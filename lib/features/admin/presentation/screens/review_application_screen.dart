@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prarambh_infra/core/widgets/back_button.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/verification_success_screen.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/models/advisor_application_model.dart';
 
@@ -58,10 +60,7 @@ class ReviewApplicationScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: textColor),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: backButton(isDark: isDark),
         title: Text(
           'Review Application',
           style: GoogleFonts.montserrat(color: textColor, fontWeight: FontWeight.bold, fontSize: 16),
@@ -82,7 +81,12 @@ class ReviewApplicationScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    // TODO: Move to Approve Flow
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => VerificationSuccessScreen(advisor: advisor),
+                      ),
+                    );
                   },
                   icon: const Icon(Icons.check_circle_outline, color: Colors.white),
                   label: Text('Verify & Approve Broker', style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),

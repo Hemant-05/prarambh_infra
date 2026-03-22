@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:prarambh_infra/core/widgets/back_button.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class AddDocumentScreen extends StatefulWidget {
@@ -25,7 +26,7 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
       appBar: AppBar(
         backgroundColor: primaryBlue,
         elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
+        leading: backButton(isDark: isDark),
         title: Text('Admin: Add New Document', style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
       ),
       body: SingleChildScrollView(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/review_application_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -34,10 +35,7 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: backButton(isDark: isDark),
         title: Text(
           'Advisor Applications',
           style: GoogleFonts.montserrat(

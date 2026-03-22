@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/admin_document_provider.dart';
@@ -35,7 +36,7 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
         backgroundColor: primaryBlue,
         elevation: 0,
         centerTitle: true,
-        leading: IconButton(icon: const Icon(Icons.menu, color: Colors.white), onPressed: () {}),
+        leading: backButton(isDark: isDark),
         title: Text('DOCS MANAGEMENT', style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
         actions: [IconButton(icon: const Icon(Icons.notifications, color: Colors.white), onPressed: () {})],
       ),

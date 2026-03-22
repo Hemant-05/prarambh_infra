@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prarambh_infra/core/widgets/back_button.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/models/advisor_application_model.dart';
 
@@ -28,7 +29,7 @@ class _AssignDocumentsScreenState extends State<AssignDocumentsScreen> {
         backgroundColor: primaryBlue,
         elevation: 0,
         centerTitle: true,
-        leading: IconButton(icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20), onPressed: () => Navigator.pop(context)),
+        leading: backButton(isDark: isDark),
         title: Text('Assign Documents', style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
       ),
       bottomNavigationBar: Container(

@@ -43,7 +43,7 @@ class _ApiClient implements ApiClient {
     try {
       _value = _result.data!.map(
         (k, dynamic v) =>
-            MapEntry(k, (v as Map<String, dynamic>)),
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
@@ -74,7 +74,7 @@ class _ApiClient implements ApiClient {
     try {
       _value = _result.data!.map(
         (k, dynamic v) =>
-            MapEntry(k, (v as Map<String, dynamic>)),
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
@@ -107,7 +107,7 @@ class _ApiClient implements ApiClient {
     try {
       _value = _result.data!.map(
         (k, dynamic v) =>
-            MapEntry(k, (v as Map<String, dynamic>)),
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
@@ -138,7 +138,7 @@ class _ApiClient implements ApiClient {
     try {
       _value = _result.data!.map(
         (k, dynamic v) =>
-            MapEntry(k, (v as Map<String, dynamic>)),
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
@@ -169,7 +169,7 @@ class _ApiClient implements ApiClient {
     try {
       _value = _result.data!.map(
         (k, dynamic v) =>
-            MapEntry(k, (v as Map<String, dynamic>)),
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
@@ -200,7 +200,7 @@ class _ApiClient implements ApiClient {
     try {
       _value = _result.data!.map(
         (k, dynamic v) =>
-            MapEntry(k, (v as Map<String, dynamic>)),
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
@@ -231,7 +231,7 @@ class _ApiClient implements ApiClient {
     try {
       _value = _result.data!.map(
         (k, dynamic v) =>
-            MapEntry(k, (v as Map<String, dynamic>)),
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
@@ -264,7 +264,7 @@ class _ApiClient implements ApiClient {
     try {
       _value = _result.data!.map(
         (k, dynamic v) =>
-            MapEntry(k, (v as Map<String, dynamic>)),
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
@@ -294,7 +294,7 @@ class _ApiClient implements ApiClient {
     try {
       _value = _result.data!.map(
         (k, dynamic v) =>
-            MapEntry(k, (v as Map<String, dynamic>)),
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
@@ -324,7 +324,7 @@ class _ApiClient implements ApiClient {
     try {
       _value = _result.data!.map(
         (k, dynamic v) =>
-            MapEntry(k, (v as Map<String, dynamic>)),
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
@@ -355,7 +355,7 @@ class _ApiClient implements ApiClient {
     try {
       _value = _result.data!.map(
         (k, dynamic v) =>
-            MapEntry(k, (v as Map<String, dynamic>)),
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
@@ -386,7 +386,7 @@ class _ApiClient implements ApiClient {
     try {
       _value = _result.data!.map(
         (k, dynamic v) =>
-            MapEntry(k, (v as Map<String, dynamic>)),
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
@@ -416,7 +416,7 @@ class _ApiClient implements ApiClient {
     try {
       _value = _result.data!.map(
         (k, dynamic v) =>
-            MapEntry(k, (v as Map<String, dynamic>)),
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
@@ -475,7 +475,7 @@ class _ApiClient implements ApiClient {
     try {
       _value = _result.data!.map(
         (k, dynamic v) =>
-            MapEntry(k, (v as Map<String, dynamic>)),
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
@@ -505,7 +505,7 @@ class _ApiClient implements ApiClient {
     try {
       _value = _result.data!.map(
         (k, dynamic v) =>
-            MapEntry(k, (v as Map<String, dynamic>)),
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
@@ -538,7 +538,7 @@ class _ApiClient implements ApiClient {
     try {
       _value = _result.data!.map(
         (k, dynamic v) =>
-            MapEntry(k, (v as Map<String, dynamic>)),
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
@@ -568,7 +568,7 @@ class _ApiClient implements ApiClient {
     try {
       _value = _result.data!.map(
         (k, dynamic v) =>
-            MapEntry(k, (v as Map<String, dynamic>)),
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
@@ -601,7 +601,7 @@ class _ApiClient implements ApiClient {
     try {
       _value = _result.data!.map(
         (k, dynamic v) =>
-            MapEntry(k, (v as Map<String, dynamic>)),
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
@@ -651,7 +651,98 @@ class _ApiClient implements ApiClient {
     try {
       _value = _result.data!.map(
         (k, dynamic v) =>
-            MapEntry(k, (v as Map<String, dynamic>)),
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<Map<String, dynamic>> getContests() async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<Map<String, dynamic>>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            'admin/contests.php',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late Map<String, dynamic> _value;
+    try {
+      _value = _result.data!.map(
+        (k, dynamic v) =>
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<Map<String, dynamic>> getContestDetails(String contestId) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'contest_id': contestId};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<Map<String, dynamic>>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            'admin/contest_details.php',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late Map<String, dynamic> _value;
+    try {
+      _value = _result.data!.map(
+        (k, dynamic v) =>
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<Map<String, dynamic>> createContest(Map<String, dynamic> body) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(body);
+    final _options = _setStreamType<Map<String, dynamic>>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            'admin/create_contest.php',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late Map<String, dynamic> _value;
+    try {
+      _value = _result.data!.map(
+        (k, dynamic v) =>
+            MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);

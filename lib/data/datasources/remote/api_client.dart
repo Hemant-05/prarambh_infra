@@ -88,4 +88,14 @@ abstract class ApiClient {
       @Part(name: "name") String name,
       @Part(name: "category") String category,
       );
+
+  // --- Admin: Contests ---
+  @GET("admin/contests.php")
+  Future<Map<String, dynamic>> getContests();
+
+  @GET("admin/contest_details.php")
+  Future<Map<String, dynamic>> getContestDetails(@Query("contest_id") String contestId);
+
+  @POST("admin/create_contest.php")
+  Future<Map<String, dynamic>> createContest(@Body() Map<String, dynamic> body);
 }
