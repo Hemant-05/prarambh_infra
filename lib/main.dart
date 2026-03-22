@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_advisor_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_document_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/add_document_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/admin_dashboard_screen.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/advisor_applications_screen.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/docs_management_screen.dart';
 import 'package:prarambh_infra/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -25,6 +30,9 @@ void main() async {
         // Ask GetIt (sl) for the AuthProvider
         ChangeNotifierProvider(create: (_) => di.sl<AuthProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdminProvider>()),
+
+        ChangeNotifierProvider(create: (_) => di.sl<AdminAdvisorProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdminDocumentProvider>()),
       ],
       child: const PraarambhApp(),
     ),
@@ -50,13 +58,16 @@ class PraarambhApp extends StatelessWidget {
         primaryColor: const Color(0xFF1976D2),
       ),
       themeMode: ThemeMode.system,
-      initialRoute: '/splash',
+      initialRoute: '/admin_dashboard',
       routes: {
         '/splash': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
         '/admin_dashboard': (context) => const AdminDashboardScreen(),
+        '/advisor_applications': (context) => const AdvisorApplicationsScreen(),
+        '/docs_management': (context) => const DocsManagementScreen(),
+        '/add_document': (context) => const AddDocumentScreen(),
       },
     );
   }

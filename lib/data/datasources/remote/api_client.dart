@@ -66,4 +66,26 @@ abstract class ApiClient {
       @Part(name: "category") String? category,
       @Part(name: "project_id") int? projectId,
       );
+
+  // --- Admin: Advisor Applications ---
+  @GET("admin/advisor_applications.php")
+  Future<Map<String, dynamic>> getAdvisorApplications();
+
+  @POST("admin/update_advisor_status.php")
+  Future<Map<String, dynamic>> updateAdvisorStatus(@Body() Map<String, dynamic> body);
+
+  // --- Admin: Document Management ---
+  @GET("admin/project_documents.php")
+  Future<Map<String, dynamic>> getProjectDocuments();
+
+  @POST("admin/assign_documents.php")
+  Future<Map<String, dynamic>> assignDocumentsToAdvisor(@Body() Map<String, dynamic> body);
+
+  @MultiPart()
+  @POST("admin/upload_project_document.php")
+  Future<Map<String, dynamic>> uploadProjectDocument(
+      @Part(name: "document") File document,
+      @Part(name: "name") String name,
+      @Part(name: "category") String category,
+      );
 }
