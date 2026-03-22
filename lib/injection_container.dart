@@ -1,5 +1,11 @@
 import 'package:get_it/get_it.dart';
 import 'package:prarambh_infra/data/datasources/remote/api_client.dart';
+import 'package:prarambh_infra/features/admin/data/repositories/admin_attendance_repository.dart';
+import 'package:prarambh_infra/features/admin/data/repositories/admin_contest_repository.dart';
+import 'package:prarambh_infra/features/admin/data/repositories/admin_leaderboard_repository.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_attendance_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_contest_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_leaderboard_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_provider.dart';
 
 // --- Core & External ---
@@ -18,25 +24,27 @@ import 'package:prarambh_infra/features/admin/presentation/providers/admin_docum
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  // ---------------------------------------------------------------------------
-  // 1. Providers / State Management (Register as Factory)
-  // ---------------------------------------------------------------------------
+
   sl.registerFactory(() => AuthProvider(authRepository: sl()));
   sl.registerFactory(() => AdminProvider(adminRepository: sl()));
 
-  // NEW ADDITIONS
   sl.registerFactory(() => AdminAdvisorProvider(repository: sl()));
   sl.registerFactory(() => AdminDocumentProvider(repository: sl()));
 
-  // ---------------------------------------------------------------------------
-  // 2. Repositories (Register as LazySingleton)
-  // ---------------------------------------------------------------------------
   sl.registerLazySingleton(() => AuthRepository(apiClient: sl()));
   sl.registerLazySingleton(() => AdminRepository(apiClient: sl()));
 
-  // NEW ADDITIONS
   sl.registerLazySingleton(() => AdminAdvisorRepository(apiClient: sl()));
   sl.registerLazySingleton(() => AdminDocumentRepository(apiClient: sl()));
+
+  sl.registerFactory(() => AdminContestProvider(repository: sl()));
+  sl.registerLazySingleton(() => AdminContestRepository(apiClient: sl()));
+
+  sl.registerFactory(()=> AdminLeaderboardProvider(repository: sl()));
+  sl.registerLazySingleton(() => AdminLeaderboardRepository(apiClient: sl()));
+
+  sl.registerFactory(() => AdminAttendanceProvider(repository: sl()));
+  sl.registerLazySingleton(() => AdminAttendanceRepository(apiClient: sl()));
 
   // ---------------------------------------------------------------------------
   // 3. Core Network

@@ -65,7 +65,7 @@ class AdminDrawer extends StatelessWidget {
                   title : 'Contests',
                   textColor : textColor,
                   onTap: () {
-                    Navigator.pushNamed(context, '/contests');
+                    Navigator.pushNamed(context, '/contests_list');
                   },
                 ),
                 _buildDrawerItem(
@@ -89,7 +89,7 @@ class AdminDrawer extends StatelessWidget {
                   title: 'Meeting & Attendance',
                   textColor: textColor,
                   onTap: () {
-                    Navigator.pushNamed(context, '/meeting_attendance');
+                    Navigator.pushNamed(context, '/attendance_report');
                   },
                 ),
                 _buildDrawerItem(

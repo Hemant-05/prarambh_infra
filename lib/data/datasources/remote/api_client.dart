@@ -98,4 +98,18 @@ abstract class ApiClient {
 
   @POST("admin/create_contest.php")
   Future<Map<String, dynamic>> createContest(@Body() Map<String, dynamic> body);
+
+  // --- Admin: Leaderboard ---
+  @GET("admin/leaderboard.php")
+  Future<Map<String, dynamic>> getLeaderboard(@Query("type") String type); // type: 'sales' or 'recruitment'
+
+// --- Admin: Attendance ---
+  @POST("admin/create_meeting.php")
+  Future<Map<String, dynamic>> createMeeting(@Body() Map<String, dynamic> body);
+
+  @GET("admin/attendance_report.php")
+  Future<Map<String, dynamic>> getAttendanceReport(@Query("meeting_id") String meetingId);
+
+  @POST("admin/verify_attendance.php")
+  Future<Map<String, dynamic>> verifyAttendance(@Body() Map<String, dynamic> body);
 }
