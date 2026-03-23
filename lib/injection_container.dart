@@ -2,13 +2,21 @@ import 'package:get_it/get_it.dart';
 import 'package:prarambh_infra/data/datasources/remote/api_client.dart';
 import 'package:prarambh_infra/features/admin/data/repositories/admin_attendance_repository.dart';
 import 'package:prarambh_infra/features/admin/data/repositories/admin_contest_repository.dart';
+import 'package:prarambh_infra/features/admin/data/repositories/admin_lead_repository.dart';
 import 'package:prarambh_infra/features/admin/data/repositories/admin_leaderboard_repository.dart';
+import 'package:prarambh_infra/features/admin/data/repositories/admin_profile_repository.dart';
+import 'package:prarambh_infra/features/admin/data/repositories/admin_project_repository.dart';
 import 'package:prarambh_infra/features/admin/data/repositories/admin_recruitment_repository.dart';
+import 'package:prarambh_infra/features/admin/data/repositories/admin_team_repository.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_attendance_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_contest_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_lead_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_leaderboard_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_profile_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_project_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_recruitment_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_team_provider.dart';
 
 // --- Core & External ---
 import 'core/network/dio_client.dart';
@@ -50,6 +58,18 @@ Future<void> init() async {
 
   sl.registerFactory(() => AdminRecruitmentProvider(repository: sl()));
   sl.registerLazySingleton(() => AdminRecruitmentRepository(apiClient: sl()));
+
+  sl.registerFactory(() => AdminTeamProvider(repository: sl()));
+  sl.registerLazySingleton(() => AdminTeamRepository(apiClient: sl()));
+
+  sl.registerFactory(() => AdminProjectProvider(repository: sl()));
+  sl.registerLazySingleton(() => AdminProjectRepository(apiClient: sl()));
+
+  sl.registerFactory(() => AdminLeadProvider(repository: sl()));
+  sl.registerLazySingleton(() => AdminLeadRepository(apiClient: sl()));
+
+  sl.registerFactory(() => AdminProfileProvider(repository: sl()));
+  sl.registerLazySingleton(() => AdminProfileRepository(apiClient: sl()));
 
   // ---------------------------------------------------------------------------
   // 3. Core Network

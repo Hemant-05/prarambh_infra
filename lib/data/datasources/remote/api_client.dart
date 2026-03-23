@@ -115,4 +115,37 @@ abstract class ApiClient {
 
   @GET("admin/recruits_by_advisor.php")
   Future<Map<String, dynamic>> getRecruitsByAdvisor(@Query("advisor_id") String advisorId);
+
+  @GET("admin/team_hierarchy.php")
+  Future<Map<String, dynamic>> getTeamHierarchy();
+
+  @GET("admin/broker_profile.php")
+  Future<Map<String, dynamic>> getBrokerProfile(@Query("advisor_id") String advisorId);
+
+  @GET("admin/projects.php")
+  Future<Map<String, dynamic>> getAllProjects();
+
+  @POST("admin/add_project.php")
+  Future<Map<String, dynamic>> addProject(@Body() Map<String, dynamic> body);
+  
+  @GET("admin/project_inventory.php")
+  Future<Map<String, dynamic>> getProjectInventory(@Query("project_id") String projectId);
+
+  @GET("admin/new_leads.php")
+  Future<Map<String, dynamic>> getNewLeads();
+
+  @GET("admin/available_advisors.php")
+  Future<Map<String, dynamic>> getAvailableAdvisors();
+
+  @POST("admin/assign_lead.php")
+  Future<Map<String, dynamic>> assignLead(@Body() Map<String, dynamic> body);
+
+  @GET("admin/profile.php")
+  Future<Map<String, dynamic>> getAdminProfile();
+
+  @POST("admin/update_profile.php")
+  Future<Map<String, dynamic>> updateAdminProfile(@Body() Map<String, dynamic> body);
+
+  @POST("admin/change_password.php")
+  Future<Map<String, dynamic>> changeAdminPassword(@Body() Map<String, dynamic> body);
 }

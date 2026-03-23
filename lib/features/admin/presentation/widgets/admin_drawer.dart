@@ -86,6 +86,15 @@ class AdminDrawer extends StatelessWidget {
                   },
                 ),
                 _buildDrawerItem(
+                  icon: Icons.campaign_outlined,
+                  title: 'Leads',
+                  textColor: textColor,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/lead_management');
+                  },
+                ),
+                _buildDrawerItem(
                   icon: Icons.people_outline,
                   title: 'Advisor Application',
                   textColor: textColor,

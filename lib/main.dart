@@ -3,19 +3,26 @@ import 'package:prarambh_infra/features/admin/presentation/providers/admin_advis
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_attendance_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_contest_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_document_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_lead_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_leaderboard_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_profile_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_project_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_recruitment_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_team_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/add_document_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/admin_dashboard_screen.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/admin_projects_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/advisor_applications_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/attendance_report_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/attendance_review_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/contests_list_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/create_meeting_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/docs_management_screen.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/lead_management_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/leaderboard_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/recruitment_dashboard_screen.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/team_management_screen.dart';
 import 'package:prarambh_infra/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -48,6 +55,10 @@ void main() async {
         ChangeNotifierProvider(create: (_) => di.sl<AdminLeaderboardProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdminAttendanceProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdminRecruitmentProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdminTeamProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdminProjectProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdminLeadProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdminProfileProvider>()),
       ],
       child: const PraarambhApp(),
     ),
@@ -88,6 +99,9 @@ class PraarambhApp extends StatelessWidget {
         '/create_meeting': (context) => const CreateMeetingScreen(),
         '/attendance_report': (context) => const AttendanceReportScreen(),
         '/recruitment_dashboard': (context) => const RecruitmentDashboardScreen(),
+        '/team_management': (context) => const TeamManagementScreen(),
+        '/admin_projects': (context) => const AdminProjectsScreen(),
+        '/lead_management': (context) => const LeadManagementScreen(),
       },
     );
   }
