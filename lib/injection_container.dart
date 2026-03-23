@@ -3,10 +3,12 @@ import 'package:prarambh_infra/data/datasources/remote/api_client.dart';
 import 'package:prarambh_infra/features/admin/data/repositories/admin_attendance_repository.dart';
 import 'package:prarambh_infra/features/admin/data/repositories/admin_contest_repository.dart';
 import 'package:prarambh_infra/features/admin/data/repositories/admin_leaderboard_repository.dart';
+import 'package:prarambh_infra/features/admin/data/repositories/admin_recruitment_repository.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_attendance_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_contest_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_leaderboard_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_recruitment_provider.dart';
 
 // --- Core & External ---
 import 'core/network/dio_client.dart';
@@ -45,6 +47,9 @@ Future<void> init() async {
 
   sl.registerFactory(() => AdminAttendanceProvider(repository: sl()));
   sl.registerLazySingleton(() => AdminAttendanceRepository(apiClient: sl()));
+
+  sl.registerFactory(() => AdminRecruitmentProvider(repository: sl()));
+  sl.registerLazySingleton(() => AdminRecruitmentRepository(apiClient: sl()));
 
   // ---------------------------------------------------------------------------
   // 3. Core Network

@@ -89,7 +89,6 @@ abstract class ApiClient {
       @Part(name: "category") String category,
       );
 
-  // --- Admin: Contests ---
   @GET("admin/contests.php")
   Future<Map<String, dynamic>> getContests();
 
@@ -99,11 +98,9 @@ abstract class ApiClient {
   @POST("admin/create_contest.php")
   Future<Map<String, dynamic>> createContest(@Body() Map<String, dynamic> body);
 
-  // --- Admin: Leaderboard ---
   @GET("admin/leaderboard.php")
   Future<Map<String, dynamic>> getLeaderboard(@Query("type") String type); // type: 'sales' or 'recruitment'
 
-// --- Admin: Attendance ---
   @POST("admin/create_meeting.php")
   Future<Map<String, dynamic>> createMeeting(@Body() Map<String, dynamic> body);
 
@@ -112,4 +109,10 @@ abstract class ApiClient {
 
   @POST("admin/verify_attendance.php")
   Future<Map<String, dynamic>> verifyAttendance(@Body() Map<String, dynamic> body);
+
+  @GET("admin/recruitment_dashboard.php")
+  Future<Map<String, dynamic>> getRecruitmentDashboard();
+
+  @GET("admin/recruits_by_advisor.php")
+  Future<Map<String, dynamic>> getRecruitsByAdvisor(@Query("advisor_id") String advisorId);
 }

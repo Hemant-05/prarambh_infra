@@ -5,6 +5,7 @@ import 'package:prarambh_infra/features/admin/presentation/providers/admin_conte
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_document_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_leaderboard_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_recruitment_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/add_document_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/admin_dashboard_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/advisor_applications_screen.dart';
@@ -14,6 +15,7 @@ import 'package:prarambh_infra/features/admin/presentation/screens/contests_list
 import 'package:prarambh_infra/features/admin/presentation/screens/create_meeting_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/docs_management_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/leaderboard_screen.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/recruitment_dashboard_screen.dart';
 import 'package:prarambh_infra/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -45,6 +47,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => di.sl<AdminContestProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdminLeaderboardProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdminAttendanceProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdminRecruitmentProvider>()),
       ],
       child: const PraarambhApp(),
     ),
@@ -84,7 +87,7 @@ class PraarambhApp extends StatelessWidget {
         '/leaderboard': (context) => const LeaderboardScreen(),
         '/create_meeting': (context) => const CreateMeetingScreen(),
         '/attendance_report': (context) => const AttendanceReportScreen(),
-
+        '/recruitment_dashboard': (context) => const RecruitmentDashboardScreen(),
       },
     );
   }

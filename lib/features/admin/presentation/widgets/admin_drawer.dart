@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prarambh_infra/core/constant/cons_strings.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -22,7 +23,7 @@ class AdminDrawer extends StatelessWidget {
           CircleAvatar(
             radius: 40,
             backgroundImage: const AssetImage(
-              'assets/images/logos.png',
+              logo
             ), // Replace with actual profile image
             backgroundColor: Colors.grey[200],
           ),
@@ -77,14 +78,6 @@ class AdminDrawer extends StatelessWidget {
                   }
                 ),
                 _buildDrawerItem(
-                  icon: Icons.military_tech_outlined,
-                  title: 'Achievements',
-                  textColor: textColor,
-                  onTap: () {
-                    Navigator.pushNamed(context, '/achievements');
-                  },
-                ),
-                _buildDrawerItem(
                   icon : Icons.co_present_outlined,
                   title: 'Meeting & Attendance',
                   textColor: textColor,
@@ -105,15 +98,8 @@ class AdminDrawer extends StatelessWidget {
                   title: 'Recruitment by Broker',
                   textColor: textColor,
                   onTap: () {
-                    Navigator.pushNamed(context, '/broker_recruitment');
-                  },
-                ),
-                _buildDrawerItem(
-                  icon: Icons.campaign_outlined,
-                  title: 'leads',
-                  textColor: textColor,
-                  onTap: () {
-                    Navigator.pushNamed(context, '/leads');
+                    Navigator.pop(context); // close drawer
+                    Navigator.pushNamed(context, '/recruitment_dashboard');
                   },
                 ),
               ],
@@ -125,7 +111,7 @@ class AdminDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
             title: Text(
-              'Log\nOut',
+              'Log Out',
               style: GoogleFonts.montserrat(
                 color: Colors.red,
                 fontWeight: FontWeight.w600,
