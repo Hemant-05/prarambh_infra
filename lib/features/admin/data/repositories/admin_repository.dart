@@ -8,14 +8,11 @@ class AdminRepository {
 
   Future<AdminDashboardModel> getDashboardData(int userId) async {
     try {
-      final response = await apiClient.getManagerDashboard(userId);
-
+      final response = await apiClient.getDashboardData(userId, "Admin");
       if (response['status'] == 'success') {
-        // Assuming your backend nests the data inside a 'data' object
         return AdminDashboardModel.fromJson(response['data'] ?? response);
-      } else {
-        throw Exception(response['message'] ?? 'Failed to load dashboard data');
       }
+      throw Exception(response['message'] ?? 'Failed to load dashboard data');
     } catch (e) {
       rethrow;
     }

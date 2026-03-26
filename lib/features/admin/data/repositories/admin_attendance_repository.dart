@@ -12,23 +12,14 @@ class AdminAttendanceRepository {
     } catch (e) { rethrow; }
   }
 
-  Future<List<AttendanceModel>> getAttendanceReport(String meetingId) async {
+  Future<List<AttendanceModel>> getAttendanceReport(int userId) async {
     try {
-      final response = await apiClient.getAttendanceReport(meetingId);
+      final response = await apiClient.getAttendance(userId);
       if (response['status'] == 'success') {
         final List data = response['data'] ?? [];
         return data.map((json) => AttendanceModel.fromJson(json)).toList();
       }
-      throw Exception(response['message'] ?? 'Failed to load report');
-    } catch (e) { rethrow; }
-  }
-
-  Future<bool> verifyAttendance(String attendanceId, String status, {String? reason}) async {
-    try {
-      final response = await apiClient.verifyAttendance({
-        "attendance_id": attendanceId, "status": status, "reason": reason ?? ""
-      });
-      return response['status'] == 'success';
+      throw Exception(response['message']);
     } catch (e) { rethrow; }
   }
 }

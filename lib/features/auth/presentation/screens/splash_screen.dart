@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/constant/cons_strings.dart';
 import 'package:prarambh_infra/core/theme/app_colors.dart';
+import 'package:prarambh_infra/features/auth/presentation/providers/auth_provider.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/widgets/auth_background.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -20,9 +22,13 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _navigateToLogin() async {
-    await Future.delayed(const Duration(seconds: 3));
+    bool res = await context.read<AuthProvider>().tryAutoLogin();
     if (mounted) {
-      Navigator.pushReplacementNamed(context, '/login');
+      if(res){
+       Navigator.pushReplacementNamed(context, '/admin_dashboard');
+      }else {
+        Navigator.pushReplacementNamed(context, '/login');
+      }
     }
   }
 

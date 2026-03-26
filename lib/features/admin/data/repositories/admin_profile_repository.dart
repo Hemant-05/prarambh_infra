@@ -8,7 +8,8 @@ class AdminProfileRepository {
 
   Future<AdminProfileModel> getProfile() async {
     try {
-      final response = await apiClient.getAdminProfile();
+      // final response = await apiClient.getAdminProfile();
+      final response = {};
       if (response['status'] == 'success') {
         return AdminProfileModel.fromJson(response['data']);
       }
@@ -18,17 +19,19 @@ class AdminProfileRepository {
 
   Future<bool> updateProfile(Map<String, dynamic> data) async {
     try {
-      final response = await apiClient.updateAdminProfile(data);
+      // final response = await apiClient.updateAdminProfile(data);
+      final response = {};
       return response['status'] == 'success';
     } catch (e) { rethrow; }
   }
 
   Future<bool> changePassword(String oldPassword, String newPassword) async {
     try {
-      final response = await apiClient.changeAdminPassword({
+      /*final response = await apiClient.changeAdminPassword({
         "old_password": oldPassword,
         "new_password": newPassword,
-      });
+      });*/
+      final response = {};
       return response['status'] == 'success';
     } catch (e) { rethrow; }
   }

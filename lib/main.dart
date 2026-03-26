@@ -88,7 +88,7 @@ class PraarambhApp extends StatelessWidget {
       routes: {
         '/splash': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
-        '/register': (context) => const RegisterScreen(),
+        '/register': (context) => RegisterScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
         '/admin_dashboard': (context) => const AdminDashboardScreen(),
         '/advisor_applications': (context) => const AdvisorApplicationsScreen(),

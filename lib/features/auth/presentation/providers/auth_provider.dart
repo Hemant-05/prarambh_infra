@@ -17,22 +17,71 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  // Login Logic
   Future<bool> login(String email, String password) async {
-    _setLoading(true);
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
     try {
-      _currentUser = await authRepository.login(email, password);
-      _errorMessage = null;
-      _setLoading(false);
-      return true; // Success
+      _currentUser = await authRepository.loginUser(email, password);
+      _isLoading = false;
+      notifyListeners();
+      return true; // Login success
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
-      _setLoading(false);
-      return false; // Failed
+      _isLoading = false;
+      notifyListeners();
+      return false; // Login failed
     }
   }
 
-  // Register Logic
+  Future<bool> loginAdvisor(
+      String password, String advisorCode) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      _currentUser = await authRepository.loginAdvisor(password, advisorCode);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> tryAutoLogin() async {
+    final creds = await authRepository.getSavedCredentials();
+    final email = creds['email'];
+    final password = creds['password'];
+
+    // If nothing is saved, fail silently and let the app show the Login screen
+    if (email == null || password == null) {
+      return false;
+    }
+
+    try {
+      // Attempt the silent background login
+      _currentUser = await authRepository.loginUser(email, password);
+      notifyListeners();
+      return true; // Success! Route them to Dashboard.
+    } catch (e) {
+      // If silent login fails (password changed, account deleted, etc.), wipe storage
+      await authRepository.clearCredentials();
+      return false;
+    }
+  }
+
+  Future<void> logout() async {
+    await authRepository.clearCredentials();
+    _currentUser = null;
+    notifyListeners();
+  }
+
   Future<bool> register({
     required String fullName,
     required String email,
@@ -55,11 +104,6 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
       return false; // Failed
     }
-  }
-
-  void logout() {
-    _currentUser = null;
-    notifyListeners();
   }
 
   void _setLoading(bool value) {

@@ -2,10 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/constant/cons_strings.dart';
 import 'package:prarambh_infra/core/theme/app_colors.dart';
+import 'package:prarambh_infra/features/auth/presentation/providers/auth_provider.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/widgets/auth_background.dart';
 
 class RegisterScreen extends StatelessWidget {
-  const RegisterScreen({Key? key}) : super(key: key);
+  RegisterScreen({Key? key}) : super(key: key);
+
+  final TextEditingController _fullNameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +62,7 @@ class RegisterScreen extends StatelessWidget {
                             primaryBlue: primaryBlue,
                             borderColor: borderColor,
                             mutedText: mutedText,
+                            controller: _fullNameController
                           ),
                           const SizedBox(height: 16),
                           _buildTextFieldLabel('Email Address'),
@@ -65,6 +73,7 @@ class RegisterScreen extends StatelessWidget {
                             primaryBlue: primaryBlue,
                             borderColor: borderColor,
                             mutedText: mutedText,
+                            controller: _emailController
                           ),
                           const SizedBox(height: 16),
                           _buildTextFieldLabel('Phone Number'),
@@ -75,10 +84,34 @@ class RegisterScreen extends StatelessWidget {
                             primaryBlue: primaryBlue,
                             borderColor: borderColor,
                             mutedText: mutedText,
+                            controller: _phoneController
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTextFieldLabel('Password'),
+                          const SizedBox(height: 8),
+                          _buildTextField(
+                              hint: '***********',
+                              icon: Icons.lock_outline,
+                              primaryBlue: primaryBlue,
+                              borderColor: borderColor,
+                              mutedText: mutedText,
+                              controller: _passwordController
                           ),
                           const SizedBox(height: 24),
                           ElevatedButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              String fullName = _fullNameController.text;
+                              String email = _emailController.text;
+                              String phone = _phoneController.text;
+                              String password = _passwordController.text;
+
+                              context.read<AuthProvider>().register(
+                                fullName: fullName,
+                                email: email,
+                                phone: phone,
+                                password: password,
+                              );
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: primaryBlue,
                               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -87,7 +120,7 @@ class RegisterScreen extends StatelessWidget {
                               ),
                             ),
                             child: Text(
-                              'Continue',
+                              'Register',
                               style: GoogleFonts.montserrat(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -105,7 +138,7 @@ class RegisterScreen extends StatelessWidget {
                               ),
                               GestureDetector(
                                 onTap: () {
-                                  Navigator.pop(context); // Navigates back to login
+                                  Navigator.pop(context);
                                 },
                                 child: Text(
                                   'Log in',
@@ -148,8 +181,10 @@ class RegisterScreen extends StatelessWidget {
     required Color primaryBlue,
     required Color borderColor,
     required Color mutedText,
+    required TextEditingController controller,
   }) {
     return TextFormField(
+      controller:  controller,
       style: GoogleFonts.montserrat(fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,

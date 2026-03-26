@@ -8,7 +8,8 @@ class AdminRecruitmentRepository {
 
   Future<RecruitmentDashboardModel> getDashboard() async {
     try {
-      final response = await apiClient.getRecruitmentDashboard();
+      // final response = await apiClient.getRecruitmentDashboard();
+      final response = {};
       if (response['status'] == 'success') {
         return RecruitmentDashboardModel.fromJson(response['data']);
       }
@@ -20,7 +21,8 @@ class AdminRecruitmentRepository {
 
   Future<List<RecruitedPersonModel>> getRecruitsByAdvisor(String advisorId) async {
     try {
-      final response = await apiClient.getRecruitsByAdvisor(advisorId);
+      // final response = await apiClient.getRecruitsByAdvisor(advisorId);
+      final response = {};
       if (response['status'] == 'success') {
         final List data = response['data'] ?? [];
         return data.map((json) => RecruitedPersonModel.fromJson(json)).toList();

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_lead_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/assign_lead_screen.dart';
+import 'package:prarambh_infra/features/auth/presentation/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../data/models/lead_models.dart';
@@ -21,7 +22,11 @@ class _LeadManagementScreenState extends State<LeadManagementScreen> with Single
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AdminLeadProvider>().fetchNewLeads();
+      // 1. Get the ID from your AuthProvider
+      final adminId = context.read<AuthProvider>().currentUser?.id ?? 1;
+
+      // 2. Pass it into the provider's fetch method
+      context.read<AdminLeadProvider>().fetchNewLeads(adminId);
     });
   }
 

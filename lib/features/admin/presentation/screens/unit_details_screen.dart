@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_project_provider.dart';
+import 'package:provider/provider.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../data/models/unit_model.dart';
 
@@ -13,19 +15,73 @@ class UnitDetailsScreen extends StatelessWidget {
     final cardColor = AppColors.getCardColor(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    Color statusColor = unit.status == 'AVAILABLE' ? Colors.green : unit.status == 'BOOKED' ? Colors.orange : Colors.red;
+    Color statusColor = unit.availabilityStatus.toUpperCase().contains('AVAILABLE') ? Colors.green : unit.availabilityStatus == 'BOOKED' ? Colors.orange : Colors.red;
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
       bottomNavigationBar: SafeArea(
         child: Container(
           padding: const EdgeInsets.all(20), color: Colors.white,
-          child: Row(
-            children: [
-              Expanded(child: OutlinedButton(onPressed: () {}, style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), side: BorderSide(color: primaryBlue), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), child: Text('Share Details', style: GoogleFonts.montserrat(color: primaryBlue, fontWeight: FontWeight.bold)))),
-              const SizedBox(width: 16),
-              Expanded(child: ElevatedButton(onPressed: () {}, style: ElevatedButton.styleFrom(backgroundColor: primaryBlue, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), child: Text('Update Status', style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold)))),
-            ],
+          child: Consumer<AdminProjectProvider>(
+              builder: (context, provider, child) {
+                return Row(
+                  children: [
+                    // DELETE BUTTON
+                    Expanded(
+                        child: OutlinedButton(
+                            onPressed: provider.isSaving ? null : () async {
+                              // Confirm deletion
+                              bool confirm = await showDialog(
+                                context: context,
+                                builder: (c) => AlertDialog(
+                                  title: const Text('Delete Unit?'),
+                                  content: const Text('This cannot be undone.'),
+                                  actions: [
+                                    TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+                                    TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
+                                  ],
+                                ),
+                              ) ?? false;
+
+                              if (confirm) {
+                                final success = await provider.removeUnit(unit.id, unit.projectId);
+                                if (success) {
+                                  Navigator.pop(context); // Go back to inventory
+                                }
+                              }
+                            },
+                            style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), side: const BorderSide(color: Colors.redAccent), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                            child: Text('Delete', style: GoogleFonts.montserrat(color: Colors.redAccent, fontWeight: FontWeight.bold))
+                        )
+                    ),
+                    const SizedBox(width: 16),
+
+                    // UPDATE STATUS BUTTON
+                    Expanded(
+                        child: ElevatedButton(
+                            onPressed: provider.isSaving ? null : () async {
+                              // In a real app, open a bottom sheet to select "Booked" or "Sold"
+                              // Here we simulate an instant update to 'Booked'
+                              final success = await provider.modifyUnit({
+                                "unit_id": unit.id,
+                                "project_id": unit.projectId,
+                                "availability_status": "Booked"
+                              }, unit.projectId);
+
+                              if (success) {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Status Updated!')));
+                                Navigator.pop(context); // Pop to see refreshed inventory
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(backgroundColor: primaryBlue, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                            child: provider.isSaving
+                                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                : Text('Update Status', style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold))
+                        )
+                    ),
+                  ],
+                );
+              }
           ),
         ),
       ),
@@ -63,14 +119,14 @@ class UnitDetailsScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Unit ${unit.unitNumber}', style: GoogleFonts.montserrat(fontSize: 22, fontWeight: FontWeight.bold)), Text('Prarambh Enclave', style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey[600]))]),
-                            Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(20)), child: Text(unit.status, style: GoogleFonts.montserrat(color: statusColor, fontWeight: FontWeight.bold, fontSize: 10))),
+                            Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(20)), child: Text(unit.availabilityStatus, style: GoogleFonts.montserrat(color: statusColor, fontWeight: FontWeight.bold, fontSize: 10))),
                           ],
                         ),
                         const Padding(padding: EdgeInsets.symmetric(vertical: 16), child: Divider(height: 1)),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('PRICE', style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)), Text(unit.price, style: GoogleFonts.montserrat(fontSize: 20, fontWeight: FontWeight.bold))]),
+                            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('PRICE', style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)), Text(unit.basePrice.toString(), style: GoogleFonts.montserrat(fontSize: 20, fontWeight: FontWeight.bold))]),
                             Row(children: [Text('Floor Plan', style: GoogleFonts.montserrat(color: primaryBlue, fontWeight: FontWeight.bold, fontSize: 13)), const SizedBox(width: 4), Icon(Icons.open_in_new, size: 14, color: primaryBlue)]),
                           ],
                         )
@@ -85,24 +141,25 @@ class UnitDetailsScreen extends StatelessWidget {
                   GridView.count(
                     crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), childAspectRatio: 2.2, crossAxisSpacing: 12, mainAxisSpacing: 12,
                     children: [
-                      _buildSpecBox(Icons.square_foot, 'Super Area', unit.superArea, cardColor),
-                      _buildSpecBox(Icons.bed, 'Configuration', unit.type, cardColor),
+                      _buildSpecBox(Icons.square_foot, 'Super Area', unit.areaSqft.toString(), cardColor),
+                      _buildSpecBox(Icons.bed, 'Configuration', unit.propertyType, cardColor),
                       _buildSpecBox(Icons.explore, 'Facing', unit.facing, cardColor),
-                      _buildSpecBox(Icons.layers, 'Floor', unit.floor, cardColor),
+                      _buildSpecBox(Icons.layers, 'Floor', unit.floorNumber, cardColor),
                     ],
                   ),
                   const SizedBox(height: 24),
 
                   // Features
-                  if (unit.features.isNotEmpty) ...[
+                  if (unit.configuration.isNotEmpty) ...[
                     Text('UNIT FEATURES', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 12),
-                    ...unit.features.map((feature) => Padding(padding: const EdgeInsets.only(bottom: 12), child: Row(children: [Icon(Icons.check_circle_outline, color: primaryBlue, size: 20), const SizedBox(width: 12), Text(feature, style: GoogleFonts.montserrat(fontSize: 14, color: Colors.black87))]))).toList(),
-                    const SizedBox(height: 24),
+                    Text(unit.configuration, style: GoogleFonts.montserrat(fontSize: 14, color: Colors.black87))
+                    /*...unit.configuration.map((feature) => Padding(padding: const EdgeInsets.only(bottom: 12), child: Row(children: [Icon(Icons.check_circle_outline, color: primaryBlue, size: 20), const SizedBox(width: 12), Text(feature, style: GoogleFonts.montserrat(fontSize: 14, color: Colors.black87))]))).toList(),
+                    const SizedBox(height: 24),*/
                   ],
 
                   // Pricing Breakdown
-                  if (unit.pricingBreakdown.isNotEmpty) ...[
+                  /*if (unit.pricingBreakdown.isNotEmpty) ...[
                     Text('PRICING BREAKDOWN', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 12),
                     Container(
@@ -117,7 +174,7 @@ class UnitDetailsScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                  ],
+                  ],*/
                   const SizedBox(height: 40),
                 ],
               ),

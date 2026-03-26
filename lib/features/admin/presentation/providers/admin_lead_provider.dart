@@ -36,16 +36,17 @@ class AdminLeadProvider extends ChangeNotifier {
     finally { _isLoadingPipeline = false; notifyListeners(); }
   }
 
-  Future<void> fetchNewLeads() async {
+  Future<void> fetchNewLeads(int adminId) async {
     _isLoading = true; notifyListeners();
     try {
+      _newLeads = await repository.getNewLeads(adminId);
       // Mock Data matching your UI exactly
-      await Future.delayed(const Duration(milliseconds: 500));
+      /*await Future.delayed(const Duration(milliseconds: 500));
       _newLeads = [
         LeadModel(id: '1', source: 'WEBSITE INQUIRY', timeAgo: '2M AGO', name: 'Jonathan Miller', email: 'j.miller@example.com', phone: '+1 555-0198', projectName: 'Skyline Penthouse B-12', projectImage: 'url', priority: 'High Priority', notes: '"Looking for commercial property in Chicago. Budget: 2M."', tags: ['INBOUND', 'COMMERCIAL', 'US-IL']),
         LeadModel(id: '2', source: 'CONTACT FORM', timeAgo: '15M AGO', name: 'Sarah Jenkins', email: 'sarah.j@webmail.com', phone: '+1 555-0421', projectName: 'Oakwood Family Villa', projectImage: 'url', priority: 'High Priority', notes: '"Looking for commercial property in Chicago. Budget: 2M."', tags: ['INBOUND', 'COMMERCIAL', 'US-IL']),
         LeadModel(id: '3', source: 'PROPERTY PORTAL', timeAgo: '3H AGO', name: 'Elena Rodriguez', email: 'elena.r@lifestyle.com', phone: '+1 555-0876', projectName: 'Harbor View Condos', projectImage: 'url'),
-      ];
+      ];*/
     } catch (e) { debugPrint(e.toString()); } finally { _isLoading = false; notifyListeners(); }
   }
 

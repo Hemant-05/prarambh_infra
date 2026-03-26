@@ -15,37 +15,55 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // 1. Controllers MUST be outside the build method
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _advisorCodeController =
+      TextEditingController(); // NEW: Advisor Code Controller
 
-  // 2. Dispose MUST be outside the build method
+  String _loginType = 'User'; // NEW: Radio button state ('User' or 'Advisor')
+
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _advisorCodeController.dispose(); // Dispose the new controller
     super.dispose();
   }
 
-  // 3. Logic methods MUST be outside the build method
   void _handleLogin() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
+    final advisorCode = _advisorCodeController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields')),
+        const SnackBar(content: Text('Please fill email and password')),
       );
       return;
     }
 
+    // Validation specifically for Advisor
+    if (_loginType == 'Advisor' && advisorCode.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Advisor Code is required')));
+      return;
+    }
+
     final authProvider = context.read<AuthProvider>();
-    final success = await authProvider.login(email, password);
+    bool success;
+
+    // Call the correct API method based on the radio selection
+    if (_loginType == 'Advisor') {
+      success = await authProvider.loginAdvisor(password, advisorCode);
+    } else {
+      success = await authProvider.login(email, password);
+    }
 
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Welcome ${authProvider.currentUser?.fullName}!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Welcome back')));
       final userRole = authProvider.currentUser?.role;
 
       if (userRole == 'Admin') {
@@ -64,12 +82,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize colors dynamically based on theme
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = AppColors.getCardColor(context);
     final primaryBlue = AppColors.getPrimaryBlue(context);
     final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
-    final mutedText = isDark ? AppColors.textMutedDark : AppColors.textMutedLight;
+    final mutedText = isDark
+        ? AppColors.textMutedDark
+        : AppColors.textMutedLight;
 
     return AuthBackground(
       child: LayoutBuilder(
@@ -103,18 +122,74 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildTextFieldLabel('Email Address'),
-                          const SizedBox(height: 8),
-                          _buildTextField(
-                            controller: _emailController,
-                            hint: 'hemantsahu123@gmail.com',
-                            icon: Icons.email_outlined,
-                            isDark: isDark,
-                            primaryBlue: primaryBlue,
-                            borderColor: borderColor,
-                            mutedText: mutedText,
+                          // NEW: Radio Buttons for Login Type
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Radio<String>(
+                                value: 'User',
+                                groupValue: _loginType,
+                                activeColor: primaryBlue,
+                                onChanged: (value) =>
+                                    setState(() => _loginType = value!),
+                              ),
+                              Text(
+                                'User',
+                                style: GoogleFonts.montserrat(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(width: 20),
+                              Radio<String>(
+                                value: 'Advisor',
+                                groupValue: _loginType,
+                                activeColor: primaryBlue,
+                                onChanged: (value) =>
+                                    setState(() => _loginType = value!),
+                              ),
+                              Text(
+                                'Advisor',
+                                style: GoogleFonts.montserrat(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 16),
+
+                          // NEW: Conditional Advisor Code Field
+                          if (_loginType == 'Advisor') ...[
+                            _buildTextFieldLabel('Advisor Code'),
+                            const SizedBox(height: 8),
+                            _buildTextField(
+                              controller: _advisorCodeController,
+                              hint: 'e.g. ADV-9082',
+                              icon: Icons.badge_outlined,
+                              isDark: isDark,
+                              primaryBlue: primaryBlue,
+                              borderColor: borderColor,
+                              mutedText: mutedText,
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+
+                          if (_loginType == 'User') ...[
+                            _buildTextFieldLabel('Email Address'),
+                            const SizedBox(height: 8),
+                            _buildTextField(
+                              controller: _emailController,
+                              hint: 'hemantsahu123@gmail.com',
+                              icon: Icons.email_outlined,
+                              isDark: isDark,
+                              primaryBlue: primaryBlue,
+                              borderColor: borderColor,
+                              mutedText: mutedText,
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+
                           _buildTextFieldLabel('Password'),
                           const SizedBox(height: 8),
                           _buildTextField(
@@ -132,7 +207,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             alignment: Alignment.centerRight,
                             child: TextButton(
                               onPressed: () {
-                                Navigator.pushNamed(context, '/forgot_password');
+                                Navigator.pushNamed(
+                                  context,
+                                  '/forgot_password',
+                                );
                               },
                               child: Text(
                                 'Forgot password ?',
@@ -146,7 +224,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton(
-                            onPressed: context.watch<AuthProvider>().isLoading ? null : _handleLogin,
+                            onPressed: context.watch<AuthProvider>().isLoading
+                                ? null
+                                : _handleLogin,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: primaryBlue,
                               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -155,15 +235,17 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             child: context.watch<AuthProvider>().isLoading
-                                ? const CircularProgressIndicator(color: Colors.white)
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
                                 : Text(
-                              'Log in',
-                              style: GoogleFonts.montserrat(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white, // White text looks best on dark blue buttons
-                              ),
-                            ),
+                                    'Log in',
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                           ),
                           const SizedBox(height: 24),
                           Row(
@@ -205,14 +287,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildTextFieldLabel(String label) {
     return Text(
       label,
-      style: GoogleFonts.montserrat(
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-      ),
+      style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w600),
     );
   }
 
-  // Notice I passed colors as arguments so we don't have to look up the theme again
   Widget _buildTextField({
     required String hint,
     required IconData icon,
@@ -229,12 +307,11 @@ class _LoginScreenState extends State<LoginScreen> {
       style: GoogleFonts.montserrat(fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.montserrat(
-          color: mutedText,
-          fontSize: 14,
-        ),
+        hintStyle: GoogleFonts.montserrat(color: mutedText, fontSize: 14),
         prefixIcon: Icon(icon, color: mutedText),
-        suffixIcon: isPassword ? Icon(Icons.visibility_off, color: mutedText) : null,
+        suffixIcon: isPassword
+            ? Icon(Icons.visibility_off, color: mutedText)
+            : null,
         contentPadding: const EdgeInsets.symmetric(vertical: 16),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -242,7 +319,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: primaryBlue), // Removed hardcoded hex here
+          borderSide: BorderSide(color: primaryBlue),
         ),
       ),
     );

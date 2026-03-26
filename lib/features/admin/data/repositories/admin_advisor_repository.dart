@@ -8,7 +8,8 @@ class AdminAdvisorRepository {
 
   Future<List<AdvisorApplicationModel>> getApplications() async {
     try {
-      final response = await apiClient.getAdvisorApplications();
+      // final response = await apiClient.getAdvisorApplications();
+      final response = {};
       if (response['status'] == 'success') {
         final List data = response['data'] ?? [];
         return data.map((json) => AdvisorApplicationModel.fromJson(json)).toList();
@@ -22,11 +23,12 @@ class AdminAdvisorRepository {
 
   Future<bool> updateStatus(String advisorId, String status, {String? reason}) async {
     try {
-      final response = await apiClient.updateAdvisorStatus({
-        "advisor_id": advisorId,
-        "status": status,
-        "reason": reason ?? "",
-      });
+      // final response = await apiClient.updateAdvisorStatus({
+      //   "advisor_id": advisorId,
+      //   "status": status,
+      //   "reason": reason ?? "",
+      // });
+      final response = {};
       return response['status'] == 'success';
     } catch (e) {
       rethrow;

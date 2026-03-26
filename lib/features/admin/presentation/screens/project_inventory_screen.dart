@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_project_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/add_unit_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/unit_details_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -35,7 +36,7 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
     // Apply local filtering
     List<UnitModel> filteredInventory = provider.inventory;
     if (selectedFilter != 'All') {
-      filteredInventory = provider.inventory.where((u) => u.status == selectedFilter.toUpperCase()).toList();
+      filteredInventory = provider.inventory.where((u) => u.availabilityStatus.toUpperCase() == selectedFilter.toUpperCase()).toList();
     }
 
     return Scaffold(
@@ -44,6 +45,12 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
         backgroundColor: primaryBlue, elevation: 0, centerTitle: true,
         leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
         title: Text('Project Inventory', style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddUnitScreen(projectId: widget.project.id))),
+        backgroundColor: primaryBlue,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: Text('Add Unit', style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
       body: Column(
         children: [
@@ -122,8 +129,8 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
   Widget _buildUnitCard(UnitModel unit, BuildContext context) {
     Color bgColor;
     Color textColor;
-    if (unit.status == 'AVAILABLE') { bgColor = const Color(0xFFE8F5E9); textColor = Colors.green[800]!; }
-    else if (unit.status == 'BOOKED') { bgColor = const Color(0xFFFFF8E1); textColor = Colors.orange[800]!; }
+    if (unit.availabilityStatus.toUpperCase() == 'AVAILABLE') { bgColor = const Color(0xFFE8F5E9); textColor = Colors.green[800]!; }
+    else if (unit.availabilityStatus.toUpperCase() == 'BOOKED') { bgColor = const Color(0xFFFFF8E1); textColor = Colors.orange[800]!; }
     else { bgColor = const Color(0xFFFCE4EC); textColor = Colors.red[800]!; }
 
     return GestureDetector(
@@ -133,12 +140,12 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(unit.status, style: GoogleFonts.montserrat(fontSize: 9, fontWeight: FontWeight.bold, color: textColor)),
+            Text(unit.availabilityStatus, style: GoogleFonts.montserrat(fontSize: 9, fontWeight: FontWeight.bold, color: textColor)),
             const SizedBox(height: 12),
             Text(unit.unitNumber, style: GoogleFonts.montserrat(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
-            Text(unit.type, style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey[600])),
+            Text(unit.propertyType, style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey[600])),
             const SizedBox(height: 8),
-            Text(unit.price, style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue[900])),
+            Text(unit.basePrice.toString(), style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue[900])),
           ],
         ),
       ),

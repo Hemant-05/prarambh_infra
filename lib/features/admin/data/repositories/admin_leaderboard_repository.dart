@@ -8,7 +8,8 @@ class AdminLeaderboardRepository {
 
   Future<List<AdvisorRankModel>> getLeaderboard(String type) async {
     try {
-      final response = await apiClient.getLeaderboard(type);
+      // final response = await apiClient.getLeaderboard(type);
+      final response = {};
       if (response['status'] == 'success') {
         final List data = response['data'] ?? [];
         return data.map((json) => AdvisorRankModel.fromJson(json)).toList();

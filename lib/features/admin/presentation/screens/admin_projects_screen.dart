@@ -89,8 +89,8 @@ class _AdminProjectsScreenState extends State<AdminProjectsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(project.name, style: GoogleFonts.montserrat(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                    Row(children: [const Icon(Icons.location_on, color: Colors.white70, size: 14), const SizedBox(width: 4), Text(project.location, style: GoogleFonts.montserrat(color: Colors.white70, fontSize: 12))]),
+                    Text(project.projectName, style: GoogleFonts.montserrat(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                    Row(children: [const Icon(Icons.location_on, color: Colors.white70, size: 14), const SizedBox(width: 4), Text(project.locationMapUrl, style: GoogleFonts.montserrat(color: Colors.white70, fontSize: 12))]),
                   ],
                 ),
               )
@@ -103,37 +103,55 @@ class _AdminProjectsScreenState extends State<AdminProjectsScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatColumn('Area', project.area, primaryBlue),
-                _buildStatColumn('Units', project.totalUnits, primaryBlue),
-                _buildStatColumn('Rate', project.baseRate, primaryBlue),
+                _buildStatColumn('Area', '${project.buildArea} sqft', primaryBlue),
+                _buildStatColumn('Units', project.totalPlots.toString(), primaryBlue),
+                _buildStatColumn('Rate', '${project.ratePerSqft.toString()}/sqft', primaryBlue),
               ],
             ),
           ),
           const Divider(height: 1),
 
-          // Admin Actions
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => ProjectDetailsAdminScreen(project: project)));
-                    },
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProjectDetailsAdminScreen(project: project))),
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[50], elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-                    child: Text('Edit Details', style: GoogleFonts.montserrat(color: primaryBlue, fontWeight: FontWeight.bold, fontSize: 13)),
+                    child: Text('Details', style: GoogleFonts.montserrat(color: primaryBlue, fontWeight: FontWeight.bold, fontSize: 13)),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => ProjectInventoryScreen(project: project)));
-                    },
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProjectInventoryScreen(project: project))),
                     style: OutlinedButton.styleFrom(side: BorderSide(color: primaryBlue), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-                    child: Text('Manage Inventory', style: GoogleFonts.montserrat(color: primaryBlue, fontWeight: FontWeight.bold, fontSize: 13)),
+                    child: Text('Inventory', style: GoogleFonts.montserrat(color: primaryBlue, fontWeight: FontWeight.bold, fontSize: 13)),
                   ),
+                ),
+                const SizedBox(width: 8),
+                // NEW DELETE BUTTON
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                  onPressed: () async {
+                    final provider = context.read<AdminProjectProvider>();
+                    bool confirm = await showDialog(
+                      context: context,
+                      builder: (c) => AlertDialog(
+                        title: Text('Delete ${project.projectName}?'),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+                          TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
+                        ],
+                      ),
+                    ) ?? false;
+
+                    if (confirm) {
+                      await provider.removeProject(project.id);
+                      // Provider automatically updates the UI
+                    }
+                  },
                 )
               ],
             ),
