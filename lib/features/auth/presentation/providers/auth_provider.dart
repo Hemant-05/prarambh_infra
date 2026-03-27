@@ -21,7 +21,6 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
-
     try {
       _currentUser = await authRepository.loginUser(email, password);
       _isLoading = false;
@@ -56,19 +55,26 @@ class AuthProvider extends ChangeNotifier {
 
   Future<bool> tryAutoLogin() async {
     final creds = await authRepository.getSavedCredentials();
-    final email = creds['email'];
+    final identifier = creds['identifier']; // Email or Advisor Code
     final password = creds['password'];
+    final role = creds['role'];
 
     // If nothing is saved, fail silently and let the app show the Login screen
-    if (email == null || password == null) {
+    if (identifier == null || password == null || role == null) {
       return false;
     }
 
     try {
-      // Attempt the silent background login
-      _currentUser = await authRepository.loginUser(email, password);
+      // Route the background login based on the saved role
+      if (role == 'Advisor' || role == "Admin") {
+        _currentUser = await authRepository.loginAdvisor(password, identifier);
+      } else {
+        _currentUser = await authRepository.loginUser(identifier, password);
+      }
+
       notifyListeners();
-      return true; // Success! Route them to Dashboard.
+      return true; // Success! Splash screen can now route to Dashboard.
+
     } catch (e) {
       // If silent login fails (password changed, account deleted, etc.), wipe storage
       await authRepository.clearCredentials();
@@ -155,10 +161,10 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> setNewPassword(String newPassword) async {
+  Future<bool> setNewPassword(String newPassword,String otp) async {
     _setLoading(true);
     try {
-      await authRepository.resetPassword(_resetEmail, newPassword);
+      await authRepository.resetPassword(_resetEmail, newPassword, otp);
       _errorMessage = null;
       _setLoading(false);
       return true; // Success, ready to navigate back to login

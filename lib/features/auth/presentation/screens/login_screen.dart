@@ -8,7 +8,7 @@ import 'package:prarambh_infra/features/auth/presentation/providers/auth_provide
 import '../../../../core/widgets/auth_background.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -21,6 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
       TextEditingController(); // NEW: Advisor Code Controller
 
   String _loginType = 'User'; // NEW: Radio button state ('User' or 'Advisor')
+  bool _isPasswordVisible = false;
 
   @override
   void dispose() {
@@ -35,18 +36,24 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text.trim();
     final advisorCode = _advisorCodeController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
+    if (password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill email and password')),
+        const SnackBar(content: Text('Please enter your password')),
       );
       return;
     }
 
-    // Validation specifically for Advisor
     if (_loginType == 'Advisor' && advisorCode.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Advisor Code is required')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Advisor Code is required')),
+      );
+      return;
+    }
+
+    if (_loginType == 'User' && email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your email')),
+      );
       return;
     }
 
@@ -65,6 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
         context,
       ).showSnackBar(const SnackBar(content: Text('Welcome back')));
       final userRole = authProvider.currentUser?.role;
+      print('------------------- $userRole');
 
       if (userRole == 'Admin') {
         Navigator.pushReplacementNamed(context, '/admin_dashboard');
@@ -196,7 +204,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             controller: _passwordController,
                             hint: 'hemant0312',
                             icon: Icons.lock_outline,
-                            isPassword: true,
+                            isPassword: !_isPasswordVisible,
+                            onTogglePassword: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
                             isDark: isDark,
                             primaryBlue: primaryBlue,
                             borderColor: borderColor,
@@ -300,6 +309,7 @@ class _LoginScreenState extends State<LoginScreen> {
     required Color primaryBlue,
     required Color borderColor,
     required Color mutedText,
+    VoidCallback? onTogglePassword,
   }) {
     return TextFormField(
       obscureText: isPassword,
@@ -309,8 +319,14 @@ class _LoginScreenState extends State<LoginScreen> {
         hintText: hint,
         hintStyle: GoogleFonts.montserrat(color: mutedText, fontSize: 14),
         prefixIcon: Icon(icon, color: mutedText),
-        suffixIcon: isPassword
-            ? Icon(Icons.visibility_off, color: mutedText)
+        suffixIcon: isPassword || onTogglePassword != null
+            ? IconButton(
+                icon: Icon(
+                  isPassword ? Icons.visibility_off : Icons.visibility,
+                  color: mutedText,
+                ),
+                onPressed: onTogglePassword,
+              )
             : null,
         contentPadding: const EdgeInsets.symmetric(vertical: 16),
         enabledBorder: OutlineInputBorder(

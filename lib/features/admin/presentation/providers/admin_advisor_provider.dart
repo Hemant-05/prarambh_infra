@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:prarambh_infra/features/admin/data/repositories/admin_advisor_repository.dart';
 import '../../data/models/advisor_application_model.dart';
@@ -7,43 +8,134 @@ class AdminAdvisorProvider extends ChangeNotifier {
 
   AdminAdvisorProvider({required this.repository});
 
-  List<AdvisorApplicationModel> _applications = [];
+  List<AdvisorApplicationModel> _advisors = [];
   bool _isLoading = false;
+  bool _isSaving = false;
   String? _errorMessage;
 
-  List<AdvisorApplicationModel> get applications => _applications;
+  List<AdvisorApplicationModel> get advisors => _advisors;
   bool get isLoading => _isLoading;
+  bool get isSaving => _isSaving;
   String? get errorMessage => _errorMessage;
 
-  Future<void> fetchApplications() async {
+  Future<void> fetchAdvisors() async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      // Fetch from API
-      _applications = await repository.getApplications();
+      _advisors = await repository.getAllAdvisors();
     } catch (e) {
       _errorMessage = e.toString();
-      // FALLBACK MOCK DATA FOR UI TESTING IF API IS NOT READY
-      _applications = [
+      // Fallback mock data for UI testing if API is not ready
+      _advisors = [
         AdvisorApplicationModel(
-            id: '1', name: 'Rajesh Kumar', status: 'Pending', zone: 'North Zone',
-            displayId: '#BK-2023-892', appliedDate: 'Oct 24, 2023', phone: '+91 98765 43210',
-            email: 'rajesh.realty@example.com', location: 'Sector 45, Gurgaon',
-            documents: [
-              KycDocument(id: 'd1', name: 'Aadhar_Front.jpg', type: 'JPG', size: '2.4 MB', url: ''),
-              KycDocument(id: 'd2', name: 'PAN_Card_Final.pdf', type: 'PDF', size: '1.1 MB', url: ''),
-            ]
+          id: '1', name: 'Rajesh Kumar', status: 'Pending', zone: 'North Zone',
+          displayId: '#BK-2023-892', appliedDate: 'Oct 24, 2023', phone: '+91 98765 43210',
+          email: 'rajesh.realty@example.com', location: 'Sector 45, Gurgaon',
+          documents: [
+            KycDocument(id: 'd1', name: 'Aadhar_Front.jpg', type: 'JPG', size: '2.4 MB', url: ''),
+            KycDocument(id: 'd2', name: 'PAN_Card_Final.pdf', type: 'PDF', size: '1.1 MB', url: ''),
+          ],
         ),
         AdvisorApplicationModel(
-            id: '2', name: 'Anita Desai', status: 'Docs Review', zone: 'South Zone',
-            displayId: '#BK-2023-92', appliedDate: 'Oct 23, 2023', phone: '', email: '', location: '', documents: []
+          id: '2', name: 'Anita Desai', status: 'Docs Review', zone: 'South Zone',
+          displayId: '#BK-2023-92', appliedDate: 'Oct 23, 2023',
+          phone: '', email: '', location: '', documents: [],
         ),
       ];
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<bool> approveAdvisor(String advisorId) async {
+    _isSaving = true; notifyListeners();
+    try {
+      final success = await repository.approveAdvisor(advisorId);
+      if (success) await fetchAdvisors();
+      return success;
+    } catch (e) {
+      debugPrint('Approve Advisor Error: $e');
+      return false;
+    } finally {
+      _isSaving = false; notifyListeners();
+    }
+  }
+
+  Future<bool> changeAdvisorStatus(String advisorId, String status, {String? reason}) async {
+    _isSaving = true; notifyListeners();
+    try {
+      final success = await repository.changeAdvisorStatus(advisorId, status, reason: reason);
+      if (success) await fetchAdvisors();
+      return success;
+    } catch (e) {
+      debugPrint('Change Status Error: $e');
+      return false;
+    } finally {
+      _isSaving = false; notifyListeners();
+    }
+  }
+
+  Future<bool> registerAdvisor({
+    required String fullName,
+    required String email,
+    required String phone,
+    required String designation,
+    required String fatherName,
+    required String dob,
+    required String gender,
+    required String nomineeName,
+    required String nomineePhone,
+    required String relationship,
+    required String occupation,
+    required String aadhaar,
+    required String pan,
+    required String bankName,
+    required String accNumber,
+    required String ifsc,
+    required String address,
+    required String city,
+    required String state,
+    required String pincode,
+    required String leaderCode,
+    required File aadharFront,
+    required File aadharBack,
+    required File panPhoto,
+    required File profilePhoto,
+  }) async {
+    _isSaving = true; notifyListeners();
+    try {
+      return await repository.registerAdvisor(
+        fullName: fullName, email: email, phone: phone,
+        designation: designation, fatherName: fatherName, dob: dob,
+        gender: gender, nomineeName: nomineeName, nomineePhone: nomineePhone,
+        relationship: relationship, occupation: occupation, aadhaar: aadhaar,
+        pan: pan, bankName: bankName, accNumber: accNumber, ifsc: ifsc,
+        address: address, city: city, state: state, pincode: pincode,
+        leaderCode: leaderCode, aadharFront: aadharFront, aadharBack: aadharBack,
+        panPhoto: panPhoto, profilePhoto: profilePhoto,
+      );
+    } catch (e) {
+      debugPrint('Register Advisor Error: $e');
+      return false;
+    } finally {
+      _isSaving = false; notifyListeners();
+    }
+  }
+
+  Future<bool> deleteAdvisor(String advisorId) async {
+    _isSaving = true; notifyListeners();
+    try {
+      final success = await repository.deleteAdvisor(advisorId);
+      if (success) _advisors.removeWhere((a) => a.id == advisorId);
+      return success;
+    } catch (e) {
+      debugPrint('Delete Advisor Error: $e');
+      return false;
+    } finally {
+      _isSaving = false; notifyListeners();
     }
   }
 }

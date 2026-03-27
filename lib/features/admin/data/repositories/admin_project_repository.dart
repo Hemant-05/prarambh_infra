@@ -2,39 +2,35 @@ import 'dart:convert';
 import 'dart:io';
 import '../../../../data/datasources/remote/api_client.dart';
 import '../models/project_model.dart';
-import '../models/unit_model.dart'; // Import UnitModel
+import '../models/unit_model.dart';
 
 class AdminProjectRepository {
   final ApiClient apiClient;
   AdminProjectRepository({required this.apiClient});
 
-  // Helper function to handle the String parsing issue globally
   dynamic _parseResponse(dynamic response) {
-    if (response is String) {
-      return jsonDecode(response);
-    }
+    if (response is String) return jsonDecode(response);
     return response;
   }
 
   // --- PROJECTS ---
+
   Future<List<ProjectModel>> getAllProjects() async {
     try {
       var response = await apiClient.getAllProjects();
       response = _parseResponse(response);
-
       if (response['status'] == 'success') {
-        final List data = response['data']['projects'] ?? [];
+        final List data = response['data']['projects'] ?? response['data'] ?? [];
         return data.map((json) => ProjectModel.fromJson(json)).toList();
       }
       throw Exception(response['message'] ?? 'Failed to load projects');
     } catch (e) { rethrow; }
   }
 
-  Future<ProjectModel> getProjectDetails(int projectId) async {
+  Future<ProjectModel> getProjectDetails(String projectId) async {
     try {
-      var response = await apiClient.getProjectDetails(projectId);
+      var response = await apiClient.getSingleProject(projectId);
       response = _parseResponse(response);
-
       if (response['status'] == 'success') {
         return ProjectModel.fromJson(response['data']);
       }
@@ -43,50 +39,89 @@ class AdminProjectRepository {
   }
 
   Future<bool> addProject({
-    required String projectName, required String developerName, required String city,
-    required String fullAddress, required String status, required String projectType,
-    required String constructionStatus, required String marketValue, required String totalPlots,
-    required String buildArea, required String reraNumber, required String location,
-    required String ratePerSqft, required String budgetRange, required String description,
-    required String reraApproved, required String amenities, required String specialties,
-    File? video, File? brochure, required List<File> images,
+    required String projectName,
+    required String developerName,
+    required String description,
+    required String reraNumber,
+    required String projectType,
+    required String constructionStatus,
+    required String fullAddress,
+    required String location,
+    required String city,
+    required String marketValue,
+    required String totalPlots,
+    required String buildArea,
+    required String ratePerSqft,
+    required String budgetRange,
+    required String amenities,
+    required String specialties,
+    File? videoFile,
+    File? brochureFile,
+    required List<File> projectImages,
   }) async {
     try {
       var response = await apiClient.addProject(
-          projectName, developerName, city, fullAddress, status, projectType,
-          constructionStatus, marketValue, totalPlots, buildArea, reraNumber,
-          location, ratePerSqft, budgetRange, description, reraApproved,
-          amenities, specialties, video, brochure, images
+        projectName, developerName, description, reraNumber, projectType,
+        constructionStatus, fullAddress, location, city, marketValue,
+        totalPlots, buildArea, ratePerSqft, budgetRange, amenities,
+        specialties, videoFile, brochureFile, projectImages,
       );
       response = _parseResponse(response);
       return response['status'] == 'success';
     } catch (e) { rethrow; }
   }
 
-  Future<bool> updateProject(Map<String, dynamic> data) async {
+  Future<bool> updateProject({
+    required String id,
+    String? projectName,
+    String? developerName,
+    String? description,
+    String? projectType,
+    String? constructionStatus,
+    String? fullAddress,
+    String? location,
+    String? city,
+    String? marketValue,
+    String? totalPlots,
+    String? buildArea,
+    String? ratePerSqft,
+    String? specialties,
+    String? amenities,
+    String? budgetRange,
+    String? reraNumber,
+    String? status,
+    File? videoFile,
+    File? brochureFile,
+    List<File>? projectImages,
+  }) async {
     try {
-      var response = await apiClient.updateProject(data);
+      var response = await apiClient.updateProject(
+        id, projectName, developerName, description, projectType,
+        constructionStatus, fullAddress, location, city, marketValue,
+        totalPlots, buildArea, ratePerSqft, specialties, amenities,
+        budgetRange, reraNumber, status, videoFile, brochureFile, projectImages,
+      );
       response = _parseResponse(response);
       return response['status'] == 'success';
     } catch (e) { rethrow; }
   }
 
-  Future<bool> deleteProject(int projectId) async {
+  Future<bool> deleteProject(String projectId) async {
     try {
-      var response = await apiClient.deleteProject({"project_id": projectId});
+      var response = await apiClient.deleteProject(projectId);
       response = _parseResponse(response);
       return response['status'] == 'success';
     } catch (e) { rethrow; }
   }
 
   // --- UNITS ---
-  Future<List<UnitModel>> getUnits(int projectId) async {
+
+  Future<List<UnitModel>> getUnits({String? projectId}) async {
     try {
       var response = await apiClient.getUnits(projectId);
       response = _parseResponse(response);
-
       if (response['status'] == 'success') {
-        final List data = response['data']['units'] ?? [];
+        final List data = response['data']['units'] ?? response['data'] ?? [];
         return data.map((json) => UnitModel.fromJson(json)).toList();
       }
       throw Exception(response['message'] ?? 'Failed to load units');
@@ -101,17 +136,25 @@ class AdminProjectRepository {
     } catch (e) { rethrow; }
   }
 
-  Future<bool> updateUnit(Map<String, dynamic> data) async {
+  Future<bool> addMultipleUnits(Map<String, dynamic> data) async {
     try {
-      var response = await apiClient.updateUnit(data);
+      var response = await apiClient.addMultipleUnits(data);
       response = _parseResponse(response);
       return response['status'] == 'success';
     } catch (e) { rethrow; }
   }
 
-  Future<bool> deleteUnit(int unitId) async {
+  Future<bool> updateUnit(String unitId, Map<String, dynamic> data) async {
     try {
-      var response = await apiClient.deleteUnit({"unit_id": unitId});
+      var response = await apiClient.updateUnit(unitId, data);
+      response = _parseResponse(response);
+      return response['status'] == 'success';
+    } catch (e) { rethrow; }
+  }
+
+  Future<bool> deleteUnit(String unitId) async {
+    try {
+      var response = await apiClient.deleteUnit(unitId);
       response = _parseResponse(response);
       return response['status'] == 'success';
     } catch (e) { rethrow; }

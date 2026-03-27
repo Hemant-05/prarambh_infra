@@ -10,7 +10,7 @@ import '../../data/models/project_model.dart';
 import 'add_project_screen.dart';
 
 class AdminProjectsScreen extends StatefulWidget {
-  const AdminProjectsScreen({Key? key}) : super(key: key);
+  const AdminProjectsScreen({super.key});
 
   @override
   State<AdminProjectsScreen> createState() => _AdminProjectsScreenState();
@@ -32,68 +32,155 @@ class _AdminProjectsScreenState extends State<AdminProjectsScreen> {
     final provider = context.watch<AdminProjectProvider>();
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
+      backgroundColor: isDark
+          ? const Color(0xFF121212)
+          : const Color(0xFFF5F7FA),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddProjectScreen())),
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AddProjectScreen()),
+        ),
         backgroundColor: primaryBlue,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: Text('Add Project', style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold)),
+        label: Text(
+          'Add Project',
+          style: GoogleFonts.montserrat(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
-        padding: const EdgeInsets.all(20),
-        physics: const BouncingScrollPhysics(),
-        itemCount: provider.projects.length,
-        itemBuilder: (context, index) {
-          return _buildProjectCard(provider.projects[index], primaryBlue, isDark);
-        },
-      ),
+              padding: const EdgeInsets.all(20),
+              physics: const BouncingScrollPhysics(),
+              itemCount: provider.projects.length,
+              itemBuilder: (context, index) {
+                return _buildProjectCard(
+                  provider.projects[index],
+                  primaryBlue,
+                  isDark,
+                );
+              },
+            ),
     );
   }
 
-  Widget _buildProjectCard(ProjectModel project, Color primaryBlue, bool isDark) {
+  Widget _buildProjectCard(
+    ProjectModel project,
+    Color primaryBlue,
+    bool isDark,
+  ) {
     final cardColor = AppColors.getCardColor(context);
     final textColor = isDark ? Colors.white : Colors.black87;
 
     Color statusColor;
     if (project.status.contains('RERA')) {
       statusColor = Colors.green;
-    } else if (project.status.contains('FEW')) statusColor = Colors.orange;
-    else statusColor = Colors.deepOrange;
+    } else if (project.status.contains('FEW'))
+      statusColor = Colors.orange;
+    else
+      statusColor = Colors.deepOrange;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         children: [
           // Image Header
           Stack(
             children: [
               Container(
-                height: 180, width: double.infinity,
+                height: 180,
+                width: double.infinity,
                 decoration: const BoxDecoration(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                  image: DecorationImage(image: AssetImage(logo), fit: BoxFit.cover), // Replace with NetworkImage(project.imageUrl)
+                  image: DecorationImage(
+                    image: AssetImage(logo),
+                    fit: BoxFit.cover,
+                  ), // Replace with NetworkImage(project.imageUrl)
                 ),
               ),
               Container(
-                height: 180, decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black.withOpacity(0.8)]),
+                height: 180,
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
+                  ),
+                ),
               ),
-              ),
-              Positioned(top: 16, right: 16, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: statusColor, borderRadius: BorderRadius.circular(4)), child: Text(project.status, style: GoogleFonts.montserrat(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)))),
               Positioned(
-                bottom: 16, left: 16,
+                top: 16,
+                right: 16,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    project.status,
+                    style: GoogleFonts.montserrat(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 16,
+                left: 16,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(project.projectName, style: GoogleFonts.montserrat(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                    Row(children: [const Icon(Icons.location_on, color: Colors.white70, size: 14), const SizedBox(width: 4), Text(project.locationMapUrl, style: GoogleFonts.montserrat(color: Colors.white70, fontSize: 12))]),
+                    Text(
+                      project.projectName,
+                      style: GoogleFonts.montserrat(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on,
+                          color: Colors.white70,
+                          size: 14,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          project.locationMapUrl,
+                          style: GoogleFonts.montserrat(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
 
@@ -103,9 +190,21 @@ class _AdminProjectsScreenState extends State<AdminProjectsScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatColumn('Area', '${project.buildArea} sqft', primaryBlue),
-                _buildStatColumn('Units', project.totalPlots.toString(), primaryBlue),
-                _buildStatColumn('Rate', '${project.ratePerSqft.toString()}/sqft', primaryBlue),
+                _buildStatColumn(
+                  'Area',
+                  '${project.buildArea} sqft',
+                  primaryBlue,
+                ),
+                _buildStatColumn(
+                  'Units',
+                  project.totalPlots.toString(),
+                  primaryBlue,
+                ),
+                _buildStatColumn(
+                  'Rate',
+                  '${project.ratePerSqft.toString()}/sqft',
+                  primaryBlue,
+                ),
               ],
             ),
           ),
@@ -117,45 +216,96 @@ class _AdminProjectsScreenState extends State<AdminProjectsScreen> {
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProjectDetailsAdminScreen(project: project))),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[50], elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-                    child: Text('Details', style: GoogleFonts.montserrat(color: primaryBlue, fontWeight: FontWeight.bold, fontSize: 13)),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            ProjectDetailsAdminScreen(project: project),
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[50],
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      'Details',
+                      style: GoogleFonts.montserrat(
+                        color: primaryBlue,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProjectInventoryScreen(project: project))),
-                    style: OutlinedButton.styleFrom(side: BorderSide(color: primaryBlue), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-                    child: Text('Inventory', style: GoogleFonts.montserrat(color: primaryBlue, fontWeight: FontWeight.bold, fontSize: 13)),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            ProjectInventoryScreen(project: project),
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: primaryBlue),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      'Inventory',
+                      style: GoogleFonts.montserrat(
+                        color: primaryBlue,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 // NEW DELETE BUTTON
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.redAccent,
+                  ),
                   onPressed: () async {
                     final provider = context.read<AdminProjectProvider>();
-                    bool confirm = await showDialog(
-                      context: context,
-                      builder: (c) => AlertDialog(
-                        title: Text('Delete ${project.projectName}?'),
-                        actions: [
-                          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-                          TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
-                        ],
-                      ),
-                    ) ?? false;
+                    bool confirm =
+                        await showDialog(
+                          context: context,
+                          builder: (c) => AlertDialog(
+                            title: Text('Delete ${project.projectName}?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(c, false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(c, true),
+                                child: const Text(
+                                  'Delete',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ) ??
+                        false;
 
                     if (confirm) {
-                      await provider.removeProject(project.id);
+                      await provider.removeProject(project.id.toString());
                       // Provider automatically updates the UI
                     }
                   },
-                )
+                ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -164,9 +314,19 @@ class _AdminProjectsScreenState extends State<AdminProjectsScreen> {
   Widget _buildStatColumn(String title, String value, Color primaryBlue) {
     return Column(
       children: [
-        Text(title, style: GoogleFonts.montserrat(fontSize: 11, color: Colors.grey[600])),
+        Text(
+          title,
+          style: GoogleFonts.montserrat(fontSize: 11, color: Colors.grey[600]),
+        ),
         const SizedBox(height: 4),
-        Text(value, style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold, color: primaryBlue)),
+        Text(
+          value,
+          style: GoogleFonts.montserrat(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: primaryBlue,
+          ),
+        ),
       ],
     );
   }

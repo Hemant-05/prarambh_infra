@@ -7,7 +7,7 @@ import '../providers/admin_leaderboard_provider.dart';
 import '../../data/models/advisor_rank_model.dart';
 
 class LeaderboardScreen extends StatefulWidget {
-  const LeaderboardScreen({Key? key}) : super(key: key);
+  const LeaderboardScreen({super.key});
 
   @override
   State<LeaderboardScreen> createState() => _LeaderboardScreenState();
@@ -18,7 +18,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AdminLeaderboardProvider>().fetchLeaderboard('sales');
+      context.read<AdminLeaderboardProvider>().fetchLeaderboard();
     });
   }
 
@@ -41,14 +41,21 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         ),
         title: Text(
           'ADVISOR LEADERBOARD',
-          style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+          style: GoogleFonts.montserrat(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
         ),
       ),
       body: Container(
         margin: const EdgeInsets.only(top: 10),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: const BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(30)),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
+          ),
         ),
         child: Column(
           children: [
@@ -76,53 +83,107 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               child: provider.isLoading
                   ? Center(child: CircularProgressIndicator(color: primaryBlue))
                   : RefreshIndicator(
-                color: primaryBlue,
-                onRefresh: () => provider.fetchLeaderboard(provider.currentTab.toLowerCase().contains('sales') ? 'sales' : 'recruitment'),
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Top 3', style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
-                      const SizedBox(height: 20),
-
-                      // Podium Layout
-                      if (provider.topThree.isNotEmpty)
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisAlignment: MainAxisAlignment.center,
+                      color: primaryBlue,
+                      onRefresh: () => provider.fetchLeaderboard(),
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(
+                          parent: BouncingScrollPhysics(),
+                        ),
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (provider.topThree.length >= 2)
-                              Expanded(child: _buildPodiumProfile(provider.topThree[1], 2, primaryBlue, isDark)),
+                            Text(
+                              'Top 3',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Podium Layout
                             if (provider.topThree.isNotEmpty)
-                              Expanded(child: _buildPodiumProfile(provider.topThree[0], 1, primaryBlue, isDark, isCenter: true)),
-                            if (provider.topThree.length >= 3)
-                              Expanded(child: _buildPodiumProfile(provider.topThree[2], 3, primaryBlue, isDark)),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  if (provider.topThree.length >= 2)
+                                    Expanded(
+                                      child: _buildPodiumProfile(
+                                        provider.topThree[1],
+                                        2,
+                                        primaryBlue,
+                                        isDark,
+                                      ),
+                                    ),
+                                  if (provider.topThree.isNotEmpty)
+                                    Expanded(
+                                      child: _buildPodiumProfile(
+                                        provider.topThree[0],
+                                        1,
+                                        primaryBlue,
+                                        isDark,
+                                        isCenter: true,
+                                      ),
+                                    ),
+                                  if (provider.topThree.length >= 3)
+                                    Expanded(
+                                      child: _buildPodiumProfile(
+                                        provider.topThree[2],
+                                        3,
+                                        primaryBlue,
+                                        isDark,
+                                      ),
+                                    ),
+                                ],
+                              ),
+
+                            const SizedBox(height: 30),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'All Advisors',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark
+                                        ? Colors.white
+                                        : Colors.black87,
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      'Rank ',
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 14,
+                                        color: primaryBlue,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.arrow_downward,
+                                      size: 16,
+                                      color: primaryBlue,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Remaining List
+                            ...provider.remainingAdvisors.map(
+                              (advisor) =>
+                                  _buildListItem(advisor, primaryBlue, isDark),
+                            ),
                           ],
                         ),
-
-                      const SizedBox(height: 30),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('All Advisors', style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
-                          Row(
-                            children: [
-                              Text('Rank ', style: GoogleFonts.montserrat(fontSize: 14, color: primaryBlue, fontWeight: FontWeight.w600)),
-                              Icon(Icons.arrow_downward, size: 16, color: primaryBlue),
-                            ],
-                          ),
-                        ],
                       ),
-                      const SizedBox(height: 16),
-
-                      // Remaining List
-                      ...provider.remainingAdvisors.map((advisor) => _buildListItem(advisor, primaryBlue, isDark)).toList(),
-                    ],
-                  ),
-                ),
-              ),
+                    ),
             ),
           ],
         ),
@@ -130,7 +191,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     );
   }
 
-  Widget _buildTab(BuildContext context, String title, AdminLeaderboardProvider provider, Color primaryBlue) {
+  Widget _buildTab(
+    BuildContext context,
+    String title,
+    AdminLeaderboardProvider provider,
+    Color primaryBlue,
+  ) {
     final isSelected = provider.currentTab == title;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -146,7 +212,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           child: Text(
             title,
             style: GoogleFonts.montserrat(
-              color: isSelected ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600]),
+              color: isSelected
+                  ? Colors.white
+                  : (isDark ? Colors.grey[400] : Colors.grey[600]),
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             ),
           ),
@@ -155,7 +223,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     );
   }
 
-  Widget _buildPodiumProfile(AdvisorRankModel advisor, int rank, Color primaryBlue, bool isDark, {bool isCenter = false}) {
+  Widget _buildPodiumProfile(
+    AdvisorRankModel advisor,
+    int rank,
+    Color primaryBlue,
+    bool isDark, {
+    bool isCenter = false,
+  }) {
     final double avatarSize = isCenter ? 45 : 35;
     final textColor = isDark ? Colors.white : Colors.black87;
 
@@ -166,15 +240,21 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           clipBehavior: Clip.none,
           children: [
             Container(
-              padding: EdgeInsets.all(isCenter ? 3 : 0), // Outer ring for Rank 1
+              padding: EdgeInsets.all(
+                isCenter ? 3 : 0,
+              ), // Outer ring for Rank 1
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: isCenter ? Border.all(color: primaryBlue, width: 2) : null,
+                border: isCenter
+                    ? Border.all(color: primaryBlue, width: 2)
+                    : null,
               ),
               child: CircleAvatar(
                 radius: avatarSize,
                 backgroundColor: Colors.grey[300],
-                backgroundImage: const AssetImage(logo), // Replace with actual avatar
+                backgroundImage: const AssetImage(
+                  logo,
+                ), // Replace with actual avatar
               ),
             ),
             Positioned(
@@ -185,29 +265,73 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 decoration: BoxDecoration(
                   color: primaryBlue,
                   shape: BoxShape.circle,
-                  border: Border.all(color: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA), width: 2),
+                  border: Border.all(
+                    color: isDark
+                        ? const Color(0xFF121212)
+                        : const Color(0xFFF5F7FA),
+                    width: 2,
+                  ),
                 ),
-                child: Text('$rank', style: GoogleFonts.montserrat(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                child: Text(
+                  '$rank',
+                  style: GoogleFonts.montserrat(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-            )
+            ),
           ],
         ),
         SizedBox(height: isCenter ? 12 : 8),
-        Text(advisor.name, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 14, color: textColor), textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
-        Text(advisor.primaryValue, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 16, color: primaryBlue)),
+        Text(
+          advisor.name,
+          style: GoogleFonts.montserrat(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: textColor,
+          ),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        Text(
+          advisor.primaryValue,
+          style: GoogleFonts.montserrat(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: primaryBlue,
+          ),
+        ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(advisor.isTrendPositive ? Icons.arrow_outward : Icons.south_east, size: 10, color: Colors.grey[600]),
-            Text(advisor.trend, style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey[600])),
+            Icon(
+              advisor.isTrendPositive ? Icons.arrow_outward : Icons.south_east,
+              size: 10,
+              color: Colors.grey[600],
+            ),
+            Text(
+              advisor.trend,
+              style: GoogleFonts.montserrat(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+            ),
           ],
         ),
-        if (isCenter) const SizedBox(height: 10), // Push the center one up slightly
+        if (isCenter)
+          const SizedBox(height: 10), // Push the center one up slightly
       ],
     );
   }
 
-  Widget _buildListItem(AdvisorRankModel advisor, Color primaryBlue, bool isDark) {
+  Widget _buildListItem(
+    AdvisorRankModel advisor,
+    Color primaryBlue,
+    bool isDark,
+  ) {
     final cardColor = AppColors.getCardColor(context);
     final textColor = isDark ? Colors.white : Colors.black87;
     final trendColor = advisor.isTrendPositive ? Colors.green : Colors.red;
@@ -218,23 +342,48 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          SizedBox(width: 20, child: Text('${advisor.rank}', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 16, color: textColor))),
+          SizedBox(
+            width: 20,
+            child: Text(
+              '${advisor.rank}',
+              style: GoogleFonts.montserrat(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: textColor,
+              ),
+            ),
+          ),
           const SizedBox(width: 12),
           CircleAvatar(
             radius: 20,
             backgroundColor: Colors.grey[300],
-            backgroundImage: const AssetImage(logo), // Replace with actual avatar
+            backgroundImage: const AssetImage(
+              logo,
+            ), // Replace with actual avatar
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(advisor.name, style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, fontSize: 14, color: textColor)),
+                Text(
+                  advisor.name,
+                  style: GoogleFonts.montserrat(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: textColor,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
@@ -252,11 +401,31 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(advisor.primaryValue, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 14, color: textColor)),
-              Text(advisor.secondaryValue, style: GoogleFonts.montserrat(fontSize: 11, color: Colors.grey[600])),
-              Text('${advisor.isTrendPositive ? '+' : '-'}${advisor.trend}', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: trendColor)),
+              Text(
+                advisor.primaryValue,
+                style: GoogleFonts.montserrat(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: textColor,
+                ),
+              ),
+              Text(
+                advisor.secondaryValue,
+                style: GoogleFonts.montserrat(
+                  fontSize: 11,
+                  color: Colors.grey[600],
+                ),
+              ),
+              Text(
+                '${advisor.isTrendPositive ? '+' : '-'}${advisor.trend}',
+                style: GoogleFonts.montserrat(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: trendColor,
+                ),
+              ),
             ],
-          )
+          ),
         ],
       ),
     );

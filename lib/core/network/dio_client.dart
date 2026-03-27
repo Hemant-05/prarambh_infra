@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:prarambh_infra/core/constant/cons_strings.dart';
@@ -22,21 +20,26 @@ class DioClient {
 
     // Add standard logging only in debug mode
     if (kDebugMode) {
-      dio.interceptors.add(LogInterceptor(
-        request: true,
-        requestHeader: true,
-        requestBody: true,
-        responseHeader: true,
-        responseBody: true,
-        error: true,
-      ));
+      dio.interceptors.add(
+        LogInterceptor(
+          request: true,
+          requestHeader: true,
+          requestBody: true,
+          responseHeader: true,
+          responseBody: true,
+          error: true,
+        ),
+      );
     }
   }
 }
 
 class AppInterceptor extends Interceptor {
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     // TODO: Fetch your saved Auth Token from local storage (SharedPreferences/SecureStorage)
     // String? token = await getAuthToken();
     // if (token != null) {
@@ -66,7 +69,9 @@ class AppInterceptor extends Interceptor {
         debugPrint("Timeout Error: ${err.message}");
         break;
       case DioExceptionType.badResponse:
-        debugPrint("Bad Response: ${err.response?.statusCode} - ${err.response?.data}");
+        debugPrint(
+          "Bad Response: ${err.response?.statusCode} - ${err.response?.data}",
+        );
         // e.g., Handle 401 Unauthorized by logging the user out globally
         if (err.response?.statusCode == 401) {
           // trigger logout logic

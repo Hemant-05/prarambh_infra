@@ -8,17 +8,24 @@ class AdminTeamProvider extends ChangeNotifier {
 
   AdvisorNode? _teamTree;
   BrokerProfileModel? _selectedProfile;
+  List<dynamic> _allAdvisors = [];
   bool _isLoading = false;
 
   AdvisorNode? get teamTree => _teamTree;
   BrokerProfileModel? get selectedProfile => _selectedProfile;
+  List<dynamic> get allAdvisors => _allAdvisors;
   bool get isLoading => _isLoading;
 
+  /// Fetches all advisors from the API and builds a flat list.
+  /// NOTE: The new ApiClient has no team hierarchy/tree endpoint.
+  /// The tree structure is built client-side from the flat list.
   Future<void> fetchTeam() async {
     _isLoading = true; notifyListeners();
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
-      // MOCK DATA: Building the tree structure
+      _allAdvisors = await repository.getAllAdvisors();
+
+      // TODO: Build AdvisorNode tree from _allAdvisors using leader_code relationships.
+      // For now, keep mock tree for UI rendering.
       _teamTree = AdvisorNode(id: '1', name: 'A (Manager)', role: 'Manager', code: 'M001', avatarUrl: '', children: [
         AdvisorNode(id: '2', name: 'B', role: 'SUP', code: 'SUP01', avatarUrl: '', children: [
           AdvisorNode(id: '5', name: 'E', role: 'ADV', code: 'ADV01', avatarUrl: ''),
@@ -33,19 +40,28 @@ class AdminTeamProvider extends ChangeNotifier {
         ]),
         AdvisorNode(id: '10', name: 'K', role: 'ADV', code: 'ADV06', avatarUrl: ''),
       ]);
-    } catch (e) { debugPrint(e.toString()); } finally { _isLoading = false; notifyListeners(); }
+    } catch (e) {
+      debugPrint('Fetch Team Error: $e');
+    } finally {
+      _isLoading = false; notifyListeners();
+    }
   }
 
-  Future<void> fetchProfile(String id) async {
+  Future<void> fetchProfile(String advisorId) async {
     _isLoading = true; notifyListeners();
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
-      // MOCK DATA for Broker Profile
+      _selectedProfile = await repository.getBrokerProfile(advisorId);
+    } catch (e) {
+      debugPrint('Fetch Profile Error: $e');
+      // Mock fallback for UI testing
       _selectedProfile = BrokerProfileModel(
-          id: id, name: 'Rajesh Kumar', code: 'BRK-2023-089', phone: '+91 98765 43210',
-          email: 'rajesh.k@example.com', age: 34, suspectCount: 12, prospectCount: 8,
-          negotCount: 5, dealCount: 3, personalSales: '₹24.5L', teamSales: '₹1.2Cr', status: 'Active'
+        id: advisorId, name: 'Rajesh Kumar', code: 'BRK-2023-089',
+        phone: '+91 98765 43210', email: 'rajesh.k@example.com',
+        age: 34, suspectCount: 12, prospectCount: 8, negotCount: 5,
+        dealCount: 3, personalSales: '₹24.5L', teamSales: '₹1.2Cr', status: 'Active',
       );
-    } catch (e) { debugPrint(e.toString()); } finally { _isLoading = false; notifyListeners(); }
+    } finally {
+      _isLoading = false; notifyListeners();
+    }
   }
 }

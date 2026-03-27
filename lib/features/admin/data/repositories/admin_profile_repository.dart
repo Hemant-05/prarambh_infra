@@ -6,10 +6,9 @@ class AdminProfileRepository {
 
   AdminProfileRepository({required this.apiClient});
 
-  Future<AdminProfileModel> getProfile() async {
+  Future<AdminProfileModel> getProfile(String userId) async {
     try {
-      // final response = await apiClient.getAdminProfile();
-      final response = {};
+      final response = await apiClient.getSingleUser(userId);
       if (response['status'] == 'success') {
         return AdminProfileModel.fromJson(response['data']);
       }
@@ -17,21 +16,16 @@ class AdminProfileRepository {
     } catch (e) { rethrow; }
   }
 
-  Future<bool> updateProfile(Map<String, dynamic> data) async {
+  Future<bool> updateProfile(String userId, Map<String, dynamic> data) async {
     try {
-      // final response = await apiClient.updateAdminProfile(data);
-      final response = {};
+      final response = await apiClient.updateUserProfile(userId, data);
       return response['status'] == 'success';
     } catch (e) { rethrow; }
   }
 
-  Future<bool> changePassword(String oldPassword, String newPassword) async {
+  Future<bool> deleteUser(String userId) async {
     try {
-      /*final response = await apiClient.changeAdminPassword({
-        "old_password": oldPassword,
-        "new_password": newPassword,
-      });*/
-      final response = {};
+      final response = await apiClient.deleteUser(userId);
       return response['status'] == 'success';
     } catch (e) { rethrow; }
   }

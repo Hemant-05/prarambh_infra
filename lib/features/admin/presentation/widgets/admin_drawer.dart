@@ -6,7 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class AdminDrawer extends StatelessWidget {
-  const AdminDrawer({Key? key}) : super(key: key);
+  const AdminDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +23,7 @@ class AdminDrawer extends StatelessWidget {
           CircleAvatar(
             radius: 40,
             backgroundImage: const AssetImage(
-              logo
+              logo,
             ), // Replace with actual profile image
             backgroundColor: Colors.grey[200],
           ),
@@ -54,7 +54,7 @@ class AdminDrawer extends StatelessWidget {
               physics: const BouncingScrollPhysics(),
               children: [
                 _buildDrawerItem(
-                  icon : Icons.description_outlined,
+                  icon: Icons.description_outlined,
                   title: 'Document Management',
                   textColor: textColor,
                   onTap: () {
@@ -62,23 +62,23 @@ class AdminDrawer extends StatelessWidget {
                   },
                 ),
                 _buildDrawerItem(
-                  icon : Icons.emoji_events_outlined,
-                  title : 'Contests',
-                  textColor : textColor,
+                  icon: Icons.emoji_events_outlined,
+                  title: 'Contests',
+                  textColor: textColor,
                   onTap: () {
                     Navigator.pushNamed(context, '/contests_list');
                   },
                 ),
                 _buildDrawerItem(
                   icon: Icons.leaderboard_outlined,
-                  title : 'Leader board',
+                  title: 'Leader board',
                   textColor: textColor,
-                  onTap: (){
+                  onTap: () {
                     Navigator.pushNamed(context, '/leaderboard');
-                  }
+                  },
                 ),
                 _buildDrawerItem(
-                  icon : Icons.co_present_outlined,
+                  icon: Icons.co_present_outlined,
                   title: 'Meeting & Attendance',
                   textColor: textColor,
                   onTap: () {

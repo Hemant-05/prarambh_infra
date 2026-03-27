@@ -6,8 +6,7 @@ import 'project_inventory_screen.dart';
 
 class ProjectDetailsAdminScreen extends StatelessWidget {
   final ProjectModel project;
-  const ProjectDetailsAdminScreen({Key? key, required this.project})
-    : super(key: key);
+  const ProjectDetailsAdminScreen({super.key, required this.project});
 
   @override
   Widget build(BuildContext context) {
@@ -43,12 +42,7 @@ class ProjectDetailsAdminScreen extends StatelessWidget {
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
-                children: [
-                  Image.network(
-                    project.images[0],
-                    fit: BoxFit.cover,
-                  ),
-                ],
+                children: [Image.network(project.images[0], fit: BoxFit.cover)],
               ),
             ),
           ),
@@ -180,7 +174,12 @@ class ProjectDetailsAdminScreen extends StatelessWidget {
                   // Stats Row
                   Row(
                     children: [
-                      Expanded(child: _buildStatBox('Total Area', '${project.buildArea}sq.ft')),
+                      Expanded(
+                        child: _buildStatBox(
+                          'Total Area',
+                          '${project.buildArea}sq.ft',
+                        ),
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: _buildStatBox(

@@ -6,15 +6,23 @@ class AdminLeaderboardRepository {
 
   AdminLeaderboardRepository({required this.apiClient});
 
-  Future<List<AdvisorRankModel>> getLeaderboard(String type) async {
+  Future<List<AdvisorRankModel>> getLeaderboard() async {
     try {
-      // final response = await apiClient.getLeaderboard(type);
-      final response = {};
+      final response = await apiClient.getLeaderboard();
       if (response['status'] == 'success') {
         final List data = response['data'] ?? [];
         return data.map((json) => AdvisorRankModel.fromJson(json)).toList();
       }
       throw Exception(response['message'] ?? 'Failed to load leaderboard');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<bool> evaluateLevel(String advisorId) async {
+    try {
+      final response = await apiClient.evaluateLevel(advisorId);
+      return response['status'] == 'success';
     } catch (e) {
       rethrow;
     }

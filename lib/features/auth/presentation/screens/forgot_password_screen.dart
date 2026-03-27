@@ -7,7 +7,7 @@ import 'package:prarambh_infra/features/auth/presentation/providers/auth_provide
 import '../../../../core/widgets/auth_background.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({Key? key}) : super(key: key);
+  const ForgotPasswordScreen({super.key});
 
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
@@ -18,6 +18,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _otpController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
 
   @override
   void initState() {
@@ -38,7 +41,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _handleAction() async {
@@ -51,26 +56,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
       final success = await authProvider.requestOtp(email);
       if (!success && mounted) _showError(authProvider.errorMessage ?? 'Error');
-    }
-    else if (step == ForgotPasswordStep.otp) {
+    } else if (step == ForgotPasswordStep.otp) {
       final otp = _otpController.text.trim();
       if (otp.isEmpty) return _showError('Please enter the OTP');
 
       final success = await authProvider.verifyOtp(otp);
-      if (!success && mounted) _showError(authProvider.errorMessage ?? 'Invalid OTP');
-    }
-    else if (step == ForgotPasswordStep.reset) {
+      if (!success && mounted)
+        _showError(authProvider.errorMessage ?? 'Invalid OTP');
+    } else if (step == ForgotPasswordStep.reset) {
       final password = _passwordController.text.trim();
       final confirm = _confirmPasswordController.text.trim();
 
-      if (password.isEmpty || confirm.isEmpty) return _showError('Please fill all fields');
+      if (password.isEmpty || confirm.isEmpty)
+        return _showError('Please fill all fields');
       if (password != confirm) return _showError('Passwords do not match');
-      if (password.length < 6) return _showError('Password must be at least 6 characters');
+      if (password.length < 6)
+        return _showError('Password must be at least 6 characters');
 
-      final success = await authProvider.setNewPassword(password);
+      final success = await authProvider.setNewPassword(password,_otpController.text.trim());
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password reset successfully. Please login.')),
+          const SnackBar(
+            content: Text('Password reset successfully. Please login.'),
+          ),
         );
         Navigator.pop(context); // Go back to Login Screen
       } else if (mounted) {
@@ -85,7 +93,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final cardColor = AppColors.getCardColor(context);
     final primaryBlue = AppColors.getPrimaryBlue(context);
     final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
-    final mutedText = isDark ? AppColors.textMutedDark : AppColors.textMutedLight;
+    final mutedText = isDark
+        ? AppColors.textMutedDark
+        : AppColors.textMutedLight;
 
     // Watch the provider to rebuild UI when step changes
     final authState = context.watch<AuthProvider>();
@@ -132,9 +142,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            step == ForgotPasswordStep.email ? 'Reset Password' :
-                            step == ForgotPasswordStep.otp ? 'Enter Verification Code' :
-                            'Create New Password',
+                            step == ForgotPasswordStep.email
+                                ? 'Reset Password'
+                                : step == ForgotPasswordStep.otp
+                                ? 'Enter Verification Code'
+                                : 'Create New Password',
                             style: GoogleFonts.montserrat(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -144,10 +156,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            step == ForgotPasswordStep.email ? 'Enter your email to receive an OTP.' :
-                            step == ForgotPasswordStep.otp ? 'We sent a code to your email.' :
-                            'Your new password must be different from previous used passwords.',
-                            style: GoogleFonts.montserrat(fontSize: 12, color: mutedText),
+                            step == ForgotPasswordStep.email
+                                ? 'Enter your email to receive an OTP.'
+                                : step == ForgotPasswordStep.otp
+                                ? 'We sent a code to your email.'
+                                : 'Your new password must be different from previous used passwords.',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 12,
+                              color: mutedText,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 24),
@@ -183,7 +200,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               controller: _passwordController,
                               hint: 'Enter new password',
                               icon: Icons.lock_outline,
-                              isPassword: true,
+                              isPassword: !_isPasswordVisible,
+                              onTogglePassword: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
                               primaryBlue: primaryBlue,
                               borderColor: borderColor,
                               mutedText: mutedText,
@@ -195,7 +213,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               controller: _confirmPasswordController,
                               hint: 'Re-enter password',
                               icon: Icons.lock_outline,
-                              isPassword: true,
+                              isPassword: !_isConfirmPasswordVisible,
+                              onTogglePassword: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
                               primaryBlue: primaryBlue,
                               borderColor: borderColor,
                               mutedText: mutedText,
@@ -204,7 +223,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                           const SizedBox(height: 24),
                           ElevatedButton(
-                            onPressed: authState.isLoading ? null : _handleAction,
+                            onPressed: authState.isLoading
+                                ? null
+                                : _handleAction,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: primaryBlue,
                               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -214,20 +235,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             ),
                             child: authState.isLoading
                                 ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                            )
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
                                 : Text(
-                              step == ForgotPasswordStep.email ? 'Send OTP' :
-                              step == ForgotPasswordStep.otp ? 'Verify OTP' :
-                              'Reset Password',
-                              style: GoogleFonts.montserrat(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
+                                    step == ForgotPasswordStep.email
+                                        ? 'Send OTP'
+                                        : step == ForgotPasswordStep.otp
+                                        ? 'Verify OTP'
+                                        : 'Reset Password',
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                           ),
                         ],
                       ),
@@ -259,6 +285,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     required Color primaryBlue,
     required Color borderColor,
     required Color mutedText,
+    VoidCallback? onTogglePassword,
   }) {
     return TextFormField(
       obscureText: isPassword,
@@ -269,6 +296,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         hintText: hint,
         hintStyle: GoogleFonts.montserrat(color: mutedText, fontSize: 14),
         prefixIcon: Icon(icon, color: mutedText),
+        suffixIcon: isPassword || onTogglePassword != null
+            ? IconButton(
+                icon: Icon(
+                  isPassword ? Icons.visibility_off : Icons.visibility,
+                  color: mutedText,
+                ),
+                onPressed: onTogglePassword,
+              )
+            : null,
         contentPadding: const EdgeInsets.symmetric(vertical: 16),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),

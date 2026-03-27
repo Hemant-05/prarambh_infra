@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/widgets/auth_background.dart';
 
 class RegisterScreen extends StatelessWidget {
-  RegisterScreen({Key? key}) : super(key: key);
+  RegisterScreen({super.key});
 
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -20,7 +20,9 @@ class RegisterScreen extends StatelessWidget {
     final cardColor = AppColors.getCardColor(context);
     final primaryBlue = AppColors.getPrimaryBlue(context);
     final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
-    final mutedText = isDark ? AppColors.textMutedDark : AppColors.textMutedLight;
+    final mutedText = isDark
+        ? AppColors.textMutedDark
+        : AppColors.textMutedLight;
 
     return AuthBackground(
       child: LayoutBuilder(
@@ -62,7 +64,7 @@ class RegisterScreen extends StatelessWidget {
                             primaryBlue: primaryBlue,
                             borderColor: borderColor,
                             mutedText: mutedText,
-                            controller: _fullNameController
+                            controller: _fullNameController,
                           ),
                           const SizedBox(height: 16),
                           _buildTextFieldLabel('Email Address'),
@@ -73,7 +75,7 @@ class RegisterScreen extends StatelessWidget {
                             primaryBlue: primaryBlue,
                             borderColor: borderColor,
                             mutedText: mutedText,
-                            controller: _emailController
+                            controller: _emailController,
                           ),
                           const SizedBox(height: 16),
                           _buildTextFieldLabel('Phone Number'),
@@ -84,18 +86,18 @@ class RegisterScreen extends StatelessWidget {
                             primaryBlue: primaryBlue,
                             borderColor: borderColor,
                             mutedText: mutedText,
-                            controller: _phoneController
+                            controller: _phoneController,
                           ),
                           const SizedBox(height: 16),
                           _buildTextFieldLabel('Password'),
                           const SizedBox(height: 8),
                           _buildTextField(
-                              hint: '***********',
-                              icon: Icons.lock_outline,
-                              primaryBlue: primaryBlue,
-                              borderColor: borderColor,
-                              mutedText: mutedText,
-                              controller: _passwordController
+                            hint: '***********',
+                            icon: Icons.lock_outline,
+                            primaryBlue: primaryBlue,
+                            borderColor: borderColor,
+                            mutedText: mutedText,
+                            controller: _passwordController,
                           ),
                           const SizedBox(height: 24),
                           ElevatedButton(
@@ -124,7 +126,8 @@ class RegisterScreen extends StatelessWidget {
                               style: GoogleFonts.montserrat(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white, // Keep this white for contrast against blue
+                                color: Colors
+                                    .white, // Keep this white for contrast against blue
                               ),
                             ),
                           ),
@@ -168,10 +171,7 @@ class RegisterScreen extends StatelessWidget {
   Widget _buildTextFieldLabel(String label) {
     return Text(
       label,
-      style: GoogleFonts.montserrat(
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-      ),
+      style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w600),
     );
   }
 
@@ -184,14 +184,11 @@ class RegisterScreen extends StatelessWidget {
     required TextEditingController controller,
   }) {
     return TextFormField(
-      controller:  controller,
+      controller: controller,
       style: GoogleFonts.montserrat(fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.montserrat(
-          color: mutedText,
-          fontSize: 14,
-        ),
+        hintStyle: GoogleFonts.montserrat(color: mutedText, fontSize: 14),
         prefixIcon: Icon(icon, color: mutedText),
         contentPadding: const EdgeInsets.symmetric(vertical: 16),
         enabledBorder: OutlineInputBorder(

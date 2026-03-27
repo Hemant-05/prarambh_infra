@@ -5,14 +5,14 @@ import 'package:prarambh_infra/features/admin/presentation/screens/admin_profile
 import 'package:prarambh_infra/features/admin/presentation/screens/admin_projects_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/sales_pipeline_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/team_management_screen.dart';
-import 'package:prarambh_infra/features/auth/presentation/providers/auth_provider.dart';
+
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../widgets/admin_drawer.dart';
 import '../widgets/admin_home_view.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
-  const AdminDashboardScreen({Key? key}) : super(key: key);
+  const AdminDashboardScreen({super.key});
 
   @override
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
@@ -25,8 +25,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userId = context.read<AuthProvider>().currentUser?.id ?? 1;
-      context.read<AdminProvider>().fetchDashboardData(userId);
+      context.read<AdminProvider>().fetchDashboardData();
     });
   }
 
@@ -45,7 +44,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     'Project Management',
     'Sales Overview',
     'Team Management',
-    'My Profile'
+    'My Profile',
   ];
 
   @override
@@ -91,14 +90,26 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         backgroundColor: primaryBlue,
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white70,
-        selectedLabelStyle: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.w600),
+        selectedLabelStyle: GoogleFonts.montserrat(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
         unselectedLabelStyle: GoogleFonts.montserrat(fontSize: 10),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.business), label: 'Project'),
-          BottomNavigationBarItem(icon: Icon(Icons.trending_up), label: 'Sales'),
-          BottomNavigationBarItem(icon: Icon(Icons.people_alt_outlined), label: 'Team'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.trending_up),
+            label: 'Sales',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people_alt_outlined),
+            label: 'Team',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: 'Profile',
+          ),
         ],
       ),
     );

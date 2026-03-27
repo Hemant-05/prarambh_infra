@@ -1,3 +1,4 @@
+import 'dart:io';
 import '../../../../data/datasources/remote/api_client.dart';
 import '../models/contest_model.dart';
 
@@ -9,15 +10,32 @@ class AdminContestRepository {
     try {
       final response = await apiClient.getContests();
       if (response['status'] == 'success') {
-        return (response['data'] as List).map((e) => ContestModel.fromJson(e)).toList();
+        final List data = response['data'] ?? [];
+        return data.map((e) => ContestModel.fromJson(e)).toList();
       }
       throw Exception(response['message'] ?? 'Failed to load contests');
     } catch (e) { rethrow; }
   }
 
-  Future<bool> createContest(Map<String, dynamic> data) async {
+  Future<bool> addContest({
+    required String title,
+    required String startDate,
+    required String endDate,
+    required String rewardName,
+    required String rules,
+    required File rewardImage,
+  }) async {
     try {
-      final response = await apiClient.createContest(data);
+      final response = await apiClient.addContest(
+        title, startDate, endDate, rewardName, rules, rewardImage,
+      );
+      return response['status'] == 'success';
+    } catch (e) { rethrow; }
+  }
+
+  Future<bool> joinContest(Map<String, dynamic> data) async {
+    try {
+      final response = await apiClient.joinContest(data);
       return response['status'] == 'success';
     } catch (e) { rethrow; }
   }

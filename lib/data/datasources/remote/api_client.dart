@@ -11,15 +11,87 @@ abstract class ApiClient {
   // ==========================================
   // 1. Authentication
   // ==========================================
-  @POST("/login")
+  @POST("/auth/user/login")
   Future<dynamic> loginUser(@Body() dynamic body);
 
-  @POST("/advisor/login")
-  Future<dynamic> loginAdvisor(@Body()  dynamic body);
+  @POST("/auth/advisor/login")
+  Future<dynamic> loginAdvisor(@Body() dynamic body);
 
-  @POST("/register")
+  // ==========================================
+  // 2. User Management
+  // ==========================================
+  @POST("/user/register")
   Future<dynamic> registerUser(@Body() dynamic body);
 
+  @GET("/user/{id}")
+  Future<dynamic> getSingleUser(@Path("id") String id);
+
+  @POST("/user/update/{id}")
+  Future<dynamic> updateUserProfile(
+    @Path("id") String id,
+    @Body() dynamic body,
+  );
+
+  @DELETE("/user/delete/{id}")
+  Future<dynamic> deleteUser(@Path("id") String id);
+
+  // ==========================================
+  // 3. Advisor Management
+  // ==========================================
+  @MultiPart()
+  @POST("/advisor/register")
+  Future<dynamic> registerAdvisor(
+    @Part(name: "full_name") String fullName,
+    @Part(name: "email") String email,
+    @Part(name: "phone") String phone,
+    @Part(name: "designation") String designation,
+    @Part(name: "father_name") String fatherName,
+    @Part(name: "date_of_birth") String dob,
+    @Part(name: "gender") String gender,
+    @Part(name: "nomineename") String nomineeName,
+    @Part(name: "nomineephone") String nomineePhone,
+    @Part(name: "relationship") String relationship,
+    @Part(name: "occupation") String occupation,
+    @Part(name: "aadhaar_number") String aadhaar,
+    @Part(name: "pan_number") String pan,
+    @Part(name: "bank_name") String bankName,
+    @Part(name: "account_number") String accNumber,
+    @Part(name: "ifsc_code") String ifsc,
+    @Part(name: "address") String address,
+    @Part(name: "city") String city,
+    @Part(name: "state") String state,
+    @Part(name: "pincode") String pincode,
+    @Part(name: "leader_code") String leaderCode,
+    @Part(name: "addresscard_front_photo") File aadharFront,
+    @Part(name: "addresscard_back_photo") File aadharBack,
+    @Part(name: "pancard_photo") File panPhoto,
+    @Part(name: "profile_photo") File profilePhoto,
+  );
+
+  @POST("/advisor/approve/{id}")
+  Future<dynamic> approveAdvisor(@Path("id") String id);
+
+  @GET("/advisor/all")
+  Future<dynamic> getAllAdvisors();
+
+  @GET("/advisor/{id}")
+  Future<dynamic> getSingleAdvisor(@Path("id") String id);
+
+  @POST("/advisor/update/{id}")
+  Future<dynamic> updateAdvisor(@Path("id") String id, @Body() dynamic body);
+
+  @POST("/advisor/status/{id}")
+  Future<dynamic> changeAdvisorStatus(
+    @Path("id") String id,
+    @Body() dynamic body,
+  );
+
+  @DELETE("/advisor/delete/{id}")
+  Future<dynamic> deleteAdvisor(@Path("id") String id);
+
+  // ==========================================
+  // 4. Password Reset
+  // ==========================================
   @POST("/password/forgot")
   Future<dynamic> requestPasswordReset(@Body() dynamic body);
 
@@ -30,215 +102,241 @@ abstract class ApiClient {
   Future<dynamic> resetPassword(@Body() dynamic body);
 
   // ==========================================
-  // 2. User Profiles & KYC
+  // 5. Projects Inventory
   // ==========================================
-  @GET("/profile")
-  Future<dynamic> getProfile(@Query("user_id") int userId);
-
-  @POST("/profile/update")
-  Future<dynamic> updateProfile(@Body() dynamic body);
-
-  @MultiPart()
-  @POST("/profile/photo")
-  Future<dynamic> uploadProfilePhoto(
-      @Part(name: "photo") File photo,
-      @Part(name: "user_id") String userId,
-      );
-
-  @MultiPart()
-  @POST("/profile/kyc")
-  Future<dynamic> uploadKycDocument(
-      @Part(name: "document") File document,
-      @Part(name: "user_id") String userId,
-      @Part(name: "document_name") String documentName,
-      );
-
-  // ==========================================
-  // 3. Inventory (Projects & Units)
-  // ==========================================
-  @GET("/projects")
-  Future<dynamic> getAllProjects();
-
-  @GET("/projects/details")
-  Future<dynamic> getProjectDetails(@Query("id") int projectId);
-
   @MultiPart()
   @POST("/projects/add")
   Future<dynamic> addProject(
-      @Part(name: "project_name") String projectName,
-      @Part(name: "developer_name") String developerName,
-      @Part(name: "city") String city,
-      @Part(name: "full_address") String fullAddress,
-      @Part(name: "status") String status,
-      @Part(name: "project_type") String projectType,
-      @Part(name: "construction_status") String constructionStatus,
-      @Part(name: "market_value") String marketValue,
-      @Part(name: "total_plots") String totalPlots,
-      @Part(name: "build_area") String buildArea,
-      @Part(name: "rera_number") String reraNumber,
-      @Part(name: "location") String location,
-      @Part(name: "rate_per_sqft") String ratePerSqft,
-      @Part(name: "budget_range") String budgetRange,
-      @Part(name: "description") String description,
-      @Part(name: "rera_approved") String reraApproved,
-      @Part(name: "amenities") String amenities,
-      @Part(name: "specialties") String specialties,
-      @Part(name: "video") File? video,
-      @Part(name: "brochure") File? brochure,
-      @Part(name: "images[]") List<File> images,
-      );
+    @Part(name: "project_name") String projectName,
+    @Part(name: "developer_name") String developerName,
+    @Part(name: "description") String description,
+    @Part(name: "rera_number") String reraNumber,
+    @Part(name: "project_type") String projectType,
+    @Part(name: "construction_status") String constructionStatus,
+    @Part(name: "full_address") String fullAddress,
+    @Part(name: "location") String location,
+    @Part(name: "city") String city,
+    @Part(name: "market_value") String marketValue,
+    @Part(name: "total_plots") String totalPlots,
+    @Part(name: "build_area") String buildArea,
+    @Part(name: "rate_per_sqft") String ratePerSqft,
+    @Part(name: "budget_range") String budgetRange,
+    @Part(name: "amenities") String amenities,
+    @Part(name: "specialties") String specialties,
+    @Part(name: "video_file") File? videoFile,
+    @Part(name: "brochure_file") File? brochureFile,
+    @Part(name: "project_images[]") List<File> projectImages,
+  );
 
-  @POST("/projects/update")
-  Future<dynamic> updateProject(@Body() dynamic body);
+  @GET("/projects")
+  Future<dynamic> getAllProjects();
 
-  @POST("/projects/delete")
-  Future<dynamic> deleteProject(@Body() dynamic body);
+  @GET("/projects/{id}")
+  Future<dynamic> getSingleProject(@Path("id") String id);
 
-  @GET("/units")
-  Future<dynamic> getUnits(@Query("project_id") int projectId);
+  @MultiPart()
+  @POST("/projects/update/{id}")
+  Future<dynamic> updateProject(
+    @Path("id") String id,
+    @Part(name: "project_name") String? projectName,
+    @Part(name: "developer_name") String? developerName,
+    @Part(name: "description") String? description,
+    @Part(name: "project_type") String? projectType,
+    @Part(name: "construction_status") String? constructionStatus,
+    @Part(name: "full_address") String? fullAddress,
+    @Part(name: "location") String? location,
+    @Part(name: "city") String? city,
+    @Part(name: "market_value") String? marketValue,
+    @Part(name: "total_plots") String? totalPlots,
+    @Part(name: "build_area") String? buildArea,
+    @Part(name: "rate_per_sqft") String? ratePerSqft,
+    @Part(name: "specialties") String? specialties,
+    @Part(name: "amenities") String? amenities,
+    @Part(name: "budget_range") String? budgetRange,
+    @Part(name: "rera_number") String? reraNumber,
+    @Part(name: "status") String? status,
+    @Part(name: "video") File? videoFile,
+    @Part(name: "brochure_file") File? brochureFile,
+    @Part(name: "project_images[]") List<File>? projectImages,
+  );
 
+  @DELETE("/projects/delete/{id}")
+  Future<dynamic> deleteProject(@Path("id") String id);
+
+  // ==========================================
+  // 6. Units Inventory
+  // ==========================================
   @POST("/units/add")
   Future<dynamic> addUnit(@Body() dynamic body);
 
-  @POST("/units/update")
-  Future<dynamic> updateUnit(@Body() dynamic body);
+  @POST("/units/add-multiple")
+  Future<dynamic> addMultipleUnits(@Body() dynamic body);
 
-  @POST("/units/delete")
-  Future<dynamic> deleteUnit(@Body() dynamic body);
+  @GET("/units")
+  Future<dynamic> getUnits(@Query("project_id") String? projectId);
+
+  @GET("/units/{id}")
+  Future<dynamic> getSingleUnit(@Path("id") String id);
+
+  @PUT("/units/update/{id}")
+  Future<dynamic> updateUnit(@Path("id") String id, @Body() dynamic body);
+
+  @DELETE("/units/delete/{id}")
+  Future<dynamic> deleteUnit(@Path("id") String id);
 
   // ==========================================
-  // 4. CRM (Leads)
+  // 7. Document Management
   // ==========================================
+  @MultiPart()
+  @POST("/documents/add")
+  Future<dynamic> addDocument(
+    @Part(name: "name") String name,
+    @Part(name: "category") String category,
+    @Part(name: "user_id") String? userId,
+    @Part(name: "document_file") File documentFile,
+  );
+
+  @GET("/documents")
+  Future<dynamic> getDocuments(
+    @Query("user_id") String? userId,
+    @Query("category") String? category,
+    @Query("general") String? general,
+  );
+
+  @GET("/documents/{id}")
+  Future<dynamic> getSingleDocument(@Path("id") String id);
+
+  @MultiPart()
+  @POST("/documents/update/{id}")
+  Future<dynamic> updateDocument(
+    @Path("id") String id,
+    @Part(name: "name") String? name,
+    @Part(name: "document_file") File? documentFile,
+  );
+
+  @DELETE("/documents/delete/{id}")
+  Future<dynamic> deleteDocument(@Path("id") String id);
+
+  // ==========================================
+  // 8. Lead Management & Priority
+  // ==========================================
+  @POST("/leads/add")
+  Future<dynamic> addLead(@Body() dynamic body);
+
+  // Can be JSON or FormData (for site visit photos)
+  @POST("/leads/update/{id}")
+  Future<dynamic> updateLead(@Path("id") String id, @Body() dynamic body);
+
   @GET("/leads")
-  Future<dynamic> getLeads(
-      @Query("user_id") int userId,
-      @Query("role") String role,
-      @Query("stage") String? stage,
-      );
+  Future<dynamic> getLeads(@Query("advisor_code") String? advisorCode);
 
-  @POST("/leads/create")
-  Future<dynamic> createLead(@Body() dynamic body);
+  @GET("/leads/{id}")
+  Future<dynamic> getSingleLead(@Path("id") String id);
 
-  @POST("/leads/update-details")
-  Future<dynamic> updateLeadDetails(@Body() dynamic body);
+  @POST("/leads/priority/add/{id}")
+  Future<dynamic> addLeadToPriority(@Path("id") String id);
 
-  @POST("/leads/log-interaction")
-  Future<dynamic> logInteraction(@Body() dynamic body);
+  @GET("/leads/priority")
+  Future<dynamic> getPriorityLeads();
 
-  @POST("/leads/delete")
-  Future<dynamic> deleteLead(@Body() dynamic body);
+  @POST("/leads/priority/remove/{id}")
+  Future<dynamic> removeLeadFromPriority(@Path("id") String id);
 
-  // ==========================================
-  // 5. Bookings & Payments
-  // ==========================================
-  @GET("/bookings")
-  Future<dynamic> getBookings();
-
-  @POST("/bookings/create")
-  Future<dynamic> createBooking(@Body() dynamic body);
-
-  @POST("/bookings/update-status")
-  Future<dynamic> updateBookingStatus(@Body() dynamic body);
-
-  @GET("/payments")
-  Future<dynamic> getPayments(@Query("booking_id") int bookingId);
-
-  @POST("/payments/add")
-  Future<dynamic> addPayment(@Body() dynamic body);
-
-  @POST("/payments/update-details")
-  Future<dynamic> updatePaymentDetails(@Body() dynamic body);
-
-  @POST("/payments/update-status")
-  Future<dynamic> updatePaymentStatus(@Body() dynamic body);
-
-  @POST("/payments/delete")
-  Future<dynamic> deletePayment(@Body() dynamic body);
+  @DELETE("/leads/delete/{id}")
+  Future<dynamic> deleteLead(@Path("id") String id);
 
   // ==========================================
-  // 6. Meetings & Attendance
+  // 9. Deal Management (New)
   // ==========================================
-  @GET("/meetings")
-  Future<dynamic> getMeetings();
+  @MultiPart()
+  @POST("/deals/add")
+  Future<dynamic> addDeal(
+    @Part(name: "client_name") String clientName,
+    @Part(name: "client_number") String clientNumber,
+    @Part(name: "property_id") String propertyId,
+    @Part(name: "client_email") String clientEmail,
+    @Part(name: "notes") String notes,
+    @Part(name: "payment_mode") String paymentMode,
+    @Part(name: "total_payment_amount") String totalAmount,
+    @Part(name: "payment_plan") String paymentPlan,
+    @Part(name: "client_adhar_front") File aadharFront,
+  );
 
-  @POST("/meetings/create")
-  Future<dynamic> createMeeting(@Body() dynamic body);
+  @POST("/deals/update/{id}")
+  Future<dynamic> updateDeal(@Path("id") String id, @Body() dynamic body);
 
-  @POST("/meetings/update")
-  Future<dynamic> updateMeeting(@Body() dynamic body);
+  @GET("/deals")
+  Future<dynamic> getAllDeals();
 
-  @POST("/meetings/delete")
-  Future<dynamic> deleteMeeting(@Body() dynamic body);
-
-  @GET("/attendance")
-  Future<dynamic> getAttendance(@Query("user_id") int userId);
-
-  @POST("/attendance/checkin")
-  Future<dynamic> checkinAttendance(@Body() dynamic body);
-
-  @POST("/attendance/checkout")
-  Future<dynamic> checkoutAttendance(@Body() dynamic body);
-
-  @POST("/attendance/delete")
-  Future<dynamic> deleteAttendance(@Body() dynamic body);
+  @DELETE("/deals/delete/{id}")
+  Future<dynamic> deleteDeal(@Path("id") String id);
 
   // ==========================================
-  // 7. Team, Promotions & Contests
+  // 10. Meetings & Attendance
   // ==========================================
-  @GET("/team")
-  Future<dynamic> getTeamHierarchy(
-      @Query("user_id") int userId,
-      @Query("view") String view,
-      );
+  @POST("/meetings/add")
+  Future<dynamic> addMeeting(@Body() dynamic body);
 
-  @POST("/team/assign")
-  Future<dynamic> assignTeamMember(@Body() dynamic body);
+  @MultiPart()
+  @POST("/attendance/check-in")
+  Future<dynamic> checkInAttendance(
+    @Part(name: "meeting_id") String meetingId,
+    @Part(name: "advisor_id") String advisorId,
+    @Part(name: "check_in_photo") File photo,
+  );
 
-  @POST("/team/remove")
-  Future<dynamic> removeTeamMember(@Body() dynamic body);
+  @MultiPart()
+  @POST("/attendance/check-out")
+  Future<dynamic> checkOutAttendance(
+    @Part(name: "meeting_id") String meetingId,
+    @Part(name: "advisor_id") String advisorId,
+    @Part(name: "check_out_photo") File photo,
+  );
 
-  @GET("/promotions/status")
-  Future<dynamic> getPromotionStatus(@Query("user_id") int userId);
+  @GET("/meetings/{id}")
+  Future<dynamic> getSingleMeeting(@Path("id") String id);
 
-  @POST("/promotions/upgrade")
-  Future<dynamic> upgradePromotion(@Body() dynamic body);
+  // ==========================================
+  // 11. Contests
+  // ==========================================
+  @MultiPart()
+  @POST("/contests/add")
+  Future<dynamic> addContest(
+    @Part(name: "title") String title,
+    @Part(name: "start_date") String startDate,
+    @Part(name: "end_date") String endDate,
+    @Part(name: "reward_name") String rewardName,
+    @Part(name: "rules") String rules,
+    @Part(name: "reward_image") File image,
+  );
+
+  @POST("/contests/join")
+  Future<dynamic> joinContest(@Body() dynamic body);
 
   @GET("/contests")
   Future<dynamic> getContests();
 
-  @POST("/contests/create")
-  Future<dynamic> createContest(@Body() dynamic body);
+  // ==========================================
+  // 12. Performance & Leaderboard
+  // ==========================================
+  @GET("/leaderboard")
+  Future<dynamic> getLeaderboard();
 
-  @POST("/contests/update")
-  Future<dynamic> updateContest(@Body() dynamic body);
-
-  @POST("/contests/delete")
-  Future<dynamic> deleteContest(@Body() dynamic body);
+  @POST("/evaluate-level/{id}")
+  Future<dynamic> evaluateLevel(@Path("id") String id);
 
   // ==========================================
-  // 8. Operations (Dashboard & Docs)
+  // 13. User Property Reselling
   // ==========================================
-  @GET("/dashboard")
-  Future<dynamic> getDashboardData(
-      @Query("user_id") int userId,
-      @Query("role") String role,
-      );
+  @POST("/user-property/add")
+  Future<dynamic> addUserProperty(@Body() dynamic body);
 
-  @GET("/documents")
-  Future<dynamic> getDocuments();
+  @POST("/user-property/verify/{id}")
+  Future<dynamic> verifyUserProperty(
+    @Path("id") String id,
+    @Body() dynamic body,
+  );
 
-  @MultiPart()
-  @POST("/documents/upload")
-  Future<dynamic> uploadDocument(
-      @Part(name: "document") File document,
-      @Part(name: "uploader_id") String uploaderId,
-      @Part(name: "document_name") String documentName,
-      @Part(name: "category") String category,
-      );
-
-  @POST("/documents/update")
-  Future<dynamic> updateDocumentMetadata(@Body() dynamic body);
-
-  @POST("/documents/delete")
-  Future<dynamic> deleteDocument(@Body() dynamic body);
+  @GET("/user-property/my/{id}")
+  Future<dynamic> getMyProperties(@Path("id") String id);
 }

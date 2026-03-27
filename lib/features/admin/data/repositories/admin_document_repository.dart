@@ -7,9 +7,13 @@ class AdminDocumentRepository {
 
   AdminDocumentRepository({required this.apiClient});
 
-  Future<List<ProjectDocumentModel>> getDocuments() async {
+  Future<List<ProjectDocumentModel>> getDocuments({
+    String? userId,
+    String? category,
+    String? general,
+  }) async {
     try {
-      final response = await apiClient.getDocuments();
+      final response = await apiClient.getDocuments(userId, category, general);
       if (response['status'] == 'success') {
         final List data = response['data'] ?? [];
         return data.map((json) => ProjectDocumentModel.fromJson(json)).toList();
@@ -18,9 +22,42 @@ class AdminDocumentRepository {
     } catch (e) { rethrow; }
   }
 
-  Future<bool> uploadDocument(File file, String name, String category, int uploaderId) async {
+  Future<ProjectDocumentModel> getSingleDocument(String id) async {
     try {
-      final response = await apiClient.uploadDocument(file, uploaderId.toString(), name, category);
+      final response = await apiClient.getSingleDocument(id);
+      if (response['status'] == 'success') {
+        return ProjectDocumentModel.fromJson(response['data']);
+      }
+      throw Exception(response['message'] ?? 'Failed to load document');
+    } catch (e) { rethrow; }
+  }
+
+  Future<bool> addDocument({
+    required String name,
+    required String category,
+    String? userId,
+    required File documentFile,
+  }) async {
+    try {
+      final response = await apiClient.addDocument(name, category, userId, documentFile);
+      return response['status'] == 'success';
+    } catch (e) { rethrow; }
+  }
+
+  Future<bool> updateDocument({
+    required String id,
+    String? name,
+    File? documentFile,
+  }) async {
+    try {
+      final response = await apiClient.updateDocument(id, name, documentFile);
+      return response['status'] == 'success';
+    } catch (e) { rethrow; }
+  }
+
+  Future<bool> deleteDocument(String id) async {
+    try {
+      final response = await apiClient.deleteDocument(id);
       return response['status'] == 'success';
     } catch (e) { rethrow; }
   }

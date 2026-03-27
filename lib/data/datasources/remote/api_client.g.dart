@@ -29,7 +29,7 @@ class _ApiClient implements ApiClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/login',
+            '/auth/user/login',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -50,7 +50,7 @@ class _ApiClient implements ApiClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/advisor/login',
+            '/auth/advisor/login',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -71,7 +71,305 @@ class _ApiClient implements ApiClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/register',
+            '/user/register',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> getSingleUser(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/user/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> updateUserProfile(String id, dynamic body) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = body;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/user/update/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> deleteUser(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'DELETE', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/user/delete/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> registerAdvisor(
+    String fullName,
+    String email,
+    String phone,
+    String designation,
+    String fatherName,
+    String dob,
+    String gender,
+    String nomineeName,
+    String nomineePhone,
+    String relationship,
+    String occupation,
+    String aadhaar,
+    String pan,
+    String bankName,
+    String accNumber,
+    String ifsc,
+    String address,
+    String city,
+    String state,
+    String pincode,
+    String leaderCode,
+    File aadharFront,
+    File aadharBack,
+    File panPhoto,
+    File profilePhoto,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = FormData();
+    _data.fields.add(MapEntry('full_name', fullName));
+    _data.fields.add(MapEntry('email', email));
+    _data.fields.add(MapEntry('phone', phone));
+    _data.fields.add(MapEntry('designation', designation));
+    _data.fields.add(MapEntry('father_name', fatherName));
+    _data.fields.add(MapEntry('date_of_birth', dob));
+    _data.fields.add(MapEntry('gender', gender));
+    _data.fields.add(MapEntry('nomineename', nomineeName));
+    _data.fields.add(MapEntry('nomineephone', nomineePhone));
+    _data.fields.add(MapEntry('relationship', relationship));
+    _data.fields.add(MapEntry('occupation', occupation));
+    _data.fields.add(MapEntry('aadhaar_number', aadhaar));
+    _data.fields.add(MapEntry('pan_number', pan));
+    _data.fields.add(MapEntry('bank_name', bankName));
+    _data.fields.add(MapEntry('account_number', accNumber));
+    _data.fields.add(MapEntry('ifsc_code', ifsc));
+    _data.fields.add(MapEntry('address', address));
+    _data.fields.add(MapEntry('city', city));
+    _data.fields.add(MapEntry('state', state));
+    _data.fields.add(MapEntry('pincode', pincode));
+    _data.fields.add(MapEntry('leader_code', leaderCode));
+    _data.files.add(
+      MapEntry(
+        'addresscard_front_photo',
+        MultipartFile.fromFileSync(
+          aadharFront.path,
+          filename: aadharFront.path.split(Platform.pathSeparator).last,
+        ),
+      ),
+    );
+    _data.files.add(
+      MapEntry(
+        'addresscard_back_photo',
+        MultipartFile.fromFileSync(
+          aadharBack.path,
+          filename: aadharBack.path.split(Platform.pathSeparator).last,
+        ),
+      ),
+    );
+    _data.files.add(
+      MapEntry(
+        'pancard_photo',
+        MultipartFile.fromFileSync(
+          panPhoto.path,
+          filename: panPhoto.path.split(Platform.pathSeparator).last,
+        ),
+      ),
+    );
+    _data.files.add(
+      MapEntry(
+        'profile_photo',
+        MultipartFile.fromFileSync(
+          profilePhoto.path,
+          filename: profilePhoto.path.split(Platform.pathSeparator).last,
+        ),
+      ),
+    );
+    final _options = _setStreamType<dynamic>(
+      Options(
+            method: 'POST',
+            headers: _headers,
+            extra: _extra,
+            contentType: 'multipart/form-data',
+          )
+          .compose(
+            _dio.options,
+            '/advisor/register',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> approveAdvisor(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/advisor/approve/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> getAllAdvisors() async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/advisor/all',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> getSingleAdvisor(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/advisor/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> updateAdvisor(String id, dynamic body) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = body;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/advisor/update/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> changeAdvisorStatus(String id, dynamic body) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = body;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/advisor/status/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> deleteAdvisor(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'DELETE', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/advisor/delete/${id}',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -146,104 +444,81 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> getProfile(int userId) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'user_id': userId};
-    final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/profile',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> updateProfile(dynamic body) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/profile/update',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> uploadProfilePhoto(File photo, String userId) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = FormData();
-    _data.files.add(
-      MapEntry(
-        'photo',
-        MultipartFile.fromFileSync(
-          photo.path,
-          filename: photo.path.split(Platform.pathSeparator).last,
-        ),
-      ),
-    );
-    _data.fields.add(MapEntry('user_id', userId));
-    final _options = _setStreamType<dynamic>(
-      Options(
-            method: 'POST',
-            headers: _headers,
-            extra: _extra,
-            contentType: 'multipart/form-data',
-          )
-          .compose(
-            _dio.options,
-            '/profile/photo',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> uploadKycDocument(
-    File document,
-    String userId,
-    String documentName,
+  Future<dynamic> addProject(
+    String projectName,
+    String developerName,
+    String description,
+    String reraNumber,
+    String projectType,
+    String constructionStatus,
+    String fullAddress,
+    String location,
+    String city,
+    String marketValue,
+    String totalPlots,
+    String buildArea,
+    String ratePerSqft,
+    String budgetRange,
+    String amenities,
+    String specialties,
+    File? videoFile,
+    File? brochureFile,
+    List<File> projectImages,
   ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     final _data = FormData();
-    _data.files.add(
-      MapEntry(
-        'document',
-        MultipartFile.fromFileSync(
-          document.path,
-          filename: document.path.split(Platform.pathSeparator).last,
+    _data.fields.add(MapEntry('project_name', projectName));
+    _data.fields.add(MapEntry('developer_name', developerName));
+    _data.fields.add(MapEntry('description', description));
+    _data.fields.add(MapEntry('rera_number', reraNumber));
+    _data.fields.add(MapEntry('project_type', projectType));
+    _data.fields.add(MapEntry('construction_status', constructionStatus));
+    _data.fields.add(MapEntry('full_address', fullAddress));
+    _data.fields.add(MapEntry('location', location));
+    _data.fields.add(MapEntry('city', city));
+    _data.fields.add(MapEntry('market_value', marketValue));
+    _data.fields.add(MapEntry('total_plots', totalPlots));
+    _data.fields.add(MapEntry('build_area', buildArea));
+    _data.fields.add(MapEntry('rate_per_sqft', ratePerSqft));
+    _data.fields.add(MapEntry('budget_range', budgetRange));
+    _data.fields.add(MapEntry('amenities', amenities));
+    _data.fields.add(MapEntry('specialties', specialties));
+    if (videoFile != null) {
+      _data.files.add(
+        MapEntry(
+          'video_file',
+          MultipartFile.fromFileSync(
+            videoFile.path,
+            filename: videoFile.path.split(Platform.pathSeparator).last,
+          ),
+        ),
+      );
+    }
+    if (brochureFile != null) {
+      _data.files.add(
+        MapEntry(
+          'brochure_file',
+          MultipartFile.fromFileSync(
+            brochureFile.path,
+            filename: brochureFile.path.split(Platform.pathSeparator).last,
+          ),
+        ),
+      );
+    }
+    _data.files.addAll(
+      projectImages.map(
+        (i) => MapEntry(
+          'project_images[]',
+          MultipartFile.fromFileSync(
+            i.path,
+            filename: i.path.split(Platform.pathSeparator).last,
+          ),
         ),
       ),
     );
-    _data.fields.add(MapEntry('user_id', userId));
-    _data.fields.add(MapEntry('document_name', documentName));
     final _options = _setStreamType<dynamic>(
       Options(
             method: 'POST',
@@ -253,7 +528,7 @@ class _ApiClient implements ApiClient {
           )
           .compose(
             _dio.options,
-            '/profile/kyc',
+            '/projects/add',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -286,16 +561,16 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> getProjectDetails(int projectId) async {
+  Future<dynamic> getSingleProject(String id) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'id': projectId};
+    final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<dynamic>(
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/projects/details',
+            '/projects/${id}',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -307,85 +582,120 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> addProject(
-    String projectName,
-    String developerName,
-    String city,
-    String fullAddress,
-    String status,
-    String projectType,
-    String constructionStatus,
-    String marketValue,
-    String totalPlots,
-    String buildArea,
-    String reraNumber,
-    String location,
-    String ratePerSqft,
-    String budgetRange,
-    String description,
-    String reraApproved,
-    String amenities,
-    String specialties,
-    File? video,
-    File? brochure,
-    List<File> images,
+  Future<dynamic> updateProject(
+    String id,
+    String? projectName,
+    String? developerName,
+    String? description,
+    String? projectType,
+    String? constructionStatus,
+    String? fullAddress,
+    String? location,
+    String? city,
+    String? marketValue,
+    String? totalPlots,
+    String? buildArea,
+    String? ratePerSqft,
+    String? specialties,
+    String? amenities,
+    String? budgetRange,
+    String? reraNumber,
+    String? status,
+    File? videoFile,
+    File? brochureFile,
+    List<File>? projectImages,
   ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     final _data = FormData();
-    _data.fields.add(MapEntry('project_name', projectName));
-    _data.fields.add(MapEntry('developer_name', developerName));
-    _data.fields.add(MapEntry('city', city));
-    _data.fields.add(MapEntry('full_address', fullAddress));
-    _data.fields.add(MapEntry('status', status));
-    _data.fields.add(MapEntry('project_type', projectType));
-    _data.fields.add(MapEntry('construction_status', constructionStatus));
-    _data.fields.add(MapEntry('market_value', marketValue));
-    _data.fields.add(MapEntry('total_plots', totalPlots));
-    _data.fields.add(MapEntry('build_area', buildArea));
-    _data.fields.add(MapEntry('rera_number', reraNumber));
-    _data.fields.add(MapEntry('location', location));
-    _data.fields.add(MapEntry('rate_per_sqft', ratePerSqft));
-    _data.fields.add(MapEntry('budget_range', budgetRange));
-    _data.fields.add(MapEntry('description', description));
-    _data.fields.add(MapEntry('rera_approved', reraApproved));
-    _data.fields.add(MapEntry('amenities', amenities));
-    _data.fields.add(MapEntry('specialties', specialties));
-    if (video != null) {
+    if (projectName != null) {
+      _data.fields.add(MapEntry('project_name', projectName));
+    }
+    if (developerName != null) {
+      _data.fields.add(MapEntry('developer_name', developerName));
+    }
+    if (description != null) {
+      _data.fields.add(MapEntry('description', description));
+    }
+    if (projectType != null) {
+      _data.fields.add(MapEntry('project_type', projectType));
+    }
+    if (constructionStatus != null) {
+      _data.fields.add(MapEntry('construction_status', constructionStatus));
+    }
+    if (fullAddress != null) {
+      _data.fields.add(MapEntry('full_address', fullAddress));
+    }
+    if (location != null) {
+      _data.fields.add(MapEntry('location', location));
+    }
+    if (city != null) {
+      _data.fields.add(MapEntry('city', city));
+    }
+    if (marketValue != null) {
+      _data.fields.add(MapEntry('market_value', marketValue));
+    }
+    if (totalPlots != null) {
+      _data.fields.add(MapEntry('total_plots', totalPlots));
+    }
+    if (buildArea != null) {
+      _data.fields.add(MapEntry('build_area', buildArea));
+    }
+    if (ratePerSqft != null) {
+      _data.fields.add(MapEntry('rate_per_sqft', ratePerSqft));
+    }
+    if (specialties != null) {
+      _data.fields.add(MapEntry('specialties', specialties));
+    }
+    if (amenities != null) {
+      _data.fields.add(MapEntry('amenities', amenities));
+    }
+    if (budgetRange != null) {
+      _data.fields.add(MapEntry('budget_range', budgetRange));
+    }
+    if (reraNumber != null) {
+      _data.fields.add(MapEntry('rera_number', reraNumber));
+    }
+    if (status != null) {
+      _data.fields.add(MapEntry('status', status));
+    }
+    if (videoFile != null) {
       _data.files.add(
         MapEntry(
           'video',
           MultipartFile.fromFileSync(
-            video.path,
-            filename: video.path.split(Platform.pathSeparator).last,
+            videoFile.path,
+            filename: videoFile.path.split(Platform.pathSeparator).last,
           ),
         ),
       );
     }
-    if (brochure != null) {
+    if (brochureFile != null) {
       _data.files.add(
         MapEntry(
-          'brochure',
+          'brochure_file',
           MultipartFile.fromFileSync(
-            brochure.path,
-            filename: brochure.path.split(Platform.pathSeparator).last,
+            brochureFile.path,
+            filename: brochureFile.path.split(Platform.pathSeparator).last,
           ),
         ),
       );
     }
-    _data.files.addAll(
-      images.map(
-        (i) => MapEntry(
-          'images[]',
-          MultipartFile.fromFileSync(
-            i.path,
-            filename: i.path.split(Platform.pathSeparator).last,
+    if (projectImages != null) {
+      _data.files.addAll(
+        projectImages.map(
+          (i) => MapEntry(
+            'project_images[]',
+            MultipartFile.fromFileSync(
+              i.path,
+              filename: i.path.split(Platform.pathSeparator).last,
+            ),
           ),
         ),
-      ),
-    );
+      );
+    }
     final _options = _setStreamType<dynamic>(
       Options(
             method: 'POST',
@@ -395,7 +705,7 @@ class _ApiClient implements ApiClient {
           )
           .compose(
             _dio.options,
-            '/projects/add',
+            '/projects/update/${id}',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -407,58 +717,16 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> updateProject(dynamic body) async {
+  Future<dynamic> deleteProject(String id) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/projects/update',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> deleteProject(dynamic body) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/projects/delete',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> getUnits(int projectId) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'project_id': projectId};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<dynamic>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
+      Options(method: 'DELETE', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/units',
+            '/projects/delete/${id}',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -491,7 +759,7 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> updateUnit(dynamic body) async {
+  Future<dynamic> addMultipleUnits(dynamic body) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -500,7 +768,7 @@ class _ApiClient implements ApiClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/units/update',
+            '/units/add-multiple',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -512,16 +780,17 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> deleteUnit(dynamic body) async {
+  Future<dynamic> getUnits(String? projectId) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'project_id': projectId};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
-    final _data = body;
+    const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
+      Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/units/delete',
+            '/units',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -533,13 +802,277 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> getLeads(int userId, String role, String? stage) async {
+  Future<dynamic> getSingleUnit(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/units/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> updateUnit(String id, dynamic body) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = body;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'PUT', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/units/update/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> deleteUnit(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'DELETE', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/units/delete/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> addDocument(
+    String name,
+    String category,
+    String? userId,
+    File documentFile,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{};
+    final _data = FormData();
+    _data.fields.add(MapEntry('name', name));
+    _data.fields.add(MapEntry('category', category));
+    if (userId != null) {
+      _data.fields.add(MapEntry('user_id', userId));
+    }
+    _data.files.add(
+      MapEntry(
+        'document_file',
+        MultipartFile.fromFileSync(
+          documentFile.path,
+          filename: documentFile.path.split(Platform.pathSeparator).last,
+        ),
+      ),
+    );
+    final _options = _setStreamType<dynamic>(
+      Options(
+            method: 'POST',
+            headers: _headers,
+            extra: _extra,
+            contentType: 'multipart/form-data',
+          )
+          .compose(
+            _dio.options,
+            '/documents/add',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> getDocuments(
+    String? userId,
+    String? category,
+    String? general,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{
       r'user_id': userId,
-      r'role': role,
-      r'stage': stage,
+      r'category': category,
+      r'general': general,
     };
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/documents',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> getSingleDocument(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/documents/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> updateDocument(
+    String id,
+    String? name,
+    File? documentFile,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{};
+    final _data = FormData();
+    if (name != null) {
+      _data.fields.add(MapEntry('name', name));
+    }
+    if (documentFile != null) {
+      _data.files.add(
+        MapEntry(
+          'document_file',
+          MultipartFile.fromFileSync(
+            documentFile.path,
+            filename: documentFile.path.split(Platform.pathSeparator).last,
+          ),
+        ),
+      );
+    }
+    final _options = _setStreamType<dynamic>(
+      Options(
+            method: 'POST',
+            headers: _headers,
+            extra: _extra,
+            contentType: 'multipart/form-data',
+          )
+          .compose(
+            _dio.options,
+            '/documents/update/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> deleteDocument(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'DELETE', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/documents/delete/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> addLead(dynamic body) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = body;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/leads/add',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> updateLead(String id, dynamic body) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = body;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/leads/update/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> getLeads(String? advisorCode) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'advisor_code': advisorCode};
     queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
@@ -559,91 +1092,7 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> createLead(dynamic body) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/leads/create',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> updateLeadDetails(dynamic body) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/leads/update-details',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> logInteraction(dynamic body) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/leads/log-interaction',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> deleteLead(dynamic body) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/leads/delete',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> getBookings() async {
+  Future<dynamic> getSingleLead(String id) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -652,7 +1101,7 @@ class _ApiClient implements ApiClient {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/bookings',
+            '/leads/${id}',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -664,79 +1113,16 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> createBooking(dynamic body) async {
+  Future<dynamic> addLeadToPriority(String id) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/bookings/create',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> updateBookingStatus(dynamic body) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/bookings/update-status',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> getPayments(int bookingId) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'booking_id': bookingId};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<dynamic>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/payments',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> addPayment(dynamic body) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/payments/add',
+            '/leads/priority/add/${id}',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -748,70 +1134,7 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> updatePaymentDetails(dynamic body) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/payments/update-details',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> updatePaymentStatus(dynamic body) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/payments/update-status',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> deletePayment(dynamic body) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/payments/delete',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> getMeetings() async {
+  Future<dynamic> getPriorityLeads() async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -820,7 +1143,7 @@ class _ApiClient implements ApiClient {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/meetings',
+            '/leads/priority',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -832,7 +1155,102 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> createMeeting(dynamic body) async {
+  Future<dynamic> removeLeadFromPriority(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/leads/priority/remove/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> deleteLead(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'DELETE', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/leads/delete/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> addDeal(
+    String clientName,
+    String clientNumber,
+    String propertyId,
+    String clientEmail,
+    String notes,
+    String paymentMode,
+    String totalAmount,
+    String paymentPlan,
+    File aadharFront,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = FormData();
+    _data.fields.add(MapEntry('client_name', clientName));
+    _data.fields.add(MapEntry('client_number', clientNumber));
+    _data.fields.add(MapEntry('property_id', propertyId));
+    _data.fields.add(MapEntry('client_email', clientEmail));
+    _data.fields.add(MapEntry('notes', notes));
+    _data.fields.add(MapEntry('payment_mode', paymentMode));
+    _data.fields.add(MapEntry('total_payment_amount', totalAmount));
+    _data.fields.add(MapEntry('payment_plan', paymentPlan));
+    _data.files.add(
+      MapEntry(
+        'client_adhar_front',
+        MultipartFile.fromFileSync(
+          aadharFront.path,
+          filename: aadharFront.path.split(Platform.pathSeparator).last,
+        ),
+      ),
+    );
+    final _options = _setStreamType<dynamic>(
+      Options(
+            method: 'POST',
+            headers: _headers,
+            extra: _extra,
+            contentType: 'multipart/form-data',
+          )
+          .compose(
+            _dio.options,
+            '/deals/add',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> updateDeal(String id, dynamic body) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -841,7 +1259,7 @@ class _ApiClient implements ApiClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/meetings/create',
+            '/deals/update/${id}',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -853,58 +1271,16 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> updateMeeting(dynamic body) async {
+  Future<dynamic> getAllDeals() async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/meetings/update',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> deleteMeeting(dynamic body) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/meetings/delete',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> getAttendance(int userId) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'user_id': userId};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<dynamic>(
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/attendance',
+            '/deals',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -916,7 +1292,28 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> checkinAttendance(dynamic body) async {
+  Future<dynamic> deleteDeal(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'DELETE', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/deals/delete/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> addMeeting(dynamic body) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -925,7 +1322,7 @@ class _ApiClient implements ApiClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/attendance/checkin',
+            '/meetings/add',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -937,16 +1334,36 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> checkoutAttendance(dynamic body) async {
+  Future<dynamic> checkInAttendance(
+    String meetingId,
+    String advisorId,
+    File photo,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    final _data = body;
+    final _data = FormData();
+    _data.fields.add(MapEntry('meeting_id', meetingId));
+    _data.fields.add(MapEntry('advisor_id', advisorId));
+    _data.files.add(
+      MapEntry(
+        'check_in_photo',
+        MultipartFile.fromFileSync(
+          photo.path,
+          filename: photo.path.split(Platform.pathSeparator).last,
+        ),
+      ),
+    );
     final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
+      Options(
+            method: 'POST',
+            headers: _headers,
+            extra: _extra,
+            contentType: 'multipart/form-data',
+          )
           .compose(
             _dio.options,
-            '/attendance/checkout',
+            '/attendance/check-in',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -958,16 +1375,36 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> deleteAttendance(dynamic body) async {
+  Future<dynamic> checkOutAttendance(
+    String meetingId,
+    String advisorId,
+    File photo,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    final _data = body;
+    final _data = FormData();
+    _data.fields.add(MapEntry('meeting_id', meetingId));
+    _data.fields.add(MapEntry('advisor_id', advisorId));
+    _data.files.add(
+      MapEntry(
+        'check_out_photo',
+        MultipartFile.fromFileSync(
+          photo.path,
+          filename: photo.path.split(Platform.pathSeparator).last,
+        ),
+      ),
+    );
     final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
+      Options(
+            method: 'POST',
+            headers: _headers,
+            extra: _extra,
+            contentType: 'multipart/form-data',
+          )
           .compose(
             _dio.options,
-            '/attendance/delete',
+            '/attendance/check-out',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -979,19 +1416,16 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> getTeamHierarchy(int userId, String view) async {
+  Future<dynamic> getSingleMeeting(String id) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{
-      r'user_id': userId,
-      r'view': view,
-    };
+    final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<dynamic>(
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/team',
+            '/meetings/${id}',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1003,7 +1437,54 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> assignTeamMember(dynamic body) async {
+  Future<dynamic> addContest(
+    String title,
+    String startDate,
+    String endDate,
+    String rewardName,
+    String rules,
+    File image,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = FormData();
+    _data.fields.add(MapEntry('title', title));
+    _data.fields.add(MapEntry('start_date', startDate));
+    _data.fields.add(MapEntry('end_date', endDate));
+    _data.fields.add(MapEntry('reward_name', rewardName));
+    _data.fields.add(MapEntry('rules', rules));
+    _data.files.add(
+      MapEntry(
+        'reward_image',
+        MultipartFile.fromFileSync(
+          image.path,
+          filename: image.path.split(Platform.pathSeparator).last,
+        ),
+      ),
+    );
+    final _options = _setStreamType<dynamic>(
+      Options(
+            method: 'POST',
+            headers: _headers,
+            extra: _extra,
+            contentType: 'multipart/form-data',
+          )
+          .compose(
+            _dio.options,
+            '/contests/add',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> joinContest(dynamic body) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -1012,70 +1493,7 @@ class _ApiClient implements ApiClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/team/assign',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> removeTeamMember(dynamic body) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/team/remove',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> getPromotionStatus(int userId) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'user_id': userId};
-    final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/promotions/status',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> upgradePromotion(dynamic body) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/promotions/upgrade',
+            '/contests/join',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1108,94 +1526,7 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> createContest(dynamic body) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/contests/create',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> updateContest(dynamic body) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/contests/update',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> deleteContest(dynamic body) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = body;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/contests/delete',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> getDashboardData(int userId, String role) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{
-      r'user_id': userId,
-      r'role': role,
-    };
-    final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<dynamic>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/dashboard',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
-  Future<dynamic> getDocuments() async {
+  Future<dynamic> getLeaderboard() async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -1204,7 +1535,7 @@ class _ApiClient implements ApiClient {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/documents',
+            '/leaderboard',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1216,38 +1547,16 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> uploadDocument(
-    File document,
-    String uploaderId,
-    String documentName,
-    String category,
-  ) async {
+  Future<dynamic> evaluateLevel(String id) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    final _data = FormData();
-    _data.files.add(
-      MapEntry(
-        'document',
-        MultipartFile.fromFileSync(
-          document.path,
-          filename: document.path.split(Platform.pathSeparator).last,
-        ),
-      ),
-    );
-    _data.fields.add(MapEntry('uploader_id', uploaderId));
-    _data.fields.add(MapEntry('document_name', documentName));
-    _data.fields.add(MapEntry('category', category));
+    const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<dynamic>(
-      Options(
-            method: 'POST',
-            headers: _headers,
-            extra: _extra,
-            contentType: 'multipart/form-data',
-          )
+      Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/documents/upload',
+            '/evaluate-level/${id}',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1259,7 +1568,7 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> updateDocumentMetadata(dynamic body) async {
+  Future<dynamic> addUserProperty(dynamic body) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -1268,7 +1577,7 @@ class _ApiClient implements ApiClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/documents/update',
+            '/user-property/add',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1280,7 +1589,7 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> deleteDocument(dynamic body) async {
+  Future<dynamic> verifyUserProperty(String id, dynamic body) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -1289,7 +1598,28 @@ class _ApiClient implements ApiClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/documents/delete',
+            '/user-property/verify/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> getMyProperties(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/user-property/my/${id}',
             queryParameters: queryParameters,
             data: _data,
           )

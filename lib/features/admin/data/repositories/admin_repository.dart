@@ -6,15 +6,13 @@ class AdminRepository {
 
   AdminRepository({required this.apiClient});
 
-  Future<AdminDashboardModel> getDashboardData(int userId) async {
-    try {
-      final response = await apiClient.getDashboardData(userId, "Admin");
-      if (response['status'] == 'success') {
-        return AdminDashboardModel.fromJson(response['data'] ?? response);
-      }
-      throw Exception(response['message'] ?? 'Failed to load dashboard data');
-    } catch (e) {
-      rethrow;
-    }
+  /// NOTE: The new ApiClient does not have a dedicated /dashboard endpoint.
+  /// Dashboard data should be composed from getAllProjects(), getLeads(),
+  /// getAllAdvisors(), and getLeaderboard() calls.
+  Future<AdminDashboardModel> getDashboardData() async {
+    throw UnimplementedError(
+      'No dedicated /dashboard endpoint exists in the new ApiClient. '
+      'Compose dashboard from getAllProjects(), getLeads(), getAllAdvisors(), getLeaderboard().',
+    );
   }
 }

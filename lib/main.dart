@@ -23,6 +23,8 @@ import 'package:prarambh_infra/features/admin/presentation/screens/lead_manageme
 import 'package:prarambh_infra/features/admin/presentation/screens/leaderboard_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/recruitment_dashboard_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/team_management_screen.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_dashboard_screen.dart';
+import 'package:prarambh_infra/features/client/presentation/screens/client_dashboard_screen.dart';
 import 'package:prarambh_infra/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -52,9 +54,13 @@ void main() async {
         ChangeNotifierProvider(create: (_) => di.sl<AdminDocumentProvider>()),
 
         ChangeNotifierProvider(create: (_) => di.sl<AdminContestProvider>()),
-        ChangeNotifierProvider(create: (_) => di.sl<AdminLeaderboardProvider>()),
+        ChangeNotifierProvider(
+          create: (_) => di.sl<AdminLeaderboardProvider>(),
+        ),
         ChangeNotifierProvider(create: (_) => di.sl<AdminAttendanceProvider>()),
-        ChangeNotifierProvider(create: (_) => di.sl<AdminRecruitmentProvider>()),
+        ChangeNotifierProvider(
+          create: (_) => di.sl<AdminRecruitmentProvider>(),
+        ),
         ChangeNotifierProvider(create: (_) => di.sl<AdminTeamProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdminProjectProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdminLeadProvider>()),
@@ -66,7 +72,7 @@ void main() async {
 }
 
 class PraarambhApp extends StatelessWidget {
-  const PraarambhApp({Key? key}) : super(key: key);
+  const PraarambhApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +90,7 @@ class PraarambhApp extends StatelessWidget {
         primaryColor: const Color(0xFF1976D2),
       ),
       themeMode: ThemeMode.system,
-      initialRoute: '/admin_dashboard',
+      initialRoute: '/splash',
       routes: {
         '/splash': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
@@ -102,6 +108,8 @@ class PraarambhApp extends StatelessWidget {
         '/team_management': (context) => const TeamManagementScreen(),
         '/admin_projects': (context) => const AdminProjectsScreen(),
         '/lead_management': (context) => const LeadManagementScreen(),
+        '/advisor_dashboard': (context) => const AdvisorDashboardScreen(),
+        '/client_dashboard': (context) => const ClientDashboardScreen(),
       },
     );
   }

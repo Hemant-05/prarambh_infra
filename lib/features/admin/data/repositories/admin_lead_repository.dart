@@ -5,28 +5,79 @@ class AdminLeadRepository {
   final ApiClient apiClient;
   AdminLeadRepository({required this.apiClient});
 
-  Future<List<LeadModel>> getNewLeads(int adminId) async {
+  /// Fetch all leads. Pass [advisorCode] to filter by advisor.
+  Future<List<LeadModel>> getLeads({String? advisorCode}) async {
     try {
-      final response = await apiClient.getLeads(adminId, "Admin", "New");
+      final response = await apiClient.getLeads(advisorCode);
       if (response['status'] == 'success') {
-        return (response['data'] as List).map((e) => LeadModel.fromJson(e)).toList();
+        final List data = response['data'] ?? [];
+        return data.map((e) => LeadModel.fromJson(e)).toList();
       }
       throw Exception(response['message']);
     } catch (e) { rethrow; }
   }
 
-  // NOTE: Still missing in Postman. Ask backend dev for the available advisors endpoint!
-  Future<List<AdvisorAssignModel>> getAvailableAdvisors() async {
-    throw Exception("Endpoint missing from API");
+  Future<LeadModel> getSingleLead(String id) async {
+    try {
+      final response = await apiClient.getSingleLead(id);
+      if (response['status'] == 'success') {
+        return LeadModel.fromJson(response['data']);
+      }
+      throw Exception(response['message']);
+    } catch (e) { rethrow; }
   }
 
-  Future<bool> assignLead(String leadId, String advisorId) async {
+  Future<bool> addLead(Map<String, dynamic> data) async {
     try {
-      final response = await apiClient.updateLeadDetails({
-        "lead_id": leadId,
-        "advisor_id": advisorId
-      });
+      final response = await apiClient.addLead(data);
       return response['status'] == 'success';
     } catch (e) { rethrow; }
+  }
+
+  Future<bool> updateLead(String leadId, Map<String, dynamic> data) async {
+    try {
+      final response = await apiClient.updateLead(leadId, data);
+      return response['status'] == 'success';
+    } catch (e) { rethrow; }
+  }
+
+  Future<bool> deleteLead(String leadId) async {
+    try {
+      final response = await apiClient.deleteLead(leadId);
+      return response['status'] == 'success';
+    } catch (e) { rethrow; }
+  }
+
+  Future<bool> addLeadToPriority(String leadId) async {
+    try {
+      final response = await apiClient.addLeadToPriority(leadId);
+      return response['status'] == 'success';
+    } catch (e) { rethrow; }
+  }
+
+  Future<List<LeadModel>> getPriorityLeads() async {
+    try {
+      final response = await apiClient.getPriorityLeads();
+      if (response['status'] == 'success') {
+        final List data = response['data'] ?? [];
+        return data.map((e) => LeadModel.fromJson(e)).toList();
+      }
+      throw Exception(response['message']);
+    } catch (e) { rethrow; }
+  }
+
+  Future<bool> removeLeadFromPriority(String leadId) async {
+    try {
+      final response = await apiClient.removeLeadFromPriority(leadId);
+      return response['status'] == 'success';
+    } catch (e) { rethrow; }
+  }
+
+  // NOTE: getAvailableAdvisors — no dedicated endpoint in new ApiClient.
+  // Use AdminAdvisorRepository.getAllAdvisors() instead.
+  Future<List<AdvisorAssignModel>> getAvailableAdvisors() async {
+    throw UnimplementedError(
+      'Use AdminAdvisorRepository.getAllAdvisors() for this data.',
+    );
   }
 }

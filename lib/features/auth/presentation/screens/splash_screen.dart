@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/constant/cons_strings.dart';
 import 'package:prarambh_infra/core/theme/app_colors.dart';
+import 'package:prarambh_infra/features/auth/data/models/user_model.dart';
 import 'package:prarambh_infra/features/auth/presentation/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/auth_background.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-
   @override
   void initState() {
     super.initState();
@@ -23,10 +23,17 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _navigateToLogin() async {
     bool res = await context.read<AuthProvider>().tryAutoLogin();
+    UserModel? user = context.read<AuthProvider>().currentUser;
     if (mounted) {
-      if(res){
-       Navigator.pushReplacementNamed(context, '/admin_dashboard');
-      }else {
+      if (res) {
+        if (user?.role == 'Admin') {
+        Navigator.pushReplacementNamed(context, '/admin_dashboard');
+        } else if (user?.role == 'Advisor') {
+        Navigator.pushReplacementNamed(context, '/advisor_dashboard');
+        } else {
+        Navigator.pushReplacementNamed(context, '/client_dashboard');
+        }
+      } else {
         Navigator.pushReplacementNamed(context, '/login');
       }
     }
@@ -36,7 +43,9 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     final primaryBlue = AppColors.getPrimaryBlue(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final mutedText = isDark ? AppColors.textMutedDark : AppColors.textMutedLight;
+    final mutedText = isDark
+        ? AppColors.textMutedDark
+        : AppColors.textMutedLight;
 
     return AuthBackground(
       child: Center(

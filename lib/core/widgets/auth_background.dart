@@ -3,7 +3,7 @@ import 'package:prarambh_infra/core/theme/app_colors.dart';
 
 class AuthBackground extends StatelessWidget {
   final Widget child;
-  const AuthBackground({Key? key, required this.child}) : super(key: key);
+  const AuthBackground({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -13,9 +13,7 @@ class AuthBackground extends StatelessWidget {
       body: Stack(
         children: [
           Positioned.fill(
-            child: CustomPaint(
-              painter: _CurvePainter(isDark: isDark),
-            ),
+            child: CustomPaint(painter: _CurvePainter(isDark: isDark)),
           ),
           SafeArea(child: child),
         ],
@@ -35,13 +33,20 @@ class _CurvePainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final orangePaint = Paint()
-      ..color = isDark ? AppColors.primaryOrangeDark : AppColors.primaryOrangeLight
+      ..color = isDark
+          ? AppColors.primaryOrangeDark
+          : AppColors.primaryOrangeLight
       ..style = PaintingStyle.fill;
 
     // Top Blue Curve
     final topPath = Path();
     topPath.lineTo(0, size.height * 0.15);
-    topPath.quadraticBezierTo(size.width * 0.5, size.height * 0.05, size.width, size.height * 0.1);
+    topPath.quadraticBezierTo(
+      size.width * 0.5,
+      size.height * 0.05,
+      size.width,
+      size.height * 0.1,
+    );
     topPath.lineTo(size.width, 0);
     topPath.close();
     canvas.drawPath(topPath, bluePaint);
@@ -50,7 +55,12 @@ class _CurvePainter extends CustomPainter {
     final bottomPath = Path();
     bottomPath.moveTo(0, size.height);
     bottomPath.lineTo(0, size.height * 0.95);
-    bottomPath.quadraticBezierTo(size.width * 0.4, size.height * 0.88, size.width, size.height * 0.85);
+    bottomPath.quadraticBezierTo(
+      size.width * 0.4,
+      size.height * 0.88,
+      size.width,
+      size.height * 0.85,
+    );
     bottomPath.lineTo(size.width, size.height);
     bottomPath.close();
     canvas.drawPath(bottomPath, orangePaint);

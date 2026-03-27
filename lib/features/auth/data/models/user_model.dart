@@ -1,35 +1,38 @@
 class UserModel {
   final int id;
+  final String name;
   final String email;
   final String phone;
-  final String role; // 'Advisor' or 'Admin'
+  final String role;
   final String status;
-  final String createdAt;
-  final String updatedAt;
-  final String? token; // We store the auth token here
+  final String? advisorCode;
+  final int? leaderId;
+  final String? profilePhoto;
 
   UserModel({
     required this.id,
+    required this.name,
     required this.email,
     required this.phone,
     required this.role,
     required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-    this.token,
+    this.advisorCode,
+    this.leaderId,
+    this.profilePhoto,
   });
 
-  // Notice we pass the token as an optional parameter since it sits outside the 'user' object in the JSON
-  factory UserModel.fromJson(Map<String, dynamic> json, {String? token}) {
+  // Factory to handle both User JSON and Advisor JSON safely
+  factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'] ?? 0,
+      name: json['full_name'] ?? json['name'] ?? 'Unknown User',
       email: json['email'] ?? '',
       phone: json['phone'] ?? '',
-      role: json['role'] ?? 'Advisor',
+      role: json['role'] ?? 'User',
       status: json['status'] ?? 'Active',
-      createdAt: json['created_at'] ?? '',
-      updatedAt: json['updated_at'] ?? '',
-      token: token,
+      advisorCode: json['Advisor_code'],
+      leaderId: json['leader_id'] is int ? json['leader_id'] : int.tryParse(json['leader_id']?.toString() ?? ''),
+      profilePhoto: json['profile_photo'],
     );
   }
 }
