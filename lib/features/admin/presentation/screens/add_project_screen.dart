@@ -7,9 +7,13 @@ import 'package:file_picker/file_picker.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_project_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../data/models/project_model.dart'; // NEW: Import the model
 
 class AddProjectScreen extends StatefulWidget {
-  const AddProjectScreen({super.key});
+  // NEW: Optional parameter. If null, it's "Add". If provided, it's "Edit".
+  final ProjectModel? existingProject;
+
+  const AddProjectScreen({super.key, this.existingProject});
 
   @override
   State<AddProjectScreen> createState() => _AddProjectScreenState();
@@ -18,11 +22,10 @@ class AddProjectScreen extends StatefulWidget {
 class _AddProjectScreenState extends State<AddProjectScreen> {
   int _currentStep = 0;
 
-  // State Variables mapping exactly to the React payload
+  // State Variables
   String _projectType = 'Residential';
   String _constructionStatus = 'New Launch';
-  String _projectStatus =
-      'Completed'; // Matches the valid MySQL ENUM we discovered
+  String _projectStatus = 'Ongoing';
   bool _reraApproved = true;
 
   // Controllers
@@ -41,27 +44,61 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
   final _amenitiesCtrl = TextEditingController();
   final _specialtiesCtrl = TextEditingController();
 
-  // Media Files
+  // Media Files (New uploads)
   final List<File> _selectedImages = [];
   File? _selectedVideo;
   File? _selectedBrochure;
 
   final ImagePicker _picker = ImagePicker();
 
+  @override
+  void initState() {
+    super.initState();
+    // NEW: Pre-fill data if we are in "Edit" mode
+    if (widget.existingProject != null) {
+      final p = widget.existingProject!;
+      _nameCtrl.text = p.projectName;
+      _devCtrl.text = p.developerName;
+      _descCtrl.text = p.description;
+      _reraCtrl.text = p.reraNumber;
+      _addressCtrl.text = p.fullAddress;
+      _cityCtrl.text = p.city;
+      _mapLinkCtrl.text = p.locationMapUrl;
+      _marketValueCtrl.text = p.marketValue.toString();
+      _budgetRangeCtrl.text = p.budgetRange;
+      _rateCtrl.text = p.ratePerSqft.toString();
+      _buildAreaCtrl.text = p.buildArea;
+      _totalPlotsCtrl.text = p.totalPlots.toString();
+      _amenitiesCtrl.text = p.amenities.join(', ');
+      _specialtiesCtrl.text = p.specialties.join(', ');
+
+      _reraApproved = p.reraNumber.isNotEmpty;
+
+      // Safe assignment for dropdowns to prevent crashes if DB has legacy data
+      final validTypes = ['Residential', 'Commercial', 'Mixed Use'];
+      if (validTypes.contains(p.projectType)) _projectType = p.projectType;
+
+      final validStatus = ['New Launch', 'Under Construction', 'Ready to Move'];
+      if (validStatus.contains(p.constructionStatus))
+        _constructionStatus = p.constructionStatus;
+
+      final validProjStatus = ['Completed', 'Ongoing', 'Upcoming'];
+      if (validProjStatus.contains(p.status)) _projectStatus = p.status;
+    }
+  }
+
   Future<void> _pickImages() async {
     final List<XFile> images = await _picker.pickMultiImage();
     if (images.isNotEmpty) {
-      setState(() {
-        _selectedImages.addAll(images.map((img) => File(img.path)));
-      });
+      setState(
+        () => _selectedImages.addAll(images.map((img) => File(img.path))),
+      );
     }
   }
 
   Future<void> _pickVideo() async {
     final XFile? video = await _picker.pickVideo(source: ImageSource.gallery);
-    if (video != null) {
-      setState(() => _selectedVideo = File(video.path));
-    }
+    if (video != null) setState(() => _selectedVideo = File(video.path));
   }
 
   Future<void> _pickBrochure() async {
@@ -69,9 +106,8 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       type: FileType.custom,
       allowedExtensions: ['pdf'],
     );
-    if (result != null) {
+    if (result != null)
       setState(() => _selectedBrochure = File(result.files.single.path!));
-    }
   }
 
   @override
@@ -98,6 +134,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
     final primaryBlue = AppColors.getPrimaryBlue(context);
     final cardColor = AppColors.getCardColor(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isEditing = widget.existingProject != null; // NEW: Flag for UI logic
 
     return Scaffold(
       backgroundColor: isDark
@@ -112,7 +149,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Add Project',
+          isEditing ? 'Update Project' : 'Add Project', // Dynamic Title
           style: GoogleFonts.montserrat(
             color: Colors.black,
             fontWeight: FontWeight.bold,
@@ -203,7 +240,6 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                               if (_currentStep == 0) {
                                 setState(() => _currentStep = 1);
                               } else {
-                                // FINAL SUBMISSION
                                 if (_nameCtrl.text.isEmpty ||
                                     _devCtrl.text.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -216,42 +252,77 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                                   return;
                                 }
 
-                                final success = await provider.createProject(
-                                  projectName: _nameCtrl.text,
-                                  developerName: _devCtrl.text,
-                                  city: _cityCtrl.text,
-                                  fullAddress: _addressCtrl.text,
-                                  projectType: _projectType,
-                                  constructionStatus: _constructionStatus,
-                                  marketValue: _marketValueCtrl.text,
-                                  totalPlots: _totalPlotsCtrl.text,
-                                  buildArea: _buildAreaCtrl.text,
-                                  reraNumber: _reraCtrl.text,
-                                  location: _mapLinkCtrl.text,
-                                  ratePerSqft: _rateCtrl.text,
-                                  budgetRange: _budgetRangeCtrl.text,
-                                  description: _descCtrl.text,
-                                  amenities: _amenitiesCtrl.text,
-                                  specialties: _specialtiesCtrl.text,
-                                  projectImages: _selectedImages,
-                                  videoFile: _selectedVideo,
-                                  brochureFile: _selectedBrochure,
-                                );
+                                bool success;
+                                if (isEditing) {
+                                  // UPDATE EXISTING PROJECT
+                                  success = await provider.modifyProject(
+                                    id: widget.existingProject!.id.toString(),
+                                    projectName: _nameCtrl.text,
+                                    developerName: _devCtrl.text,
+                                    city: _cityCtrl.text,
+                                    fullAddress: _addressCtrl.text,
+                                    projectType: _projectType,
+                                    constructionStatus: _constructionStatus,
+                                    marketValue: _marketValueCtrl.text,
+                                    totalPlots: _totalPlotsCtrl.text,
+                                    buildArea: _buildAreaCtrl.text,
+                                    reraNumber: _reraCtrl.text,
+                                    location: _mapLinkCtrl.text,
+                                    ratePerSqft: _rateCtrl.text,
+                                    budgetRange: _budgetRangeCtrl.text,
+                                    description: _descCtrl.text,
+                                    amenities: _amenitiesCtrl.text,
+                                    specialties: _specialtiesCtrl.text,
+                                    status: _projectStatus,
+                                    projectImages: _selectedImages.isNotEmpty
+                                        ? _selectedImages
+                                        : null,
+                                    videoFile: _selectedVideo,
+                                    brochureFile: _selectedBrochure,
+                                  );
+                                } else {
+                                  // CREATE NEW PROJECT
+                                  success = await provider.createProject(
+                                    projectName: _nameCtrl.text,
+                                    developerName: _devCtrl.text,
+                                    city: _cityCtrl.text,
+                                    fullAddress: _addressCtrl.text,
+                                    projectType: _projectType,
+                                    constructionStatus: _constructionStatus,
+                                    marketValue: _marketValueCtrl.text,
+                                    totalPlots: _totalPlotsCtrl.text,
+                                    buildArea: _buildAreaCtrl.text,
+                                    reraNumber: _reraCtrl.text,
+                                    location: _mapLinkCtrl.text,
+                                    ratePerSqft: _rateCtrl.text,
+                                    budgetRange: _budgetRangeCtrl.text,
+                                    description: _descCtrl.text,
+                                    amenities: _amenitiesCtrl.text,
+                                    specialties: _specialtiesCtrl.text,
+                                    projectImages: _selectedImages,
+                                    videoFile: _selectedVideo,
+                                    brochureFile: _selectedBrochure,
+                                  );
+                                }
 
-                                if (success) {
+                                if (success && mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
+                                    SnackBar(
                                       content: Text(
-                                        'Project created successfully',
+                                        isEditing
+                                            ? 'Project Updated Successfully!'
+                                            : 'Project Created Successfully!',
                                       ),
                                     ),
                                   );
-                                  Navigator.pop(context);
-                                } else {
+                                  Navigator.pop(
+                                    context,
+                                  ); // Pop back to list or details
+                                } else if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text(
-                                        'Failed to create project.',
+                                        'Failed to save project. Check your connection.',
                                       ),
                                     ),
                                   );
@@ -277,7 +348,9 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                           : Text(
                               _currentStep == 0
                                   ? 'Next Step →'
-                                  : 'Publish Project ✓',
+                                  : (isEditing
+                                        ? 'Save Changes ✓'
+                                        : 'Publish Project ✓'),
                               style: GoogleFonts.montserrat(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -295,7 +368,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
         padding: const EdgeInsets.all(20),
         child: _currentStep == 0
             ? _buildStep1(primaryBlue, cardColor)
-            : _buildStep2(primaryBlue, cardColor),
+            : _buildStep2(primaryBlue, cardColor, isEditing),
       ),
     );
   }
@@ -311,8 +384,6 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
           const SizedBox(height: 16),
           _buildTextField('Description', _descCtrl, maxLines: 3),
           const SizedBox(height: 16),
-
-          // DROPDOWNS: Type & Construction Status
           Row(
             children: [
               Expanded(
@@ -339,8 +410,6 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
             ],
           ),
           const SizedBox(height: 16),
-
-          // DROPDOWNS: Project Status & RERA Switch
           Row(
             children: [
               Expanded(
@@ -376,10 +445,9 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildTextField('RERA No. (If Approved)', _reraCtrl),
+          if (_reraApproved) _buildTextField('RERA No.', _reraCtrl),
         ]),
         const SizedBox(height: 24),
-
         _buildCard(cardColor, primaryBlue, 'Location', Icons.location_on, [
           _buildTextField('Full Address', _addressCtrl, maxLines: 2),
           const SizedBox(height: 16),
@@ -392,7 +460,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
   }
 
   // --- STEP 2: Media, Config & Pricing ---
-  Widget _buildStep2(Color primaryBlue, Color cardColor) {
+  Widget _buildStep2(Color primaryBlue, Color cardColor, bool isEditing) {
     return Column(
       children: [
         _buildCard(
@@ -404,7 +472,11 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
             Row(
               children: [
                 Expanded(
-                  child: _buildTextField('Total Units/Plots', _totalPlotsCtrl),
+                  child: _buildTextField(
+                    'Total Units/Plots',
+                    _totalPlotsCtrl,
+                    isNumber: true,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -416,10 +488,20 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
             Row(
               children: [
                 Expanded(
-                  child: _buildTextField('Market Value', _marketValueCtrl),
+                  child: _buildTextField(
+                    'Market Value',
+                    _marketValueCtrl,
+                    isNumber: true,
+                  ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(child: _buildTextField('Rate per Sqft', _rateCtrl)),
+                Expanded(
+                  child: _buildTextField(
+                    'Rate per Sqft',
+                    _rateCtrl,
+                    isNumber: true,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -432,130 +514,135 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
         ),
         const SizedBox(height: 24),
 
-        _buildCard(
-          cardColor,
-          primaryBlue,
-          'Media Uploads',
-          Icons.cloud_upload,
-          [
-            // IMAGES
-            GestureDetector(
-              onTap: _pickImages,
-              child: DottedBorder(
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  color: Colors.blue[50],
-                  child: Column(
-                    children: [
-                      Icon(Icons.image, color: primaryBlue),
-                      Text(
-                        'Select Gallery Images',
-                        style: GoogleFonts.montserrat(
-                          color: primaryBlue,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
+        _buildCard(cardColor, primaryBlue, 'Media Uploads', Icons.cloud_upload, [
+          if (isEditing)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: Text(
+                'Note: Uploading new media will add to or replace existing files depending on backend logic.',
+                style: GoogleFonts.montserrat(
+                  fontSize: 10,
+                  color: Colors.orange,
+                  fontStyle: FontStyle.italic,
                 ),
               ),
             ),
-            if (_selectedImages.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Wrap(
-                  spacing: 8,
-                  children: _selectedImages
-                      .map(
-                        (img) => Stack(
-                          children: [
-                            Image.file(
-                              img,
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
-                            ),
-                            Positioned(
-                              right: 0,
-                              child: GestureDetector(
-                                onTap: () =>
-                                    setState(() => _selectedImages.remove(img)),
-                                child: const Icon(
-                                  Icons.cancel,
-                                  color: Colors.red,
-                                  size: 20,
-                                ),
+          GestureDetector(
+            onTap: _pickImages,
+            child: DottedBorder(
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                color: Colors.blue[50],
+                child: Column(
+                  children: [
+                    Icon(Icons.image, color: primaryBlue),
+                    Text(
+                      'Select Gallery Images',
+                      style: GoogleFonts.montserrat(
+                        color: primaryBlue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (_selectedImages.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Wrap(
+                spacing: 8,
+                children: _selectedImages
+                    .map(
+                      (img) => Stack(
+                        children: [
+                          Image.file(
+                            img,
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                          ),
+                          Positioned(
+                            right: 0,
+                            child: GestureDetector(
+                              onTap: () =>
+                                  setState(() => _selectedImages.remove(img)),
+                              child: const Icon(
+                                Icons.cancel,
+                                color: Colors.red,
+                                size: 20,
                               ),
                             ),
-                          ],
-                        ),
-                      )
-                      .toList(),
-                ),
-              ),
-            const SizedBox(height: 20),
-
-            // VIDEO
-            ListTile(
-              onTap: _pickVideo,
-              tileColor: Colors.grey[100],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              leading: Icon(
-                Icons.videocam,
-                color: _selectedVideo != null ? Colors.green : Colors.grey,
-              ),
-              title: Text(
-                _selectedVideo != null
-                    ? 'Video Selected'
-                    : 'Select Preview Video',
-                style: GoogleFonts.montserrat(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              trailing: _selectedVideo != null
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, color: Colors.red),
-                      onPressed: () => setState(() => _selectedVideo = null),
+                          ),
+                        ],
+                      ),
                     )
-                  : null,
+                    .toList(),
+              ),
             ),
-            const SizedBox(height: 12),
+          const SizedBox(height: 20),
 
-            // BROCHURE
-            ListTile(
-              onTap: _pickBrochure,
-              tileColor: Colors.grey[100],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              leading: Icon(
-                Icons.picture_as_pdf,
-                color: _selectedBrochure != null
-                    ? Colors.redAccent
-                    : Colors.grey,
-              ),
-              title: Text(
-                _selectedBrochure != null
-                    ? 'Brochure PDF Selected'
-                    : 'Select Brochure File',
-                style: GoogleFonts.montserrat(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              trailing: _selectedBrochure != null
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, color: Colors.red),
-                      onPressed: () => setState(() => _selectedBrochure = null),
-                    )
-                  : null,
+          ListTile(
+            onTap: _pickVideo,
+            tileColor: Colors.grey[100],
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
             ),
-          ],
-        ),
+            leading: Icon(
+              Icons.videocam,
+              color: _selectedVideo != null ? Colors.green : Colors.grey,
+            ),
+            title: Text(
+              _selectedVideo != null
+                  ? 'New Video Selected'
+                  : (isEditing && widget.existingProject!.videoUrl.isNotEmpty
+                        ? 'Replace Existing Video'
+                        : 'Select Preview Video'),
+              style: GoogleFonts.montserrat(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            trailing: _selectedVideo != null
+                ? IconButton(
+                    icon: const Icon(Icons.clear, color: Colors.red),
+                    onPressed: () => setState(() => _selectedVideo = null),
+                  )
+                : null,
+          ),
+          const SizedBox(height: 12),
+
+          ListTile(
+            onTap: _pickBrochure,
+            tileColor: Colors.grey[100],
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            leading: Icon(
+              Icons.picture_as_pdf,
+              color: _selectedBrochure != null ? Colors.redAccent : Colors.grey,
+            ),
+            title: Text(
+              _selectedBrochure != null
+                  ? 'New Brochure Selected'
+                  : (isEditing && widget.existingProject!.brochureUrl.isNotEmpty
+                        ? 'Replace Existing Brochure'
+                        : 'Select Brochure PDF'),
+              style: GoogleFonts.montserrat(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            trailing: _selectedBrochure != null
+                ? IconButton(
+                    icon: const Icon(Icons.clear, color: Colors.red),
+                    onPressed: () => setState(() => _selectedBrochure = null),
+                  )
+                : null,
+          ),
+        ]),
       ],
     );
   }
@@ -602,6 +689,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
   Widget _buildTextField(
     String label,
     TextEditingController controller, {
+    bool isNumber = false,
     int maxLines = 1,
   }) {
     return Column(
@@ -619,6 +707,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
         TextField(
           controller: controller,
           maxLines: maxLines,
+          keyboardType: isNumber ? TextInputType.number : TextInputType.text,
           style: GoogleFonts.montserrat(fontSize: 13),
           decoration: InputDecoration(
             contentPadding: const EdgeInsets.symmetric(
@@ -641,7 +730,6 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
     );
   }
 
-  // NEW DROPDOWN HELPER WIDGET
   Widget _buildDropdown(
     String label,
     String value,
