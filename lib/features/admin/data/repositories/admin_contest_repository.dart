@@ -9,7 +9,7 @@ class AdminContestRepository {
   Future<List<ContestModel>> getContests() async {
     try {
       final response = await apiClient.getContests();
-      if (response['status'] == 'success') {
+      if (response['status']) {
         final List data = response['data'] ?? [];
         return data.map((e) => ContestModel.fromJson(e)).toList();
       }
@@ -29,14 +29,14 @@ class AdminContestRepository {
       final response = await apiClient.addContest(
         title, startDate, endDate, rewardName, rules, rewardImage,
       );
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 
   Future<bool> joinContest(Map<String, dynamic> data) async {
     try {
       final response = await apiClient.joinContest(data);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 }

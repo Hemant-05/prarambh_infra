@@ -11,7 +11,7 @@ class AdminDocumentRepository {
     try {
       final response = await apiClient.getDocuments(userId, category, general);
       // THE FIX: Accept boolean true
-      if (response['status'] == true || response['status'] == 'success') {
+      if (response['status']) {
         final List data = response['data'] ?? [];
         return data.map((json) => DocumentModel.fromJson(json)).toList();
       }
@@ -22,7 +22,7 @@ class AdminDocumentRepository {
   Future<DocumentModel> getSingleDocument(String id) async {
     try {
       final response = await apiClient.getSingleDocument(id);
-      if (response['status'] == true || response['status'] == 'success') {
+      if (response['status']) {
         return DocumentModel.fromJson(response['data']);
       }
       throw Exception(response['message'] ?? 'Failed to load document');
@@ -32,21 +32,21 @@ class AdminDocumentRepository {
   Future<bool> addDocument({required String name, required String category, String? userId, required File documentFile}) async {
     try {
       final response = await apiClient.addDocument(name, category, userId, documentFile);
-      return response['status'] == true || response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 
   Future<bool> updateDocument({required String id, String? name, File? documentFile}) async {
     try {
       final response = await apiClient.updateDocument(id, name, documentFile);
-      return response['status'] == true || response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 
   Future<bool> deleteDocument(String id) async {
     try {
       final response = await apiClient.deleteDocument(id);
-      return response['status'] == true || response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 }

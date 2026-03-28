@@ -9,7 +9,7 @@ class AdminTeamRepository {
   Future<BrokerProfileModel> getBrokerProfile(String advisorId) async {
     try {
       final response = await apiClient.getSingleAdvisor(advisorId);
-      if (response['status'] == 'success') {
+      if (response['status']) {
         return BrokerProfileModel.fromJson(response['data']);
       }
       throw Exception(response['message']);
@@ -20,7 +20,7 @@ class AdminTeamRepository {
   Future<List<dynamic>> getAllAdvisors() async {
     try {
       final response = await apiClient.getAllAdvisors('');
-      if (response['status'] == 'success') {
+      if (response['status']) {
         return response['data'] ?? [];
       }
       throw Exception(response['message']);

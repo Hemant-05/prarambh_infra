@@ -248,7 +248,7 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              unit.basePrice.toString(),
+              '₹${unit.calculatedPrice.toStringAsFixed(0)}',
               style: GoogleFonts.montserrat(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,

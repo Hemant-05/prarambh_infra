@@ -9,7 +9,7 @@ class AdminLeadRepository {
   Future<List<LeadModel>> getLeads({String? advisorCode}) async {
     try {
       final response = await apiClient.getLeads(advisorCode);
-      if (response['status'] == 'success') {
+      if (response['status']) {
         final List data = response['data'] ?? [];
         return data.map((e) => LeadModel.fromJson(e)).toList();
       }
@@ -20,7 +20,7 @@ class AdminLeadRepository {
   Future<LeadModel> getSingleLead(String id) async {
     try {
       final response = await apiClient.getSingleLead(id);
-      if (response['status'] == 'success') {
+      if (response['status']) {
         return LeadModel.fromJson(response['data']);
       }
       throw Exception(response['message']);
@@ -30,35 +30,35 @@ class AdminLeadRepository {
   Future<bool> addLead(Map<String, dynamic> data) async {
     try {
       final response = await apiClient.addLead(data);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 
   Future<bool> updateLead(String leadId, Map<String, dynamic> data) async {
     try {
       final response = await apiClient.updateLead(leadId, data);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 
   Future<bool> deleteLead(String leadId) async {
     try {
       final response = await apiClient.deleteLead(leadId);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 
   Future<bool> addLeadToPriority(String leadId) async {
     try {
       final response = await apiClient.addLeadToPriority(leadId);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 
   Future<List<LeadModel>> getPriorityLeads() async {
     try {
       final response = await apiClient.getPriorityLeads();
-      if (response['status'] == 'success') {
+      if (response['status']) {
         final List data = response['data'] ?? [];
         return data.map((e) => LeadModel.fromJson(e)).toList();
       }
@@ -69,7 +69,7 @@ class AdminLeadRepository {
   Future<bool> removeLeadFromPriority(String leadId) async {
     try {
       final response = await apiClient.removeLeadFromPriority(leadId);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 

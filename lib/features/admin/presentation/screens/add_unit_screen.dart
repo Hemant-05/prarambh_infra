@@ -9,7 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../providers/admin_project_provider.dart';
 
 class AddUnitScreen extends StatefulWidget {
-  final int projectId; // kept as int to match ProjectModel.id
+  final int projectId;
   const AddUnitScreen({super.key, required this.projectId});
 
   @override
@@ -20,19 +20,23 @@ class _AddUnitScreenState extends State<AddUnitScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  // Form Controllers (Single Unit)
+  // Form Controllers
   final _towerCtrl = TextEditingController();
   final _floorCtrl = TextEditingController();
   final _unitCtrl = TextEditingController();
   final _areaCtrl = TextEditingController();
   final _rateCtrl = TextEditingController();
-  final _priceCtrl = TextEditingController();
-  final _amenitiesCtrl = TextEditingController();
 
-  // Dropdown States (Single Unit)
+  // NEW Controllers to match JSON
+  final _locationCtrl = TextEditingController();
+  final _plotNumCtrl = TextEditingController();
+  final _plotDimCtrl = TextEditingController();
+  final _sizeCtrl = TextEditingController();
+
+  // Dropdown States
   String _config = '3BHK';
   String _type = 'Apartment';
-  String _saleCategory = 'Buy';
+  String _saleCategory = 'New Sale';
   String _facing = 'East';
   String _status = 'Available';
 
@@ -54,18 +58,18 @@ class _AddUnitScreenState extends State<AddUnitScreen>
     _unitCtrl.dispose();
     _areaCtrl.dispose();
     _rateCtrl.dispose();
-    _priceCtrl.dispose();
-    _amenitiesCtrl.dispose();
+    _locationCtrl.dispose();
+    _plotNumCtrl.dispose();
+    _plotDimCtrl.dispose();
+    _sizeCtrl.dispose();
     super.dispose();
   }
 
-  // --- EXCEL PARSING LOGIC ---
   Future<void> _pickAndParseExcel() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['xlsx', 'xls'],
     );
-
     if (result != null) {
       setState(() {
         _isParsing = true;
@@ -76,38 +80,34 @@ class _AddUnitScreenState extends State<AddUnitScreen>
       try {
         var bytes = _selectedExcelFile!.readAsBytesSync();
         var excel = Excel.decodeBytes(bytes);
-
-        // Read the first sheet
         String sheetName = excel.tables.keys.first;
         var table = excel.tables[sheetName]!;
 
-        // Assuming Row 0 is headers, start from Row 1
         for (int i = 1; i < table.maxRows; i++) {
           var row = table.row(i);
-          if (row.isEmpty || row[0]?.value == null) continue; // Skip empty rows
+          if (row.isEmpty || row[0]?.value == null) continue;
 
-          // Map the columns to the API JSON format
-          // Adjust the indexes [0], [1] based on your actual Excel template column order
           _parsedBulkData.add({
             "project_id": widget.projectId,
             "tower_name": row[0]?.value?.toString() ?? "",
             "floor_number": row[1]?.value?.toString() ?? "",
             "unit_number": row[2]?.value?.toString() ?? "",
-            "configuration": row[3]?.value?.toString() ?? "2BHK",
+            "configuration": row[3]?.value?.toString() ?? "3BHK",
             "property_type": row[4]?.value?.toString() ?? "Apartment",
-            "sale_category": row[5]?.value?.toString() ?? "Buy",
+            "sale_category": row[5]?.value?.toString() ?? "New Sale",
             "facing": row[6]?.value?.toString() ?? "East",
-            "amenities": row[7]?.value?.toString() ?? "",
-            "area_sqft": double.tryParse(row[8]?.value?.toString() ?? '0') ?? 0,
-            "rate_per_sqft":
-                double.tryParse(row[9]?.value?.toString() ?? '0') ?? 0,
-            "base_price":
+            "Location": row[7]?.value?.toString() ?? "",
+            "plot_number": row[8]?.value?.toString() ?? "",
+            "plot_dimensions": row[9]?.value?.toString() ?? "",
+            "area_sqft":
                 double.tryParse(row[10]?.value?.toString() ?? '0') ?? 0,
-            "availability_status": row[11]?.value?.toString() ?? "Available",
+            "rate_per_sqft":
+                double.tryParse(row[11]?.value?.toString() ?? '0') ?? 0,
+            "size": row[12]?.value?.toString() ?? "",
+            "availability_status": row[13]?.value?.toString() ?? "Available",
           });
         }
       } catch (e) {
-        debugPrint("Error parsing Excel: $e");
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Invalid Excel format.')));
@@ -161,199 +161,185 @@ class _AddUnitScreenState extends State<AddUnitScreen>
     );
   }
 
-  // ==========================================
-  // TAB 1: SINGLE UNIT FORM
-  // ==========================================
   Widget _buildSingleUnitForm(Color primaryBlue, Color cardColor) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: cardColor,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Row(
-                  children: [
-                    Expanded(child: _buildTextField('Tower Name', _towerCtrl)),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildTextField('Floor Number', _floorCtrl),
-                    ),
-                  ],
+                Expanded(child: _buildTextField('Tower Name', _towerCtrl)),
+                const SizedBox(width: 16),
+                Expanded(child: _buildTextField('Floor Number', _floorCtrl)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildTextField('Unit Number (e.g. A-101)', _unitCtrl),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildDropdown('Configuration', _config, [
+                    '1BHK',
+                    '2BHK',
+                    '3BHK',
+                    '4BHK',
+                    'Villa',
+                  ], (v) => setState(() => _config = v!)),
                 ),
-                const SizedBox(height: 16),
-                _buildTextField('Unit Number (e.g. A-101)', _unitCtrl),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildDropdown('Configuration', _config, [
-                        '1BHK',
-                        '2BHK',
-                        '3BHK',
-                        '4BHK',
-                        'Villa',
-                      ], (v) => setState(() => _config = v!)),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildDropdown('Property Type', _type, [
-                        'Apartment',
-                        'Villa',
-                        'Plot',
-                        'Commercial',
-                      ], (v) => setState(() => _type = v!)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildDropdown(
-                        'Sale Category',
-                        _saleCategory,
-                        ['Buy', 'Rent'],
-                        (v) => setState(() => _saleCategory = v!),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildDropdown('Facing', _facing, [
-                        'East',
-                        'West',
-                        'North',
-                        'South',
-                      ], (v) => setState(() => _facing = v!)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _buildTextField(
-                  'Amenities (e.g. Garden Facing)',
-                  _amenitiesCtrl,
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextField(
-                        'Area (SqFt)',
-                        _areaCtrl,
-                        isNumber: true,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildTextField(
-                        'Rate / SqFt',
-                        _rateCtrl,
-                        isNumber: true,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextField(
-                        'Base Price',
-                        _priceCtrl,
-                        isNumber: true,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildDropdown('Status', _status, [
-                        'Available',
-                        'Hold',
-                        'Booked',
-                        'Sold',
-                      ], (v) => setState(() => _status = v!)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                Consumer<AdminProjectProvider>(
-                  builder: (context, provider, child) {
-                    return SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: provider.isSaving
-                            ? null
-                            : () async {
-                                final data = {
-                                  "project_id": widget.projectId,
-                                  "tower_name": _towerCtrl.text,
-                                  "floor_number": _floorCtrl.text,
-                                  "unit_number": _unitCtrl.text,
-                                  "configuration": _config,
-                                  "property_type": _type,
-                                  "sale_category": _saleCategory,
-                                  "facing": _facing,
-                                  "amenities": _amenitiesCtrl.text,
-                                  "area_sqft":
-                                      int.tryParse(_areaCtrl.text) ?? 0,
-                                  "rate_per_sqft":
-                                      int.tryParse(_rateCtrl.text) ?? 0,
-                                  "base_price":
-                                      int.tryParse(_priceCtrl.text) ?? 0,
-                                  "availability_status": _status,
-                                };
-                                final success = await provider.createUnit(
-                                  data,
-                                  widget.projectId.toString(),
-                                );
-                                if (success) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Unit Added!'),
-                                    ),
-                                  );
-                                  Navigator.pop(context);
-                                }
-                              },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryBlue,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: provider.isSaving
-                            ? const CircularProgressIndicator(
-                                color: Colors.white,
-                              )
-                            : Text(
-                                'Add Unit',
-                                style: GoogleFonts.montserrat(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                      ),
-                    );
-                  },
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildDropdown('Property Type', _type, [
+                    'Apartment',
+                    'Villa',
+                    'Plot',
+                    'Commercial',
+                  ], (v) => setState(() => _type = v!)),
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildDropdown(
+                    'Sale Category',
+                    _saleCategory,
+                    ['New Sale', 'Resale', 'Rent'],
+                    (v) => setState(() => _saleCategory = v!),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildDropdown('Facing', _facing, [
+                    'East',
+                    'West',
+                    'North',
+                    'South',
+                  ], (v) => setState(() => _facing = v!)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildTextField('Location (e.g. Corner Unit)', _locationCtrl),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(child: _buildTextField('Plot Number', _plotNumCtrl)),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildTextField('Plot Dimensions', _plotDimCtrl),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    'Area (SqFt)',
+                    _areaCtrl,
+                    isNumber: true,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildTextField(
+                    'Rate / SqFt',
+                    _rateCtrl,
+                    isNumber: true,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField('Size (e.g. Large)', _sizeCtrl),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildDropdown('Status', _status, [
+                    'Available',
+                    'Booked',
+                    'Sold',
+                  ], (v) => setState(() => _status = v!)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            Consumer<AdminProjectProvider>(
+              builder: (context, provider, child) {
+                return SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: provider.isSaving
+                        ? null
+                        : () async {
+                            final data = {
+                              "project_id": widget.projectId,
+                              "tower_name": _towerCtrl.text,
+                              "floor_number": _floorCtrl.text,
+                              "unit_number": _unitCtrl.text,
+                              "configuration": _config,
+                              "property_type": _type,
+                              "sale_category": _saleCategory,
+                              "facing": _facing,
+                              "Location": _locationCtrl.text,
+                              "plot_number": _plotNumCtrl.text,
+                              "plot_dimensions": _plotDimCtrl.text,
+                              "area_sqft": double.tryParse(_areaCtrl.text) ?? 0,
+                              "rate_per_sqft":
+                                  double.tryParse(_rateCtrl.text) ?? 0,
+                              "size": _sizeCtrl.text,
+                              "availability_status": _status,
+                            };
+                            final success = await provider.createUnit(
+                              data,
+                              widget.projectId.toString(),
+                            );
+                            if (success && mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Unit Added!')),
+                              );
+                              Navigator.pop(context);
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryBlue,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: provider.isSaving
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : Text(
+                            'Add Unit',
+                            style: GoogleFonts.montserrat(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  // ==========================================
-  // TAB 2: BULK UPLOAD FORM
-  // ==========================================
   Widget _buildBulkUploadForm(Color primaryBlue, Color cardColor) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -385,7 +371,7 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Ensure your Excel file has columns in this exact order:\nTower | Floor | Unit | Config | Type | Sale | Facing | Amenities | Area | Rate | Base Price | Status',
+                  'Columns:\nTower | Floor | Unit | Config | Type | Sale | Facing | Location | Plot No | Dimensions | Area | Rate | Size | Status',
                   style: GoogleFonts.montserrat(
                     fontSize: 12,
                     color: Colors.black87,
@@ -396,7 +382,6 @@ class _AddUnitScreenState extends State<AddUnitScreen>
             ),
           ),
           const SizedBox(height: 24),
-
           GestureDetector(
             onTap: _pickAndParseExcel,
             child: DottedBorder(
@@ -426,9 +411,7 @@ class _AddUnitScreenState extends State<AddUnitScreen>
             ),
           ),
           const SizedBox(height: 24),
-
           if (_isParsing) const Center(child: CircularProgressIndicator()),
-
           if (_parsedBulkData.isNotEmpty) ...[
             Text(
               'Preview (${_parsedBulkData.length} units ready)',
@@ -462,7 +445,7 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                         ),
                       ),
                       Text(
-                        '₹${u['base_price']}',
+                        '₹${(u['area_sqft'] * u['rate_per_sqft']).toStringAsFixed(0)}',
                         style: GoogleFonts.montserrat(
                           color: Colors.grey[700],
                           fontSize: 12,
@@ -474,7 +457,6 @@ class _AddUnitScreenState extends State<AddUnitScreen>
               ),
             ),
             const SizedBox(height: 24),
-
             Consumer<AdminProjectProvider>(
               builder: (context, provider, child) {
                 return SizedBox(
@@ -487,7 +469,7 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                               _parsedBulkData,
                               widget.projectId.toString(),
                             );
-                            if (success) {
+                            if (success && mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
@@ -496,14 +478,6 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                                 ),
                               );
                               Navigator.pop(context);
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Some units failed to upload. Check logs.',
-                                  ),
-                                ),
-                              );
                             }
                           },
                     style: ElevatedButton.styleFrom(

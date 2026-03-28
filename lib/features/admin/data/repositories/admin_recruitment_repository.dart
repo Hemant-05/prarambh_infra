@@ -14,7 +14,7 @@ class AdminRecruitmentRepository {
       // The new ApiClient does not expose a recruits-by-advisor endpoint.
       // Fetching the advisor's full record as a fallback.
       final response = await apiClient.getSingleAdvisor(advisorId);
-      if (response['status'] == 'success') {
+      if (response['status']) {
         final data = response['data'];
         // Wrap single advisor data as a list entry.
         return [RecruitedPersonModel.fromJson(data)];

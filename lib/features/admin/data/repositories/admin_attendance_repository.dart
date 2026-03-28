@@ -9,14 +9,14 @@ class AdminAttendanceRepository {
   Future<bool> addMeeting(Map<String, dynamic> data) async {
     try {
       final response = await apiClient.addMeeting(data);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 
   Future<dynamic> getSingleMeeting(String meetingId) async {
     try {
       final response = await apiClient.getSingleMeeting(meetingId);
-      if (response['status'] == 'success') {
+      if (response['status']) {
         return response['data'];
       }
       throw Exception(response['message']);
@@ -30,7 +30,7 @@ class AdminAttendanceRepository {
   }) async {
     try {
       final response = await apiClient.checkInAttendance(meetingId, advisorId, photo);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 
@@ -41,7 +41,7 @@ class AdminAttendanceRepository {
   }) async {
     try {
       final response = await apiClient.checkOutAttendance(meetingId, advisorId, photo);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 

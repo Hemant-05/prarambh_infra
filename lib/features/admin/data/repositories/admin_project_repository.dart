@@ -19,8 +19,8 @@ class AdminProjectRepository {
     try {
       var response = await apiClient.getAllProjects();
       response = _parseResponse(response);
-      if (response['status'] == 'success') {
-        final List data = response['data']['projects'] ?? response['data'] ?? [];
+      if (response['status']) {
+        final List data = response['data'] ?? [];
         return data.map((json) => ProjectModel.fromJson(json)).toList();
       }
       throw Exception(response['message'] ?? 'Failed to load projects');
@@ -31,7 +31,7 @@ class AdminProjectRepository {
     try {
       var response = await apiClient.getSingleProject(projectId);
       response = _parseResponse(response);
-      if (response['status'] == 'success') {
+      if (response['status']) {
         return ProjectModel.fromJson(response['data']);
       }
       throw Exception(response['message']);
@@ -67,7 +67,7 @@ class AdminProjectRepository {
         specialties, videoFile, brochureFile, projectImages,
       );
       response = _parseResponse(response);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 
@@ -102,7 +102,7 @@ class AdminProjectRepository {
         budgetRange, reraNumber, status, videoFile, brochureFile, projectImages,
       );
       response = _parseResponse(response);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 
@@ -110,7 +110,7 @@ class AdminProjectRepository {
     try {
       var response = await apiClient.deleteProject(projectId);
       response = _parseResponse(response);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 
@@ -120,8 +120,8 @@ class AdminProjectRepository {
     try {
       var response = await apiClient.getUnits(projectId);
       response = _parseResponse(response);
-      if (response['status'] == 'success') {
-        final List data = response['data']['units'] ?? response['data'] ?? [];
+      if (response['status']) {
+        final List data = response['data'] ?? [];
         return data.map((json) => UnitModel.fromJson(json)).toList();
       }
       throw Exception(response['message'] ?? 'Failed to load units');
@@ -132,7 +132,7 @@ class AdminProjectRepository {
     try {
       var response = await apiClient.addUnit(data);
       response = _parseResponse(response);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 
@@ -140,7 +140,7 @@ class AdminProjectRepository {
     try {
       var response = await apiClient.addMultipleUnits(data);
       response = _parseResponse(response);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 
@@ -148,7 +148,7 @@ class AdminProjectRepository {
     try {
       var response = await apiClient.updateUnit(unitId, data);
       response = _parseResponse(response);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 
@@ -156,7 +156,7 @@ class AdminProjectRepository {
     try {
       var response = await apiClient.deleteUnit(unitId);
       response = _parseResponse(response);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) { rethrow; }
   }
 }

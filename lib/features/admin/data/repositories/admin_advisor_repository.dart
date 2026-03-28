@@ -10,7 +10,7 @@ class AdminAdvisorRepository {
   Future<List<AdvisorApplicationModel>> getAllAdvisors({String? status}) async {
     try {
       final response = await apiClient.getAllAdvisors(status);
-      if (response['status'] == true || response['status'] == 'success') {
+      if (response['status']) {
         final List data = response['data'] ?? [];
         return data.map((json) => AdvisorApplicationModel.fromJson(json)).toList();
       }
@@ -63,7 +63,7 @@ class AdminAdvisorRepository {
   Future<bool> deleteAdvisor(String advisorId) async {
     try {
       final response = await apiClient.deleteAdvisor(advisorId);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) {
       rethrow;
     }

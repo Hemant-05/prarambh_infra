@@ -104,12 +104,14 @@ class _AdminProjectsScreenState extends State<AdminProjectsScreen> {
               Container(
                 height: 180,
                 width: double.infinity,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                   image: DecorationImage(
-                    image: AssetImage(logo),
-                    fit: BoxFit.cover,
-                  ), // Replace with NetworkImage(project.imageUrl)
+                    image: project.images.isNotEmpty
+                        ? NetworkImage(project.images[0]) as ImageProvider
+                        : const AssetImage(logo),
+                    fit: BoxFit.cover
+                  ),
                 ),
               ),
               Container(

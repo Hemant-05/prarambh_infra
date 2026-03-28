@@ -9,7 +9,7 @@ class AdminLeaderboardRepository {
   Future<List<AdvisorRankModel>> getLeaderboard() async {
     try {
       final response = await apiClient.getLeaderboard();
-      if (response['status'] == 'success') {
+      if (response['status']) {
         final List data = response['data'] ?? [];
         return data.map((json) => AdvisorRankModel.fromJson(json)).toList();
       }
@@ -22,7 +22,7 @@ class AdminLeaderboardRepository {
   Future<bool> evaluateLevel(String advisorId) async {
     try {
       final response = await apiClient.evaluateLevel(advisorId);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) {
       rethrow;
     }
