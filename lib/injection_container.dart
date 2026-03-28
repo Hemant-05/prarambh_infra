@@ -17,6 +17,13 @@ import 'package:prarambh_infra/features/admin/presentation/providers/admin_proje
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_recruitment_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_team_provider.dart';
+import 'package:prarambh_infra/features/advisor/data/repositories/advisor_document_repository.dart';
+import 'package:prarambh_infra/features/advisor/data/repositories/advisor_repository.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_dashboard_provider.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_document_provider.dart';
+import 'package:prarambh_infra/features/recruitment/data/repositories/recruitment_repository.dart';
+import 'package:prarambh_infra/features/recruitment/presentation/providers/advisor_registration_provider.dart';
+import 'package:prarambh_infra/features/recruitment/presentation/providers/recruitment_provider.dart';
 
 // --- Core & External ---
 import 'core/network/dio_client.dart';
@@ -42,6 +49,7 @@ Future<void> init() async {
   sl.registerFactory(() => AdminDocumentProvider(repository: sl()));
 
   sl.registerLazySingleton(() => AuthRepository(apiClient: sl()));
+  sl.registerLazySingleton(() => AdvisorRegistrationProvider(repository: sl()));
   sl.registerLazySingleton(() => AdminRepository(apiClient: sl()));
 
   sl.registerLazySingleton(() => AdminAdvisorRepository(apiClient: sl()));
@@ -70,6 +78,16 @@ Future<void> init() async {
 
   sl.registerFactory(() => AdminProfileProvider(repository: sl()));
   sl.registerLazySingleton(() => AdminProfileRepository(apiClient: sl()));
+
+  sl.registerFactory(() => AdvisorDashboardProvider(repository: sl()));
+  sl.registerLazySingleton(() => AdvisorRepository(apiClient: sl()));
+
+  sl.registerFactory(() => RecruitmentProvider(repository: sl()));
+  sl.registerLazySingleton(() => RecruitmentRepository(apiClient: sl()));
+
+  sl.registerFactory(() => AdvisorDocumentProvider(repository: sl()));
+  sl.registerLazySingleton(() => AdvisorDocumentRepository(apiClient: sl()));
+
 
   // ---------------------------------------------------------------------------
   // 3. Core Network

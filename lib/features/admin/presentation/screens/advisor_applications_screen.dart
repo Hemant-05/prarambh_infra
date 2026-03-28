@@ -15,6 +15,9 @@ class AdvisorApplicationsScreen extends StatefulWidget {
 }
 
 class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
+  // NEW: State variable to hold the user's search text
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
@@ -29,6 +32,17 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
     final cardColor = AppColors.getCardColor(context);
     final primaryBlue = AppColors.getPrimaryBlue(context);
     final provider = context.watch<AdminAdvisorProvider>();
+
+    // NEW: Create a filtered list based on the search query
+    final filteredAdvisors = provider.advisors.where((advisor) {
+      if (_searchQuery.isEmpty) return true;
+
+      final query = _searchQuery.toLowerCase();
+      return advisor.name.toLowerCase().contains(query) ||
+          advisor.displayId.toLowerCase().contains(query) ||
+          advisor.city.toLowerCase().contains(query) ||
+          advisor.state.toLowerCase().contains(query);
+    }).toList();
 
     return Scaffold(
       backgroundColor: isDark
@@ -46,15 +60,6 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
             fontSize: 18,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.notifications_outlined,
-              color: isDark ? Colors.white : Colors.black,
-            ),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -71,42 +76,21 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                     border: Border.all(color: Colors.grey.withOpacity(0.2)),
                   ),
                   child: TextField(
+                    // NEW: Update state when user types
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
                     decoration: InputDecoration(
                       icon: const Icon(Icons.search, color: Colors.grey),
-                      hintText: 'Search by name, ID...',
+                      hintText: 'Search by name, ID, city...',
                       hintStyle: GoogleFonts.montserrat(
                         color: Colors.grey,
                         fontSize: 14,
                       ),
                       border: InputBorder.none,
                     ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  child: Row(
-                    children: [
-                      _buildFilterChip(
-                        'Pending',
-                        isActive: true,
-                        onClear: () {},
-                        primaryBlue: primaryBlue,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildFilterChip(
-                        'Date',
-                        isDropdown: true,
-                        primaryBlue: primaryBlue,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildFilterChip(
-                        'Region',
-                        isDropdown: true,
-                        primaryBlue: primaryBlue,
-                      ),
-                    ],
                   ),
                 ),
               ],
@@ -121,22 +105,12 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'PENDING REVIEW (${provider.advisors.length})',
+                  // NEW: Show the count of the filtered list
+                  'PENDING REVIEW (${filteredAdvisors.length})',
                   style: GoogleFonts.montserrat(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: Colors.grey[600],
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    'View All',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      color: primaryBlue,
-                      fontWeight: FontWeight.bold,
-                    ),
                   ),
                 ),
               ],
@@ -147,61 +121,30 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
           Expanded(
             child: provider.isLoading
                 ? const Center(child: CircularProgressIndicator())
+                : filteredAdvisors.isEmpty
+                ? Center(
+              child: Text(
+                _searchQuery.isEmpty
+                    ? 'No pending applications'
+                    : 'No results found for "$_searchQuery"',
+                style: GoogleFonts.montserrat(color: Colors.grey),
+              ),
+            )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 8,
-                    ),
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: provider.advisors.length,
-                    itemBuilder: (context, index) {
-                      final app = provider.advisors[index];
-                      return _buildAdvisorCard(app, cardColor, isDark);
-                    },
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterChip(
-    String label, {
-    bool isActive = false,
-    bool isDropdown = false,
-    VoidCallback? onClear,
-    required Color primaryBlue,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: isActive ? primaryBlue : Colors.transparent,
-        border: Border.all(
-          color: isActive ? primaryBlue : Colors.grey.withOpacity(0.3),
-        ),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.montserrat(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: isActive ? Colors.white : Colors.grey[700],
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 8,
+              ),
+              physics: const BouncingScrollPhysics(),
+              // NEW: Use the filtered list length
+              itemCount: filteredAdvisors.length,
+              itemBuilder: (context, index) {
+                // NEW: Use the filtered list item
+                final app = filteredAdvisors[index];
+                return _buildAdvisorCard(app, cardColor, isDark);
+              },
             ),
           ),
-          if (onClear != null) ...[
-            const SizedBox(width: 4),
-            GestureDetector(
-              onTap: onClear,
-              child: const Icon(Icons.close, size: 14, color: Colors.white),
-            ),
-          ],
-          if (isDropdown) ...[
-            const SizedBox(width: 4),
-            Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.grey[700]),
-          ],
         ],
       ),
     );
@@ -237,7 +180,7 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
           borderRadius: BorderRadius.circular(12),
           border: Border(
             left: BorderSide(color: statusColor, width: 4),
-          ), // The left colored bar
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.03),
@@ -257,7 +200,9 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                     radius: 24,
                     backgroundColor: Colors.blue[100],
                     child: Text(
-                      app.name.substring(0, 2).toUpperCase(),
+                      app.name.isNotEmpty && app.name.length >= 2
+                          ? app.name.substring(0, 2).toUpperCase()
+                          : 'U',
                       style: GoogleFonts.montserrat(
                         fontWeight: FontWeight.bold,
                         color: Colors.blue[900],
@@ -291,14 +236,19 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          app.name,
-                          style: GoogleFonts.montserrat(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black,
+                        Expanded(
+                          child: Text(
+                            app.name,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -320,8 +270,9 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                       ],
                     ),
                     const SizedBox(height: 4),
+
                     Text(
-                      '${app.zone} • ID: ${app.displayId}',
+                      '${app.city}, ${app.state} • ID: ${app.displayId}',
                       style: GoogleFonts.montserrat(
                         fontSize: 12,
                         color: Colors.grey[600],

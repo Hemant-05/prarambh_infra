@@ -19,7 +19,7 @@ class AdminTeamRepository {
   /// Fetch all advisors to build a team list view.
   Future<List<dynamic>> getAllAdvisors() async {
     try {
-      final response = await apiClient.getAllAdvisors();
+      final response = await apiClient.getAllAdvisors('');
       if (response['status'] == 'success') {
         return response['data'] ?? [];
       }

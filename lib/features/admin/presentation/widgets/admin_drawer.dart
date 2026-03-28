@@ -108,7 +108,7 @@ class AdminDrawer extends StatelessWidget {
                   textColor: textColor,
                   onTap: () {
                     Navigator.pop(context); // close drawer
-                    Navigator.pushNamed(context, '/recruitment_dashboard');
+                    Navigator.pushNamed(context, '/admin_recruitment_dashboard');
                   },
                 ),
               ],

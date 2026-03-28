@@ -7,23 +7,21 @@ class AdminAdvisorRepository {
 
   AdminAdvisorRepository({required this.apiClient});
 
-  Future<List<AdvisorApplicationModel>> getAllAdvisors() async {
+  Future<List<AdvisorApplicationModel>> getAllAdvisors({String? status}) async {
     try {
-      final response = await apiClient.getAllAdvisors();
-      if (response['status'] == 'success') {
+      final response = await apiClient.getAllAdvisors(status);
+      if (response['status'] == true || response['status'] == 'success') {
         final List data = response['data'] ?? [];
         return data.map((json) => AdvisorApplicationModel.fromJson(json)).toList();
       }
       throw Exception(response['message'] ?? 'Failed to load advisors');
-    } catch (e) {
-      rethrow;
-    }
+    } catch (e) { rethrow; }
   }
 
   Future<AdvisorApplicationModel> getSingleAdvisor(String id) async {
     try {
       final response = await apiClient.getSingleAdvisor(id);
-      if (response['status'] == 'success') {
+      if (response['status']) {
         return AdvisorApplicationModel.fromJson(response['data']);
       }
       throw Exception(response['message'] ?? 'Failed to load advisor');
@@ -66,7 +64,7 @@ class AdminAdvisorRepository {
         bankName, accNumber, ifsc, address, city, state, pincode, leaderCode,
         aadharFront, aadharBack, panPhoto, profilePhoto,
       );
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) {
       rethrow;
     }
@@ -75,7 +73,7 @@ class AdminAdvisorRepository {
   Future<bool> approveAdvisor(String advisorId) async {
     try {
       final response = await apiClient.approveAdvisor(advisorId);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) {
       rethrow;
     }
@@ -84,7 +82,7 @@ class AdminAdvisorRepository {
   Future<bool> updateAdvisor(String advisorId, Map<String, dynamic> data) async {
     try {
       final response = await apiClient.updateAdvisor(advisorId, data);
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) {
       rethrow;
     }
@@ -96,7 +94,7 @@ class AdminAdvisorRepository {
         advisorId,
         {'status': status, 'reason': reason},
       );
-      return response['status'] == 'success';
+      return response['status'];
     } catch (e) {
       rethrow;
     }

@@ -6,16 +6,16 @@ import '../../../../core/theme/app_colors.dart';
 import '../providers/admin_recruitment_provider.dart';
 import 'recruiter_detail_screen.dart';
 
-class RecruitmentDashboardScreen extends StatefulWidget {
-  const RecruitmentDashboardScreen({super.key});
+class AdminRecruitmentDashboardScreen extends StatefulWidget {
+  const AdminRecruitmentDashboardScreen({super.key});
 
   @override
-  State<RecruitmentDashboardScreen> createState() =>
-      _RecruitmentDashboardScreenState();
+  State<AdminRecruitmentDashboardScreen> createState() =>
+      _AdminRecruitmentDashboardScreenState();
 }
 
-class _RecruitmentDashboardScreenState
-    extends State<RecruitmentDashboardScreen> {
+class _AdminRecruitmentDashboardScreenState
+    extends State<AdminRecruitmentDashboardScreen> {
   @override
   void initState() {
     super.initState();
@@ -63,6 +63,18 @@ class _RecruitmentDashboardScreenState
           ),
         ],
       ),
+      floatingActionButton: IconButton(
+        onPressed: () => Navigator.pushNamed(context, '/advisor_registration'),
+        icon: Container(
+          height: 50,
+          width: 50,
+          decoration: BoxDecoration(
+            color: primaryBlue,
+            borderRadius: BorderRadius.all(Radius.circular(18)),
+          ),
+          child: Icon(Icons.add, color: Colors.white, size: 28),
+        ),
+      ),
       body: provider.isLoading || provider.dashboardData == null
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -72,14 +84,7 @@ class _RecruitmentDashboardScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Welcome back,',
-                    style: GoogleFonts.montserrat(
-                      color: Colors.grey[600],
-                      fontSize: 14,
-                    ),
-                  ),
-                  Text(
-                    'Recruiter Portal',
+                    'Recruitment Dashboard',
                     style: GoogleFonts.montserrat(
                       color: textColor,
                       fontSize: 24,

@@ -15,20 +15,23 @@ import 'package:prarambh_infra/features/admin/presentation/screens/admin_dashboa
 import 'package:prarambh_infra/features/admin/presentation/screens/admin_projects_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/advisor_applications_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/attendance_report_screen.dart';
-import 'package:prarambh_infra/features/admin/presentation/screens/attendance_review_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/contests_list_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/create_meeting_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/docs_management_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/lead_management_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/leaderboard_screen.dart';
-import 'package:prarambh_infra/features/admin/presentation/screens/recruitment_dashboard_screen.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/admin_recruitment_dashboard_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/team_management_screen.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_dashboard_provider.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_document_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_dashboard_screen.dart';
+import 'package:prarambh_infra/features/recruitment/presentation/providers/advisor_registration_provider.dart';
 import 'package:prarambh_infra/features/client/presentation/screens/client_dashboard_screen.dart';
 import 'package:prarambh_infra/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:prarambh_infra/features/recruitment/presentation/providers/recruitment_provider.dart';
+import 'package:prarambh_infra/features/recruitment/presentation/screens/advisor_registration_screen.dart';
+import 'package:prarambh_infra/features/recruitment/presentation/screens/recruiter_dashboard_screen.dart';
 import 'package:provider/provider.dart';
-
-// Import the injection container
 import 'injection_container.dart' as di;
 
 import 'features/auth/presentation/providers/auth_provider.dart';
@@ -65,6 +68,10 @@ void main() async {
         ChangeNotifierProvider(create: (_) => di.sl<AdminProjectProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdminLeadProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdminProfileProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdvisorRegistrationProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdvisorDashboardProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<RecruitmentProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdvisorDocumentProvider>()),
       ],
       child: const PraarambhApp(),
     ),
@@ -104,12 +111,14 @@ class PraarambhApp extends StatelessWidget {
         '/leaderboard': (context) => const LeaderboardScreen(),
         '/create_meeting': (context) => const CreateMeetingScreen(),
         '/attendance_report': (context) => const AttendanceReportScreen(),
-        '/recruitment_dashboard': (context) => const RecruitmentDashboardScreen(),
+        '/admin_recruitment_dashboard': (context) => const AdminRecruitmentDashboardScreen(),
         '/team_management': (context) => const TeamManagementScreen(),
         '/admin_projects': (context) => const AdminProjectsScreen(),
         '/lead_management': (context) => const LeadManagementScreen(),
         '/advisor_dashboard': (context) => const AdvisorDashboardScreen(),
         '/client_dashboard': (context) => const ClientDashboardScreen(),
+        '/advisor_registration': (context) => const AdvisorRegistrationScreen(),
+        '/recruiter_dashboard' : (context) => const RecruiterDashboardScreen(),
       },
     );
   }
