@@ -30,46 +30,6 @@ class AdminAdvisorRepository {
     }
   }
 
-  Future<bool> registerAdvisor({
-    required String fullName,
-    required String email,
-    required String phone,
-    required String designation,
-    required String fatherName,
-    required String dob,
-    required String gender,
-    required String nomineeName,
-    required String nomineePhone,
-    required String relationship,
-    required String occupation,
-    required String aadhaar,
-    required String pan,
-    required String bankName,
-    required String accNumber,
-    required String ifsc,
-    required String address,
-    required String city,
-    required String state,
-    required String pincode,
-    required String leaderCode,
-    required File aadharFront,
-    required File aadharBack,
-    required File panPhoto,
-    required File profilePhoto,
-  }) async {
-    try {
-      final response = await apiClient.registerAdvisor(
-        fullName, email, phone, designation, fatherName, dob, gender,
-        nomineeName, nomineePhone, relationship, occupation, aadhaar, pan,
-        bankName, accNumber, ifsc, address, city, state, pincode, leaderCode,
-        aadharFront, aadharBack, panPhoto, profilePhoto,
-      );
-      return response['status'];
-    } catch (e) {
-      rethrow;
-    }
-  }
-
   Future<bool> approveAdvisor(String advisorId) async {
     try {
       final response = await apiClient.approveAdvisor(advisorId);

@@ -61,53 +61,6 @@ class AdminAdvisorProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> registerAdvisor({
-    required String fullName,
-    required String email,
-    required String phone,
-    required String designation,
-    required String fatherName,
-    required String dob,
-    required String gender,
-    required String nomineeName,
-    required String nomineePhone,
-    required String relationship,
-    required String occupation,
-    required String aadhaar,
-    required String pan,
-    required String bankName,
-    required String accNumber,
-    required String ifsc,
-    required String address,
-    required String city,
-    required String state,
-    required String pincode,
-    required String leaderCode,
-    required File aadharFront,
-    required File aadharBack,
-    required File panPhoto,
-    required File profilePhoto,
-  }) async {
-    _isSaving = true; notifyListeners();
-    try {
-      return await repository.registerAdvisor(
-        fullName: fullName, email: email, phone: phone,
-        designation: designation, fatherName: fatherName, dob: dob,
-        gender: gender, nomineeName: nomineeName, nomineePhone: nomineePhone,
-        relationship: relationship, occupation: occupation, aadhaar: aadhaar,
-        pan: pan, bankName: bankName, accNumber: accNumber, ifsc: ifsc,
-        address: address, city: city, state: state, pincode: pincode,
-        leaderCode: leaderCode, aadharFront: aadharFront, aadharBack: aadharBack,
-        panPhoto: panPhoto, profilePhoto: profilePhoto,
-      );
-    } catch (e) {
-      debugPrint('Register Advisor Error: $e');
-      return false;
-    } finally {
-      _isSaving = false; notifyListeners();
-    }
-  }
-
   Future<bool> deleteAdvisor(String advisorId) async {
     _isSaving = true; notifyListeners();
     try {

@@ -171,6 +171,7 @@ class _ApiClient implements ApiClient {
     File aadharFront,
     File aadharBack,
     File panPhoto,
+    File panBackPhoto,
     File profilePhoto,
   ) async {
     final _extra = <String, dynamic>{};
@@ -222,6 +223,15 @@ class _ApiClient implements ApiClient {
         MultipartFile.fromFileSync(
           panPhoto.path,
           filename: panPhoto.path.split(Platform.pathSeparator).last,
+        ),
+      ),
+    );
+    _data.files.add(
+      MapEntry(
+        'pancard_back_photo',
+        MultipartFile.fromFileSync(
+          panBackPhoto.path,
+          filename: panBackPhoto.path.split(Platform.pathSeparator).last,
         ),
       ),
     );

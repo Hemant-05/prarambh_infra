@@ -65,6 +65,7 @@ abstract class ApiClient {
     @Part(name: "addresscard_front_photo") File aadharFront,
     @Part(name: "addresscard_back_photo") File aadharBack,
     @Part(name: "pancard_photo") File panPhoto,
+    @Part(name: "pancard_back_photo") File panBackPhoto,
     @Part(name: "profile_photo") File profilePhoto,
   );
 

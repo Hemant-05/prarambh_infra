@@ -20,11 +20,11 @@ class AdvisorRegistrationProvider extends ChangeNotifier {
   final emailCtrl = TextEditingController();
   final addressCtrl = TextEditingController();
   final occupationCtrl = TextEditingController();
-  final pincodeCtrl = TextEditingController(); // Missing in UI, needed for API
+  final pincodeCtrl = TextEditingController();
 
   String gender = 'Male';
-  String state = 'Madhya Pradesh';
-  String city = 'Hoshangabad';
+  final stateCtrl = TextEditingController();
+  final cityCtrl =  TextEditingController();
 
   // --- Step 2 Controllers ---
   final nomineeNameCtrl = TextEditingController();
@@ -41,7 +41,8 @@ class AdvisorRegistrationProvider extends ChangeNotifier {
   File? aadharFront;
   File? aadharBack;
   File? panPhoto;
-  File? profilePhoto; // Missing in UI, needed for API
+  File? panBackPhoto; // NEW FIELD
+  File? profilePhoto;
 
   Future<void> pickFile(String type) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
@@ -50,6 +51,7 @@ class AdvisorRegistrationProvider extends ChangeNotifier {
       if (type == 'aadhar_front') aadharFront = file;
       if (type == 'aadhar_back') aadharBack = file;
       if (type == 'pan') panPhoto = file;
+      if (type == 'pan_back') panBackPhoto = file; // NEW FIELD
       if (type == 'profile') profilePhoto = file;
       notifyListeners();
     }
@@ -57,7 +59,8 @@ class AdvisorRegistrationProvider extends ChangeNotifier {
 
   // --- Validation & Submission ---
   bool validateStep1(BuildContext context) {
-    if (nameCtrl.text.isEmpty || phoneCtrl.text.isEmpty || aadharCtrl.text.isEmpty || panCtrl.text.isEmpty) {
+    // Also added dobCtrl verification since it's required by the backend
+    if (nameCtrl.text.isEmpty || phoneCtrl.text.isEmpty || aadharCtrl.text.isEmpty || panCtrl.text.isEmpty || dobCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all required Personal & Contact details.')));
       return false;
     }
@@ -65,7 +68,8 @@ class AdvisorRegistrationProvider extends ChangeNotifier {
   }
 
   Future<bool> submitRegistration(BuildContext context) async {
-    if (leaderCodeCtrl.text.isEmpty || aadharFront == null || aadharBack == null || panPhoto == null || profilePhoto == null) {
+    // Added panBackPhoto to validation
+    if (leaderCodeCtrl.text.isEmpty || aadharFront == null || aadharBack == null || panPhoto == null || panBackPhoto == null || profilePhoto == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please upload all required documents and provide Leader Code.')));
       return false;
     }
@@ -78,9 +82,19 @@ class AdvisorRegistrationProvider extends ChangeNotifier {
           nomineeName: nomineeNameCtrl.text, nomineePhone: nomineePhoneCtrl.text, relationship: relationship,
           occupation: occupationCtrl.text, aadhaar: aadharCtrl.text, pan: panCtrl.text,
           bankName: bankNameCtrl.text, accNumber: accNumberCtrl.text, ifsc: ifscCtrl.text,
-          address: addressCtrl.text, city: city, state: state, pincode: pincodeCtrl.text, leaderCode: leaderCodeCtrl.text,
-          aadharFront: aadharFront!, aadharBack: aadharBack!, panPhoto: panPhoto!, profilePhoto: profilePhoto!
+          address: addressCtrl.text, city: cityCtrl.text, state: stateCtrl.text, pincode: pincodeCtrl.text, leaderCode: leaderCodeCtrl.text,
+          aadharFront: aadharFront!, aadharBack: aadharBack!, panPhoto: panPhoto!,
+          panBackPhoto: panBackPhoto!, // NEW FIELD passed to repo
+          profilePhoto: profilePhoto!
       );
+
+      if(success){
+        nameCtrl.clear(); fatherNameCtrl.clear(); dobCtrl.clear(); aadharCtrl.clear(); panCtrl.clear();
+        phoneCtrl.clear(); emailCtrl.clear(); addressCtrl.clear(); occupationCtrl.clear(); pincodeCtrl.clear();
+        nomineeNameCtrl.clear(); nomineePhoneCtrl.clear(); bankNameCtrl.clear(); accNumberCtrl.clear(); ifscCtrl.clear();
+        branchCtrl.clear(); leaderCodeCtrl.clear();
+        aadharFront = null; aadharBack = null; panPhoto = null; panBackPhoto = null; profilePhoto = null;
+      }
 
       _isLoading = false; notifyListeners();
       return success;

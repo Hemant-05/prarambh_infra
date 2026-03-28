@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:prarambh_infra/data/datasources/remote/api_client.dart';
 import '../models/recruitment_model.dart';
 
@@ -15,14 +14,16 @@ class RecruitmentRepository {
     required String pan, required String bankName, required String accNumber,
     required String ifsc, required String address, required String city,
     required String state, required String pincode, required String leaderCode,
-    required File aadharFront, required File aadharBack, required File panPhoto, required File profilePhoto,
+    required File aadharFront, required File aadharBack, required File panPhoto,
+    required File panBackPhoto, // NEW FIELD
+    required File profilePhoto,
   }) async {
     try {
       final response = await apiClient.registerAdvisor(
         fullName, email, phone, designation, fatherName, dob, gender,
         nomineeName, nomineePhone, relationship, occupation, aadhaar, pan,
         bankName, accNumber, ifsc, address, city, state, pincode, leaderCode,
-        aadharFront, aadharBack, panPhoto, profilePhoto,
+        aadharFront, aadharBack, panPhoto, panBackPhoto, profilePhoto, // Added to client call
       );
 
       final status = response['status'];

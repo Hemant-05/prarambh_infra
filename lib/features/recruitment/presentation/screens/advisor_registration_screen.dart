@@ -49,7 +49,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
           Expanded(
             child: PageView(
               controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(), // Disable swipe to force button clicks
+              physics: const NeverScrollableScrollPhysics(),
               children: [
                 _buildStepOne(provider),
                 _buildStepTwo(provider, primaryBlue),
@@ -102,7 +102,8 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                 _buildTextField("Father's Name", "Enter father's name", provider.fatherNameCtrl),
                 Row(
                   children: [
-                    Expanded(child: _buildTextField('Date of birth', 'MM/DD/YYYY', provider.dobCtrl, icon: Icons.calendar_today_outlined)),
+                    // UPDATED: Date Picker Widget
+                    Expanded(child: _buildDatePicker('Date of birth', 'YYYY-MM-DD', provider.dobCtrl, provider)),
                     const SizedBox(width: 12),
                     Expanded(child: _buildDropdown('Gender', provider.gender, ['Male', 'Female', 'Other'], (v) => setState(() => provider.gender = v!))),
                   ],
@@ -123,9 +124,9 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                 _buildTextField('Address', 'Full residential address', provider.addressCtrl, maxLines: 2),
                 Row(
                   children: [
-                    Expanded(child: _buildDropdown('State', provider.state, ['Madhya Pradesh', 'Maharashtra', 'Gujarat'], (v) => setState(() => provider.state = v!))),
+                    Expanded(child: _buildTextField('State', 'Madhya Pradesh', provider.stateCtrl, icon: Icons.map)),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildDropdown('City', provider.city, ['Hoshangabad', 'Indore', 'Bhopal'], (v) => setState(() => provider.city = v!))),
+                    Expanded(child: _buildTextField('City', 'Ujjain', provider.cityCtrl, icon: Icons.location_city_outlined)),
                   ],
                 ),
                 Row(
@@ -189,7 +190,9 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
               children: [
                 _buildUploadBox('Aadhar Card (Front)', 'aadhar_front', provider.aadharFront, provider, primaryBlue),
                 _buildUploadBox('Aadhar Card (Back)', 'aadhar_back', provider.aadharBack, provider, primaryBlue),
-                _buildUploadBox('PAN Card', 'pan', provider.panPhoto, provider, primaryBlue),
+                _buildUploadBox('PAN Card (Front)', 'pan', provider.panPhoto, provider, primaryBlue),
+                // UPDATED: Added PAN Card Back
+                _buildUploadBox('PAN Card (Back)', 'pan_back', provider.panBackPhoto, provider, primaryBlue),
                 _buildUploadBox('Profile Photo (Selfie)', 'profile', provider.profilePhoto, provider, primaryBlue),
               ],
             ),
@@ -206,6 +209,49 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
   // ==========================================
   // WIDGET HELPERS
   // ==========================================
+
+  // NEW: Custom Date Picker Field
+  Widget _buildDatePicker(String label, String hint, TextEditingController controller, AdvisorRegistrationProvider provider) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: GoogleFonts.montserrat(fontSize: 12, color: Colors.black87)),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () async {
+              final DateTime? picked = await showDatePicker(
+                context: context,
+                initialDate: DateTime(2000, 1, 1), // Default start date
+                firstDate: DateTime(1950),
+                lastDate: DateTime.now(),
+              );
+              if (picked != null) {
+                // Format directly to YYYY-MM-DD for the backend
+                String formattedDate = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                controller.text = formattedDate;
+              }
+            },
+            child: AbsorbPointer( // Prevents keyboard from popping up
+              child: TextField(
+                controller: controller,
+                style: GoogleFonts.montserrat(fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: hint, hintStyle: GoogleFonts.montserrat(color: Colors.grey[400], fontSize: 13),
+                  suffixIcon: const Icon(Icons.calendar_today_outlined, color: Colors.grey),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSectionHeader(String number, String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
