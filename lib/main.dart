@@ -24,11 +24,15 @@ import 'package:prarambh_infra/features/admin/presentation/screens/lead_manageme
 import 'package:prarambh_infra/features/admin/presentation/screens/leaderboard_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/admin_recruitment_dashboard_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/team_management_screen.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_attendance_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_contest_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_dashboard_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_document_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_lead_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_dashboard_screen.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_leaderboard_provider.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_leaderboard_screen.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/installment_calculator_screen.dart';
 import 'package:prarambh_infra/features/recruitment/presentation/providers/advisor_registration_provider.dart';
 import 'package:prarambh_infra/features/client/presentation/screens/client_dashboard_screen.dart';
 import 'package:prarambh_infra/features/auth/presentation/screens/forgot_password_screen.dart';
@@ -79,6 +83,8 @@ void main() async {
         ChangeNotifierProvider(create: (_) => di.sl<AdminDealProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdvisorLeadProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdvisorContestProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdvisorAttendanceProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdvisorLeaderboardProvider>()),
       ],
       child: const PraarambhApp(),
     ),
@@ -127,6 +133,8 @@ class PraarambhApp extends StatelessWidget {
         '/client_dashboard': (context) => const ClientDashboardScreen(),
         '/advisor_registration': (context) => const AdvisorRegistrationScreen(),
         '/recruiter_dashboard' : (context) => const RecruiterDashboardScreen(),
+        '/installment_calculator': (context) => const InstallmentCalculatorScreen(),
+        '/advisor_leaderboard': (context) => const AdvisorLeaderboardScreen(),
       },
     );
   }

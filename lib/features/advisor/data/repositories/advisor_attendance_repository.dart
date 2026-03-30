@@ -1,0 +1,40 @@
+import 'dart:io';
+import '../../../../data/datasources/remote/api_client.dart';
+import '../models/advisor_meeting_model.dart';
+
+class AdvisorAttendanceRepository {
+  final ApiClient apiClient;
+
+  AdvisorAttendanceRepository({required this.apiClient});
+
+  Future<List<AdvisorMeetingModel>> getAllMeetings() async {
+    try {
+      final response = await apiClient.getAllMeetings();
+      if (response['status'] == true || response['status'] == 'success') {
+        final List data = response['data'] ?? [];
+        return data.map((e) => AdvisorMeetingModel.fromJson(e)).toList();
+      }
+      throw Exception(response['message'] ?? 'Failed to load meetings');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<bool> checkIn(String meetingId, String advisorId, File photo) async {
+    try {
+      final response = await apiClient.checkInAttendance(meetingId, advisorId, photo);
+      return response['status'] == true || response['status'] == 'success';
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<bool> checkOut(String meetingId, String advisorId, File photo) async {
+    try {
+      final response = await apiClient.checkOutAttendance(meetingId, advisorId, photo);
+      return response['status'] == true || response['status'] == 'success';
+    } catch (e) {
+      rethrow;
+    }
+  }
+}

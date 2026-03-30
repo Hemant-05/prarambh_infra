@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/features/admin/data/models/advisor_application_model.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/contests_list_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_contests_list_screen.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_schedule_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/document_center_screen.dart';
 import 'package:prarambh_infra/features/auth/data/repositories/auth_repository.dart';
 import 'package:prarambh_infra/features/auth/presentation/providers/auth_provider.dart';
@@ -502,8 +503,15 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
       ),
       itemCount: actions.length,
       itemBuilder: (context, index) {
-        return Container(
-          decoration: BoxDecoration(
+        return InkWell(
+          onTap: () {
+            if (actions[index]['label'] == 'Calculator') {
+              Navigator.pushNamed(context, '/installment_calculator');
+            }
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: _primaryBlue.withOpacity(0.2)),
@@ -528,8 +536,9 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
               ),
             ],
           ),
-        );
-      },
+        ),
+      );
+    },
     );
   }
 
@@ -885,10 +894,19 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           _drawerItem(
             Icons.calculate_outlined,
             'Calculator - INSTALLMENT',
-            () {},
+            () {
+              Navigator.pushNamed(context, '/installment_calculator');
+            },
           ),
-          _drawerItem(Icons.badge_outlined, 'Meeting & Attendance', () {}),
-          _drawerItem(Icons.leaderboard_outlined, 'Leader board', () {}),
+          _drawerItem(Icons.badge_outlined, 'Meeting & Attendance', () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AdvisorScheduleScreen()),
+            );
+          }),
+          _drawerItem(Icons.leaderboard_outlined, 'Leader board', () {
+            Navigator.pushNamed(context, '/advisor_leaderboard');
+          }),
           _drawerItem(Icons.person_add_alt, 'Recruit Advisor', () {
             Navigator.pushNamed(context, '/recruiter_dashboard');
           }),
