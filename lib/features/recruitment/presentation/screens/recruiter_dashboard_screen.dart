@@ -55,10 +55,6 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildHeader(),
-                      const SizedBox(height: 24),
-                      _buildStatsGrid(provider.data!),
-                      const SizedBox(height: 32),
-                      _buildRecentRecruitmentsHeader(primaryBlue),
                       const SizedBox(height: 16),
                       _buildRecentRecruitmentsList(
                         provider.data!.recentRecruitments,
@@ -81,10 +77,10 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
           children: [
             const SizedBox(height: 4),
             Text(
-              'Recruitment Portal',
+              'Recruitment List',
               style: GoogleFonts.montserrat(
                 color: const Color(0xFF11223A), // Dark navy
-                fontSize: 22,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -112,130 +108,6 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
               ),
             ),
           ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatsGrid(RecruitmentDashboardModel data) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 1.3, // Adjusts height of cards
-      children: [
-        _buildStatCard(
-          'TOTAL',
-          data.totalBrokers.toString(),
-          'Brokers',
-          Icons.people_outline,
-          Colors.blueGrey,
-        ),
-        _buildStatCard(
-          'ACTIVE',
-          data.activeBrokers.toString(),
-          'Onboarded',
-          Icons.check_circle_outline,
-          Colors.green,
-        ),
-        _buildStatCard(
-          'PENDING',
-          data.pendingBrokers.toString(),
-          'Verification',
-          Icons.assignment_late_outlined,
-          Colors.orange,
-        ),
-        _buildStatCard(
-          'SUSPENDED',
-          data.suspendedBrokers.toString(),
-          'Action Req.',
-          Icons.block,
-          Colors.redAccent,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatCard(
-    String title,
-    String count,
-    String subtitle,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blueGrey.shade100, width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: color),
-              const SizedBox(width: 6),
-              Text(
-                title,
-                style: GoogleFonts.montserrat(
-                  color: Colors.blueGrey[600],
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          Text(
-            count,
-            style: GoogleFonts.montserrat(
-              color: const Color(0xFF11223A),
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: GoogleFonts.montserrat(
-              color: Colors.blueGrey[500],
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRecentRecruitmentsHeader(Color primaryBlue) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          'Recent Recruitments',
-          style: GoogleFonts.montserrat(
-            color: const Color(0xFF11223A),
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        TextButton(
-          onPressed: () {},
-          child: Text(
-            'View All',
-            style: GoogleFonts.montserrat(
-              color: primaryBlue,
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-            ),
-          ),
         ),
       ],
     );

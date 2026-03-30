@@ -19,9 +19,11 @@ import 'package:prarambh_infra/features/admin/presentation/providers/admin_proje
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_recruitment_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_team_provider.dart';
+import 'package:prarambh_infra/features/advisor/data/repositories/advisor_contest_repository.dart';
 import 'package:prarambh_infra/features/advisor/data/repositories/advisor_document_repository.dart';
 import 'package:prarambh_infra/features/advisor/data/repositories/advisor_lead_repository.dart';
 import 'package:prarambh_infra/features/advisor/data/repositories/advisor_repository.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_contest_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_dashboard_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_document_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_lead_provider.dart';
@@ -97,6 +99,10 @@ Future<void> init() async {
 
   sl.registerFactory(() => AdvisorLeadProvider(repository: sl()));
   sl.registerLazySingleton(() => AdvisorLeadRepository(apiClient: sl()));
+
+  sl.registerFactory(() => AdvisorContestProvider(repository: sl()));
+  sl.registerLazySingleton(() => AdvisorContestRepository(apiClient: sl()));
+
   // ---------------------------------------------------------------------------
   // 3. Core Network
   // ---------------------------------------------------------------------------

@@ -2,6 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prarambh_infra/features/admin/data/models/advisor_application_model.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/contests_list_screen.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_contests_list_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/document_center_screen.dart';
 import 'package:prarambh_infra/features/auth/data/repositories/auth_repository.dart';
 import 'package:prarambh_infra/features/auth/presentation/providers/auth_provider.dart';
@@ -24,14 +27,15 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Call this with the actual logged-in user's ID later
-      context.read<AdvisorDashboardProvider>().fetchDashboardData('PIA00001');
+      final advisor_code = context.read<AuthProvider>().currentUser?.advisorCode ?? '';
+      context.read<AdvisorDashboardProvider>().fetchDashboardData(advisor_code);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AdvisorDashboardProvider>();
+    final advisor = context.read<AuthProvider>().currentUser;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
@@ -54,7 +58,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
       body: provider.isLoading || provider.data == null
           ? Center(child: CircularProgressIndicator(color: _primaryBlue))
           : RefreshIndicator(
-              onRefresh: () => provider.fetchDashboardData('PIA00001'),
+              onRefresh: () => provider.fetchDashboardData(advisor!.advisorCode!??'PIA00004'),
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
@@ -861,7 +865,12 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
               MaterialPageRoute(builder: (context) => DocumentCenterScreen()),
             );
           }),
-          _drawerItem(Icons.emoji_events_outlined, 'Contests', () {}),
+          _drawerItem(Icons.emoji_events_outlined, 'Contests', () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AdvisorContestsListScreen()),
+            );
+          }),
           _drawerItem(
             Icons.account_balance_wallet_outlined,
             'My Income',
