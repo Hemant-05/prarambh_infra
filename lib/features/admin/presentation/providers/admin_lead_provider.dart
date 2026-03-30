@@ -101,6 +101,7 @@ class AdminLeadProvider extends ChangeNotifier {
       final success = await repository.assignLeadToAdvisor(leadId, advisorCode);
       if (success) {
         await fetchUnassignedLeads();
+        await fetchLeads();
       }
       return success;
     } catch (e) {

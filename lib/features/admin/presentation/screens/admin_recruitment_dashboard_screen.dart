@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/back_button.dart';
 import '../providers/admin_recruitment_provider.dart';
-import 'recruiter_detail_screen.dart';
 
 class AdminRecruitmentDashboardScreen extends StatefulWidget {
   const AdminRecruitmentDashboardScreen({super.key});
@@ -36,32 +35,15 @@ class _AdminRecruitmentDashboardScreenState
       backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        elevation: 0,
         leading: backButton(isDark: isDark),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 20),
-            child: Stack(
-              alignment: Alignment.bottomRight,
-              children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundImage: const AssetImage('assets/images/logos.png'),
-                  backgroundColor: Colors.grey[200],
-                ),
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: Colors.green,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                ),
-              ],
-            ),
+        title: Text(
+          'Recruitment Dashboard',
+          style: GoogleFonts.montserrat(
+            color: textColor,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
           ),
-        ],
+        ),
       ),
       floatingActionButton: IconButton(
         onPressed: () => Navigator.pushNamed(context, '/advisor_registration'),
@@ -70,9 +52,9 @@ class _AdminRecruitmentDashboardScreenState
           width: 50,
           decoration: BoxDecoration(
             color: primaryBlue,
-            borderRadius: BorderRadius.all(Radius.circular(18)),
+            borderRadius: const BorderRadius.all(Radius.circular(18)),
           ),
-          child: Icon(Icons.add, color: Colors.white, size: 28),
+          child: const Icon(Icons.add, color: Colors.white, size: 28),
         ),
       ),
       body: provider.isLoading || provider.dashboardData == null
@@ -83,17 +65,6 @@ class _AdminRecruitmentDashboardScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Recruitment Dashboard',
-                    style: GoogleFonts.montserrat(
-                      color: textColor,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // 2x2 Grid Stats
                   GridView.count(
                     crossAxisCount: 2,
                     crossAxisSpacing: 16,
@@ -104,8 +75,8 @@ class _AdminRecruitmentDashboardScreenState
                     children: [
                       _buildStatCard(
                         'TOTAL',
-                        provider.dashboardData!.totalBrokers.toString(),
-                        'Brokers',
+                        provider.dashboardData!.totalRecruits.toString(),
+                        'Recruits',
                         Icons.people_outline,
                         primaryBlue,
                         cardColor,
@@ -113,7 +84,7 @@ class _AdminRecruitmentDashboardScreenState
                       ),
                       _buildStatCard(
                         'ACTIVE',
-                        provider.dashboardData!.activeBrokers.toString(),
+                        provider.dashboardData!.activeRecruits.toString(),
                         'Onboarded',
                         Icons.check_circle_outline,
                         Colors.green,
@@ -122,8 +93,8 @@ class _AdminRecruitmentDashboardScreenState
                       ),
                       _buildStatCard(
                         'PENDING',
-                        provider.dashboardData!.pendingVerification.toString(),
-                        'Verification',
+                        provider.dashboardData!.pendingApprovals.toString(),
+                        'Approval',
                         Icons.pending_actions_outlined,
                         Colors.orange,
                         cardColor,
@@ -131,8 +102,8 @@ class _AdminRecruitmentDashboardScreenState
                       ),
                       _buildStatCard(
                         'SUSPENDED',
-                        provider.dashboardData!.suspendedActionReq.toString(),
-                        'Action Req.',
+                        provider.dashboardData!.inactiveOrSuspended.toString(),
+                        'Inactive',
                         Icons.block_outlined,
                         Colors.red,
                         cardColor,
@@ -146,7 +117,7 @@ class _AdminRecruitmentDashboardScreenState
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Top Recruiters',
+                        'Recent Applications',
                         style: GoogleFonts.montserrat(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -165,111 +136,165 @@ class _AdminRecruitmentDashboardScreenState
                   ),
                   const SizedBox(height: 16),
 
-                  // Modified List View
-                  ...provider.dashboardData!.topRecruiters.map(
-                    (recruiter) => GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => RecruiterDetailScreen(
-                            recruiterName: recruiter.name,
-                            advisorId: recruiter.id,
+                  if (provider.dashboardData!.recentApplications.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 40),
+                        child: Text(
+                          "No recent applications found",
+                          style: GoogleFonts.montserrat(
+                            color: Colors.grey,
+                            fontSize: 14,
                           ),
                         ),
                       ),
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: cardColor,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.grey.withOpacity(0.1),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.02),
-                              blurRadius: 5,
-                              offset: const Offset(0, 2),
+                    )
+                  else
+                    ...provider.dashboardData!.recentApplications.map((
+                      applicant,
+                    ) {
+                      bool isActive =
+                          applicant.status.toLowerCase() == 'active';
+                      Color statusColor = isActive
+                          ? Colors.green
+                          : Colors.orange;
+
+                      return GestureDetector(
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Clicked on ${applicant.name}'),
                             ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 22,
-                              backgroundColor: Colors.blue[50],
-                              child: Text(
-                                recruiter.initials,
-                                style: GoogleFonts.montserrat(
-                                  fontWeight: FontWeight.bold,
-                                  color: primaryBlue,
+                          );
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: cardColor,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.grey.withOpacity(0.1),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.02),
+                                blurRadius: 5,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 22,
+                                backgroundColor: primaryBlue.withOpacity(0.1),
+                                child: Text(
+                                  applicant.initials,
+                                  style: GoogleFonts.montserrat(
+                                    fontWeight: FontWeight.bold,
+                                    color: primaryBlue,
+                                    fontSize: 14,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      applicant.name,
+                                      style: GoogleFonts.montserrat(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: textColor,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      applicant.designation,
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.phone,
+                                          size: 10,
+                                          color: Colors.grey[400],
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          applicant.phone,
+                                          style: GoogleFonts.montserrat(
+                                            fontSize: 10,
+                                            color: Colors.grey[500],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Icon(
+                                          Icons.email,
+                                          size: 10,
+                                          color: Colors.grey[400],
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            applicant.email,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: GoogleFonts.montserrat(
+                                              fontSize: 10,
+                                              color: Colors.grey[500],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Column(
                                 children: [
-                                  Text(
-                                    recruiter.name,
-                                    style: GoogleFonts.montserrat(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                      color: textColor,
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: statusColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      applicant.status,
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: statusColor,
+                                      ),
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.calendar_today_outlined,
-                                        size: 12,
-                                        color: Colors.grey[500],
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        recruiter.joinedDate,
-                                        style: GoogleFonts.montserrat(
-                                          fontSize: 12,
-                                          color: Colors.grey[500],
-                                        ),
-                                      ),
-                                    ],
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    applicant.joinedDate,
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 9,
+                                      color: Colors.grey[400],
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ],
                               ),
-                            ),
-                            // The modification: Showing recruit count instead of a status pill
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  '${recruiter.recruitCount}',
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: primaryBlue,
-                                  ),
-                                ),
-                                Text(
-                                  'Recruits',
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 10,
-                                    color: Colors.grey[600],
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(width: 12),
-                            Icon(Icons.chevron_right, color: Colors.grey[400]),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
-                  ),
+                      );
+                    }),
                 ],
               ),
             ),

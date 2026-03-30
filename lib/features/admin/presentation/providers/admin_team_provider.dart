@@ -6,12 +6,12 @@ class AdminTeamProvider extends ChangeNotifier {
   final AdminTeamRepository repository;
   AdminTeamProvider({required this.repository});
 
-  dynamic _teamTree; // Can map to AdvisorNode.fromJson in UI
+  AdvisorNode? _teamTree; // Strongly typed mapped model
   BrokerProfileModel? _selectedProfile;
   List<dynamic> _allAdvisors = [];
   bool _isLoading = false;
 
-  dynamic get teamTree => _teamTree;
+  AdvisorNode? get teamTree => _teamTree;
   BrokerProfileModel? get selectedProfile => _selectedProfile;
   List<dynamic> get allAdvisors => _allAdvisors;
   bool get isLoading => _isLoading;
@@ -20,8 +20,20 @@ class AdminTeamProvider extends ChangeNotifier {
     _isLoading = true; notifyListeners();
     try {
       _allAdvisors = await repository.getAllAdvisors();
-      // Fetches the real tree structure directly from the backend API
-      _teamTree = await repository.getTeamHierarchy();
+      final data = await repository.getTeamHierarchy();
+      if (data is List) {
+        // Map the array into a structured Root Node containing the entire network
+        _teamTree = AdvisorNode(
+          id: 'root',
+          name: 'Admin Dashboard',
+          role: 'Headquarters',
+          code: 'Prarambh Infra',
+          avatarUrl: '',
+          children: data.map((e) => AdvisorNode.fromJson(e)).toList(),
+        );
+      } else if (data is Map<String, dynamic>) {
+        _teamTree = AdvisorNode.fromJson(data);
+      }
     } catch (e) {
       debugPrint('Fetch Team Error: $e');
       _teamTree = null;
@@ -39,6 +51,20 @@ class AdminTeamProvider extends ChangeNotifier {
       _selectedProfile = null;
     } finally {
       _isLoading = false; notifyListeners();
+    }
+  }
+
+  Future<bool> updateAdvisorStatus(String advisorId, String status, String reason) async {
+    try {
+      final success = await repository.updateAdvisorStatus(advisorId, status, reason);
+      if (success && _selectedProfile != null) {
+        // Re-fetch to get updated data
+        await fetchProfile(advisorId);
+      }
+      return success;
+    } catch (e) {
+      debugPrint('Update Status Error: $e');
+      return false;
     }
   }
 }

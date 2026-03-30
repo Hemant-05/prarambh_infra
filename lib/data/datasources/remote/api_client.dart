@@ -235,6 +235,9 @@ abstract class ApiClient {
       @Body() dynamic body,
       );
 
+  @GET("/advisor/assign-list")
+  Future<dynamic> getAdvisorsForAssignment();
+
   @POST("/leads/add-note/{id}")
   Future<dynamic> addLeadNote(@Path("id") String id, @Body() dynamic body);
 
@@ -280,8 +283,8 @@ abstract class ApiClient {
       @Part(name: "advisor_code") String advisorCode,
       @Part(name: "stage") String stage,
       @Part(name: "deal_status") String dealStatus,
-      @Part(name: "payment_amount") String paymentAmount,
-      @Part(name: "payment_mode") String paymentMode,
+      @Part(name: "token_amount") String tokenAmount,
+      @Part(name: "token_payment_mode") String tokenPaymentMode,
       @Part(name: "client_adhar_front") File? clientAdharFront,
       @Part(name: "client_adhar_back") File? clientAdharBack,
       @Part(name: "client_pan_front") File? clientPanFront,
@@ -292,8 +295,8 @@ abstract class ApiClient {
       @Part(name: "doc_files[]") List<File>? docFiles,
       );
 
-  @PUT("/deals/{id}")
-  Future<dynamic> updateDeal(@Path("id") String dealId, @Body() Map<String, dynamic> data);
+  @POST("/deals/update/{id}")
+  Future<dynamic> updateDeal(@Path("id") String dealId, @Body() dynamic data);
 
   @POST("/deals/add-note/{id}")
   Future<dynamic> addDealNote(@Path("id") String id, @Body() dynamic body);
@@ -324,6 +327,9 @@ abstract class ApiClient {
 
   @DELETE("/meetings/delete/{id}")
   Future<dynamic> deleteMeeting(@Path("id") String id);
+
+  @GET("/attendance/daily")
+  Future<dynamic> getDailyAttendance(@Query("date") String date);
 
   @MultiPart()
   @POST("/attendance/check-in")

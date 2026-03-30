@@ -1,47 +1,83 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import '../../data/models/attendance_model.dart';
 import '../../data/repositories/admin_attendance_repository.dart';
+import '../../data/models/meeting_model.dart';
 
 class AdminAttendanceProvider extends ChangeNotifier {
   final AdminAttendanceRepository repository;
   AdminAttendanceProvider({required this.repository});
 
-  List<dynamic> _meetings = [];
+  List<MeetingModel> _meetings = [];
+  MeetingModel? _selectedMeeting;
   bool _isLoading = false;
   bool _isSaving = false;
-  dynamic _currentMeeting;
+  String? _error;
 
-  List<dynamic> get meetings => _meetings;
+  List<MeetingModel> get meetings => _meetings;
+  MeetingModel? get selectedMeeting => _selectedMeeting;
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
-  dynamic get currentMeeting => _currentMeeting;
+  String? get error => _error;
 
-  Future<void> fetchAllMeetings() async {
+  // Keep legacy getter for AttendanceReportScreen compatibility
+  dynamic get currentMeeting => _selectedMeeting;
+
+  dynamic _dailyReport;
+  dynamic get dailyReport => _dailyReport;
+
+  Future<void> fetchDailyAttendance(String date) async {
     _isLoading = true; notifyListeners();
     try {
-      _meetings = await repository.getAllMeetings();
+      _dailyReport = await repository.getDailyAttendance(date);
     } catch (e) {
-      debugPrint('Fetch All Meetings Error: $e');
-      _meetings = [];
+      debugPrint('Fetch Daily Attendance Error: $e');
+      _dailyReport = null;
     } finally {
       _isLoading = false; notifyListeners();
+    }
+  }
+
+  Future<void> fetchAllMeetings() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final raw = await repository.getAllMeetings();
+      if (raw is List) {
+        _meetings = raw.map((e) => MeetingModel.fromJson(e as Map<String, dynamic>)).toList();
+        // Sort newest first
+        _meetings.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      } else {
+        _meetings = [];
+      }
+    } catch (e) {
+      debugPrint('Fetch All Meetings Error: $e');
+      _error = e.toString();
+      _meetings = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
   Future<void> fetchMeeting(String meetingId) async {
-    _isLoading = true; notifyListeners();
+    _isLoading = true;
+    notifyListeners();
     try {
-      _currentMeeting = await repository.getSingleMeeting(meetingId);
+      final raw = await repository.getSingleMeeting(meetingId);
+      if (raw is Map<String, dynamic>) {
+        _selectedMeeting = MeetingModel.fromJson(raw);
+      }
     } catch (e) {
       debugPrint('Fetch Meeting Error: $e');
     } finally {
-      _isLoading = false; notifyListeners();
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
   Future<bool> addMeeting(Map<String, dynamic> data) async {
-    _isSaving = true; notifyListeners();
+    _isSaving = true;
+    notifyListeners();
     try {
       final success = await repository.addMeeting(data);
       if (success) await fetchAllMeetings();
@@ -50,31 +86,20 @@ class AdminAttendanceProvider extends ChangeNotifier {
       debugPrint('Add Meeting Error: $e');
       return false;
     } finally {
-      _isSaving = false; notifyListeners();
+      _isSaving = false;
+      notifyListeners();
     }
   }
 
-  Future<bool> checkIn({required String meetingId, required String advisorId, required File photo}) async {
-    _isSaving = true; notifyListeners();
+  Future<bool> deleteMeeting(String id) async {
     try {
-      return await repository.checkInAttendance(meetingId: meetingId, advisorId: advisorId, photo: photo);
+      final success = await repository.deleteMeeting(id);
+      if (success) _meetings.removeWhere((m) => m.id == id);
+      notifyListeners();
+      return success;
     } catch (e) {
-      debugPrint('Check-In Error: $e');
+      debugPrint('Delete Meeting Error: $e');
       return false;
-    } finally {
-      _isSaving = false; notifyListeners();
-    }
-  }
-
-  Future<bool> checkOut({required String meetingId, required String advisorId, required File photo}) async {
-    _isSaving = true; notifyListeners();
-    try {
-      return await repository.checkOutAttendance(meetingId: meetingId, advisorId: advisorId, photo: photo);
-    } catch (e) {
-      debugPrint('Check-Out Error: $e');
-      return false;
-    } finally {
-      _isSaving = false; notifyListeners();
     }
   }
 }

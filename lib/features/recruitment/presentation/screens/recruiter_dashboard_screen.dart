@@ -6,7 +6,7 @@ import '../providers/recruitment_provider.dart';
 import '../../data/models/recruitment_model.dart';
 
 class RecruiterDashboardScreen extends StatefulWidget {
-  const RecruiterDashboardScreen({Key? key}) : super(key: key);
+  const RecruiterDashboardScreen({super.key});
 
   @override
   State<RecruiterDashboardScreen> createState() =>

@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:excel/excel.dart' show Excel;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -20,14 +19,12 @@ class _AddUnitScreenState extends State<AddUnitScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  // Form Controllers
+  // Form Controllers for Single Unit
   final _towerCtrl = TextEditingController();
   final _floorCtrl = TextEditingController();
   final _unitCtrl = TextEditingController();
   final _areaCtrl = TextEditingController();
   final _rateCtrl = TextEditingController();
-
-  // NEW Controllers to match JSON
   final _locationCtrl = TextEditingController();
   final _plotNumCtrl = TextEditingController();
   final _plotDimCtrl = TextEditingController();
@@ -41,9 +38,7 @@ class _AddUnitScreenState extends State<AddUnitScreen>
   String _status = 'Available';
 
   // Bulk Upload State
-  File? _selectedExcelFile;
-  final List<Map<String, dynamic>> _parsedBulkData = [];
-  bool _isParsing = false;
+  File? _selectedCsvFile;
 
   @override
   void initState() {
@@ -65,54 +60,29 @@ class _AddUnitScreenState extends State<AddUnitScreen>
     super.dispose();
   }
 
-  Future<void> _pickAndParseExcel() async {
+  // THE FIX: Use FileType.any to bypass the Android/iOS CSV grey-out bug,
+  // then manually validate that the user picked a .csv file.
+  Future<void> _pickCSV() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['xlsx', 'xls'],
+      type: FileType.any,
     );
-    if (result != null) {
-      setState(() {
-        _isParsing = true;
-        _selectedExcelFile = File(result.files.single.path!);
-        _parsedBulkData.clear();
-      });
 
-      try {
-        var bytes = _selectedExcelFile!.readAsBytesSync();
-        var excel = Excel.decodeBytes(bytes);
-        String sheetName = excel.tables.keys.first;
-        var table = excel.tables[sheetName]!;
+    if (result != null && result.files.single.path != null) {
+      String filePath = result.files.single.path!;
 
-        for (int i = 1; i < table.maxRows; i++) {
-          var row = table.row(i);
-          if (row.isEmpty || row[0]?.value == null) continue;
-
-          _parsedBulkData.add({
-            "project_id": widget.projectId,
-            "tower_name": row[0]?.value?.toString() ?? "",
-            "floor_number": row[1]?.value?.toString() ?? "",
-            "unit_number": row[2]?.value?.toString() ?? "",
-            "configuration": row[3]?.value?.toString() ?? "3BHK",
-            "property_type": row[4]?.value?.toString() ?? "Apartment",
-            "sale_category": row[5]?.value?.toString() ?? "New Sale",
-            "facing": row[6]?.value?.toString() ?? "East",
-            "Location": row[7]?.value?.toString() ?? "",
-            "plot_number": row[8]?.value?.toString() ?? "",
-            "plot_dimensions": row[9]?.value?.toString() ?? "",
-            "area_sqft":
-                double.tryParse(row[10]?.value?.toString() ?? '0') ?? 0,
-            "rate_per_sqft":
-                double.tryParse(row[11]?.value?.toString() ?? '0') ?? 0,
-            "size": row[12]?.value?.toString() ?? "",
-            "availability_status": row[13]?.value?.toString() ?? "Available",
-          });
+      if (filePath.toLowerCase().endsWith('.csv')) {
+        setState(() {
+          _selectedCsvFile = File(filePath);
+        });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid file type! Please select a .csv file.'),
+              backgroundColor: Colors.red,
+            ),
+          );
         }
-      } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Invalid Excel format.')));
-      } finally {
-        setState(() => _isParsing = false);
       }
     }
   }
@@ -147,7 +117,7 @@ class _AddUnitScreenState extends State<AddUnitScreen>
           indicatorColor: primaryBlue,
           tabs: const [
             Tab(text: 'Single Unit'),
-            Tab(text: 'Bulk Upload (Excel)'),
+            Tab(text: 'Bulk Upload (CSV)'),
           ],
         ),
       ),
@@ -161,6 +131,9 @@ class _AddUnitScreenState extends State<AddUnitScreen>
     );
   }
 
+  // ======================================================================
+  // 1. SINGLE UNIT FORM
+  // ======================================================================
   Widget _buildSingleUnitForm(Color primaryBlue, Color cardColor) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -187,20 +160,13 @@ class _AddUnitScreenState extends State<AddUnitScreen>
               children: [
                 Expanded(
                   child: _buildDropdown('Configuration', _config, [
-                    '1BHK',
-                    '2BHK',
-                    '3BHK',
-                    '4BHK',
-                    'Villa',
+                    '1BHK', '2BHK', '3BHK', '4BHK', 'Villa',
                   ], (v) => setState(() => _config = v!)),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: _buildDropdown('Property Type', _type, [
-                    'Apartment',
-                    'Villa',
-                    'Plot',
-                    'Commercial',
+                    'Apartment', 'Villa', 'Plot', 'Commercial',
                   ], (v) => setState(() => _type = v!)),
                 ),
               ],
@@ -209,20 +175,14 @@ class _AddUnitScreenState extends State<AddUnitScreen>
             Row(
               children: [
                 Expanded(
-                  child: _buildDropdown(
-                    'Sale Category',
-                    _saleCategory,
-                    ['New Sale', 'Resale', 'Rent'],
-                    (v) => setState(() => _saleCategory = v!),
-                  ),
+                  child: _buildDropdown('Sale Category', _saleCategory, [
+                    'New Sale', 'Resale', 'Rent'
+                  ], (v) => setState(() => _saleCategory = v!)),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: _buildDropdown('Facing', _facing, [
-                    'East',
-                    'West',
-                    'North',
-                    'South',
+                    'East', 'West', 'North', 'South',
                   ], (v) => setState(() => _facing = v!)),
                 ),
               ],
@@ -234,43 +194,25 @@ class _AddUnitScreenState extends State<AddUnitScreen>
               children: [
                 Expanded(child: _buildTextField('Plot Number', _plotNumCtrl)),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: _buildTextField('Plot Dimensions', _plotDimCtrl),
-                ),
+                Expanded(child: _buildTextField('Plot Dimensions', _plotDimCtrl)),
               ],
             ),
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(
-                  child: _buildTextField(
-                    'Area (SqFt)',
-                    _areaCtrl,
-                    isNumber: true,
-                  ),
-                ),
+                Expanded(child: _buildTextField('Area (SqFt)', _areaCtrl, isNumber: true)),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: _buildTextField(
-                    'Rate / SqFt',
-                    _rateCtrl,
-                    isNumber: true,
-                  ),
-                ),
+                Expanded(child: _buildTextField('Rate / SqFt', _rateCtrl, isNumber: true)),
               ],
             ),
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(
-                  child: _buildTextField('Size (e.g. Large)', _sizeCtrl),
-                ),
+                Expanded(child: _buildTextField('Size (e.g. Large)', _sizeCtrl)),
                 const SizedBox(width: 16),
                 Expanded(
                   child: _buildDropdown('Status', _status, [
-                    'Available',
-                    'Booked',
-                    'Sold',
+                    'Available', 'Booked', 'Sold',
                   ], (v) => setState(() => _status = v!)),
                 ),
               ],
@@ -285,51 +227,42 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                     onPressed: provider.isSaving
                         ? null
                         : () async {
-                            final data = {
-                              "project_id": widget.projectId,
-                              "tower_name": _towerCtrl.text,
-                              "floor_number": _floorCtrl.text,
-                              "unit_number": _unitCtrl.text,
-                              "configuration": _config,
-                              "property_type": _type,
-                              "sale_category": _saleCategory,
-                              "facing": _facing,
-                              "Location": _locationCtrl.text,
-                              "plot_number": _plotNumCtrl.text,
-                              "plot_dimensions": _plotDimCtrl.text,
-                              "area_sqft": double.tryParse(_areaCtrl.text) ?? 0,
-                              "rate_per_sqft":
-                                  double.tryParse(_rateCtrl.text) ?? 0,
-                              "size": _sizeCtrl.text,
-                              "availability_status": _status,
-                            };
-                            final success = await provider.createUnit(
-                              data,
-                              widget.projectId.toString(),
-                            );
-                            if (success && mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Unit Added!')),
-                              );
-                              Navigator.pop(context);
-                            }
-                          },
+                      final data = {
+                        "project_id": widget.projectId,
+                        "tower_name": _towerCtrl.text,
+                        "floor_number": _floorCtrl.text,
+                        "unit_number": _unitCtrl.text,
+                        "configuration": _config,
+                        "property_type": _type,
+                        "sale_category": _saleCategory,
+                        "facing": _facing,
+                        "Location": _locationCtrl.text,
+                        "plot_number": _plotNumCtrl.text,
+                        "plot_dimensions": _plotDimCtrl.text,
+                        "area_sqft": double.tryParse(_areaCtrl.text) ?? 0,
+                        "rate_per_sqft": double.tryParse(_rateCtrl.text) ?? 0,
+                        "size": _sizeCtrl.text,
+                        "availability_status": _status,
+                      };
+                      final success = await provider.createUnit(
+                        data,
+                        widget.projectId.toString(),
+                      );
+                      if (success && mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Unit Added Successfully!')),
+                        );
+                        Navigator.pop(context);
+                      }
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryBlue,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
                     child: provider.isSaving
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : Text(
-                            'Add Unit',
-                            style: GoogleFonts.montserrat(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                        : Text('Add Unit', style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold)),
                   ),
                 );
               },
@@ -340,6 +273,9 @@ class _AddUnitScreenState extends State<AddUnitScreen>
     );
   }
 
+  // ======================================================================
+  // 2. BULK UPLOAD FORM (CSV)
+  // ======================================================================
   Widget _buildBulkUploadForm(Color primaryBlue, Color cardColor) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -361,29 +297,23 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                     Icon(Icons.info_outline, color: primaryBlue),
                     const SizedBox(width: 8),
                     Text(
-                      'Excel Template Guide',
-                      style: GoogleFonts.montserrat(
-                        fontWeight: FontWeight.bold,
-                        color: primaryBlue,
-                      ),
+                      'CSV Template Guide',
+                      style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: primaryBlue),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Columns:\nTower | Floor | Unit | Config | Type | Sale | Facing | Location | Plot No | Dimensions | Area | Rate | Size | Status',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 12,
-                    color: Colors.black87,
-                    height: 1.5,
-                  ),
+                  'Please ensure your Excel file is Saved As a .CSV format before uploading.\n\nRequired Columns:\nTower | Floor | Unit | Config | Type | Sale | Facing | Location | Plot No | Dimensions | Area | Rate | Size | Status',
+                  style: GoogleFonts.montserrat(fontSize: 12, color: Colors.black87, height: 1.5),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
+
           GestureDetector(
-            onTap: _pickAndParseExcel,
+            onTap: _pickCSV,
             child: DottedBorder(
               child: Container(
                 width: double.infinity,
@@ -394,15 +324,19 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                 ),
                 child: Column(
                   children: [
-                    Icon(Icons.upload_file, size: 40, color: primaryBlue),
+                    Icon(
+                        _selectedCsvFile != null ? Icons.check_circle : Icons.upload_file,
+                        size: 40,
+                        color: _selectedCsvFile != null ? Colors.green : primaryBlue
+                    ),
                     const SizedBox(height: 12),
                     Text(
-                      _selectedExcelFile != null
-                          ? _selectedExcelFile!.path.split('/').last
-                          : 'Tap to Upload Excel File',
+                      _selectedCsvFile != null
+                          ? _selectedCsvFile!.path.split('/').last
+                          : 'Tap to Select CSV File',
                       style: GoogleFonts.montserrat(
                         fontWeight: FontWeight.bold,
-                        color: primaryBlue,
+                        color: _selectedCsvFile != null ? Colors.green : primaryBlue,
                       ),
                     ),
                   ],
@@ -410,53 +344,9 @@ class _AddUnitScreenState extends State<AddUnitScreen>
               ),
             ),
           ),
-          const SizedBox(height: 24),
-          if (_isParsing) const Center(child: CircularProgressIndicator()),
-          if (_parsedBulkData.isNotEmpty) ...[
-            Text(
-              'Preview (${_parsedBulkData.length} units ready)',
-              style: GoogleFonts.montserrat(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              height: 200,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: ListView.separated(
-                padding: const EdgeInsets.all(12),
-                itemCount: _parsedBulkData.length,
-                separatorBuilder: (c, i) => const Divider(),
-                itemBuilder: (c, i) {
-                  final u = _parsedBulkData[i];
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${u['tower_name']} - ${u['unit_number']}',
-                        style: GoogleFonts.montserrat(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                      Text(
-                        '₹${(u['area_sqft'] * u['rate_per_sqft']).toStringAsFixed(0)}',
-                        style: GoogleFonts.montserrat(
-                          color: Colors.grey[700],
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 24),
+          const SizedBox(height: 32),
+
+          if (_selectedCsvFile != null)
             Consumer<AdminProjectProvider>(
               builder: (context, provider, child) {
                 return SizedBox(
@@ -465,21 +355,27 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                     onPressed: provider.isSaving
                         ? null
                         : () async {
-                            final success = await provider.bulkUploadUnits(
-                              widget.projectId.toString(),
-                              _selectedExcelFile!,
-                            );
-                            if (success && mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    '${_parsedBulkData.length} Units Uploaded!',
-                                  ),
-                                ),
-                              );
-                              Navigator.pop(context);
-                            }
-                          },
+                      final success = await provider.bulkUploadUnits(
+                        widget.projectId.toString(),
+                        _selectedCsvFile!,
+                      );
+                      if (success && mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Bulk Units Uploaded Successfully!'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        Navigator.pop(context);
+                      } else if (!success && mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Upload Failed. Check your CSV format.'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -490,38 +386,29 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                     child: provider.isSaving
                         ? const CircularProgressIndicator(color: Colors.white)
                         : Text(
-                            'Upload All Units',
-                            style: GoogleFonts.montserrat(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                      'Upload CSV to Server',
+                      style: GoogleFonts.montserrat(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 );
               },
             ),
-          ],
         ],
       ),
     );
   }
 
   // --- UI Helpers ---
-  Widget _buildTextField(
-    String label,
-    TextEditingController controller, {
-    bool isNumber = false,
-  }) {
+  Widget _buildTextField(String label, TextEditingController controller, {bool isNumber = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: GoogleFonts.montserrat(
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[600],
-          ),
+          style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey[600]),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -529,65 +416,40 @@ class _AddUnitScreenState extends State<AddUnitScreen>
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
           style: GoogleFonts.montserrat(fontSize: 13),
           decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             filled: true,
-            fillColor: Colors.grey[50],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey.shade200),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey.shade200),
-            ),
+            fillColor: Colors.white,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildDropdown(
-    String label,
-    String value,
-    List<String> items,
-    ValueChanged<String?> onChanged,
-  ) {
+  Widget _buildDropdown(String label, String value, List<String> items, ValueChanged<String?> onChanged) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: GoogleFonts.montserrat(
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[600],
-          ),
+          style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey[600]),
         ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: Colors.grey[50],
+            color: Colors.white,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: Colors.grey.shade300),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: value,
               isExpanded: true,
               icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-              style: GoogleFonts.montserrat(
-                fontSize: 13,
-                color: Colors.black87,
-              ),
-              items: items
-                  .map(
-                    (item) => DropdownMenuItem(value: item, child: Text(item)),
-                  )
-                  .toList(),
+              style: GoogleFonts.montserrat(fontSize: 13, color: Colors.black87),
+              items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
               onChanged: onChanged,
             ),
           ),

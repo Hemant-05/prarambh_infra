@@ -47,18 +47,27 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
                   fit: BoxFit.contain,
                   loadingBuilder: (c, child, progress) {
                     if (progress == null) return child;
-                    return const Center(child: CircularProgressIndicator(color: Colors.white));
+                    return const Center(
+                      child: CircularProgressIndicator(color: Colors.white),
+                    );
                   },
-                  errorBuilder: (c, e, s) => const Center(child: Icon(Icons.broken_image, color: Colors.white, size: 50)),
+                  errorBuilder: (c, e, s) => const Center(
+                    child: Icon(
+                      Icons.broken_image,
+                      color: Colors.white,
+                      size: 50,
+                    ),
+                  ),
                 ),
               ),
               Positioned(
-                top: 40, right: 20,
+                top: 40,
+                right: 20,
                 child: IconButton(
                   icon: const Icon(Icons.close, color: Colors.white, size: 30),
                   onPressed: () => Navigator.pop(context),
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -69,7 +78,10 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
       if (await canLaunchUrl(url)) {
         await launchUrl(url, mode: LaunchMode.externalApplication);
       } else {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open PDF.')));
+        if (mounted)
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Could not open PDF.')));
       }
     }
   }
@@ -82,60 +94,117 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (bottomSheetContext) {
         return StatefulBuilder(
-            builder: (context, setSheetState) {
-              return Padding(
-                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 20, right: 20, top: 20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Update Document', style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: nameCtrl,
-                      decoration: InputDecoration(
-                        labelText: 'Document Name',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: primaryBlue)),
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 20,
+                right: 20,
+                top: 20,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Update Document',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: nameCtrl,
+                    decoration: InputDecoration(
+                      labelText: 'Document Name',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: primaryBlue),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    ListTile(
-                      onTap: () async {
-                        FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf', 'jpg', 'png']);
-                        if (result != null) {
-                          setSheetState(() => newFile = File(result.files.single.path!));
-                        }
-                      },
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: Colors.grey.shade300)),
-                      leading: Icon(newFile != null ? Icons.check_circle : Icons.upload_file, color: newFile != null ? Colors.green : primaryBlue),
-                      title: Text(newFile != null ? newFile!.path.split('/').last : 'Replace File (Optional)', style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w600)),
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          Navigator.pop(bottomSheetContext); // Close sheet
-                          final success = await context.read<AdminDocumentProvider>().updateDocument(
-                            id: doc.id,
-                            name: nameCtrl.text != doc.name ? nameCtrl.text : null,
-                            documentFile: newFile,
+                  ),
+                  const SizedBox(height: 16),
+                  ListTile(
+                    onTap: () async {
+                      FilePickerResult? result = await FilePicker.platform
+                          .pickFiles(
+                            type: FileType.custom,
+                            allowedExtensions: ['pdf', 'jpg', 'png'],
                           );
-                          if (success && mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Document Updated')));
-                        },
-                        style: ElevatedButton.styleFrom(backgroundColor: primaryBlue, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-                        child: Text('Save Changes', style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold)),
+                      if (result != null) {
+                        setSheetState(
+                          () => newFile = File(result.files.single.path!),
+                        );
+                      }
+                    },
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    leading: Icon(
+                      newFile != null ? Icons.check_circle : Icons.upload_file,
+                      color: newFile != null ? Colors.green : primaryBlue,
+                    ),
+                    title: Text(
+                      newFile != null
+                          ? newFile!.path.split('/').last
+                          : 'Replace File (Optional)',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              );
-            }
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        Navigator.pop(bottomSheetContext); // Close sheet
+                        final success = await context
+                            .read<AdminDocumentProvider>()
+                            .updateDocument(
+                              id: doc.id,
+                              name: nameCtrl.text != doc.name
+                                  ? nameCtrl.text
+                                  : null,
+                              documentFile: newFile,
+                            );
+                        if (success && mounted)
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Document Updated')),
+                          );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryBlue,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        'Save Changes',
+                        style: GoogleFonts.montserrat(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            );
+          },
         );
       },
     );
@@ -143,21 +212,39 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
 
   // --- 3. DELETE DOCUMENT LOGIC ---
   Future<void> _deleteDocument(DocumentModel doc) async {
-    bool confirm = await showDialog(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: const Text('Delete Document?'),
-        content: Text('Are you sure you want to delete "${doc.name}"? This cannot be undone.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
-        ],
-      ),
-    ) ?? false;
+    bool confirm =
+        await showDialog(
+          context: context,
+          builder: (c) => AlertDialog(
+            title: const Text('Delete Document?'),
+            content: Text(
+              'Are you sure you want to delete "${doc.name}"? This cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(c, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(c, true),
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
 
     if (confirm) {
-      final success = await context.read<AdminDocumentProvider>().deleteDocument(doc.id);
-      if (success && mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Document Deleted')));
+      final success = await context
+          .read<AdminDocumentProvider>()
+          .deleteDocument(doc.id);
+      if (success && mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Document Deleted')));
     }
   }
 
@@ -170,60 +257,127 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
     final provider = context.watch<AdminDocumentProvider>();
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF0F4F8),
+      backgroundColor: isDark
+          ? const Color(0xFF121212)
+          : const Color(0xFFF0F4F8),
       appBar: AppBar(
-        backgroundColor: primaryBlue, elevation: 0, centerTitle: true,
+        backgroundColor: primaryBlue,
+        elevation: 0,
+        centerTitle: true,
         leading: backButton(isDark: isDark),
-        title: Text('DOCS MANAGEMENT', style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+        title: Text(
+          'DOCS MANAGEMENT',
+          style: GoogleFonts.montserrat(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: primaryBlue,
         child: const Icon(Icons.add, color: Colors.white),
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddDocumentScreen())),
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AddDocumentScreen()),
+        ),
       ),
       body: provider.isLoading
           ? Center(child: CircularProgressIndicator(color: primaryBlue))
           : SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        physics: const BouncingScrollPhysics(),
-        child: Container(
-          decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: primaryBlue)),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              padding: const EdgeInsets.all(20),
+              physics: const BouncingScrollPhysics(),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: primaryBlue),
+                ),
+                child: Column(
                   children: [
-                    Expanded(child: Text('MANAGE COMPANY\nDOCUMENTS', style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: primaryBlue, height: 1.2))),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(color: primaryBlue, borderRadius: BorderRadius.circular(8)),
-                      child: Column(
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('${provider.documents.length}', style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                          Text('Active', style: GoogleFonts.montserrat(color: Colors.white, fontSize: 10)),
+                          Expanded(
+                            child: Text(
+                              'MANAGE COMPANY\nDOCUMENTS',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: primaryBlue,
+                                height: 1.2,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: primaryBlue,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  '${provider.documents.length}',
+                                  style: GoogleFonts.montserrat(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                Text(
+                                  'Active',
+                                  style: GoogleFonts.montserrat(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
+                    const Divider(height: 1),
+                    if (provider.groupedDocuments.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.all(30),
+                        child: Text(
+                          "No documents found.",
+                          style: GoogleFonts.montserrat(color: Colors.grey),
+                        ),
+                      )
+                    else
+                      ...provider.groupedDocuments.entries.map((entry) {
+                        return _buildExpandableSection(
+                          entry.key,
+                          entry.value,
+                          primaryBlue,
+                          textColor,
+                          isDark,
+                          initiallyExpanded: true,
+                        );
+                      }),
                   ],
                 ),
               ),
-              const Divider(height: 1),
-              if (provider.groupedDocuments.isEmpty)
-                Padding(padding: const EdgeInsets.all(30), child: Text("No documents found.", style: GoogleFonts.montserrat(color: Colors.grey)))
-              else
-                ...provider.groupedDocuments.entries.map((entry) {
-                  return _buildExpandableSection(entry.key, entry.value, primaryBlue, textColor, isDark, initiallyExpanded: true);
-                }).toList(),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 
-  Widget _buildExpandableSection(String title, List<DocumentModel> documents, Color primaryBlue, Color textColor, bool isDark, {bool initiallyExpanded = false}) {
+  Widget _buildExpandableSection(
+    String title,
+    List<DocumentModel> documents,
+    Color primaryBlue,
+    Color textColor,
+    bool isDark, {
+    bool initiallyExpanded = false,
+  }) {
     return Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
@@ -233,21 +387,39 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(title, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 15, color: initiallyExpanded ? primaryBlue : textColor)),
+            Text(
+              title,
+              style: GoogleFonts.montserrat(
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+                color: initiallyExpanded ? primaryBlue : textColor,
+              ),
+            ),
             if (documents.isNotEmpty)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.5)), borderRadius: BorderRadius.circular(4)),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.withOpacity(0.5)),
+                  borderRadius: BorderRadius.circular(4),
+                ),
                 child: Column(
                   children: [
-                    Text('${documents.length}', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold)),
+                    Text(
+                      '${documents.length}',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     Text('Active', style: GoogleFonts.montserrat(fontSize: 8)),
                   ],
                 ),
               ),
           ],
         ),
-        children: documents.map((doc) => _buildDocItem(doc, primaryBlue, textColor)).toList(),
+        children: documents
+            .map((doc) => _buildDocItem(doc, primaryBlue, textColor))
+            .toList(),
       ),
     );
   }
@@ -261,16 +433,37 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(8)),
-                child: Icon(doc.type == 'PDF' ? Icons.picture_as_pdf : Icons.image, color: doc.type == 'PDF' ? Colors.red : primaryBlue),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  doc.type == 'PDF' ? Icons.picture_as_pdf : Icons.image,
+                  color: doc.type == 'PDF' ? Colors.red : primaryBlue,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(doc.name, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 14, color: textColor), maxLines: 1, overflow: TextOverflow.ellipsis),
-                    Text('${doc.type} File', style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey)),
+                    Text(
+                      doc.name,
+                      style: GoogleFonts.montserrat(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: textColor,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      '${doc.type} File',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -289,14 +482,32 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
                 child: OutlinedButton.icon(
                   onPressed: () => _showUpdateBottomSheet(doc, primaryBlue),
                   icon: Icon(Icons.sync_alt, color: primaryBlue, size: 16),
-                  label: Text('Update', style: GoogleFonts.montserrat(color: primaryBlue, fontWeight: FontWeight.bold)),
-                  style: OutlinedButton.styleFrom(side: BorderSide(color: primaryBlue), padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                  label: Text(
+                    'Update',
+                    style: GoogleFonts.montserrat(
+                      color: primaryBlue,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: primaryBlue),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               OutlinedButton(
                 onPressed: () => _deleteDocument(doc),
-                style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.redAccent), padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.redAccent),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
                 child: const Icon(Icons.delete, color: Colors.redAccent),
               ),
             ],

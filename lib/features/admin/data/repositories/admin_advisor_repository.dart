@@ -1,4 +1,3 @@
-import 'dart:io';
 import '../../../../data/datasources/remote/api_client.dart';
 import '../models/advisor_application_model.dart';
 
@@ -12,10 +11,14 @@ class AdminAdvisorRepository {
       final response = await apiClient.getAllAdvisors(status);
       if (response['status']) {
         final List data = response['data'] ?? [];
-        return data.map((json) => AdvisorApplicationModel.fromJson(json)).toList();
+        return data
+            .map((json) => AdvisorApplicationModel.fromJson(json))
+            .toList();
       }
       throw Exception(response['message'] ?? 'Failed to load advisors');
-    } catch (e) { rethrow; }
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<AdvisorApplicationModel> getSingleAdvisor(String id) async {
@@ -25,7 +28,9 @@ class AdminAdvisorRepository {
         return AdvisorApplicationModel.fromJson(response['data']);
       }
       throw Exception(response['message'] ?? 'Failed to load advisor');
-    } catch (e) { rethrow; }
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<dynamic> getAdvisorProfile(String id) async {
@@ -35,37 +40,54 @@ class AdminAdvisorRepository {
         return response['data'];
       }
       throw Exception(response['message'] ?? 'Failed to load advisor profile');
-    } catch (e) { rethrow; }
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<bool> approveAdvisor(String advisorId) async {
     try {
       final response = await apiClient.approveAdvisor(advisorId);
       return response['status'];
-    } catch (e) { rethrow; }
+    } catch (e) {
+      rethrow;
+    }
   }
 
-  Future<bool> updateAdvisor(String advisorId, Map<String, dynamic> data) async {
+  Future<bool> updateAdvisor(
+    String advisorId,
+    Map<String, dynamic> data,
+  ) async {
     try {
       final response = await apiClient.updateAdvisor(advisorId, data);
       return response['status'];
-    } catch (e) { rethrow; }
+    } catch (e) {
+      rethrow;
+    }
   }
 
-  Future<bool> changeAdvisorStatus(String advisorId, String status, {String? reason}) async {
+  Future<bool> changeAdvisorStatus(
+    String advisorId,
+    String status, {
+    String? reason,
+  }) async {
     try {
-      final response = await apiClient.changeAdvisorStatus(
-        advisorId,
-        {'status': status, 'reason': reason},
-      );
+      final response = await apiClient.changeAdvisorStatus(advisorId, {
+        'status': status,
+        'reason': reason,
+      });
       return response['status'];
-    } catch (e) { rethrow; }
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<bool> deleteAdvisor(String advisorId) async {
     try {
       final response = await apiClient.deleteAdvisor(advisorId);
       return response['status'];
-    } catch (e) { rethrow; }
+    } catch (e) {
+      rethrow;
+    }
   }
 }

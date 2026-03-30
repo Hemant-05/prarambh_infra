@@ -47,6 +47,18 @@ class AdminAttendanceRepository {
     } catch (e) { rethrow; }
   }
 
+  Future<dynamic> getDailyAttendance(String date) async {
+    try {
+      final response = await apiClient.getDailyAttendance(date);
+      if (response['status'] == true || response['status'] == 'success') {
+        return response['data'];
+      }
+      throw Exception(response['message'] ?? 'Failed to load daily attendance');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<bool> checkInAttendance({
     required String meetingId, required String advisorId, required File photo,
   }) async {

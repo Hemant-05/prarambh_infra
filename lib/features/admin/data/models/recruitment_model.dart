@@ -1,24 +1,24 @@
 class RecruitmentDashboardModel {
-  final int totalBrokers;
-  final int activeBrokers;
-  final int pendingVerification;
-  final int suspendedActionReq;
-  final List<RecruiterModel> topRecruiters;
+  final int totalRecruits;
+  final int activeRecruits;
+  final int pendingApprovals;
+  final int inactiveOrSuspended;
+  final List<RecruitedPersonModel> recentApplications;
 
   RecruitmentDashboardModel({
-    required this.totalBrokers, required this.activeBrokers,
-    required this.pendingVerification, required this.suspendedActionReq,
-    required this.topRecruiters,
+    required this.totalRecruits, required this.activeRecruits,
+    required this.pendingApprovals, required this.inactiveOrSuspended,
+    required this.recentApplications,
   });
 
   factory RecruitmentDashboardModel.fromJson(Map<String, dynamic> json) {
     return RecruitmentDashboardModel(
-      totalBrokers: json['total_brokers'] ?? 0,
-      activeBrokers: json['active_brokers'] ?? 0,
-      pendingVerification: json['pending_verification'] ?? 0,
-      suspendedActionReq: json['suspended_action_req'] ?? 0,
-      topRecruiters: (json['top_recruiters'] as List<dynamic>?)
-          ?.map((e) => RecruiterModel.fromJson(e))
+      totalRecruits: json['metrics']?['total_recruits'] ?? 0,
+      activeRecruits: json['metrics']?['active_recruits'] ?? 0,
+      pendingApprovals: json['metrics']?['pending_approvals'] ?? 0,
+      inactiveOrSuspended: json['metrics']?['inactive_or_suspended'] ?? 0,
+      recentApplications: (json['recent_applications'] as List<dynamic>?)
+          ?.map((e) => RecruitedPersonModel.fromJson(e))
           .toList() ?? [],
     );
   }
@@ -48,20 +48,37 @@ class RecruiterModel {
 class RecruitedPersonModel {
   final String id;
   final String name;
+  final String email;
+  final String phone;
+  final String designation;
+  final String advisorCode;
   final String joinedDate;
   final String status;
   final String initials;
 
   RecruitedPersonModel({
-    required this.id, required this.name, required this.joinedDate,
+    required this.id, required this.name, required this.email,
+    required this.phone, required this.designation,
+    required this.advisorCode, required this.joinedDate,
     required this.status, required this.initials,
   });
 
-  factory RecruitedPersonModel.fromJson(Map<String, dynamic> json) => RecruitedPersonModel(
-    id: json['id']?.toString() ?? '',
-    name: json['name'] ?? json['full_name'] ?? '',
-    joinedDate: json['joined_date'] ?? json['created_at']?.toString().split(' ')[0] ?? '',
-    status: json['status'] ?? 'Pending',
-    initials: json['initials'] ?? '',
-  );
+  factory RecruitedPersonModel.fromJson(Map<String, dynamic> json) {
+    String n = json['name'] ?? json['full_name'] ?? 'Unknown User';
+    String computedInitials = json['initials'] ?? '';
+    if (computedInitials.isEmpty && n.trim().isNotEmpty) {
+      computedInitials = n.trim().split(' ').map((e) => e.isNotEmpty ? e[0].toUpperCase() : '').take(2).join();
+    }
+    return RecruitedPersonModel(
+      id: json['id']?.toString() ?? '',
+      name: n,
+      email: json['email'] ?? '',
+      phone: json['phone'] ?? '',
+      designation: json['designation'] ?? 'Advisor',
+      advisorCode: json['Advisor_code'] ?? '',
+      joinedDate: json['joined_date'] ?? json['created_at']?.toString().split(' ')[0] ?? '',
+      status: json['status'] ?? 'Pending',
+      initials: computedInitials,
+    );
+  }
 }

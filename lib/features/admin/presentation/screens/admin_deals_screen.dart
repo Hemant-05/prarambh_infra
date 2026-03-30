@@ -1,0 +1,280 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import '../providers/admin_deal_provider.dart';
+import 'deal_management_screen.dart';
+
+class AdminDealsScreen extends StatefulWidget {
+  const AdminDealsScreen({super.key});
+
+  @override
+  State<AdminDealsScreen> createState() => _AdminDealsScreenState();
+}
+
+class _AdminDealsScreenState extends State<AdminDealsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AdminDealProvider>().fetchAllDeals();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final primaryBlue = AppColors.getPrimaryBlue(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF121212) : const Color(0xFFF3F4F6);
+
+    return Scaffold(
+      backgroundColor: bgColor,
+      body: Consumer<AdminDealProvider>(
+        builder: (context, provider, child) {
+          if (provider.isLoading) {
+            return Center(
+              child: CircularProgressIndicator(color: primaryBlue),
+            );
+          }
+
+          if (provider.deals.isEmpty) {
+            return _buildEmptyState(primaryBlue);
+          }
+
+          return RefreshIndicator(
+            onRefresh: () async {
+              await provider.fetchAllDeals();
+            },
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: provider.deals.length,
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemBuilder: (context, index) {
+                final deal = provider.deals[index];
+                return _buildDealCard(context, deal, primaryBlue, isDark);
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(Color primaryBlue) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.handshake_outlined, size: 80, color: Colors.grey.shade400),
+          const SizedBox(height: 16),
+          Text(
+            "No Deals Found",
+            style: GoogleFonts.montserrat(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Deals initiated by advisors will appear here.",
+            style: GoogleFonts.montserrat(
+              fontSize: 14,
+              color: Colors.grey.shade500,
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () {
+              context.read<AdminDealProvider>().fetchAllDeals();
+            },
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            label: const Text(
+              "Refresh",
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryBlue,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDealCard(BuildContext context, dynamic deal, Color primaryBlue, bool isDark) {
+    final cardColor = isDark ? Colors.grey[900] : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+
+    Color statusColor = Colors.orange;
+    if (deal.dealStatus.toLowerCase() == 'verified') {
+      statusColor = Colors.green;
+    }
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => DealManagementScreen(
+              deal: deal,
+            ),
+          ),
+        ).then((_) {
+          // Refresh when returning in case of updates
+          context.read<AdminDealProvider>().fetchAllDeals();
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.withOpacity(0.2)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header: ID and Status
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: primaryBlue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    "Deal #${deal.id}",
+                    style: GoogleFonts.montserrat(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: primaryBlue,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    deal.dealStatus.toUpperCase(),
+                    style: GoogleFonts.montserrat(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: statusColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            
+            // Client details
+            Text(
+              deal.clientName,
+              style: GoogleFonts.montserrat(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(Icons.phone, size: 14, color: Colors.grey[600]),
+                const SizedBox(width: 4),
+                Text(
+                  "+91 ${deal.clientNumber}",
+                  style: GoogleFonts.montserrat(
+                    fontSize: 13,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Divider(color: Colors.grey.withOpacity(0.2)),
+            const SizedBox(height: 12),
+            
+            // Property & Token info
+            Row(
+              children: [
+                Expanded(
+                  child: _buildInfoItem("Property ID", "${deal.propertyId}", Icons.home_work),
+                ),
+                Expanded(
+                  child: _buildInfoItem(
+                    "Token/Booking",
+                    deal.tokenAmount != null ? "₹${deal.tokenAmount}" : "Pending",
+                    Icons.monetization_on,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildInfoItem("Payment Mode", deal.tokenPaymentMode ?? "N/A", Icons.credit_card),
+                ),
+                Expanded(
+                  child: _buildInfoItem("Date Created", deal.createdAt.split(' ')[0], Icons.calendar_today),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoItem(String label, String value, IconData icon) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 12, color: Colors.grey[500]),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: GoogleFonts.montserrat(
+                fontSize: 10,
+                color: Colors.grey[500],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: GoogleFonts.montserrat(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+}

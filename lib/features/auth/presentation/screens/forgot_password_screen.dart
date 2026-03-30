@@ -61,19 +61,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (otp.isEmpty) return _showError('Please enter the OTP');
 
       final success = await authProvider.verifyOtp(otp);
-      if (!success && mounted)
+      if (!success && mounted) {
         _showError(authProvider.errorMessage ?? 'Invalid OTP');
+      }
     } else if (step == ForgotPasswordStep.reset) {
       final password = _passwordController.text.trim();
       final confirm = _confirmPasswordController.text.trim();
 
-      if (password.isEmpty || confirm.isEmpty)
+      if (password.isEmpty || confirm.isEmpty) {
         return _showError('Please fill all fields');
+      }
       if (password != confirm) return _showError('Passwords do not match');
-      if (password.length < 6)
+      if (password.length < 6) {
         return _showError('Password must be at least 6 characters');
+      }
 
-      final success = await authProvider.setNewPassword(password,_otpController.text.trim());
+      final success = await authProvider.setNewPassword(
+        password,
+        _otpController.text.trim(),
+      );
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -201,7 +207,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               hint: 'Enter new password',
                               icon: Icons.lock_outline,
                               isPassword: !_isPasswordVisible,
-                              onTogglePassword: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+                              onTogglePassword: () => setState(
+                                () => _isPasswordVisible = !_isPasswordVisible,
+                              ),
                               primaryBlue: primaryBlue,
                               borderColor: borderColor,
                               mutedText: mutedText,
@@ -214,7 +222,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               hint: 'Re-enter password',
                               icon: Icons.lock_outline,
                               isPassword: !_isConfirmPasswordVisible,
-                              onTogglePassword: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
+                              onTogglePassword: () => setState(
+                                () => _isConfirmPasswordVisible =
+                                    !_isConfirmPasswordVisible,
+                              ),
                               primaryBlue: primaryBlue,
                               borderColor: borderColor,
                               mutedText: mutedText,

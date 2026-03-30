@@ -1142,6 +1142,27 @@ class _ApiClient implements ApiClient {
   }
 
   @override
+  Future<dynamic> getAdvisorsForAssignment() async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/advisor/assign-list',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
   Future<dynamic> addLeadNote(String id, dynamic body) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
@@ -1347,8 +1368,8 @@ class _ApiClient implements ApiClient {
     String advisorCode,
     String stage,
     String dealStatus,
-    String paymentAmount,
-    String paymentMode,
+    String tokenAmount,
+    String tokenPaymentMode,
     File? clientAdharFront,
     File? clientAdharBack,
     File? clientPanFront,
@@ -1368,8 +1389,8 @@ class _ApiClient implements ApiClient {
     _data.fields.add(MapEntry('advisor_code', advisorCode));
     _data.fields.add(MapEntry('stage', stage));
     _data.fields.add(MapEntry('deal_status', dealStatus));
-    _data.fields.add(MapEntry('payment_amount', paymentAmount));
-    _data.fields.add(MapEntry('payment_mode', paymentMode));
+    _data.fields.add(MapEntry('token_amount', tokenAmount));
+    _data.fields.add(MapEntry('token_payment_mode', tokenPaymentMode));
     if (clientAdharFront != null) {
       _data.files.add(
         MapEntry(
@@ -1453,17 +1474,16 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> updateDeal(String dealId, Map<String, dynamic> data) async {
+  Future<dynamic> updateDeal(String dealId, dynamic data) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    final _data = <String, dynamic>{};
-    _data.addAll(data);
+    final _data = data;
     final _options = _setStreamType<dynamic>(
-      Options(method: 'PUT', headers: _headers, extra: _extra)
+      Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/deals/${dealId}',
+            '/deals/update/${dealId}',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1653,6 +1673,27 @@ class _ApiClient implements ApiClient {
           .compose(
             _dio.options,
             '/meetings/delete/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> getDailyAttendance(String date) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'date': date};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/attendance/daily',
             queryParameters: queryParameters,
             data: _data,
           )

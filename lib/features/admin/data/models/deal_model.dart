@@ -2,24 +2,40 @@ class DealModel {
   final int id;
   final String clientName;
   final String clientNumber;
+  final String advisorCode;
   final String clientEmail;
   final String clientAdharFront;
+  final String clientAdharBack;
+  final String clientPanFront;
+  final String clientPanBack;
   final int propertyId;
+  final String stage;
+  final int leadId;
   final bool isResale;
-  final String notes;
+  final List<dynamic> notes;
   final String dealStatus;
-  final String paymentMode;
+  final String? tokenAmount;
+  final String? tokenPaymentMode;
+  final String? tokenDate;
+  final dynamic paymentPlan;
+  final String? paymentAmount;
   final String paymentStatus;
   final String createdAt;
-  final List<dynamic> propertyDocs; // NEW
-  final List<dynamic> installments; // NEW
+  final String updatedAt;
+  final List<dynamic> propertyDocs;
+  final List<dynamic> installments;
 
   DealModel({
     required this.id, required this.clientName, required this.clientNumber,
-    required this.clientEmail, required this.clientAdharFront, required this.propertyId,
+    required this.advisorCode,
+    required this.clientEmail, required this.clientAdharFront, required this.clientAdharBack,
+    required this.clientPanFront, required this.clientPanBack, required this.propertyId,
+    required this.stage, required this.leadId,
     required this.isResale, required this.notes, required this.dealStatus,
-    required this.paymentMode, required this.paymentStatus, required this.createdAt,
-    required this.propertyDocs, required this.installments,
+    this.tokenAmount, this.tokenPaymentMode, this.tokenDate,
+    required this.propertyDocs, this.paymentPlan, required this.installments,
+    this.paymentAmount, required this.paymentStatus, required this.createdAt,
+    required this.updatedAt,
   });
 
   factory DealModel.fromJson(Map<String, dynamic> json) {
@@ -39,17 +55,28 @@ class DealModel {
       id: json['id'] ?? 0,
       clientName: json['client_name']?.toString() ?? '',
       clientNumber: json['client_number']?.toString() ?? '',
+      advisorCode: json['advisor_code']?.toString() ?? '',
       clientEmail: json['client_email']?.toString() ?? '',
       clientAdharFront: json['client_adhar_front']?.toString() ?? '',
+      clientAdharBack: json['client_adhar_back']?.toString() ?? '',
+      clientPanFront: json['client_pan_front']?.toString() ?? '',
+      clientPanBack: json['client_pan_back']?.toString() ?? '',
       propertyId: json['property_id'] != null ? int.tryParse(json['property_id'].toString()) ?? 0 : 0,
+      stage: json['stage']?.toString() ?? '',
+      leadId: json['lead_id'] != null ? int.tryParse(json['lead_id'].toString()) ?? 0 : 0,
       isResale: json['is_resale'] == 1 || json['is_resale'] == '1',
-      notes: json['notes']?.toString() ?? '',
+      notes: json['notes'] is List ? json['notes'] : [],
       dealStatus: json['deal_status']?.toString() ?? 'not verified',
-      paymentMode: json['payment_mode']?.toString() ?? 'online',
-      paymentStatus: json['payment_status']?.toString() ?? 'Pending',
-      createdAt: json['created_at']?.toString().split(' ')[0] ?? '',
+      tokenAmount: json['token_amount']?.toString(),
+      tokenPaymentMode: json['token_payment_mode']?.toString(),
+      tokenDate: json['token_date']?.toString(),
       propertyDocs: parsedDocs,
+      paymentPlan: json['payment_plan'],
       installments: json['installments'] is List ? json['installments'] : [],
+      paymentAmount: json['payment_amount']?.toString(),
+      paymentStatus: json['payment_status']?.toString() ?? 'Pending',
+      createdAt: json['created_at']?.toString() ?? '',
+      updatedAt: json['updated_at']?.toString() ?? '',
     );
   }
-}
+}

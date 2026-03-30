@@ -1,5 +1,4 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:dio/dio.dart';
 import 'package:prarambh_infra/data/datasources/remote/api_client.dart';
 import '../models/user_model.dart';
 
@@ -14,7 +13,7 @@ class AuthRepository {
   static const String _keyPassword = 'auth_password';
   static const String _keyRole = 'auth_role';
 
-// --- 1. USER LOGIN ---
+  // --- 1. USER LOGIN ---
   Future<UserModel> loginUser(String email, String password) async {
     try {
       final response = await apiClient.loginUser({
@@ -32,7 +31,9 @@ class AuthRepository {
         return UserModel.fromJson(userData);
       }
       throw Exception(response['message'] ?? 'Login failed');
-    } catch (e) { rethrow; }
+    } catch (e) {
+      rethrow;
+    }
   }
 
   // --- 2. ADVISOR LOGIN ---
@@ -48,18 +49,24 @@ class AuthRepository {
       if (status == true || status == 'success') {
         final userData = response['data']['user'] ?? response['data'];
 
-        String role = advisorCode.contains('admin')? 'Admin' :'Advisor';
+        String role = advisorCode.contains('admin') ? 'Admin' : 'Advisor';
         userData['role'] = role;
         // Save identifier as Advisor Code, and Role as Advisor
         await _saveCredentials(advisorCode, password, role);
         return UserModel.fromJson(userData);
       }
       throw Exception(response['message'] ?? 'Advisor Login failed');
-    } catch (e) { rethrow; }
+    } catch (e) {
+      rethrow;
+    }
   }
 
   // --- SECURE STORAGE HELPERS ---
-  Future<void> _saveCredentials(String identifier, String password, String role) async {
+  Future<void> _saveCredentials(
+    String identifier,
+    String password,
+    String role,
+  ) async {
     await _secureStorage.write(key: _keyIdentifier, value: identifier);
     await _secureStorage.write(key: _keyPassword, value: password);
     await _secureStorage.write(key: _keyRole, value: role);
@@ -92,8 +99,8 @@ class AuthRepository {
         "password": password,
       });
 
-        final status = response['status'];
-        if (status == true || status == 'success') {
+      final status = response['status'];
+      if (status == true || status == 'success') {
         _saveCredentials(email, password, 'User');
         return true;
       } else {
@@ -107,8 +114,8 @@ class AuthRepository {
   Future<bool> requestPasswordReset(String email) async {
     try {
       final response = await apiClient.requestPasswordReset({"email": email});
-        final status = response['status'];
-        if (status == true || status == 'success') {
+      final status = response['status'];
+      if (status == true || status == 'success') {
         return true;
       } else {
         throw Exception(response['message'] ?? 'Failed to send OTP');
@@ -121,8 +128,8 @@ class AuthRepository {
   Future<bool> verifyOtp(String email, String otp) async {
     try {
       final response = await apiClient.verifyOtp({"email": email, "otp": otp});
-        final status = response['status'];
-        if (status == true || status == 'success') {
+      final status = response['status'];
+      if (status == true || status == 'success') {
         return true;
       } else {
         throw Exception(response['message'] ?? 'Invalid OTP');
@@ -132,15 +139,19 @@ class AuthRepository {
     }
   }
 
-  Future<bool> resetPassword(String email, String newPassword,String otp) async {
+  Future<bool> resetPassword(
+    String email,
+    String newPassword,
+    String otp,
+  ) async {
     try {
       final response = await apiClient.resetPassword({
         "email": email,
-        "otp" : otp,
+        "otp": otp,
         "new_password": newPassword,
       });
-        final status = response['status'];
-        if (status == true || status == 'success') {
+      final status = response['status'];
+      if (status == true || status == 'success') {
         return true;
       } else {
         throw Exception(response['message'] ?? 'Failed to reset password');

@@ -16,6 +16,7 @@ import 'package:prarambh_infra/features/admin/presentation/screens/admin_dashboa
 import 'package:prarambh_infra/features/admin/presentation/screens/admin_projects_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/advisor_applications_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/attendance_report_screen.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/meeting_management_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/contests_list_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/create_meeting_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/docs_management_screen.dart';
@@ -114,7 +115,8 @@ class PraarambhApp extends StatelessWidget {
         '/contests_list': (context) => const ContestsListScreen(),
         '/leaderboard': (context) => const LeaderboardScreen(),
         '/create_meeting': (context) => const CreateMeetingScreen(),
-        '/attendance_report': (context) => const AttendanceReportScreen(),
+        '/attendance_report': (context) => const AttendanceReportScreen(meetingId: ''),
+        '/meeting_management': (context) => const MeetingManagementScreen(),
         '/admin_recruitment_dashboard': (context) => const AdminRecruitmentDashboardScreen(),
         '/team_management': (context) => const TeamManagementScreen(),
         '/admin_projects': (context) => const AdminProjectsScreen(),

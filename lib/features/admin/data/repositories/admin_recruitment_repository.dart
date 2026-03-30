@@ -1,5 +1,4 @@
 import '../../../../data/datasources/remote/api_client.dart';
-import '../models/recruitment_model.dart';
 
 class AdminRecruitmentRepository {
   final ApiClient apiClient;

@@ -1,28 +1,95 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/models/contest_model.dart';
 
-class ContestDetailsScreen extends StatelessWidget {
+class ContestDetailsScreen extends StatefulWidget {
   final ContestModel contest;
   const ContestDetailsScreen({super.key, required this.contest});
+
+  @override
+  State<ContestDetailsScreen> createState() => _ContestDetailsScreenState();
+}
+
+class _ContestDetailsScreenState extends State<ContestDetailsScreen> {
+  DateTime? _targetDate;
+  Timer? _timer;
+  Duration _timeLeft = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeTimer();
+  }
+
+  void _initializeTimer() {
+    // If contest is live and has an end date, start ticking
+    if (widget.contest.status.toUpperCase() == 'LIVE' && widget.contest.endDate != null) {
+      _targetDate = DateTime.tryParse(widget.contest.endDate!);
+      if (_targetDate != null) {
+        _updateTimer();
+        _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateTimer());
+      }
+    }
+  }
+
+  void _updateTimer() {
+    if (_targetDate == null || !mounted) return;
+    final now = DateTime.now();
+    if (_targetDate!.isAfter(now)) {
+      setState(() {
+        _timeLeft = _targetDate!.difference(now);
+      });
+    } else {
+      setState(() {
+        _timeLeft = Duration.zero;
+      });
+      _timer?.cancel();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String _formatPad(int value) => value.toString().padLeft(2, '0');
 
   @override
   Widget build(BuildContext context) {
     final primaryBlue = AppColors.getPrimaryBlue(context);
     final cardColor = AppColors.getCardColor(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bool isLive = widget.contest.status.toUpperCase() == 'LIVE';
 
     return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF121212)
-          : const Color(0xFFF0F4F8),
+      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: ElevatedButton.icon(
+            onPressed: () {},
+            icon: const Icon(Icons.check_box_outlined, color: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryBlue,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            label: Text(
+              'How to Qualify',
+              style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ),
+        ),
+      ),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
           // Header Image with transparent AppBar
           SliverAppBar(
-            expandedHeight: 300,
+            expandedHeight: 320,
             pinned: true,
             backgroundColor: primaryBlue,
             leading: IconButton(
@@ -31,43 +98,30 @@ class ContestDetailsScreen extends StatelessWidget {
             ),
             title: Text(
               'Contest Details',
-              style: GoogleFonts.montserrat(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
+              style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
             ),
             actions: [
-              IconButton(
-                icon: const Icon(Icons.share, color: Colors.white),
-                onPressed: () {},
-              ),
+              IconButton(icon: const Icon(Icons.share, color: Colors.white), onPressed: () {}),
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Placeholder for the palm tree image
-                  Container(
-                    color: Colors.blueGrey,
-                    child: const Center(
-                      child: Icon(
-                        Icons.image,
-                        size: 100,
-                        color: Colors.white24,
-                      ),
-                    ),
-                  ),
+                  // Reward Image
+                  widget.contest.imageUrl.isNotEmpty
+                      ? Image.network(
+                    widget.contest.imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (c, e, s) => Container(color: Colors.blueGrey, child: const Icon(Icons.image, size: 100, color: Colors.white24)),
+                  )
+                      : Container(color: Colors.blueGrey, child: const Icon(Icons.image, size: 100, color: Colors.white24)),
                   // Gradient Overlay
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black12,
-                          Colors.black87.withOpacity(0.8),
-                        ],
+                        colors: [Colors.black26, Colors.black.withOpacity(0.85)],
                       ),
                     ),
                   ),
@@ -80,46 +134,27 @@ class ContestDetailsScreen extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            Icon(
-                              Icons.circle,
-                              size: 8,
-                              color: Colors.deepOrange,
-                            ),
-                            const SizedBox(width: 6),
+                            Icon(Icons.circle, size: 10, color: isLive ? Colors.deepOrange : Colors.grey),
+                            const SizedBox(width: 8),
                             Text(
-                              'LIVE NOW',
-                              style: GoogleFonts.montserrat(
-                                color: Colors.deepOrange,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
+                              isLive ? 'LIVE NOW' : widget.contest.status.toUpperCase(),
+                              style: GoogleFonts.montserrat(color: isLive ? Colors.deepOrange : Colors.grey, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 1),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          contest.title,
-                          style: GoogleFonts.montserrat(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          widget.contest.title,
+                          style: GoogleFonts.montserrat(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            const Icon(
-                              Icons.emoji_events,
-                              color: Colors.white70,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 6),
+                            const Icon(Icons.emoji_events, color: Colors.white70, size: 18),
+                            const SizedBox(width: 8),
                             Text(
-                              'Reward: ${contest.rewardText}',
-                              style: GoogleFonts.montserrat(
-                                color: Colors.white70,
-                                fontSize: 14,
-                              ),
+                              'Reward: ${widget.contest.rewardText}',
+                              style: GoogleFonts.montserrat(color: Colors.white70, fontSize: 15, fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
@@ -134,15 +169,10 @@ class ContestDetailsScreen extends StatelessWidget {
           // Body Content
           SliverToBoxAdapter(
             child: Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: isDark
-                    ? const Color(0xFF121212)
-                    : const Color(0xFFF0F4F8),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
-                ),
+                color: isDark ? const Color(0xFF121212) : const Color(0xFFF9FAFB),
+                borderRadius: const BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,18 +183,11 @@ class ContestDetailsScreen extends StatelessWidget {
                     children: [
                       Text(
                         'TIME REMAINING',
-                        style: GoogleFonts.montserrat(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: Colors.grey[800],
-                        ),
+                        style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13, color: isDark ? Colors.white : Colors.black87),
                       ),
                       Text(
-                        'Ends ${contest.endDate ?? ""}',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                        widget.contest.endDate != null ? 'Ends ${widget.contest.endDate!.split(' ')[0]}' : 'No End Date',
+                        style: GoogleFonts.montserrat(fontSize: 13, color: Colors.blueGrey[600], fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
@@ -172,13 +195,13 @@ class ContestDetailsScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildTimeBox('15', 'DAYS', cardColor, primaryBlue),
-                      _buildTimeBox('08', 'HRS', cardColor, primaryBlue),
-                      _buildTimeBox('45', 'MINS', cardColor, primaryBlue),
-                      _buildTimeBox('12', 'SECS', cardColor, primaryBlue),
+                      _buildTimeBox(_formatPad(_timeLeft.inDays), 'DAYS', cardColor, primaryBlue, isDark),
+                      _buildTimeBox(_formatPad(_timeLeft.inHours.remainder(24)), 'HRS', cardColor, primaryBlue, isDark),
+                      _buildTimeBox(_formatPad(_timeLeft.inMinutes.remainder(60)), 'MINS', cardColor, primaryBlue, isDark),
+                      _buildTimeBox(_formatPad(_timeLeft.inSeconds.remainder(60)), 'SECS', cardColor, primaryBlue, isDark),
                     ],
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 32),
 
                   // Top Performers
                   Row(
@@ -186,150 +209,100 @@ class ContestDetailsScreen extends StatelessWidget {
                     children: [
                       Text(
                         'Top Performers',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
                       ),
                       Text(
-                        'View Leaderboard>',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          color: primaryBlue,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        'View Leaderboard >',
+                        style: GoogleFonts.montserrat(fontSize: 12, color: primaryBlue, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  if (contest.topPerformers != null)
-                    ...contest.topPerformers!.asMap().entries.map((entry) {
+                  if (widget.contest.topPerformers != null && widget.contest.topPerformers!.isNotEmpty)
+                    ...widget.contest.topPerformers!.asMap().entries.map((entry) {
                       int rank = entry.key + 1;
-                      Color rankColor = rank == 1
-                          ? Colors.amber[100]!
-                          : rank == 2
-                          ? Colors.grey[200]!
-                          : Colors.orange[100]!;
-                      Color rankTextColor = rank == 1
-                          ? Colors.amber[900]!
-                          : rank == 2
-                          ? Colors.grey[700]!
-                          : Colors.orange[900]!;
-                      Color avatarBg = rank == 1
-                          ? Colors.purple[100]!
-                          : rank == 2
-                          ? Colors.teal[100]!
-                          : Colors.pink[100]!;
+                      Color rankColor = rank == 1 ? const Color(0xFFFFF9C4) : rank == 2 ? const Color(0xFFF5F5F5) : const Color(0xFFFFE0B2);
+                      Color rankTextColor = rank == 1 ? const Color(0xFFF57F17) : rank == 2 ? const Color(0xFF757575) : const Color(0xFFE65100);
+                      Color avatarBg = rank == 1 ? const Color(0xFFE8EAF6) : rank == 2 ? const Color(0xFFE0F2F1) : const Color(0xFFFCE4EC);
+                      Color avatarText = rank == 1 ? const Color(0xFF3F51B5) : rank == 2 ? const Color(0xFF00796B) : const Color(0xFFC2185B);
 
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: cardColor,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2))],
+                        ),
                         child: Row(
                           children: [
                             CircleAvatar(
-                              radius: 12,
+                              radius: 14,
                               backgroundColor: rankColor,
-                              child: Text(
-                                '$rank',
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: rankTextColor,
-                                ),
-                              ),
+                              child: Text('$rank', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: rankTextColor)),
                             ),
                             const SizedBox(width: 12),
                             CircleAvatar(
                               radius: 20,
                               backgroundColor: avatarBg,
-                              child: Text(
-                                entry.value.initials,
-                                style: GoogleFonts.montserrat(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue[900],
-                                  fontSize: 12,
-                                ),
-                              ),
+                              child: Text(entry.value.initials, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: avatarText, fontSize: 13)),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    entry.value.name,
-                                    style: GoogleFonts.montserrat(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  Text(
-                                    entry.value.location,
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 10,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
+                                  Text(entry.value.name, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 14, color: isDark ? Colors.white : Colors.black87)),
+                                  Text(entry.value.location, style: GoogleFonts.montserrat(fontSize: 11, color: Colors.blueGrey[400], fontWeight: FontWeight.w500)),
                                 ],
                               ),
                             ),
-                            Text(
-                              entry.value.units,
-                              style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: primaryBlue,
-                              ),
-                            ),
+                            Text(entry.value.units, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 14, color: primaryBlue)),
                           ],
                         ),
                       );
-                    }),
-                  const SizedBox(height: 20),
+                    })
+                  else
+                    Center(child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text("No performers listed yet.", style: GoogleFonts.montserrat(color: Colors.grey)),
+                    )),
+
+                  const SizedBox(height: 24),
 
                   // Rules
                   Text(
                     'Contest Rules',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
                   ),
                   const SizedBox(height: 16),
-                  if (contest.rules != null)
-                    ...contest.rules!.map(
-                      (rule) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                  if (widget.contest.rules != null && widget.contest.rules!.isNotEmpty)
+                    ...widget.contest.rules!.map(
+                          (rule) => Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
                               margin: const EdgeInsets.only(top: 2),
-                              padding: const EdgeInsets.all(2),
-                              decoration: BoxDecoration(
-                                color: Colors.blue[50],
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.check,
-                                size: 12,
-                                color: primaryBlue,
-                              ),
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), shape: BoxShape.circle),
+                              child: Icon(Icons.check, size: 14, color: primaryBlue),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
                                 rule,
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 13,
-                                  color: Colors.grey[800],
-                                  height: 1.4,
-                                ),
+                                style: GoogleFonts.montserrat(fontSize: 13, color: isDark ? Colors.grey[300] : Colors.blueGrey[800], height: 1.5, fontWeight: FontWeight.w500),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ),
+                    )
+                  else
+                    Text("No specific rules provided.", style: GoogleFonts.montserrat(color: Colors.grey)),
                 ],
               ),
             ),
@@ -339,39 +312,29 @@ class ContestDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTimeBox(
-    String value,
-    String label,
-    Color cardColor,
-    Color primaryBlue,
-  ) {
-    return Container(
-      width: 70,
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: GoogleFonts.montserrat(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: primaryBlue,
+  Widget _buildTimeBox(String value, String label, Color cardColor, Color primaryBlue, bool isDark) {
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.grey[900] : Colors.blue[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.blue.withOpacity(0.2)),
+        ),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: GoogleFonts.montserrat(fontSize: 26, fontWeight: FontWeight.bold, color: primaryBlue),
             ),
-          ),
-          Text(
-            label,
-            style: GoogleFonts.montserrat(
-              fontSize: 10,
-              color: Colors.grey[500],
-              fontWeight: FontWeight.w600,
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.montserrat(fontSize: 10, color: Colors.blueGrey[600], fontWeight: FontWeight.bold, letterSpacing: 1),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

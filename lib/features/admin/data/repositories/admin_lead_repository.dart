@@ -80,13 +80,15 @@ class AdminLeadRepository {
 
   Future<List<AdvisorAssignModel>> getAvailableAdvisors() async {
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
-      return [
-        AdvisorAssignModel(name: 'Rahul Sharma', activeLeads: 4, advisorCode: 'PIA00001', profile: ''),
-        AdvisorAssignModel(name: 'Priya Patel', activeLeads: 2, advisorCode: 'PIA00002', profile: ''),
-        AdvisorAssignModel(name: 'Amit Singh', activeLeads: 8, advisorCode: 'PIA00003', profile: ''),
-      ];
-    } catch (e) { rethrow; }
+      final response = await apiClient.getAdvisorsForAssignment();
+      if (response['status'] == true || response['status'] == 'success') {
+        final List data = response['data'] ?? [];
+        return data.map((e) => AdvisorAssignModel.fromJson(e)).toList();
+      }
+      throw Exception(response['message'] ?? 'Failed to load advisors');
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<bool> addLeadToPriority(String leadId) async {

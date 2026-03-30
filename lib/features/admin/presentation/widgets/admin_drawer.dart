@@ -82,7 +82,8 @@ class AdminDrawer extends StatelessWidget {
                   title: 'Meeting & Attendance',
                   textColor: textColor,
                   onTap: () {
-                    Navigator.pushNamed(context, '/attendance_report');
+                    Navigator.pop(context); // close drawer
+                    Navigator.pushNamed(context, '/meeting_management');
                   },
                 ),
                 _buildDrawerItem(

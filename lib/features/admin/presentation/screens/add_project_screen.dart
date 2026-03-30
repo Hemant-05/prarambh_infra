@@ -79,8 +79,9 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       if (validTypes.contains(p.projectType)) _projectType = p.projectType;
 
       final validStatus = ['New Launch', 'Under Construction', 'Ready to Move'];
-      if (validStatus.contains(p.constructionStatus))
+      if (validStatus.contains(p.constructionStatus)) {
         _constructionStatus = p.constructionStatus;
+      }
 
       final validProjStatus = ['Completed', 'Ongoing', 'Upcoming'];
       if (validProjStatus.contains(p.status)) _projectStatus = p.status;
@@ -106,8 +107,9 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       type: FileType.custom,
       allowedExtensions: ['pdf'],
     );
-    if (result != null)
+    if (result != null) {
       setState(() => _selectedBrochure = File(result.files.single.path!));
+    }
   }
 
   @override

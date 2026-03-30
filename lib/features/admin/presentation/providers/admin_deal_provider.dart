@@ -30,7 +30,7 @@ class AdminDealProvider extends ChangeNotifier {
   Future<bool> initiateDeal({
     required String clientName, required String clientNumber,
     required String advisorCode, required String tokenAmount,
-    required String paymentMode,
+    required String tokenPaymentMode,
     File? aadhaarPhotoFront, File? aadhaarPhotoBack,
     File? panPhotoFront, File? panPhotoBack,
     List<String>? docTitles, List<File>? docFiles,
@@ -39,8 +39,8 @@ class AdminDealProvider extends ChangeNotifier {
     try {
       final success = await repository.createDeal(
           clientName: clientName, clientNumber: clientNumber, advisorCode: advisorCode,
-          stage: 'booking', dealStatus: 'not verified', paymentAmount: tokenAmount,
-          paymentMode: paymentMode,
+          stage: 'booking', dealStatus: 'not verified', tokenAmount: tokenAmount,
+          tokenPaymentMode: tokenPaymentMode,
           clientAdharFront: aadhaarPhotoFront, clientAdharBack: aadhaarPhotoBack,
           clientPanFront: panPhotoFront, clientPanBack: panPhotoBack,
           docTitles: docTitles, docFiles: docFiles
@@ -67,10 +67,24 @@ class AdminDealProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> savePaymentPlan(String dealId, String installmentsJson, String totalAmount, String status) async {
+  Future<bool> savePaymentPlan({
+    required String dealId, 
+    required String installmentsJson, 
+    required String totalAmount, 
+    required String status,
+    String? tokenAmount,
+    String? tokenPaymentMode,
+    String? tokenDate,
+    String? paymentPlan,
+  }) async {
     _isSaving = true; notifyListeners();
     try {
-      final success = await repository.updateDealInstallments(dealId, installmentsJson, totalAmount, status);
+      final success = await repository.updateDealInstallments(
+        dealId: dealId, installmentsJson: installmentsJson, 
+        totalAmount: totalAmount, status: status,
+        tokenAmount: tokenAmount, tokenPaymentMode: tokenPaymentMode,
+        tokenDate: tokenDate, paymentPlan: paymentPlan,
+      );
       if (success) await fetchAllDeals();
       return success;
     } catch (e) {

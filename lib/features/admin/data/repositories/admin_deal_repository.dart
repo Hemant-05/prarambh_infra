@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:dio/dio.dart';
 import '../../../../data/datasources/remote/api_client.dart';
 import '../models/deal_model.dart';
 
@@ -9,15 +10,15 @@ class AdminDealRepository {
   Future<bool> createDeal({
     required String clientName, required String clientNumber,
     required String advisorCode, required String stage,
-    required String dealStatus, required String paymentAmount,
-    required String paymentMode,
+    required String dealStatus, required String tokenAmount,
+    required String tokenPaymentMode,
     File? clientAdharFront, File? clientAdharBack,
     File? clientPanFront, File? clientPanBack,
     List<String>? docTitles, List<File>? docFiles,
   }) async {
     try {
       final response = await apiClient.createDeal(
-          clientName, clientNumber, advisorCode, stage, dealStatus, paymentAmount, paymentMode,
+          clientName, clientNumber, advisorCode, stage, dealStatus, tokenAmount, tokenPaymentMode,
           clientAdharFront, clientAdharBack, clientPanFront, clientPanBack,
           "[]", "[]", // Empty JSON arrays for notes and installments initially
           docTitles, docFiles
@@ -26,13 +27,34 @@ class AdminDealRepository {
     } catch (e) { rethrow; }
   }
 
-  Future<bool> updateDealInstallments(String dealId, String installmentsJson, String totalAmount, String status) async {
+  Future<bool> updateDealInstallments({
+    required String dealId, 
+    required String installmentsJson, 
+    required String totalAmount, 
+    required String status,
+    String? tokenAmount,
+    String? tokenPaymentMode,
+    String? tokenDate,
+    String? paymentPlan,
+  }) async {
     try {
-      final response = await apiClient.updateDeal(dealId, {
+      final payload = <String, dynamic>{
         "installments": installmentsJson,
-        "total_payment_amount": totalAmount,
         "payment_status": status,
-      });
+      };
+      // Skip appending if empty
+      if (totalAmount.isNotEmpty) payload["payment_amount"] = totalAmount;
+      if (paymentPlan != null && paymentPlan.isNotEmpty) payload["payment_plan"] = paymentPlan;
+      
+      if (tokenAmount != null && tokenAmount.isNotEmpty) {
+        payload["token_amount"] = tokenAmount;
+        payload["deal_status"] = "verified"; // <-- The requested status update feature!
+      }
+      if (tokenPaymentMode != null && tokenPaymentMode.isNotEmpty) payload["token_payment_mode"] = tokenPaymentMode;
+      if (tokenDate != null && tokenDate.isNotEmpty) payload["token_date"] = tokenDate;
+      
+      final formData = FormData.fromMap(payload);
+      final response = await apiClient.updateDeal(dealId, formData);
       return response['status'] == true || response['status'] == 'success';
     } catch (e) { rethrow; }
   }

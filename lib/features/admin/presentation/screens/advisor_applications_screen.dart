@@ -22,7 +22,7 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AdminAdvisorProvider>().fetchAdvisors();
+      context.read<AdminAdvisorProvider>().fetchAdvisors(status: 'pending');
     });
   }
 

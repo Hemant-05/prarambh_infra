@@ -14,12 +14,27 @@ class AssignLeadScreen extends StatefulWidget {
 }
 
 class _AssignLeadScreenState extends State<AssignLeadScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AdminLeadProvider>().fetchAdvisorsForAssignment();
     });
+
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.trim().toLowerCase();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -35,6 +50,15 @@ class _AssignLeadScreenState extends State<AssignLeadScreen> {
       widget.lead.leadCategory.toUpperCase(),
       widget.lead.stage.toUpperCase()
     ];
+
+    // Filter advisors based on search query
+    List<AdvisorAssignModel> filteredAdvisors = provider.availableAdvisors;
+    if (_searchQuery.isNotEmpty) {
+      filteredAdvisors = filteredAdvisors.where((advisor) {
+        return advisor.name.toLowerCase().contains(_searchQuery) ||
+            advisor.advisorCode.toLowerCase().contains(_searchQuery);
+      }).toList();
+    }
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
@@ -104,8 +128,9 @@ class _AssignLeadScreenState extends State<AssignLeadScreen> {
 
                 // Search Bar
                 TextField(
+                  controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: 'Search advisors by name or expertise...',
+                    hintText: 'Search advisors by name or code...',
                     hintStyle: GoogleFonts.montserrat(color: Colors.grey[400], fontSize: 14),
                     prefixIcon: const Icon(Icons.search, color: Colors.grey),
                     filled: true, fillColor: Colors.grey[50],
@@ -136,13 +161,15 @@ class _AssignLeadScreenState extends State<AssignLeadScreen> {
           Expanded(
             child: provider.isLoading
                 ? const Center(child: CircularProgressIndicator())
+                : filteredAdvisors.isEmpty
+                ? Center(child: Text("No advisors match your search.", style: GoogleFonts.montserrat(color: Colors.grey)))
                 : ListView.separated(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
               physics: const BouncingScrollPhysics(),
-              itemCount: provider.availableAdvisors.length,
+              itemCount: filteredAdvisors.length,
               separatorBuilder: (context, index) => const Divider(height: 1),
               itemBuilder: (context, index) {
-                final advisor = provider.availableAdvisors[index];
+                final advisor = filteredAdvisors[index];
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Row(
@@ -151,13 +178,8 @@ class _AssignLeadScreenState extends State<AssignLeadScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Text(advisor.name, style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold, color: textColor)),
-                              const SizedBox(width: 8),
-                              Icon(Icons.circle, size: 8, color: true ? Colors.green : Colors.grey[400]),
-                            ],
-                          ),
+                          // REMOVED GREEN DOT
+                          Text(advisor.name, style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold, color: textColor)),
                           const SizedBox(height: 8),
                           Row(
                             children: [

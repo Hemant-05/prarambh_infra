@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:prarambh_infra/features/admin/data/repositories/admin_advisor_repository.dart';
 import '../../data/models/advisor_application_model.dart';
@@ -36,7 +35,8 @@ class AdminAdvisorProvider extends ChangeNotifier {
   }
 
   Future<bool> approveAdvisor(String advisorId) async {
-    _isSaving = true; notifyListeners();
+    _isSaving = true;
+    notifyListeners();
     try {
       final success = await repository.approveAdvisor(advisorId);
       if (success) await fetchAdvisors(status: 'pending');
@@ -45,12 +45,17 @@ class AdminAdvisorProvider extends ChangeNotifier {
       debugPrint('Approve Advisor Error: $e');
       return false;
     } finally {
-      _isSaving = false; notifyListeners();
+      _isSaving = false;
+      notifyListeners();
     }
   }
 
-  Future<bool> updateAdvisor(String advisorId, Map<String, dynamic> data) async {
-    _isSaving = true; notifyListeners();
+  Future<bool> updateAdvisor(
+    String advisorId,
+    Map<String, dynamic> data,
+  ) async {
+    _isSaving = true;
+    notifyListeners();
     try {
       final success = await repository.updateAdvisor(advisorId, data);
       if (success) await fetchAdvisors();
@@ -59,26 +64,38 @@ class AdminAdvisorProvider extends ChangeNotifier {
       debugPrint('Update Advisor Error: $e');
       return false;
     } finally {
-      _isSaving = false; notifyListeners();
+      _isSaving = false;
+      notifyListeners();
     }
   }
 
-  Future<bool> changeAdvisorStatus(String advisorId, String status, {String? reason}) async {
-    _isSaving = true; notifyListeners();
+  Future<bool> changeAdvisorStatus(
+    String advisorId,
+    String status, {
+    String? reason,
+  }) async {
+    _isSaving = true;
+    notifyListeners();
     try {
-      final success = await repository.changeAdvisorStatus(advisorId, status, reason: reason);
+      final success = await repository.changeAdvisorStatus(
+        advisorId,
+        status,
+        reason: reason,
+      );
       if (success) await fetchAdvisors();
       return success;
     } catch (e) {
       debugPrint('Change Status Error: $e');
       return false;
     } finally {
-      _isSaving = false; notifyListeners();
+      _isSaving = false;
+      notifyListeners();
     }
   }
 
   Future<bool> deleteAdvisor(String advisorId) async {
-    _isSaving = true; notifyListeners();
+    _isSaving = true;
+    notifyListeners();
     try {
       final success = await repository.deleteAdvisor(advisorId);
       if (success) _advisors.removeWhere((a) => a.id == advisorId);
@@ -87,7 +104,8 @@ class AdminAdvisorProvider extends ChangeNotifier {
       debugPrint('Delete Advisor Error: $e');
       return false;
     } finally {
-      _isSaving = false; notifyListeners();
+      _isSaving = false;
+      notifyListeners();
     }
   }
 }

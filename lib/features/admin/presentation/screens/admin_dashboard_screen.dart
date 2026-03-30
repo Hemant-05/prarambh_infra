@@ -4,7 +4,7 @@ import 'package:prarambh_infra/features/admin/presentation/providers/admin_provi
 import 'package:prarambh_infra/features/admin/presentation/screens/admin_profile_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/admin_projects_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/team_management_screen.dart';
-import 'package:prarambh_infra/features/advisor/presentation/screens/sales_pipeline_screen.dart';
+import 'admin_deals_screen.dart';
 
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -33,7 +33,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final List<Widget> _views = [
     const AdminHomeView(),
     const AdminProjectsScreen(),
-    const SalesPipelineScreen(),
+    const AdminDealsScreen(),
     const TeamManagementScreen(),
     const AdminProfileScreen(),
   ];
@@ -42,7 +42,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final List<String> _pageTitles = [
     'Admin Dashboard',
     'Project Management',
-    'Sales Overview',
+    'Deal Management',
     'Team Management',
     'My Profile',
   ];
@@ -99,8 +99,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.business), label: 'Project'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.trending_up),
-            label: 'Sales',
+            icon: Icon(Icons.handshake_outlined),
+            label: 'Deals',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.people_alt_outlined),

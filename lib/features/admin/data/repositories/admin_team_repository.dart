@@ -7,11 +7,22 @@ class AdminTeamRepository {
 
   Future<BrokerProfileModel> getBrokerProfile(String advisorId) async {
     try {
-      final response = await apiClient.getSingleAdvisor(advisorId);
+      // /advisor/profile/{id} returns the FULL nested profile with all sections
+      final response = await apiClient.getAdvisorProfile(advisorId);
       if (response['status'] == true || response['status'] == 'success') {
         return BrokerProfileModel.fromJson(response['data']);
       }
       throw Exception(response['message']);
+    } catch (e) { rethrow; }
+  }
+
+  Future<bool> updateAdvisorStatus(String advisorId, String status, String reason) async {
+    try {
+      final response = await apiClient.changeAdvisorStatus(advisorId, {
+        'status': status,
+        'reason': reason,
+      });
+      return response['status'] == true || response['status'] == 'success';
     } catch (e) { rethrow; }
   }
 
