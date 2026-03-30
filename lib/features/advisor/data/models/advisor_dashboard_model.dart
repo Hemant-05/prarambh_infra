@@ -1,5 +1,3 @@
-// lib/features/advisor/data/models/advisor_dashboard_model.dart
-
 class AdvisorDashboardModel {
   final String name;
   final String role;
@@ -21,16 +19,15 @@ class AdvisorDashboardModel {
     required this.promotionStatus, required this.activeContests,
   });
 
-  // Ready for JSON from your future API
   factory AdvisorDashboardModel.fromJson(Map<String, dynamic> json) {
     return AdvisorDashboardModel(
-      name: json['name'] ?? 'Rajesh Kumar',
-      role: json['role'] ?? 'MANAGER',
-      advisorId: json['advisor_id'] ?? '#PI-8821',
-      parentName: json['parent_name'] ?? 'Amit Singh',
-      currentLevel: json['current_level'] ?? 'Senior Adviser',
-      nextLevel: json['next_level'] ?? 'DIRECTOR',
-      progressPercent: json['progress_percent'] ?? 82,
+      name: json['name'] ?? 'Unknown Advisor',
+      role: json['role'] ?? 'Advisor',
+      advisorId: json['advisor_id'] ?? '',
+      parentName: json['parent_name'] ?? 'None',
+      currentLevel: json['current_level'] ?? '',
+      nextLevel: json['next_level'] ?? '',
+      progressPercent: json['progress_percent'] ?? 0,
       sales: SalesConversion.fromJson(json['sales'] ?? {}),
       pendingActions: (json['pending_actions'] as List?)?.map((e) => PendingAction.fromJson(e)).toList() ?? [],
       promotionStatus: (json['promotion_status'] as List?)?.map((e) => PromotionMetric.fromJson(e)).toList() ?? [],
@@ -48,9 +45,9 @@ class SalesConversion {
 
   factory SalesConversion.fromJson(Map<String, dynamic> json) {
     return SalesConversion(
-      suspecting: json['suspecting'] ?? 102,
-      prospecting: json['prospecting'] ?? 25,
-      siteVisit: json['site_visit'] ?? 10,
+      suspecting: json['suspecting'] ?? 0,
+      prospecting: json['prospecting'] ?? 0,
+      siteVisit: json['site_visit'] ?? 0,
     );
   }
 }

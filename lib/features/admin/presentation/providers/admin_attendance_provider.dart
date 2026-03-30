@@ -7,15 +7,27 @@ class AdminAttendanceProvider extends ChangeNotifier {
   final AdminAttendanceRepository repository;
   AdminAttendanceProvider({required this.repository});
 
-  List<AttendanceModel> _records = [];
+  List<dynamic> _meetings = [];
   bool _isLoading = false;
   bool _isSaving = false;
   dynamic _currentMeeting;
 
-  List<AttendanceModel> get records => _records;
+  List<dynamic> get meetings => _meetings;
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
   dynamic get currentMeeting => _currentMeeting;
+
+  Future<void> fetchAllMeetings() async {
+    _isLoading = true; notifyListeners();
+    try {
+      _meetings = await repository.getAllMeetings();
+    } catch (e) {
+      debugPrint('Fetch All Meetings Error: $e');
+      _meetings = [];
+    } finally {
+      _isLoading = false; notifyListeners();
+    }
+  }
 
   Future<void> fetchMeeting(String meetingId) async {
     _isLoading = true; notifyListeners();
@@ -28,29 +40,12 @@ class AdminAttendanceProvider extends ChangeNotifier {
     }
   }
 
-  /// Fetch attendance report. NOTE: New ApiClient has no dedicated
-  /// getAttendance endpoint — attendance is embedded in meeting records.
-  Future<void> fetchReport(String meetingId) async {
-    _isLoading = true; notifyListeners();
-    try {
-      _records = await repository.getAttendanceReport();
-
-      // Fallback mock data if no backend endpoint yet
-      if (_records.isEmpty) {
-        _records = [
-          AttendanceModel(id: '1', advisorId: '101', advisorName: 'Rahul Sharma', checkInTime: '10:00 AM', checkOutTime: '11:30 AM', duration: '1h 30m', checkInStatus: 'Verified', checkOutStatus: 'Verified', checkInPhoto: 'url', checkOutPhoto: 'url', lat: '28.6219', long: '77.3628'),
-          AttendanceModel(id: '2', advisorId: '102', advisorName: 'Priya Patel', checkInTime: '10:45 AM', checkOutTime: '11:30 AM', duration: '45m', checkInStatus: 'Verified', checkOutStatus: 'Pending', checkInPhoto: 'url', checkOutPhoto: '', lat: '28.6219', long: '77.3628'),
-          AttendanceModel(id: '3', advisorId: '103', advisorName: 'Amit Singh', checkInTime: '11:15 AM', checkOutTime: '11:30 AM', duration: '15m', checkInStatus: 'Verified', checkOutStatus: 'Verified', checkInPhoto: 'url', checkOutPhoto: 'url', lat: '28.6219', long: '77.3628'),
-        ];
-      }
-    } catch (e) { debugPrint(e.toString()); }
-    finally { _isLoading = false; notifyListeners(); }
-  }
-
   Future<bool> addMeeting(Map<String, dynamic> data) async {
     _isSaving = true; notifyListeners();
     try {
-      return await repository.addMeeting(data);
+      final success = await repository.addMeeting(data);
+      if (success) await fetchAllMeetings();
+      return success;
     } catch (e) {
       debugPrint('Add Meeting Error: $e');
       return false;
@@ -59,18 +54,10 @@ class AdminAttendanceProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> checkIn({
-    required String meetingId,
-    required String advisorId,
-    required File photo,
-  }) async {
+  Future<bool> checkIn({required String meetingId, required String advisorId, required File photo}) async {
     _isSaving = true; notifyListeners();
     try {
-      return await repository.checkInAttendance(
-        meetingId: meetingId,
-        advisorId: advisorId,
-        photo: photo,
-      );
+      return await repository.checkInAttendance(meetingId: meetingId, advisorId: advisorId, photo: photo);
     } catch (e) {
       debugPrint('Check-In Error: $e');
       return false;
@@ -79,18 +66,10 @@ class AdminAttendanceProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> checkOut({
-    required String meetingId,
-    required String advisorId,
-    required File photo,
-  }) async {
+  Future<bool> checkOut({required String meetingId, required String advisorId, required File photo}) async {
     _isSaving = true; notifyListeners();
     try {
-      return await repository.checkOutAttendance(
-        meetingId: meetingId,
-        advisorId: advisorId,
-        photo: photo,
-      );
+      return await repository.checkOutAttendance(meetingId: meetingId, advisorId: advisorId, photo: photo);
     } catch (e) {
       debugPrint('Check-Out Error: $e');
       return false;

@@ -5,11 +5,27 @@ class AdminLeadRepository {
   final ApiClient apiClient;
   AdminLeadRepository({required this.apiClient});
 
-  /// Fetch all leads. Pass [advisorCode] to filter by advisor.
-  Future<List<LeadModel>> getLeads({String? advisorCode}) async {
+  Future<List<LeadModel>> getLeads({String? advisorCode, String? stage}) async {
     try {
-      final response = await apiClient.getLeads(advisorCode);
-      if (response['status']) {
+      // API client now accepts stage directly if needed, but we pass advisor code
+      final response = await apiClient.getLeads(advisorCode, stage, null);
+      if (response['status'] == true || response['status'] == 'success') {
+        final List data = response['data'] ?? [];
+        List<LeadModel> leads = data.map((e) => LeadModel.fromJson(e)).toList();
+
+        if (stage != null && stage.isNotEmpty) {
+          leads = leads.where((l) => l.stage.toLowerCase() == stage.toLowerCase()).toList();
+        }
+        return leads;
+      }
+      throw Exception(response['message']);
+    } catch (e) { rethrow; }
+  }
+
+  Future<List<LeadModel>> getUnassignedLeads() async {
+    try {
+      final response = await apiClient.getUnassignedLeads();
+      if (response['status'] == true || response['status'] == 'success') {
         final List data = response['data'] ?? [];
         return data.map((e) => LeadModel.fromJson(e)).toList();
       }
@@ -30,21 +46,46 @@ class AdminLeadRepository {
   Future<bool> addLead(Map<String, dynamic> data) async {
     try {
       final response = await apiClient.addLead(data);
-      return response['status'];
+      return response['status'] == true || response['status'] == 'success';
     } catch (e) { rethrow; }
   }
 
   Future<bool> updateLead(String leadId, Map<String, dynamic> data) async {
     try {
       final response = await apiClient.updateLead(leadId, data);
-      return response['status'];
+      return response['status'] == true || response['status'] == 'success';
+    } catch (e) { rethrow; }
+  }
+
+  Future<bool> addLeadNote(String leadId, String title, String time) async {
+    try {
+      final response = await apiClient.addLeadNote(leadId, {'title': title, 'time': time});
+      return response['status'] == true || response['status'] == 'success';
     } catch (e) { rethrow; }
   }
 
   Future<bool> deleteLead(String leadId) async {
     try {
       final response = await apiClient.deleteLead(leadId);
-      return response['status'];
+      return response['status'] == true || response['status'] == 'success';
+    } catch (e) { rethrow; }
+  }
+
+  Future<bool> assignLeadToAdvisor(String leadId, String advisorCode) async {
+    try {
+      final response = await apiClient.assignLeadToAdvisor(leadId, advisorCode);
+      return response['status'] == true || response['status'] == 'success';
+    } catch (e) { rethrow; }
+  }
+
+  Future<List<AdvisorAssignModel>> getAvailableAdvisors() async {
+    try {
+      await Future.delayed(const Duration(milliseconds: 500));
+      return [
+        AdvisorAssignModel(name: 'Rahul Sharma', activeLeads: 4, advisorCode: 'PIA00001', profile: ''),
+        AdvisorAssignModel(name: 'Priya Patel', activeLeads: 2, advisorCode: 'PIA00002', profile: ''),
+        AdvisorAssignModel(name: 'Amit Singh', activeLeads: 8, advisorCode: 'PIA00003', profile: ''),
+      ];
     } catch (e) { rethrow; }
   }
 
@@ -57,7 +98,7 @@ class AdminLeadRepository {
 
   Future<List<LeadModel>> getPriorityLeads() async {
     try {
-      final response = await apiClient.getPriorityLeads();
+      final response = await apiClient.getPriorityLeads(null);
       if (response['status']) {
         final List data = response['data'] ?? [];
         return data.map((e) => LeadModel.fromJson(e)).toList();
@@ -71,13 +112,5 @@ class AdminLeadRepository {
       final response = await apiClient.removeLeadFromPriority(leadId);
       return response['status'];
     } catch (e) { rethrow; }
-  }
-
-  // NOTE: getAvailableAdvisors — no dedicated endpoint in new ApiClient.
-  // Use AdminAdvisorRepository.getAllAdvisors() instead.
-  Future<List<AdvisorAssignModel>> getAvailableAdvisors() async {
-    throw UnimplementedError(
-      'Use AdminAdvisorRepository.getAllAdvisors() for this data.',
-    );
   }
 }

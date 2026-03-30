@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:prarambh_infra/data/datasources/remote/api_client.dart';
 import 'package:prarambh_infra/features/admin/data/repositories/admin_attendance_repository.dart';
 import 'package:prarambh_infra/features/admin/data/repositories/admin_contest_repository.dart';
+import 'package:prarambh_infra/features/admin/data/repositories/admin_deal_repository.dart';
 import 'package:prarambh_infra/features/admin/data/repositories/admin_lead_repository.dart';
 import 'package:prarambh_infra/features/admin/data/repositories/admin_leaderboard_repository.dart';
 import 'package:prarambh_infra/features/admin/data/repositories/admin_profile_repository.dart';
@@ -10,6 +11,7 @@ import 'package:prarambh_infra/features/admin/data/repositories/admin_recruitmen
 import 'package:prarambh_infra/features/admin/data/repositories/admin_team_repository.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_attendance_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_contest_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_deal_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_lead_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_leaderboard_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_profile_provider.dart';
@@ -18,9 +20,11 @@ import 'package:prarambh_infra/features/admin/presentation/providers/admin_provi
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_recruitment_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_team_provider.dart';
 import 'package:prarambh_infra/features/advisor/data/repositories/advisor_document_repository.dart';
+import 'package:prarambh_infra/features/advisor/data/repositories/advisor_lead_repository.dart';
 import 'package:prarambh_infra/features/advisor/data/repositories/advisor_repository.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_dashboard_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_document_provider.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_lead_provider.dart';
 import 'package:prarambh_infra/features/recruitment/data/repositories/recruitment_repository.dart';
 import 'package:prarambh_infra/features/recruitment/presentation/providers/advisor_registration_provider.dart';
 import 'package:prarambh_infra/features/recruitment/presentation/providers/recruitment_provider.dart';
@@ -88,7 +92,11 @@ Future<void> init() async {
   sl.registerFactory(() => AdvisorDocumentProvider(repository: sl()));
   sl.registerLazySingleton(() => AdvisorDocumentRepository(apiClient: sl()));
 
+  sl.registerFactory(() => AdminDealProvider(repository: sl()));
+  sl.registerLazySingleton(() => AdminDealRepository(apiClient: sl()));
 
+  sl.registerFactory(() => AdvisorLeadProvider(repository: sl()));
+  sl.registerLazySingleton(() => AdvisorLeadRepository(apiClient: sl()));
   // ---------------------------------------------------------------------------
   // 3. Core Network
   // ---------------------------------------------------------------------------

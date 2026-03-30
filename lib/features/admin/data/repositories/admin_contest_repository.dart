@@ -17,13 +17,19 @@ class AdminContestRepository {
     } catch (e) { rethrow; }
   }
 
+  Future<ContestModel> getSingleContest(String id) async {
+    try {
+      final response = await apiClient.getSingleContest(id);
+      if (response['status']) {
+        return ContestModel.fromJson(response['data']);
+      }
+      throw Exception(response['message'] ?? 'Failed to load contest');
+    } catch (e) { rethrow; }
+  }
+
   Future<bool> addContest({
-    required String title,
-    required String startDate,
-    required String endDate,
-    required String rewardName,
-    required String rules,
-    required File rewardImage,
+    required String title, required String startDate, required String endDate,
+    required String rewardName, required String rules, required File rewardImage,
   }) async {
     try {
       final response = await apiClient.addContest(
@@ -33,9 +39,23 @@ class AdminContestRepository {
     } catch (e) { rethrow; }
   }
 
+  Future<bool> updateContest(String id, {String? title, File? rewardImage}) async {
+    try {
+      final response = await apiClient.updateContest(id, title, rewardImage);
+      return response['status'];
+    } catch (e) { rethrow; }
+  }
+
   Future<bool> joinContest(Map<String, dynamic> data) async {
     try {
       final response = await apiClient.joinContest(data);
+      return response['status'];
+    } catch (e) { rethrow; }
+  }
+
+  Future<bool> deleteContest(String id) async {
+    try {
+      final response = await apiClient.deleteContest(id);
       return response['status'];
     } catch (e) { rethrow; }
   }

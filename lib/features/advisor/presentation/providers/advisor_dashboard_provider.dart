@@ -1,5 +1,3 @@
-// lib/features/advisor/presentation/providers/advisor_dashboard_provider.dart
-
 import 'package:flutter/material.dart';
 import '../../data/models/advisor_dashboard_model.dart';
 import '../../data/repositories/advisor_repository.dart';
@@ -22,6 +20,7 @@ class AdvisorDashboardProvider extends ChangeNotifier {
       _data = await repository.getDashboardData(advisorId);
     } catch (e) {
       debugPrint("Error fetching advisor dashboard: $e");
+      _data = null;
     } finally {
       _isLoading = false;
       notifyListeners();

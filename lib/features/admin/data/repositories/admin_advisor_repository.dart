@@ -25,27 +25,31 @@ class AdminAdvisorRepository {
         return AdvisorApplicationModel.fromJson(response['data']);
       }
       throw Exception(response['message'] ?? 'Failed to load advisor');
-    } catch (e) {
-      rethrow;
-    }
+    } catch (e) { rethrow; }
+  }
+
+  Future<dynamic> getAdvisorProfile(String id) async {
+    try {
+      final response = await apiClient.getAdvisorProfile(id);
+      if (response['status']) {
+        return response['data'];
+      }
+      throw Exception(response['message'] ?? 'Failed to load advisor profile');
+    } catch (e) { rethrow; }
   }
 
   Future<bool> approveAdvisor(String advisorId) async {
     try {
       final response = await apiClient.approveAdvisor(advisorId);
       return response['status'];
-    } catch (e) {
-      rethrow;
-    }
+    } catch (e) { rethrow; }
   }
 
   Future<bool> updateAdvisor(String advisorId, Map<String, dynamic> data) async {
     try {
       final response = await apiClient.updateAdvisor(advisorId, data);
       return response['status'];
-    } catch (e) {
-      rethrow;
-    }
+    } catch (e) { rethrow; }
   }
 
   Future<bool> changeAdvisorStatus(String advisorId, String status, {String? reason}) async {
@@ -55,17 +59,13 @@ class AdminAdvisorRepository {
         {'status': status, 'reason': reason},
       );
       return response['status'];
-    } catch (e) {
-      rethrow;
-    }
+    } catch (e) { rethrow; }
   }
 
   Future<bool> deleteAdvisor(String advisorId) async {
     try {
       final response = await apiClient.deleteAdvisor(advisorId);
       return response['status'];
-    } catch (e) {
-      rethrow;
-    }
+    } catch (e) { rethrow; }
   }
 }

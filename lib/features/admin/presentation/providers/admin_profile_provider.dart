@@ -21,15 +21,7 @@ class AdminProfileProvider extends ChangeNotifier {
       _profile = await repository.getProfile(userId);
     } catch (e) {
       debugPrint('Fetch Profile Error: $e');
-      // Mock data for UI testing
-      _profile = AdminProfileModel(
-        id: userId,
-        name: 'Amit Jadhav',
-        email: 'admin@prarambhinfra.com',
-        phone: '+91 9876543210',
-        role: 'Super Admin',
-        avatarUrl: '',
-      );
+      _profile = null;
     } finally {
       _isLoading = false; notifyListeners();
     }

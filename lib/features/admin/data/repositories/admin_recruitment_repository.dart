@@ -6,32 +6,27 @@ class AdminRecruitmentRepository {
 
   AdminRecruitmentRepository({required this.apiClient});
 
-  /// Fetch all advisors as the recruitment pipeline.
-  /// The new ApiClient does not have a dedicated recruitment dashboard endpoint.
-  /// Use getAllAdvisors from AdminAdvisorRepository or the leaderboard for summary data.
-  Future<List<RecruitedPersonModel>> getRecruitsByAdvisor(String advisorId) async {
+  Future<dynamic> getTeamTree({String? leaderId}) async {
     try {
-      // The new ApiClient does not expose a recruits-by-advisor endpoint.
-      // Fetching the advisor's full record as a fallback.
-      final response = await apiClient.getSingleAdvisor(advisorId);
+      final response = await apiClient.getTeamTree(leaderId);
       if (response['status']) {
-        final data = response['data'];
-        // Wrap single advisor data as a list entry.
-        return [RecruitedPersonModel.fromJson(data)];
+        return response['data'];
       }
-      throw Exception(response['message'] ?? 'Failed to load recruits');
+      throw Exception(response['message'] ?? 'Failed to load team tree');
     } catch (e) {
       rethrow;
     }
   }
 
-  /// NOTE: There is no dedicated recruitment dashboard endpoint in the new ApiClient.
-  /// Use AdminAdvisorRepository.getAllAdvisors() + AdminLeaderboardRepository.getLeaderboard()
-  /// to compose dashboard-level data.
-  Future<RecruitmentDashboardModel> getDashboard() async {
-    throw UnimplementedError(
-      'No dedicated recruitment dashboard endpoint exists in the new ApiClient. '
-      'Compose from getAllAdvisors() and getLeaderboard().',
-    );
+  Future<dynamic> getDashboard({String? leaderId}) async {
+    try {
+      final response = await apiClient.getRecruitmentDashboard(leaderId);
+      if (response['status']) {
+        return response['data'];
+      }
+      throw Exception(response['message'] ?? 'Failed to load dashboard');
+    } catch (e) {
+      rethrow;
+    }
   }
 }

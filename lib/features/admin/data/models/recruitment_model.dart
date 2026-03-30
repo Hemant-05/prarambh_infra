@@ -1,4 +1,3 @@
-// The main dashboard data containing stats and the top recruiters
 class RecruitmentDashboardModel {
   final int totalBrokers;
   final int activeBrokers;
@@ -25,7 +24,6 @@ class RecruitmentDashboardModel {
   }
 }
 
-// Model for the Advisor who recruits others
 class RecruiterModel {
   final String id;
   final String name;
@@ -39,18 +37,19 @@ class RecruiterModel {
   });
 
   factory RecruiterModel.fromJson(Map<String, dynamic> json) => RecruiterModel(
-    id: json['id']?.toString() ?? '', name: json['name'] ?? '',
-    joinedDate: json['joined_date'] ?? '', recruitCount: json['recruit_count'] ?? 0,
+    id: json['id']?.toString() ?? '',
+    name: json['name'] ?? '',
+    joinedDate: json['joined_date'] ?? '',
+    recruitCount: json['recruit_count'] ?? 0,
     initials: json['initials'] ?? '',
   );
 }
 
-// Model for the specific people an advisor has recruited
 class RecruitedPersonModel {
   final String id;
   final String name;
   final String joinedDate;
-  final String status; // 'Active', 'Pending', 'Suspended'
+  final String status;
   final String initials;
 
   RecruitedPersonModel({
@@ -59,8 +58,10 @@ class RecruitedPersonModel {
   });
 
   factory RecruitedPersonModel.fromJson(Map<String, dynamic> json) => RecruitedPersonModel(
-    id: json['id']?.toString() ?? '', name: json['name'] ?? '',
-    joinedDate: json['joined_date'] ?? '', status: json['status'] ?? 'Pending',
+    id: json['id']?.toString() ?? '',
+    name: json['name'] ?? json['full_name'] ?? '',
+    joinedDate: json['joined_date'] ?? json['created_at']?.toString().split(' ')[0] ?? '',
+    status: json['status'] ?? 'Pending',
     initials: json['initials'] ?? '',
   );
 }

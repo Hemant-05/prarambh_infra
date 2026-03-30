@@ -7,10 +7,10 @@ class AdminDocumentRepository {
 
   AdminDocumentRepository({required this.apiClient});
 
-  Future<List<DocumentModel>> getDocuments({String? userId, String? category, String? general}) async {
+  Future<List<DocumentModel>> getDocuments({String? userId, String? category}) async {
     try {
-      final response = await apiClient.getDocuments(userId, category, general);
-      // THE FIX: Accept boolean true
+      // Fixed: Removed the third parameter as it doesn't match API Client
+      final response = await apiClient.getDocuments(userId, category);
       if (response['status']) {
         final List data = response['data'] ?? [];
         return data.map((json) => DocumentModel.fromJson(json)).toList();
@@ -36,9 +36,10 @@ class AdminDocumentRepository {
     } catch (e) { rethrow; }
   }
 
-  Future<bool> updateDocument({required String id, String? name, File? documentFile}) async {
+  Future<bool> updateDocument({required String id, String? name, String? category, File? documentFile}) async {
     try {
-      final response = await apiClient.updateDocument(id, name, documentFile);
+      // Fixed: Added category
+      final response = await apiClient.updateDocument(id, name, category, documentFile);
       return response['status'];
     } catch (e) { rethrow; }
   }

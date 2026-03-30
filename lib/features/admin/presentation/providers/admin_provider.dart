@@ -15,21 +15,13 @@ class AdminProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  /// NOTE: The new ApiClient does not expose a dedicated /dashboard endpoint.
-  /// Dashboard data must be composed from getAllProjects(), getLeads(),
-  /// getAllAdvisors(), and getLeaderboard() via their respective providers.
   Future<void> fetchDashboardData() async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      // TODO: Compose dashboard from individual endpoint providers once
-      // the backend exposes a combined endpoint, or compose here from
-      // AdminProjectProvider, AdminLeadProvider, etc.
-      throw UnimplementedError(
-        'No /dashboard endpoint in new ApiClient. Compose from individual providers.',
-      );
+      _dashboardData = await adminRepository.getDashboardData();
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
     } finally {

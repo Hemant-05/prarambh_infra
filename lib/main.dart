@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_advisor_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_attendance_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_contest_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_deal_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_document_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_lead_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_leaderboard_provider.dart';
@@ -24,6 +25,7 @@ import 'package:prarambh_infra/features/admin/presentation/screens/admin_recruit
 import 'package:prarambh_infra/features/admin/presentation/screens/team_management_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_dashboard_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_document_provider.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_lead_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_dashboard_screen.dart';
 import 'package:prarambh_infra/features/recruitment/presentation/providers/advisor_registration_provider.dart';
 import 'package:prarambh_infra/features/client/presentation/screens/client_dashboard_screen.dart';
@@ -72,6 +74,8 @@ void main() async {
         ChangeNotifierProvider(create: (_) => di.sl<AdvisorDashboardProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<RecruitmentProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdvisorDocumentProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdminDealProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdvisorLeadProvider>()),
       ],
       child: const PraarambhApp(),
     ),

@@ -24,7 +24,7 @@ class AdvisorApplicationModel {
   final String status;
   final String leaderId;
   final String appliedDate;
-  final String slab; // NEW FIELD
+  final String slab;
   final List<KycDocument> documents;
 
   AdvisorApplicationModel({
@@ -40,14 +40,11 @@ class AdvisorApplicationModel {
 
   factory AdvisorApplicationModel.fromJson(Map<String, dynamic> json) {
     List<KycDocument> docs = [];
-
-    // THE FIX: Removed 'api/' from the end of this URL
     const String imageBaseUrl = "https://workiees.com/";
 
     void addDocIfPresent(String key, String title) {
       if (json[key] != null && json[key].toString().isNotEmpty) {
         String rawUrl = json[key].toString();
-        // Use imageBaseUrl instead of baseUrl
         String fullUrl = rawUrl.startsWith('http') ? rawUrl : imageBaseUrl + (rawUrl.startsWith('/') ? rawUrl.substring(1) : rawUrl);
 
         docs.add(KycDocument(
@@ -67,33 +64,32 @@ class AdvisorApplicationModel {
     addDocIfPresent('profile_photo', 'Profile Photo');
 
     return AdvisorApplicationModel(
-      // ... keep all the other mappings the exactly same ...
       id: json['id']?.toString() ?? '',
-      displayId: json['Advisor_code'] ?? 'PENDING-ID',
-      name: json['full_name'] ?? 'Unknown',
-      email: json['email'] ?? 'N/A',
-      phone: json['phone'] ?? 'N/A',
-      designation: json['designation'] ?? 'Advisor',
-      fatherName: json['father_name'] ?? 'N/A',
-      dob: json['date_of_birth'] ?? 'N/A',
-      gender: json['gender'] ?? 'N/A',
-      nomineeName: json['nomineename'] ?? 'N/A',
-      nomineePhone: json['nomineephone'] ?? 'N/A',
-      relationship: json['relationship'] ?? 'N/A',
-      occupation: json['occupation'] ?? 'N/A',
-      aadhaarNumber: json['aadhaar_number'] ?? 'N/A',
-      panNumber: json['pan_number'] ?? 'N/A',
-      bankName: json['bank_name'] ?? 'N/A',
-      accountNumber: json['account_number'] ?? 'N/A',
-      ifscCode: json['ifsc_code'] ?? 'N/A',
-      address: json['address'] ?? 'N/A',
-      city: json['city'] ?? 'N/A',
-      state: json['state'] ?? 'N/A',
-      pincode: json['pincode'] ?? 'N/A',
-      status: json['status'] ?? 'Pending',
-      leaderId: json['leader_id']?.toString() ?? 'N/A',
-      appliedDate: json['created_at']?.toString().split(' ')[0] ?? 'N/A',
-      slab: json['slab']?.toString() ?? 'N/A',
+      displayId: json['Advisor_code']?.toString() ?? '',
+      name: json['full_name']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      phone: json['phone']?.toString() ?? '',
+      designation: json['designation']?.toString() ?? 'Advisor',
+      fatherName: json['father_name']?.toString() ?? '',
+      dob: json['date_of_birth']?.toString() ?? '',
+      gender: json['gender']?.toString() ?? '',
+      nomineeName: json['nomineename']?.toString() ?? '',
+      nomineePhone: json['nomineephone']?.toString() ?? '',
+      relationship: json['relationship']?.toString() ?? '',
+      occupation: json['occupation']?.toString() ?? '',
+      aadhaarNumber: json['aadhaar_number']?.toString() ?? '',
+      panNumber: json['pan_number']?.toString() ?? '',
+      bankName: json['bank_name']?.toString() ?? '',
+      accountNumber: json['account_number']?.toString() ?? '',
+      ifscCode: json['ifsc_code']?.toString() ?? '',
+      address: json['address']?.toString() ?? '',
+      city: json['city']?.toString() ?? '',
+      state: json['state']?.toString() ?? '',
+      pincode: json['pincode']?.toString() ?? '',
+      status: json['status']?.toString() ?? 'Pending',
+      leaderId: json['leader_id']?.toString() ?? '',
+      appliedDate: json['created_at']?.toString().split(' ')[0] ?? '',
+      slab: json['slab']?.toString() ?? '',
       documents: docs,
     );
   }

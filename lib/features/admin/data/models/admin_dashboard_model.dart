@@ -25,16 +25,16 @@ class AdminDashboardModel {
 
   factory AdminDashboardModel.fromJson(Map<String, dynamic> json) {
     return AdminDashboardModel(
-      unitsSold: json['units_sold'] ?? 0,
-      unitsTarget: json['units_target'] ?? 150,
-      monthlyProgressPercent: json['monthly_progress'] ?? 0,
+      unitsSold: json['units_sold'] != null ? int.tryParse(json['units_sold'].toString()) ?? 0 : 0,
+      unitsTarget: json['units_target'] != null ? int.tryParse(json['units_target'].toString()) ?? 0 : 0,
+      monthlyProgressPercent: json['monthly_progress'] != null ? int.tryParse(json['monthly_progress'].toString()) ?? 0 : 0,
       suspectingLeads: json['sales_overview']?['suspecting'] ?? 0,
       prospectingLeads: json['sales_overview']?['prospecting'] ?? 0,
       siteVisitingLeads: json['sales_overview']?['site_visiting'] ?? 0,
       bookingLeads: json['sales_overview']?['booking'] ?? 0,
       referralLeads: json['sales_overview']?['referral'] ?? 0,
-      pendingVerifications: json['pending_verifications'] ?? [],
-      recentClosures: json['recent_closures'] ?? [],
+      pendingVerifications: json['pending_verifications'] is List ? json['pending_verifications'] : [],
+      recentClosures: json['recent_closures'] is List ? json['recent_closures'] : [],
     );
   }
 }

@@ -18,15 +18,17 @@ class AdminAdvisorProvider extends ChangeNotifier {
   bool get isSaving => _isSaving;
   String? get errorMessage => _errorMessage;
 
-  Future<void> fetchAdvisors() async {
+  // FIX: Added the ability to pass status dynamically (e.g. 'pending', 'active')
+  Future<void> fetchAdvisors({String? status}) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      _advisors = await repository.getAllAdvisors(status: 'pending');
+      _advisors = await repository.getAllAdvisors(status: status);
     } catch (e) {
       _errorMessage = e.toString();
+      _advisors = [];
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -37,10 +39,24 @@ class AdminAdvisorProvider extends ChangeNotifier {
     _isSaving = true; notifyListeners();
     try {
       final success = await repository.approveAdvisor(advisorId);
-      if (success) await fetchAdvisors();
+      if (success) await fetchAdvisors(status: 'pending');
       return success;
     } catch (e) {
       debugPrint('Approve Advisor Error: $e');
+      return false;
+    } finally {
+      _isSaving = false; notifyListeners();
+    }
+  }
+
+  Future<bool> updateAdvisor(String advisorId, Map<String, dynamic> data) async {
+    _isSaving = true; notifyListeners();
+    try {
+      final success = await repository.updateAdvisor(advisorId, data);
+      if (success) await fetchAdvisors();
+      return success;
+    } catch (e) {
+      debugPrint('Update Advisor Error: $e');
       return false;
     } finally {
       _isSaving = false; notifyListeners();

@@ -14,7 +14,6 @@ class AdminProjectRepository {
   }
 
   // --- PROJECTS ---
-
   Future<List<ProjectModel>> getAllProjects() async {
     try {
       var response = await apiClient.getAllProjects();
@@ -39,25 +38,12 @@ class AdminProjectRepository {
   }
 
   Future<bool> addProject({
-    required String projectName,
-    required String developerName,
-    required String description,
-    required String reraNumber,
-    required String projectType,
-    required String constructionStatus,
-    required String fullAddress,
-    required String location,
-    required String city,
-    required String marketValue,
-    required String totalPlots,
-    required String buildArea,
-    required String ratePerSqft,
-    required String budgetRange,
-    required String amenities,
-    required String specialties,
-    File? videoFile,
-    File? brochureFile,
-    required List<File> projectImages,
+    required String projectName, required String developerName, required String description,
+    required String reraNumber, required String projectType, required String constructionStatus,
+    required String fullAddress, required String location, required String city,
+    required String marketValue, required String totalPlots, required String buildArea,
+    required String ratePerSqft, required String budgetRange, required String amenities,
+    required String specialties, File? videoFile, File? brochureFile, required List<File> projectImages,
   }) async {
     try {
       var response = await apiClient.addProject(
@@ -72,27 +58,11 @@ class AdminProjectRepository {
   }
 
   Future<bool> updateProject({
-    required String id,
-    String? projectName,
-    String? developerName,
-    String? description,
-    String? projectType,
-    String? constructionStatus,
-    String? fullAddress,
-    String? location,
-    String? city,
-    String? marketValue,
-    String? totalPlots,
-    String? buildArea,
-    String? ratePerSqft,
-    String? specialties,
-    String? amenities,
-    String? budgetRange,
-    String? reraNumber,
-    String? status,
-    File? videoFile,
-    File? brochureFile,
-    List<File>? projectImages,
+    required String id, String? projectName, String? developerName, String? description,
+    String? projectType, String? constructionStatus, String? fullAddress, String? location,
+    String? city, String? marketValue, String? totalPlots, String? buildArea,
+    String? ratePerSqft, String? specialties, String? amenities, String? budgetRange,
+    String? reraNumber, String? status, File? videoFile, File? brochureFile, List<File>? projectImages,
   }) async {
     try {
       var response = await apiClient.updateProject(
@@ -115,7 +85,6 @@ class AdminProjectRepository {
   }
 
   // --- UNITS ---
-
   Future<List<UnitModel>> getUnits({String? projectId}) async {
     try {
       var response = await apiClient.getUnits(projectId);
@@ -139,6 +108,15 @@ class AdminProjectRepository {
   Future<bool> addMultipleUnits(Map<String, dynamic> data) async {
     try {
       var response = await apiClient.addMultipleUnits(data);
+      response = _parseResponse(response);
+      return response['status'];
+    } catch (e) { rethrow; }
+  }
+
+  // NEW: Bulk Upload CSV
+  Future<bool> bulkUploadUnits(String projectId, File csvFile) async {
+    try {
+      var response = await apiClient.bulkUploadUnits(projectId, csvFile);
       response = _parseResponse(response);
       return response['status'];
     } catch (e) { rethrow; }

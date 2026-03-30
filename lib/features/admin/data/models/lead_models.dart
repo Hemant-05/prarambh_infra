@@ -1,84 +1,101 @@
 class LeadModel {
   final String id;
-  final String source; // e.g., 'WEBSITE INQUIRY'
-  final String timeAgo;
-  final String name;
-  final String email;
-  final String phone;
-  final String projectName;
-  final String projectImage;
-  final String? assignedAdvisor; // Null if new
-  // Extended details for assignment screen
-  final String priority;
+  final String clientName;
+  final String clientNumber;
+  final String advisorCode;
+  final String source;
+  final String clientAge;
+  final String clientOccupation;
+  final String leadCategory;   // A, B, C
+  final String leadPotential;  // Hot, Warm, Cold
+  final String clientAddress;
+  final String ownsHouse;
+  final String annualIncome;
+  final bool keyDecisionMaker; // 1 or 0 -> Yes/No
+  final bool isPriority;
+  final String siteVisitPhoto;
+  final String stage;
+  final int propertyId;
+  final String callOutCome;
+  final String reason;
   final String notes;
-  final List<String> tags;
+  final String reminder;
+  final String meetingPoint;
+  final int communicationAttempt;
+  final String createdAt;
+  final String updatedAt;
 
   LeadModel({
-    required this.id, required this.source, required this.timeAgo,
-    required this.name, required this.email, required this.phone,
-    required this.projectName, required this.projectImage,
-    this.assignedAdvisor, this.priority = 'Standard', this.notes = '',
-    this.tags = const [],
+    required this.id, required this.clientName, required this.clientNumber,
+    required this.advisorCode, required this.source, required this.clientAge,
+    required this.clientOccupation, required this.leadCategory, required this.leadPotential,
+    required this.clientAddress, required this.ownsHouse, required this.annualIncome,
+    required this.keyDecisionMaker, required this.isPriority, required this.siteVisitPhoto,
+    required this.stage, required this.propertyId, required this.callOutCome,
+    required this.reason, required this.notes, required this.reminder,
+    required this.meetingPoint, required this.communicationAttempt,
+    required this.createdAt, required this.updatedAt,
   });
 
-  factory LeadModel.fromJson(Map<String, dynamic> json) => LeadModel(
-    id: json['id']?.toString() ?? '', source: json['source'] ?? '', timeAgo: json['time_ago'] ?? '',
-    name: json['name'] ?? '', email: json['email'] ?? '', phone: json['phone'] ?? '',
-    projectName: json['project_name'] ?? '', projectImage: json['project_image'] ?? '',
-    assignedAdvisor: json['assigned_advisor'], priority: json['priority'] ?? 'Standard',
-    notes: json['notes'] ?? '', tags: List<String>.from(json['tags'] ?? []),
-  );
+  factory LeadModel.fromJson(Map<String, dynamic> json) {
+    // FIX: Parse out the default zero-time from the database
+    String parsedReminder = json['reminder']?.toString() ?? '';
+    if (parsedReminder == '0000-00-00 00:00:00') parsedReminder = '';
+
+    return LeadModel(
+      id: json['id']?.toString() ?? '',
+      clientName: json['client_name']?.toString() ?? 'Unknown Client',
+      clientNumber: json['client_number']?.toString() ?? 'N/A',
+      advisorCode: json['advisor_code']?.toString() ?? '',
+      source: json['source']?.toString() ?? 'Generated',
+
+      clientAge: json['client_age']?.toString() ?? 'N/A',
+      clientOccupation: json['client_occupation']?.toString() ?? 'N/A',
+
+      // Separate Category and Potential
+      leadCategory: json['lead_category']?.toString() ?? 'A',
+      leadPotential: json['lead_potential']?.toString() ?? 'Warm',
+
+      clientAddress: json['client_address']?.toString() ?? 'N/A',
+      ownsHouse: json['owns_house']?.toString() ?? 'N/A',
+      annualIncome: json['annual_income']?.toString() ?? 'N/A',
+
+      // FIX: Decision maker is now boolean (1 = Yes, 0 = No)
+      keyDecisionMaker: json['key_decision_maker'] == 1 || json['key_decision_maker'] == '1' || json['key_decision_maker'] == true,
+
+      isPriority: json['is_priority'] == 1 || json['is_priority'] == true,
+      siteVisitPhoto: json['site_visit_photo']?.toString() ?? '',
+
+      stage: (json['stage'] == null || json['stage'].toString().isEmpty) ? 'suspecting' : json['stage'].toString(),
+
+      propertyId: json['property_id'] != null ? int.tryParse(json['property_id'].toString()) ?? 0 : 0,
+      callOutCome: json['call_outcome']?.toString() ?? '',
+      reason: json['reason']?.toString() ?? '',
+      notes: json['notes']?.toString() ?? '',
+      reminder: parsedReminder, // Uses the cleaned string
+      meetingPoint: json['meeting_point']?.toString() ?? '',
+
+      communicationAttempt: json['communication_attempt'] != null ? int.tryParse(json['communication_attempt'].toString()) ?? 0 : 0,
+      createdAt: json['created_at']?.toString().split(' ')[0] ?? '',
+      updatedAt: json['updated_at']?.toString().split(' ')[0] ?? '',
+    );
+  }
 }
 
 class AdvisorAssignModel {
-  final String id;
+  final String advisorCode;
   final String name;
-  final bool isOnline;
+  final String profile;
   final int activeLeads;
-  final String conversionRate;
-  final bool isWarning; // To show orange conv rate
 
   AdvisorAssignModel({
-    required this.id, required this.name, required this.isOnline,
-    required this.activeLeads, required this.conversionRate, required this.isWarning,
+    required this.name,
+    required this.activeLeads, required this.advisorCode, required this.profile,
   });
 
   factory AdvisorAssignModel.fromJson(Map<String, dynamic> json) => AdvisorAssignModel(
-    id: json['id']?.toString() ?? '', name: json['name'] ?? '', isOnline: json['is_online'] ?? false,
-    activeLeads: json['active_leads'] ?? 0, conversionRate: json['conversion_rate'] ?? '0%',
-    isWarning: json['is_warning'] ?? false,
+    name: json['name'] ?? '',
+    activeLeads: json['active_leads'] ?? 0,
+    advisorCode: json['advisor_code'] ?? '', profile: json['profile'] ?? '',
   );
-}
-
-class PipelineLeadModel {
-  final String id;
-  final String name;
-  final String project;
-  final String advisorName;
-  final String lastActiveDate;
-  final String stage; // 'Suspecting', 'Prospecting', 'Site Visit', etc.
-
-  PipelineLeadModel({
-    required this.id, required this.name, required this.project,
-    required this.advisorName, required this.lastActiveDate, required this.stage,
-  });
-
-  factory PipelineLeadModel.fromJson(Map<String, dynamic> json) => PipelineLeadModel(
-    id: json['id']?.toString() ?? '', name: json['name'] ?? '',
-    project: json['project'] ?? '', advisorName: json['advisor_name'] ?? '',
-    lastActiveDate: json['last_active'] ?? '', stage: json['stage'] ?? 'Suspecting',
-  );
-}
-
-class LeadActivityModel {
-  final String title;
-  final String description;
-  final String timestamp;
-  final String type; // 'Call', 'Email', 'System'
-  final String status; // 'CONNECTED', 'SENT', ''
-
-  LeadActivityModel({
-    required this.title, required this.description, required this.timestamp,
-    required this.type, required this.status,
-  });
 }

@@ -465,9 +465,9 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                     onPressed: provider.isSaving
                         ? null
                         : () async {
-                            final success = await provider.createBulkUnits(
-                              _parsedBulkData,
+                            final success = await provider.bulkUploadUnits(
                               widget.projectId.toString(),
+                              _selectedExcelFile!,
                             );
                             if (success && mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(

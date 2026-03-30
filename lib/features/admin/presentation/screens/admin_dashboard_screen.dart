@@ -3,8 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/admin_profile_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/admin_projects_screen.dart';
-import 'package:prarambh_infra/features/admin/presentation/screens/sales_pipeline_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/team_management_screen.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/sales_pipeline_screen.dart';
 
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';

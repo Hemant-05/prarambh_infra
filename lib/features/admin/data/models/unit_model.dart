@@ -17,7 +17,6 @@ class UnitModel {
   final String size;
   final String availabilityStatus;
 
-  // NEW: Automatically calculate the total price for the UI
   double get calculatedPrice => areaSqft * ratePerSqft;
 
   UnitModel({
@@ -41,22 +40,22 @@ class UnitModel {
 
   factory UnitModel.fromJson(Map<String, dynamic> json) {
     return UnitModel(
-      id: json['id'] ?? 0,
-      projectId: json['project_id'] ?? 0,
-      towerName: json['tower_name'] ?? '',
-      floorNumber: json['floor_number'] ?? '',
-      unitNumber: json['unit_number'] ?? '',
-      configuration: json['configuration'] ?? '',
-      propertyType: json['property_type'] ?? '',
-      saleCategory: json['sale_category'] ?? '',
-      facing: json['facing'] ?? '',
-      location: json['Location'] ?? '', // Capital L to match your JSON
-      plotNumber: json['plot_number'] ?? '',
-      plotDimensions: json['plot_dimensions'] ?? '',
+      id: json['id'] != null ? int.tryParse(json['id'].toString()) ?? 0 : 0,
+      projectId: json['project_id'] != null ? int.tryParse(json['project_id'].toString()) ?? 0 : 0,
+      towerName: json['tower_name']?.toString() ?? '',
+      floorNumber: json['floor_number']?.toString() ?? '',
+      unitNumber: json['unit_number']?.toString() ?? '',
+      configuration: json['configuration']?.toString() ?? '',
+      propertyType: json['property_type']?.toString() ?? '',
+      saleCategory: json['sale_category']?.toString() ?? '',
+      facing: json['facing']?.toString() ?? '',
+      location: json['Location']?.toString() ?? json['location']?.toString() ?? '',
+      plotNumber: json['plot_number']?.toString() ?? '',
+      plotDimensions: json['plot_dimensions']?.toString() ?? '',
       areaSqft: double.tryParse(json['area_sqft']?.toString() ?? '0') ?? 0,
       ratePerSqft: double.tryParse(json['rate_per_sqft']?.toString() ?? '0') ?? 0,
-      size: json['size'] ?? '',
-      availabilityStatus: json['availability_status'] ?? 'Available',
+      size: json['size']?.toString() ?? '',
+      availabilityStatus: json['availability_status']?.toString() ?? 'Available',
     );
   }
 }
