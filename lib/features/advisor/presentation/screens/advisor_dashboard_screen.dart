@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_profile_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_team_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -55,7 +56,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
       const AdvisorProjectsScreen(),
       const SalesPipelineScreen(),
       const AdvisorTeamScreen(),
-      _buildPlaceholderScreen('My Profile', Icons.person_outline),
+      const AdvisorProfileScreen(),
     ];
 
     return Scaffold(
