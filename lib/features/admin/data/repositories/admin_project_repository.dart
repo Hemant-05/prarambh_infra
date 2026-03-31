@@ -97,9 +97,31 @@ class AdminProjectRepository {
     } catch (e) { rethrow; }
   }
 
-  Future<bool> addUnit(Map<String, dynamic> data) async {
+  Future<bool> addUnit({
+    required String projectId,
+    required String towerName,
+    required String floorNumber,
+    required String unitNumber,
+    required String configuration,
+    required String propertyType,
+    required String saleCategory,
+    required String facing,
+    required String location,
+    required String plotNumber,
+    required String plotDimensions,
+    required String areaSqft,
+    required String ratePerSqft,
+    required String size,
+    required String availabilityStatus,
+    List<File>? unitImages,
+  }) async {
     try {
-      var response = await apiClient.addUnit(data);
+      var response = await apiClient.addUnit(
+        projectId, towerName, floorNumber, unitNumber, configuration,
+        propertyType, saleCategory, facing, location, plotNumber,
+        plotDimensions, areaSqft, ratePerSqft, size, availabilityStatus,
+        unitImages,
+      );
       response = _parseResponse(response);
       return response['status'];
     } catch (e) { rethrow; }
@@ -122,9 +144,32 @@ class AdminProjectRepository {
     } catch (e) { rethrow; }
   }
 
-  Future<bool> updateUnit(String unitId, Map<String, dynamic> data) async {
+  Future<bool> updateUnit({
+    required String unitId,
+    String? projectId,
+    String? towerName,
+    String? floorNumber,
+    String? unitNumber,
+    String? configuration,
+    String? propertyType,
+    String? saleCategory,
+    String? facing,
+    String? location,
+    String? plotNumber,
+    String? plotDimensions,
+    String? areaSqft,
+    String? ratePerSqft,
+    String? size,
+    String? availabilityStatus,
+    List<File>? unitImages,
+  }) async {
     try {
-      var response = await apiClient.updateUnit(unitId, data);
+      var response = await apiClient.updateUnit(
+        unitId, projectId, towerName, floorNumber, unitNumber, configuration,
+        propertyType, saleCategory, facing, location, plotNumber,
+        plotDimensions, areaSqft, ratePerSqft, size, availabilityStatus,
+        unitImages,
+      );
       response = _parseResponse(response);
       return response['status'];
     } catch (e) { rethrow; }

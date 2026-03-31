@@ -40,6 +40,29 @@ class _AddUnitScreenState extends State<AddUnitScreen>
   // Bulk Upload State
   File? _selectedCsvFile;
 
+  // Unit Images State
+  final List<File> _selectedUnitImages = [];
+
+  Future<void> _pickImages() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      type: FileType.image,
+    );
+    if (result != null) {
+      setState(() {
+        _selectedUnitImages.addAll(
+            result.paths.where((path) => path != null).map((path) => File(path!))
+        );
+      });
+    }
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      _selectedUnitImages.removeAt(index);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -219,6 +242,55 @@ class _AddUnitScreenState extends State<AddUnitScreen>
             ),
             const SizedBox(height: 24),
 
+            // --- Unit Images Section ---
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Unit Images', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold)),
+                TextButton.icon(
+                  onPressed: _pickImages,
+                  icon: const Icon(Icons.add_photo_alternate, size: 18),
+                  label: Text('Add Images', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 12)),
+                  style: TextButton.styleFrom(foregroundColor: primaryBlue),
+                )
+              ],
+            ),
+            if (_selectedUnitImages.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 100,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _selectedUnitImages.length,
+                  itemBuilder: (context, index) {
+                    return Stack(
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(right: 12),
+                          width: 100, height: 100,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            image: DecorationImage(image: FileImage(_selectedUnitImages[index]), fit: BoxFit.cover),
+                          ),
+                        ),
+                        Positioned(
+                          top: 4, right: 16,
+                          child: GestureDetector(
+                            onTap: () => _removeImage(index),
+                            child: CircleAvatar(
+                              radius: 12, backgroundColor: Colors.red.withOpacity(0.8),
+                              child: const Icon(Icons.close, size: 14, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
+            const SizedBox(height: 24),
+
             Consumer<AdminProjectProvider>(
               builder: (context, provider, child) {
                 return SizedBox(
@@ -247,6 +319,7 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                       final success = await provider.createUnit(
                         data,
                         widget.projectId.toString(),
+                        unitImages: _selectedUnitImages.isNotEmpty ? _selectedUnitImages : null,
                       );
                       if (success && mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(

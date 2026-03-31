@@ -1,20 +1,65 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_project_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../data/models/unit_model.dart';
 
-class UnitDetailsScreen extends StatelessWidget {
+class UnitDetailsScreen extends StatefulWidget {
   final UnitModel unit;
   const UnitDetailsScreen({super.key, required this.unit});
+
+  @override
+  State<UnitDetailsScreen> createState() => _UnitDetailsScreenState();
+}
+
+class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
+  int _currentPage = 0;
 
   void _showUpdateBottomSheet(BuildContext context, Color primaryBlue) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _UpdateUnitForm(unit: unit, primaryBlue: primaryBlue),
+      builder: (context) => _UpdateUnitForm(unit: widget.unit, primaryBlue: primaryBlue),
+    );
+  }
+
+  void _showFullScreenImage(BuildContext context, String imageUrl) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Close',
+      barrierColor: Colors.black.withOpacity(0.9),
+      pageBuilder: (context, _, __) {
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white, size: 30),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+          body: Center(
+            child: InteractiveViewer(
+              panEnabled: true,
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.contain,
+                width: double.infinity,
+                height: double.infinity,
+                errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -24,9 +69,9 @@ class UnitDetailsScreen extends StatelessWidget {
     final cardColor = AppColors.getCardColor(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    Color statusColor = unit.availabilityStatus.toUpperCase().contains('AVAILABLE')
+    Color statusColor = widget.unit.availabilityStatus.toUpperCase().contains('AVAILABLE')
         ? Colors.green
-        : unit.availabilityStatus.toUpperCase().contains('BOOKED')
+        : widget.unit.availabilityStatus.toUpperCase().contains('BOOKED')
         ? Colors.orange
         : Colors.red;
 
@@ -54,7 +99,7 @@ class UnitDetailsScreen extends StatelessWidget {
                         ) ?? false;
 
                         if (confirm) {
-                          final success = await provider.removeUnit(unit.id.toString(), unit.projectId.toString());
+                          final success = await provider.removeUnit(widget.unit.id.toString(), widget.unit.projectId.toString());
                           if (success && context.mounted) Navigator.pop(context);
                         }
                       },
@@ -87,8 +132,60 @@ class UnitDetailsScreen extends StatelessWidget {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Container(color: Colors.grey[300], child: const Icon(Icons.apartment, size: 80, color: Colors.grey)),
-                  Container(decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black12, Colors.transparent]))),
+                  if (widget.unit.unitImages.isNotEmpty)
+                    Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        PageView.builder(
+                          itemCount: widget.unit.unitImages.length,
+                          onPageChanged: (index) => setState(() => _currentPage = index),
+                          itemBuilder: (context, index) => GestureDetector(
+                            onTap: () => _showFullScreenImage(context, widget.unit.unitImages[index]),
+                            child: Image.network(
+                              widget.unit.unitImages[index],
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        // Indicator dots
+                        if (widget.unit.unitImages.length > 1)
+                          Positioned(
+                            bottom: 20,
+                            left: 0,
+                            right: 0,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(
+                                widget.unit.unitImages.length,
+                                    (index) => Container(
+                                  width: 8,
+                                  height: 8,
+                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: _currentPage == index
+                                        ? Colors.white
+                                        : Colors.white.withOpacity(0.4),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    )
+                  else
+                    Container(color: Colors.grey[300], child: const Icon(Icons.apartment, size: 80, color: Colors.grey)),
+                  IgnorePointer(
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Colors.black54, Colors.transparent],
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -110,14 +207,14 @@ class UnitDetailsScreen extends StatelessWidget {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('${unit.towerName} - ${unit.unitNumber}', style: GoogleFonts.montserrat(fontSize: 22, fontWeight: FontWeight.bold)),
-                                Text(unit.propertyType, style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey[600])),
+                                Text('${widget.unit.towerName} - ${widget.unit.unitNumber}', style: GoogleFonts.montserrat(fontSize: 22, fontWeight: FontWeight.bold)),
+                                Text(widget.unit.propertyType, style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey[600])),
                               ],
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
-                              child: Text(unit.availabilityStatus.toUpperCase(), style: GoogleFonts.montserrat(color: statusColor, fontWeight: FontWeight.bold, fontSize: 10)),
+                              child: Text(widget.unit.availabilityStatus.toUpperCase(), style: GoogleFonts.montserrat(color: statusColor, fontWeight: FontWeight.bold, fontSize: 10)),
                             ),
                           ],
                         ),
@@ -129,8 +226,8 @@ class UnitDetailsScreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('TOTAL PRICE', style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
-                                Text('₹${unit.calculatedPrice.toStringAsFixed(0)}', style: GoogleFonts.montserrat(fontSize: 20, fontWeight: FontWeight.bold, color: primaryBlue)),
-                                Text('₹${unit.ratePerSqft} / sqft', style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey)),
+                                Text('₹${widget.unit.calculatedPrice.toStringAsFixed(0)}', style: GoogleFonts.montserrat(fontSize: 20, fontWeight: FontWeight.bold, color: primaryBlue)),
+                                Text('₹${widget.unit.ratePerSqft} / sqft', style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey)),
                               ],
                             ),
                           ],
@@ -146,14 +243,14 @@ class UnitDetailsScreen extends StatelessWidget {
                     crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
                     childAspectRatio: 2.2, crossAxisSpacing: 12, mainAxisSpacing: 12,
                     children: [
-                      _buildSpecBox(Icons.square_foot, 'Super Area', '${unit.areaSqft} sqft', cardColor),
-                      _buildSpecBox(Icons.bed, 'Configuration', unit.configuration, cardColor),
-                      _buildSpecBox(Icons.explore, 'Facing', unit.facing, cardColor),
-                      _buildSpecBox(Icons.layers, 'Floor', unit.floorNumber, cardColor),
-                      _buildSpecBox(Icons.location_on, 'Location', unit.location.isNotEmpty ? unit.location : 'N/A', cardColor),
-                      _buildSpecBox(Icons.category, 'Size', unit.size.isNotEmpty ? unit.size : 'N/A', cardColor),
-                      _buildSpecBox(Icons.map, 'Plot No.', unit.plotNumber.isNotEmpty ? unit.plotNumber : 'N/A', cardColor),
-                      _buildSpecBox(Icons.straighten, 'Dimensions', unit.plotDimensions.isNotEmpty ? unit.plotDimensions : 'N/A', cardColor),
+                      _buildSpecBox(Icons.square_foot, 'Super Area', '${widget.unit.areaSqft} sqft', cardColor),
+                      _buildSpecBox(Icons.bed, 'Configuration', widget.unit.configuration, cardColor),
+                      _buildSpecBox(Icons.explore, 'Facing', widget.unit.facing, cardColor),
+                      _buildSpecBox(Icons.layers, 'Floor', widget.unit.floorNumber, cardColor),
+                      _buildSpecBox(Icons.location_on, 'Location', widget.unit.location.isNotEmpty ? widget.unit.location : 'N/A', cardColor),
+                      _buildSpecBox(Icons.category, 'Size', widget.unit.size.isNotEmpty ? widget.unit.size : 'N/A', cardColor),
+                      _buildSpecBox(Icons.map, 'Plot No.', widget.unit.plotNumber.isNotEmpty ? widget.unit.plotNumber : 'N/A', cardColor),
+                      _buildSpecBox(Icons.straighten, 'Dimensions', widget.unit.plotDimensions.isNotEmpty ? widget.unit.plotDimensions : 'N/A', cardColor),
                     ],
                   ),
                   const SizedBox(height: 40),
@@ -222,6 +319,28 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
   late List<String> saleOptions;
   late List<String> facingOptions;
   late List<String> statusOptions;
+
+  final List<File> _selectedUnitImages = [];
+
+  Future<void> _pickImages() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      type: FileType.image,
+    );
+    if (result != null) {
+      setState(() {
+        _selectedUnitImages.addAll(
+            result.paths.where((path) => path != null).map((path) => File(path!))
+        );
+      });
+    }
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      _selectedUnitImages.removeAt(index);
+    });
+  }
 
   @override
   void initState() {
@@ -351,6 +470,55 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
                       Expanded(child: _buildTextField('Location (Corner)', _locationCtrl)),
                     ],
                   ),
+                  const SizedBox(height: 16),
+
+                  // --- Append New Images ---
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Append New Images', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold)),
+                      TextButton.icon(
+                        onPressed: _pickImages,
+                        icon: const Icon(Icons.add_photo_alternate, size: 18),
+                        label: Text('Select Images', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 12)),
+                        style: TextButton.styleFrom(foregroundColor: widget.primaryBlue),
+                      )
+                    ],
+                  ),
+                  if (_selectedUnitImages.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 80,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _selectedUnitImages.length,
+                        itemBuilder: (context, index) {
+                          return Stack(
+                            children: [
+                              Container(
+                                margin: const EdgeInsets.only(right: 12),
+                                width: 80, height: 80,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  image: DecorationImage(image: FileImage(_selectedUnitImages[index]), fit: BoxFit.cover),
+                                ),
+                              ),
+                              Positioned(
+                                top: 4, right: 16,
+                                child: GestureDetector(
+                                  onTap: () => _removeImage(index),
+                                  child: CircleAvatar(
+                                    radius: 10, backgroundColor: Colors.red.withOpacity(0.8),
+                                    child: const Icon(Icons.close, size: 12, color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 24),
 
                   Consumer<AdminProjectProvider>(
@@ -376,7 +544,12 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
                               "availability_status": _status,
                             };
 
-                            final success = await provider.modifyUnit(widget.unit.id.toString(), data, widget.unit.projectId.toString());
+                            final success = await provider.modifyUnit(
+                              widget.unit.id.toString(), 
+                              data, 
+                              widget.unit.projectId.toString(),
+                              unitImages: _selectedUnitImages.isNotEmpty ? _selectedUnitImages : null,
+                            );
                             if (success && mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unit Details Updated!')));
                               Navigator.pop(context); // Close the bottom sheet

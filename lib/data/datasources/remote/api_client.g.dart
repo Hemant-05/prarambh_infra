@@ -770,13 +770,64 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> addUnit(dynamic body) async {
+  Future<dynamic> addUnit(
+    String projectId,
+    String towerName,
+    String floorNumber,
+    String unitNumber,
+    String configuration,
+    String propertyType,
+    String saleCategory,
+    String facing,
+    String location,
+    String plotNumber,
+    String plotDimensions,
+    String areaSqft,
+    String ratePerSqft,
+    String size,
+    String availabilityStatus,
+    List<File>? unitImages,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
-    final _data = body;
+    final _data = FormData();
+    _data.fields.add(MapEntry('project_id', projectId));
+    _data.fields.add(MapEntry('tower_name', towerName));
+    _data.fields.add(MapEntry('floor_number', floorNumber));
+    _data.fields.add(MapEntry('unit_number', unitNumber));
+    _data.fields.add(MapEntry('configuration', configuration));
+    _data.fields.add(MapEntry('property_type', propertyType));
+    _data.fields.add(MapEntry('sale_category', saleCategory));
+    _data.fields.add(MapEntry('facing', facing));
+    _data.fields.add(MapEntry('Location', location));
+    _data.fields.add(MapEntry('plot_number', plotNumber));
+    _data.fields.add(MapEntry('plot_dimensions', plotDimensions));
+    _data.fields.add(MapEntry('area_sqft', areaSqft));
+    _data.fields.add(MapEntry('rate_per_sqft', ratePerSqft));
+    _data.fields.add(MapEntry('size', size));
+    _data.fields.add(MapEntry('availability_status', availabilityStatus));
+    if (unitImages != null) {
+      _data.files.addAll(
+        unitImages.map(
+          (i) => MapEntry(
+            'unit_images[]',
+            MultipartFile.fromFileSync(
+              i.path,
+              filename: i.path.split(Platform.pathSeparator).last,
+            ),
+          ),
+        ),
+      );
+    }
     final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
+      Options(
+            method: 'POST',
+            headers: _headers,
+            extra: _extra,
+            contentType: 'multipart/form-data',
+          )
           .compose(
             _dio.options,
             '/units/add',
@@ -891,13 +942,95 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> updateUnit(String id, dynamic body) async {
+  Future<dynamic> updateUnit(
+    String id,
+    String? projectId,
+    String? towerName,
+    String? floorNumber,
+    String? unitNumber,
+    String? configuration,
+    String? propertyType,
+    String? saleCategory,
+    String? facing,
+    String? location,
+    String? plotNumber,
+    String? plotDimensions,
+    String? areaSqft,
+    String? ratePerSqft,
+    String? size,
+    String? availabilityStatus,
+    List<File>? unitImages,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
-    final _data = body;
+    final _data = FormData();
+    if (projectId != null) {
+      _data.fields.add(MapEntry('project_id', projectId));
+    }
+    if (towerName != null) {
+      _data.fields.add(MapEntry('tower_name', towerName));
+    }
+    if (floorNumber != null) {
+      _data.fields.add(MapEntry('floor_number', floorNumber));
+    }
+    if (unitNumber != null) {
+      _data.fields.add(MapEntry('unit_number', unitNumber));
+    }
+    if (configuration != null) {
+      _data.fields.add(MapEntry('configuration', configuration));
+    }
+    if (propertyType != null) {
+      _data.fields.add(MapEntry('property_type', propertyType));
+    }
+    if (saleCategory != null) {
+      _data.fields.add(MapEntry('sale_category', saleCategory));
+    }
+    if (facing != null) {
+      _data.fields.add(MapEntry('facing', facing));
+    }
+    if (location != null) {
+      _data.fields.add(MapEntry('Location', location));
+    }
+    if (plotNumber != null) {
+      _data.fields.add(MapEntry('plot_number', plotNumber));
+    }
+    if (plotDimensions != null) {
+      _data.fields.add(MapEntry('plot_dimensions', plotDimensions));
+    }
+    if (areaSqft != null) {
+      _data.fields.add(MapEntry('area_sqft', areaSqft));
+    }
+    if (ratePerSqft != null) {
+      _data.fields.add(MapEntry('rate_per_sqft', ratePerSqft));
+    }
+    if (size != null) {
+      _data.fields.add(MapEntry('size', size));
+    }
+    if (availabilityStatus != null) {
+      _data.fields.add(MapEntry('availability_status', availabilityStatus));
+    }
+    if (unitImages != null) {
+      _data.files.addAll(
+        unitImages.map(
+          (i) => MapEntry(
+            'unit_images[]',
+            MultipartFile.fromFileSync(
+              i.path,
+              filename: i.path.split(Platform.pathSeparator).last,
+            ),
+          ),
+        ),
+      );
+    }
     final _options = _setStreamType<dynamic>(
-      Options(method: 'PUT', headers: _headers, extra: _extra)
+      Options(
+            method: 'PUT',
+            headers: _headers,
+            extra: _extra,
+            contentType: 'multipart/form-data',
+          )
           .compose(
             _dio.options,
             '/units/update/${id}',

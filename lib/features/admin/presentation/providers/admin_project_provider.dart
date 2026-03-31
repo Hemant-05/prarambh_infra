@@ -149,10 +149,27 @@ class AdminProjectProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> createUnit(Map<String, dynamic> data, String projectId) async {
+  Future<bool> createUnit(Map<String, dynamic> data, String projectId, {List<File>? unitImages}) async {
     _isSaving = true; notifyListeners();
     try {
-      final success = await repository.addUnit(data);
+      final success = await repository.addUnit(
+        projectId: projectId,
+        towerName: data['tower_name']?.toString() ?? '',
+        floorNumber: data['floor_number']?.toString() ?? '',
+        unitNumber: data['unit_number']?.toString() ?? '',
+        configuration: data['configuration']?.toString() ?? '',
+        propertyType: data['property_type']?.toString() ?? '',
+        saleCategory: data['sale_category']?.toString() ?? '',
+        facing: data['facing']?.toString() ?? '',
+        location: data['Location']?.toString() ?? '',
+        plotNumber: data['plot_number']?.toString() ?? '',
+        plotDimensions: data['plot_dimensions']?.toString() ?? '',
+        areaSqft: data['area_sqft']?.toString() ?? '',
+        ratePerSqft: data['rate_per_sqft']?.toString() ?? '',
+        size: data['size']?.toString() ?? '',
+        availabilityStatus: data['availability_status']?.toString() ?? '',
+        unitImages: unitImages,
+      );
       if (success) await fetchInventory(projectId);
       return success;
     } catch (e) {
@@ -163,10 +180,28 @@ class AdminProjectProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> modifyUnit(String unitId, Map<String, dynamic> data, String projectId) async {
+  Future<bool> modifyUnit(String unitId, Map<String, dynamic> data, String projectId, {List<File>? unitImages}) async {
     _isSaving = true; notifyListeners();
     try {
-      final success = await repository.updateUnit(unitId, data);
+      final success = await repository.updateUnit(
+        unitId: unitId,
+        projectId: projectId,
+        towerName: data['tower_name']?.toString(),
+        floorNumber: data['floor_number']?.toString(),
+        unitNumber: data['unit_number']?.toString(),
+        configuration: data['configuration']?.toString(),
+        propertyType: data['property_type']?.toString(),
+        saleCategory: data['sale_category']?.toString(),
+        facing: data['facing']?.toString(),
+        location: data['Location']?.toString(),
+        plotNumber: data['plot_number']?.toString(),
+        plotDimensions: data['plot_dimensions']?.toString(),
+        areaSqft: data['area_sqft']?.toString(),
+        ratePerSqft: data['rate_per_sqft']?.toString(),
+        size: data['size']?.toString(),
+        availabilityStatus: data['availability_status']?.toString(),
+        unitImages: unitImages,
+      );
       if (success) await fetchInventory(projectId);
       return success;
     } catch (e) {

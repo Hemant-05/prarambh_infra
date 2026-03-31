@@ -16,6 +16,7 @@ class UnitModel {
   final double ratePerSqft;
   final String size;
   final String availabilityStatus;
+  final List<String> unitImages;
 
   double get calculatedPrice => areaSqft * ratePerSqft;
 
@@ -36,6 +37,7 @@ class UnitModel {
     required this.ratePerSqft,
     required this.size,
     required this.availabilityStatus,
+    this.unitImages = const [],
   });
 
   factory UnitModel.fromJson(Map<String, dynamic> json) {
@@ -56,6 +58,31 @@ class UnitModel {
       ratePerSqft: double.tryParse(json['rate_per_sqft']?.toString() ?? '0') ?? 0,
       size: json['size']?.toString() ?? '',
       availabilityStatus: json['availability_status']?.toString() ?? 'Available',
+      unitImages: _parseImages(json['unit_images']),
     );
+  }
+
+  static List<String> _parseImages(dynamic imagesData) {
+    if (imagesData == null) return [];
+    List<dynamic> items = [];
+    if (imagesData is List) {
+      items = imagesData;
+    } else if (imagesData is String && imagesData.isNotEmpty) {
+      // Handle comma-separated string just in case
+      if (imagesData.contains(',')) {
+        items = imagesData.split(',');
+      } else {
+        items = [imagesData];
+      }
+    }
+
+    return items.map((img) {
+      String url = img.toString().trim();
+      // Backend returns relative paths like "uploads/units/..."
+      if (!url.startsWith('http')) {
+        return "https://workiees.com/" + (url.startsWith('/') ? url.substring(1) : url);
+      }
+      return url;
+    }).toList();
   }
 }

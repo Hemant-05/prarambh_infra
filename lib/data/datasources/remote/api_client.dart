@@ -164,8 +164,26 @@ abstract class ApiClient {
   // ==========================================
   // 6. Units Inventory & CSV Uploads
   // ==========================================
+  @MultiPart()
   @POST("/units/add")
-  Future<dynamic> addUnit(@Body() dynamic body);
+  Future<dynamic> addUnit(
+      @Part(name: "project_id") String projectId,
+      @Part(name: "tower_name") String towerName,
+      @Part(name: "floor_number") String floorNumber,
+      @Part(name: "unit_number") String unitNumber,
+      @Part(name: "configuration") String configuration,
+      @Part(name: "property_type") String propertyType,
+      @Part(name: "sale_category") String saleCategory,
+      @Part(name: "facing") String facing,
+      @Part(name: "Location") String location,
+      @Part(name: "plot_number") String plotNumber,
+      @Part(name: "plot_dimensions") String plotDimensions,
+      @Part(name: "area_sqft") String areaSqft,
+      @Part(name: "rate_per_sqft") String ratePerSqft,
+      @Part(name: "size") String size,
+      @Part(name: "availability_status") String availabilityStatus,
+      @Part(name: "unit_images[]") List<File>? unitImages,
+      );
 
   @POST("/units/add-multiple")
   Future<dynamic> addMultipleUnits(@Body() dynamic body);
@@ -183,8 +201,27 @@ abstract class ApiClient {
   @GET("/units/{id}")
   Future<dynamic> getSingleUnit(@Path("id") String id);
 
+  @MultiPart()
   @PUT("/units/update/{id}")
-  Future<dynamic> updateUnit(@Path("id") String id, @Body() dynamic body);
+  Future<dynamic> updateUnit(
+      @Path("id") String id,
+      @Part(name: "project_id") String? projectId,
+      @Part(name: "tower_name") String? towerName,
+      @Part(name: "floor_number") String? floorNumber,
+      @Part(name: "unit_number") String? unitNumber,
+      @Part(name: "configuration") String? configuration,
+      @Part(name: "property_type") String? propertyType,
+      @Part(name: "sale_category") String? saleCategory,
+      @Part(name: "facing") String? facing,
+      @Part(name: "Location") String? location,
+      @Part(name: "plot_number") String? plotNumber,
+      @Part(name: "plot_dimensions") String? plotDimensions,
+      @Part(name: "area_sqft") String? areaSqft,
+      @Part(name: "rate_per_sqft") String? ratePerSqft,
+      @Part(name: "size") String? size,
+      @Part(name: "availability_status") String? availabilityStatus,
+      @Part(name: "unit_images[]") List<File>? unitImages,
+      );
 
   @DELETE("/units/delete/{id}")
   Future<dynamic> deleteUnit(@Path("id") String id);
