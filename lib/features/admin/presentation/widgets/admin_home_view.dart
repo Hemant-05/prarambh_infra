@@ -394,8 +394,8 @@ class AdminHomeView extends StatelessWidget {
                         itemBuilder: (context, index) {
                           final ad = data.pendingVerifications[index];
                           return _buildVerificationCard(
-                            ad['name'],
-                            ad['time'],
+                            ad['full_name'],
+                            ad['applied_time_ago'],
                             cardColor,
                             primaryBlue,
                             textColor,
@@ -430,7 +430,7 @@ class AdminHomeView extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            child: Text('${data.recentClosures[index]}')
+                            child: Text('${data.recentClosures[index]}'),
                           );
                         },
                       )

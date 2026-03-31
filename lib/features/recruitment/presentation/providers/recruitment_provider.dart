@@ -12,12 +12,12 @@ class RecruitmentProvider extends ChangeNotifier {
   RecruitmentDashboardModel? get data => _data;
   bool get isLoading => _isLoading;
 
-  Future<void> fetchDashboard() async {
+  Future<void> fetchDashboard(String advisorId) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      _data = await repository.getDashboardData();
+      _data = await repository.getDashboardData(advisorId);
     } catch (e) {
       debugPrint("Error fetching recruitment dashboard: $e");
     } finally {

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/recruitment_provider.dart';
 import '../../data/models/recruitment_model.dart';
 
@@ -9,8 +11,7 @@ class RecruiterDashboardScreen extends StatefulWidget {
   const RecruiterDashboardScreen({super.key});
 
   @override
-  State<RecruiterDashboardScreen> createState() =>
-      _RecruiterDashboardScreenState();
+  State<RecruiterDashboardScreen> createState() => _RecruiterDashboardScreenState();
 }
 
 class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
@@ -18,104 +19,136 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<RecruitmentProvider>().fetchDashboard();
+      final authProvider = context.read<AuthProvider>();
+      final advisorId = authProvider.currentUser?.id.toString() ?? '';
+      if (advisorId.isNotEmpty) {
+        context.read<RecruitmentProvider>().fetchDashboard(advisorId);
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<RecruitmentProvider>();
-    final primaryBlue = AppColors.getPrimaryBlue(
-      context,
-    ); // Or const Color(0xFF0056A4)
+    final primaryBlue = AppColors.getPrimaryBlue(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      floatingActionButton: IconButton(
-        onPressed: () => Navigator.pushNamed(context, '/advisor_registration'),
-        icon: Container(
-          height: 50,
-          width: 50,
-          decoration: BoxDecoration(
-            color: primaryBlue,
-            borderRadius: BorderRadius.all(Radius.circular(18)),
-          ),
-          child: Icon(Icons.add, color: Colors.white, size: 28),
-        ),
+      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: backButton(isDark: isDark),
+        title: Text('My Recruitment', style: GoogleFonts.montserrat(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
       ),
-      body: SafeArea(
-        child: provider.isLoading || provider.data == null
-            ? Center(child: CircularProgressIndicator(color: primaryBlue))
-            : RefreshIndicator(
-                onRefresh: () => provider.fetchDashboard(),
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeader(),
-                      const SizedBox(height: 16),
-                      _buildRecentRecruitmentsList(
-                        provider.data!.recentRecruitments,
-                      ),
-                      const SizedBox(height: 80), // Padding for FAB
-                    ],
-                  ),
-                ),
-              ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.pushNamed(context, '/advisor_registration'),
+        backgroundColor: primaryBlue,
+        icon: const Icon(Icons.person_add, color: Colors.white),
+        label: Text("Add Advisor", style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold)),
+      ),
+      body: provider.isLoading || provider.data == null
+          ? Center(child: CircularProgressIndicator(color: primaryBlue))
+          : RefreshIndicator(
+        onRefresh: () async {
+          final id = context.read<AuthProvider>().currentUser?.id.toString() ?? '';
+          await context.read<RecruitmentProvider>().fetchDashboard(id);
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildLeaderProfileCard(provider.data!.leaderInfo, primaryBlue),
+              const SizedBox(height: 24),
+              _buildStatsGrid(provider.data!.stats),
+              const SizedBox(height: 32),
+              Text('Team Members (${provider.data!.teamMembers.length})', style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+              const SizedBox(height: 16),
+              provider.data!.teamMembers.isEmpty
+                  ? Center(child: Padding(padding: const EdgeInsets.all(30.0), child: Text("No team members yet.", style: GoogleFonts.montserrat(color: Colors.grey))))
+                  : _buildRecentRecruitmentsList(provider.data!.teamMembers, isDark),
+              const SizedBox(height: 80),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text(
-              'Recruitment List',
-              style: GoogleFonts.montserrat(
-                color: const Color(0xFF11223A), // Dark navy
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        Stack(
-          children: [
-            const CircleAvatar(
-              radius: 22,
-              backgroundImage: NetworkImage(
-                'https://i.pravatar.cc/150?img=11',
-              ), // Current User Avatar
-            ),
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: Colors.green,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
+  Widget _buildLeaderProfileCard(LeaderInfoModel leader, Color primaryBlue) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [primaryBlue, Colors.blue.shade800], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: primaryBlue.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6))],
+      ),
+      child: Row(
+        children: [
+          _buildAvatar(leader.fullName, leader.imageUrl, radius: 30),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  leader.fullName,
+                  style: GoogleFonts.montserrat(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-              ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
+                      child: Text(leader.designation, style: GoogleFonts.montserrat(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(width: 8),
+                    Text('•  ${leader.advisorCode}', style: GoogleFonts.montserrat(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
+                  ],
+                )
+              ],
             ),
-          ],
-        ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsGrid(RecruitmentStatsModel stats) {
+    return Row(
+      children: [
+        Expanded(child: _buildStatCard('Total\nMembers', stats.totalRecruits, Colors.blue)),
+        const SizedBox(width: 12),
+        Expanded(child: _buildStatCard('Active\nMembers', stats.activeRecruits, Colors.green)),
+        const SizedBox(width: 12),
+        Expanded(child: _buildStatCard('Pending\nApprovals', stats.pendingRecruits, Colors.orange)),
       ],
     );
   }
 
-  Widget _buildRecentRecruitmentsList(
-    List<RecruitedAdvisorModel> recruitments,
-  ) {
+  Widget _buildStatCard(String title, int count, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 5, offset: const Offset(0, 2))],
+      ),
+      child: Column(
+        children: [
+          Text('$count', style: GoogleFonts.montserrat(fontSize: 24, fontWeight: FontWeight.bold, color: color)),
+          const SizedBox(height: 4),
+          Text(title, textAlign: TextAlign.center, style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.blueGrey)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentRecruitmentsList(List<RecruitedAdvisorModel> recruitments, bool isDark) {
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -124,15 +157,16 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
       itemBuilder: (context, index) {
         final recruit = recruitments[index];
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? Colors.grey[900] : Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.blueGrey.shade100, width: 1),
+            border: Border.all(color: Colors.grey.withOpacity(0.15)),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2))],
           ),
           child: Row(
             children: [
-              _buildAvatar(recruit.name, recruit.imageUrl),
+              _buildAvatar(recruit.name, recruit.imageUrl, radius: 22),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -140,38 +174,24 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
                   children: [
                     Text(
                       recruit.name,
-                      style: GoogleFonts.montserrat(
-                        color: const Color(0xFF11223A),
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: GoogleFonts.montserrat(color: isDark ? Colors.white : const Color(0xFF11223A), fontSize: 14, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(
-                          Icons.calendar_today_outlined,
-                          size: 12,
-                          color: Colors.blueGrey[400],
-                        ),
+                        Icon(Icons.badge_outlined, size: 12, color: Colors.blueGrey[400]),
                         const SizedBox(width: 4),
-                        Text(
-                          'Joined ${recruit.dateJoined}',
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.montserrat(
-                            color: Colors.blueGrey[500],
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        Text(recruit.advisorCode, style: GoogleFonts.montserrat(color: Colors.blueGrey[600], fontSize: 11, fontWeight: FontWeight.w600)),
+                        const SizedBox(width: 8),
+                        Icon(Icons.calendar_today_outlined, size: 12, color: Colors.blueGrey[400]),
+                        const SizedBox(width: 4),
+                        Text(recruit.dateJoined, style: GoogleFonts.montserrat(color: Colors.blueGrey[600], fontSize: 11)),
                       ],
                     ),
                   ],
                 ),
               ),
               _buildStatusPill(recruit.status),
-              // const SizedBox(width: 2),
-              Icon(Icons.chevron_right, color: Colors.blueGrey[300]),
             ],
           ),
         );
@@ -179,26 +199,26 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
     );
   }
 
-  Widget _buildAvatar(String name, String? imageUrl) {
-    if (imageUrl != null && imageUrl.isNotEmpty) {
-      return CircleAvatar(radius: 22, backgroundImage: NetworkImage(imageUrl));
+  Widget _buildAvatar(String name, String imageUrl, {required double radius}) {
+    // Avoid crashing on broken PDF/XLSX image uploads from backend testing
+    bool isInvalidImage = imageUrl.toLowerCase().endsWith('.xlsx') || imageUrl.toLowerCase().endsWith('.pdf');
+
+    if (imageUrl.isNotEmpty && !isInvalidImage) {
+      return CircleAvatar(
+        radius: radius,
+        backgroundImage: NetworkImage(imageUrl),
+        backgroundColor: Colors.blue.shade50,
+      );
     }
 
-    // Fallback: Use initials if no image is available
-    String initials = name.isNotEmpty
-        ? name.trim().split(' ').map((l) => l[0]).take(2).join().toUpperCase()
-        : '?';
+    String initials = name.isNotEmpty ? name.trim().split(' ').map((l) => l.isNotEmpty ? l[0] : '').take(2).join().toUpperCase() : '?';
 
     return CircleAvatar(
-      radius: 22,
+      radius: radius,
       backgroundColor: Colors.blue.shade50,
       child: Text(
         initials,
-        style: GoogleFonts.montserrat(
-          color: Colors.blue.shade800,
-          fontWeight: FontWeight.bold,
-          fontSize: 14,
-        ),
+        style: GoogleFonts.montserrat(color: Colors.blue.shade800, fontWeight: FontWeight.bold, fontSize: radius * 0.6),
       ),
     );
   }
@@ -216,6 +236,7 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
         bgColor = Colors.orange.shade50;
         textColor = Colors.orange.shade800;
         break;
+      case 'inactive':
       case 'suspended':
         bgColor = Colors.red.shade50;
         textColor = Colors.red.shade700;
@@ -227,18 +248,10 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: textColor.withOpacity(0.3)),
-      ),
+      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: textColor.withOpacity(0.3))),
       child: Text(
-        status,
-        style: GoogleFonts.montserrat(
-          color: textColor,
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-        ),
+        status.toUpperCase(),
+        style: GoogleFonts.montserrat(color: textColor, fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.5),
       ),
     );
   }

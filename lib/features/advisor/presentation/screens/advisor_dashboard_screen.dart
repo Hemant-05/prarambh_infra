@@ -907,7 +907,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           _drawerItem(Icons.leaderboard_outlined, 'Leader board', () {
             Navigator.pushNamed(context, '/advisor_leaderboard');
           }),
-          _drawerItem(Icons.person_add_alt, 'Recruit Advisor', () {
+          _drawerItem(Icons.people_outline, 'My Recruitment', () {
             Navigator.pushNamed(context, '/recruiter_dashboard');
           }),
           _drawerItem(Icons.campaign_outlined, 'Promotions', () {}),

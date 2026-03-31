@@ -396,7 +396,7 @@ abstract class ApiClient {
   @GET("/admin/dashboard")
   Future<dynamic> getAdminDashboard();
 
-  @GET("/advisor/dashboard")
+  @GET("/advisor/app-dashboard")
   Future<dynamic> getAdvisorDashboard(@Query("advisor_code") String advisorCode);
 
   @GET("/inventory/dashboard")
@@ -410,6 +410,9 @@ abstract class ApiClient {
   // ==========================================
   @GET("/team/tree")
   Future<dynamic> getTeamTree(@Query("leader_id") String? leaderId);
+
+  @GET("/team/advisor/{id}")
+  Future<dynamic> getAdvisorTeam(@Path("id") String advisorId);
 
   // ==========================================
   // 15. Blogs
