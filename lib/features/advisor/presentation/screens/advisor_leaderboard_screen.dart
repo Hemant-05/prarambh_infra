@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/advisor_leaderboard_provider.dart';
@@ -45,10 +46,7 @@ class _AdvisorLeaderboardScreenState extends State<AdvisorLeaderboardScreen> {
         backgroundColor: primaryBlue,
         elevation: 0,
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: backButton(isDark: !isDark),
         title: Text(
           'LEADER BOARD',
           style: GoogleFonts.montserrat(

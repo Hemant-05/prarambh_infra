@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/features/admin/data/models/advisor_application_model.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/contests_list_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_contests_list_screen.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_projects_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_schedule_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/document_center_screen.dart';
 import 'package:prarambh_infra/features/auth/data/repositories/auth_repository.dart';
@@ -24,19 +25,42 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
   String _selectedSalesTab = 'Month';
   final Color _primaryBlue = const Color(0xFF0056A4); // Exact match from image
 
+  // --- NEW: Bottom Navigation State ---
+  int _selectedIndex = 0;
+
+  final List<String> _appBarTitles = [
+    'Business Dashboard',
+    'Projects & Inventory',
+    'Sales Pipeline',
+    'My Team',
+    'My Profile'
+  ];
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final advisor_code = context.read<AuthProvider>().currentUser?.advisorCode ?? '';
-      context.read<AdvisorDashboardProvider>().fetchDashboardData(advisor_code);
+      final advisorCode = context.read<AuthProvider>().currentUser?.advisorCode ?? '';
+      context.read<AdvisorDashboardProvider>().fetchDashboardData(advisorCode);
+    });
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<AdvisorDashboardProvider>();
-    final advisor = context.read<AuthProvider>().currentUser;
+    // --- NEW: Screen List for Easy Swapping Later ---
+    final List<Widget> screens = [
+      _buildDashboardContent(context),
+      AdvisorProjectsScreen(),
+      _buildPlaceholderScreen('Sales Pipeline', Icons.trending_up),
+      _buildPlaceholderScreen('Team Management', Icons.people_outline),
+      _buildPlaceholderScreen('My Profile', Icons.person_outline),
+    ];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
@@ -46,7 +70,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
         elevation: 0,
         centerTitle: false,
         title: Text(
-          'Business Dashboard',
+          _appBarTitles[_selectedIndex], // Dynamic Title
           style: GoogleFonts.montserrat(
             fontWeight: FontWeight.bold,
             fontSize: 18,
@@ -55,61 +79,167 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      // Add your standard BottomNavigationBar here if not handled by a wrapper
-      body: provider.isLoading || provider.data == null
-          ? Center(child: CircularProgressIndicator(color: _primaryBlue))
-          : RefreshIndicator(
-              onRefresh: () => provider.fetchDashboardData(advisor!.advisorCode!??'PIA00004'),
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildTopProfileCard(provider.data!),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 20),
-                          _buildSectionTitle('Career Progress'),
-                          _buildCareerProgress(provider.data!),
-                          const SizedBox(height: 24),
 
-                          _buildSalesConversionHeader(),
-                          _buildSalesConversionCards(provider.data!.sales),
-                          const SizedBox(height: 24),
+      // --- NEW: Bottom Navigation Bar ---
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.white,
+          selectedItemColor: _primaryBlue,
+          unselectedItemColor: Colors.grey.shade500,
+          selectedLabelStyle: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold),
+          unselectedLabelStyle: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.w600),
+          elevation: 0,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Padding(padding: EdgeInsets.only(bottom: 4), child: Icon(Icons.dashboard_outlined)),
+              activeIcon: Padding(padding: EdgeInsets.only(bottom: 4), child: Icon(Icons.dashboard_rounded)),
+              label: 'Dashboard',
+            ),
+            BottomNavigationBarItem(
+              icon: Padding(padding: EdgeInsets.only(bottom: 4), child: Icon(Icons.business_outlined)),
+              activeIcon: Padding(padding: EdgeInsets.only(bottom: 4), child: Icon(Icons.business)),
+              label: 'Projects',
+            ),
+            BottomNavigationBarItem(
+              icon: Padding(padding: EdgeInsets.only(bottom: 4), child: Icon(Icons.trending_up_rounded)),
+              activeIcon: Padding(padding: EdgeInsets.only(bottom: 4), child: Icon(Icons.trending_up, size: 26)),
+              label: 'Sales',
+            ),
+            BottomNavigationBarItem(
+              icon: Padding(padding: EdgeInsets.only(bottom: 4), child: Icon(Icons.people_outline)),
+              activeIcon: Padding(padding: EdgeInsets.only(bottom: 4), child: Icon(Icons.people)),
+              label: 'Team',
+            ),
+            BottomNavigationBarItem(
+              icon: Padding(padding: EdgeInsets.only(bottom: 4), child: Icon(Icons.person_outline)),
+              activeIcon: Padding(padding: EdgeInsets.only(bottom: 4), child: Icon(Icons.person)),
+              label: 'Profile',
+            ),
+          ],
+        ),
+      ),
 
-                          _buildSectionTitle('Quick Actions'),
-                          _buildQuickActionsGrid(),
-                          const SizedBox(height: 24),
+      // --- IndexedStack keeps state alive when switching tabs ---
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: screens,
+      ),
+    );
+  }
 
-                          _buildPendingActionsHeader(
-                            provider.data!.pendingActions.length,
-                          ),
-                          _buildPendingActionsList(
-                            provider.data!.pendingActions,
-                          ),
-                          const SizedBox(height: 24),
+  // ==========================================
+  // MAIN DASHBOARD CONTENT (TAB 0)
+  // ==========================================
+  Widget _buildDashboardContent(BuildContext context) {
+    final provider = context.watch<AdvisorDashboardProvider>();
+    final advisor = context.read<AuthProvider>().currentUser;
 
-                          _buildSectionTitle('Promotion Status'),
-                          _buildPromotionStatusTable(
-                            provider.data!.promotionStatus,
-                          ),
-                          const SizedBox(height: 24),
+    if (provider.isLoading || provider.data == null) {
+      return Center(child: CircularProgressIndicator(color: _primaryBlue));
+    }
 
-                          _buildActiveContestsHeader(),
-                          _buildActiveContestsList(
-                            provider.data!.activeContests,
-                          ),
-                          const SizedBox(height: 40),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+    return RefreshIndicator(
+      onRefresh: () => provider.fetchDashboardData(advisor!.advisorCode ?? 'PIA00004'),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTopProfileCard(provider.data!),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+                  _buildSectionTitle('Career Progress'),
+                  _buildCareerProgress(provider.data!),
+                  const SizedBox(height: 24),
+
+                  _buildSalesConversionHeader(),
+                  _buildSalesConversionCards(provider.data!.sales),
+                  const SizedBox(height: 24),
+
+                  _buildSectionTitle('Quick Actions'),
+                  _buildQuickActionsGrid(),
+                  const SizedBox(height: 24),
+
+                  _buildPendingActionsHeader(
+                    provider.data!.pendingActions.length,
+                  ),
+                  _buildPendingActionsList(
+                    provider.data!.pendingActions,
+                  ),
+                  const SizedBox(height: 24),
+
+                  _buildSectionTitle('Promotion Status'),
+                  _buildPromotionStatusTable(
+                    provider.data!.promotionStatus,
+                  ),
+                  const SizedBox(height: 24),
+
+                  _buildActiveContestsHeader(),
+                  _buildActiveContestsList(
+                    provider.data!.activeContests,
+                  ),
+                  const SizedBox(height: 40),
+                ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==========================================
+  // PLACEHOLDER SCREEN WIDGET
+  // ==========================================
+  Widget _buildPlaceholderScreen(String title, IconData icon) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 64, color: _primaryBlue.withOpacity(0.5)),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            '$title Screen',
+            style: GoogleFonts.montserrat(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Coming Soon',
+            style: GoogleFonts.montserrat(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -367,39 +497,39 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             children: ['Month', 'Quarter', 'Year']
                 .map(
                   (e) => GestureDetector(
-                    onTap: () => setState(() => _selectedSalesTab = e),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
+                onTap: () => setState(() => _selectedSalesTab = e),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _selectedSalesTab == e
+                        ? Colors.white
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: _selectedSalesTab == e
+                        ? [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 4,
                       ),
-                      decoration: BoxDecoration(
-                        color: _selectedSalesTab == e
-                            ? Colors.white
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: _selectedSalesTab == e
-                            ? [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 4,
-                                ),
-                              ]
-                            : [],
-                      ),
-                      child: Text(
-                        e,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: _selectedSalesTab == e
-                              ? _primaryBlue
-                              : Colors.grey[600],
-                        ),
-                      ),
+                    ]
+                        : [],
+                  ),
+                  child: Text(
+                    e,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: _selectedSalesTab == e
+                          ? _primaryBlue
+                          : Colors.grey[600],
                     ),
                   ),
-                )
+                ),
+              ),
+            )
                 .toList(),
           ),
         ),
@@ -444,11 +574,11 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
   }
 
   Widget _buildSalesCard(
-    String value,
-    String label,
-    Color bgColor,
-    Color textColor,
-  ) {
+      String value,
+      String label,
+      Color bgColor,
+      Color textColor,
+      ) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
@@ -512,33 +642,33 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           borderRadius: BorderRadius.circular(12),
           child: Container(
             decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _primaryBlue.withOpacity(0.2)),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                actions[index]['icon'] as IconData,
-                color: _primaryBlue,
-                size: 28,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                actions[index]['label'] as String,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.montserrat(
-                  fontSize: 10,
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _primaryBlue.withOpacity(0.2)),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  actions[index]['icon'] as IconData,
                   color: _primaryBlue,
-                  fontWeight: FontWeight.w500,
+                  size: 28,
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  actions[index]['label'] as String,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 10,
+                    color: _primaryBlue,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      );
-    },
+        );
+      },
     );
   }
 
@@ -682,7 +812,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             ),
           ),
           ...metrics.map(
-            (m) => Container(
+                (m) => Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               decoration: BoxDecoration(
                 border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
@@ -806,12 +936,12 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             ),
             subtitle: contests[index].subtitle != null
                 ? Text(
-                    contests[index].subtitle!,
-                    style: GoogleFonts.montserrat(
-                      fontSize: 11,
-                      color: _primaryBlue,
-                    ),
-                  )
+              contests[index].subtitle!,
+              style: GoogleFonts.montserrat(
+                fontSize: 11,
+                color: _primaryBlue,
+              ),
+            )
                 : null,
             trailing: const Icon(Icons.chevron_right, color: Colors.grey),
           ),
@@ -883,18 +1013,18 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           _drawerItem(
             Icons.account_balance_wallet_outlined,
             'My Income',
-            () {},
+                () {},
           ),
           _drawerItem(
             Icons.event_available_outlined,
             'Upcoming Installment',
-            () {},
+                () {},
           ),
           _drawerItem(Icons.military_tech_outlined, 'Achievements', () {}),
           _drawerItem(
             Icons.calculate_outlined,
             'Calculator - INSTALLMENT',
-            () {
+                () {
               Navigator.pushNamed(context, '/installment_calculator');
             },
           ),
@@ -914,7 +1044,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           _drawerItem(
             Icons.groups_outlined,
             'Business plan - click 6 points',
-            () {},
+                () {},
           ),
           const Divider(),
           ListTile(
@@ -930,7 +1060,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
               Navigator.pushNamedAndRemoveUntil(
                 context,
                 '/login',
-                (route) => false,
+                    (route) => false,
               );
               context.read<AuthProvider>().logout();
             },
