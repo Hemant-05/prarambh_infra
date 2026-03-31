@@ -323,7 +323,7 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
                             child: Column(
                               children: [
                                 Text(
-                                  '${provider.documents.length}',
+                                  '${provider.managedDocumentsCount}',
                                   style: GoogleFonts.montserrat(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,

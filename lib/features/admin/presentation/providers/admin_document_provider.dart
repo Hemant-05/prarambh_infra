@@ -19,10 +19,17 @@ class AdminDocumentProvider extends ChangeNotifier {
   Map<String, List<DocumentModel>> get groupedDocuments {
     final map = <String, List<DocumentModel>>{};
     for (var doc in _documents) {
+      // Hide personal documents from general management view
+      if (doc.category.toLowerCase() == 'personal') continue;
+      
       if (!map.containsKey(doc.category)) map[doc.category] = [];
       map[doc.category]!.add(doc);
     }
     return map;
+  }
+
+  int get managedDocumentsCount {
+    return _documents.where((doc) => doc.category.toLowerCase() != 'personal').length;
   }
 
   Future<void> fetchDocuments({String? userId, String? category}) async {
