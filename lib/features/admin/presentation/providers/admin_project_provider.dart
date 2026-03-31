@@ -22,6 +22,28 @@ class AdminProjectProvider extends ChangeNotifier {
   List<UnitModel> get inventory => _inventory;
   bool get isLoadingInventory => _isLoadingInventory;
 
+  // --- Inventory Stats ---
+  int get totalUnitsCount => _inventory.length;
+
+  int get availableUnitsCount =>
+      _inventory
+          .where((u) => u.availabilityStatus.toLowerCase() == 'available')
+          .length;
+
+  int get bookedUnitsCount =>
+      _inventory
+          .where((u) => u.availabilityStatus.toLowerCase() == 'booked')
+          .length;
+
+  int get soldUnitsCount =>
+      _inventory
+          .where(
+            (u) =>
+                u.availabilityStatus.toLowerCase() == 'sold' ||
+                u.availabilityStatus.toLowerCase() == 'sold out',
+          )
+          .length;
+
   Future<void> fetchProjects() async {
     _isLoading = true; notifyListeners();
     try {

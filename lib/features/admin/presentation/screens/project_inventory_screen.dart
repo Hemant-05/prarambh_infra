@@ -39,8 +39,11 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
       filteredInventory = provider.inventory
           .where(
             (u) =>
+                (selectedFilter == 'Sold Out' &&
+                    (u.availabilityStatus.toLowerCase() == 'sold' ||
+                        u.availabilityStatus.toLowerCase() == 'sold out')) ||
                 u.availabilityStatus.toUpperCase() ==
-                selectedFilter.toUpperCase(),
+                    selectedFilter.toUpperCase(),
           )
           .toList();
     }
@@ -100,7 +103,11 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
                   selectedFilter == 'Booked',
                   primaryBlue,
                 ),
-                _buildFilterChip('Sold', selectedFilter == 'Sold', primaryBlue),
+                _buildFilterChip(
+                  'Sold Out',
+                  selectedFilter == 'Sold Out',
+                  primaryBlue,
+                ),
               ],
             ),
           ),
@@ -111,10 +118,26 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildStatText('250', 'TOTAL UNITS', Colors.black87),
-                _buildStatText('45', 'AVAILABLE', Colors.green),
-                _buildStatText('120', 'BOOKED', Colors.orange),
-                _buildStatText('85', 'SOLD', Colors.grey),
+                _buildStatText(
+                  '${provider.totalUnitsCount}',
+                  'TOTAL UNITS',
+                  Colors.black87,
+                ),
+                _buildStatText(
+                  '${provider.availableUnitsCount}',
+                  'AVAILABLE',
+                  Colors.green,
+                ),
+                _buildStatText(
+                  '${provider.bookedUnitsCount}',
+                  'BOOKED',
+                  Colors.orange,
+                ),
+                _buildStatText(
+                  '${provider.soldUnitsCount}',
+                  'SOLD',
+                  Colors.red,
+                ),
               ],
             ),
           ),
@@ -204,9 +227,13 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
     } else if (unit.availabilityStatus.toUpperCase() == 'BOOKED') {
       bgColor = const Color(0xFFFFF8E1);
       textColor = Colors.orange[800]!;
-    } else {
+    } else if (unit.availabilityStatus.toUpperCase() == 'SOLD' ||
+        unit.availabilityStatus.toUpperCase() == 'SOLD OUT') {
       bgColor = const Color(0xFFFCE4EC);
       textColor = Colors.red[800]!;
+    } else {
+      bgColor = Colors.grey[200]!;
+      textColor = Colors.grey[700]!;
     }
 
     return GestureDetector(
