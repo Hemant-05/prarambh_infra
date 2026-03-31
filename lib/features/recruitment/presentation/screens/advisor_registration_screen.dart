@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:provider/provider.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/advisor_registration_provider.dart';
 
 class AdvisorRegistrationScreen extends StatefulWidget {
@@ -42,6 +43,39 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
   Widget build(BuildContext context) {
     final primaryBlue = AppColors.getPrimaryBlue(context);
     final provider = context.watch<AdvisorRegistrationProvider>();
+    final currentUser = context.read<AuthProvider>().currentUser;
+
+    // RULE: If logged-in user is 'Advisor' role and their designation is exactly 'advisor' (or null), block them.
+    final isRoleAdvisor = currentUser?.role.toLowerCase() == 'advisor';
+    final userDesignation = (currentUser?.designation ?? '').toLowerCase();
+    
+    if (isRoleAdvisor && (userDesignation == 'advisor' || userDesignation.isEmpty)) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Text(
+              'You do not have permission to recruit an Advisor.',
+              style: GoogleFonts.montserrat(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -91,6 +125,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                           final success = await provider.submitRegistration(
                             context,
                           );
+                          if (!context.mounted) return;
                           if (success) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -136,6 +171,31 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
   // STEP 1 UI
   // ==========================================
   Widget _buildStepOne(AdvisorRegistrationProvider provider) {
+    final currentUser = context.read<AuthProvider>().currentUser;
+    // Generate Designation Options
+    List<String> designationOptions = ['Advisor'];
+    
+    final role = currentUser?.role.toLowerCase() ?? '';
+    final designationStr = (currentUser?.designation ?? '').toLowerCase();
+
+    if (role == 'admin' || role == 'superadmin') {
+      designationOptions = [
+        'Advisor',
+        'Supervisor',
+        'Manager',
+        'Chief Manager',
+        'Senior Manager',
+        'Director'
+      ];
+    } else if (role == 'advisor' && designationStr == 'director') {
+      designationOptions = ['Advisor', 'Supervisor'];
+    }
+
+    // Ensure state matches valid list initially
+    if (!designationOptions.contains(provider.designation)) {
+      provider.designation = designationOptions.first;
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Column(
@@ -267,6 +327,12 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                       ),
                     ),
                   ],
+                ),
+                _buildDropdown(
+                  'Designation',
+                  provider.designation,
+                  designationOptions,
+                  (v) => setState(() => provider.designation = v!),
                 ),
               ],
             ),

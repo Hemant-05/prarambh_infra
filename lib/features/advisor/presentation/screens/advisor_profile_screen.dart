@@ -41,7 +41,7 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
           await provider.fetchProfile(id);
         },
         child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+          physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             _buildProfileHeader(provider.profile!, primaryBlue, isDark),
             SliverPadding(

@@ -23,6 +23,7 @@ class AdvisorRegistrationProvider extends ChangeNotifier {
   final pincodeCtrl = TextEditingController();
 
   String gender = 'Male';
+  String designation = 'Advisor';
   final stateCtrl = TextEditingController();
   final cityCtrl =  TextEditingController();
 
@@ -77,7 +78,7 @@ class AdvisorRegistrationProvider extends ChangeNotifier {
     _isLoading = true; notifyListeners();
     try {
       final success = await repository.registerAdvisorDetailed(
-          fullName: nameCtrl.text, email: emailCtrl.text, phone: phoneCtrl.text, designation: 'Advisor',
+          fullName: nameCtrl.text, email: emailCtrl.text, phone: phoneCtrl.text, designation: designation,
           fatherName: fatherNameCtrl.text, dob: dobCtrl.text, gender: gender,
           nomineeName: nomineeNameCtrl.text, nomineePhone: nomineePhoneCtrl.text, relationship: relationship,
           occupation: occupationCtrl.text, aadhaar: aadharCtrl.text, pan: panCtrl.text,
@@ -92,7 +93,7 @@ class AdvisorRegistrationProvider extends ChangeNotifier {
         nameCtrl.clear(); fatherNameCtrl.clear(); dobCtrl.clear(); aadharCtrl.clear(); panCtrl.clear();
         phoneCtrl.clear(); emailCtrl.clear(); addressCtrl.clear(); occupationCtrl.clear(); pincodeCtrl.clear();
         nomineeNameCtrl.clear(); nomineePhoneCtrl.clear(); bankNameCtrl.clear(); accNumberCtrl.clear(); ifscCtrl.clear();
-        branchCtrl.clear(); leaderCodeCtrl.clear();
+        branchCtrl.clear(); leaderCodeCtrl.clear(); designation = 'Advisor';
         aadharFront = null; aadharBack = null; panPhoto = null; panBackPhoto = null; profilePhoto = null;
       }
 

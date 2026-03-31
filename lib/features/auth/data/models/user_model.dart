@@ -5,6 +5,7 @@ class UserModel {
   final String phone;
   final String role;
   final String status;
+  final String? designation;
   final String? advisorCode;
   final int? leaderId;
   final String? profilePhoto;
@@ -16,6 +17,7 @@ class UserModel {
     required this.phone,
     required this.role,
     required this.status,
+    this.designation,
     this.advisorCode,
     this.leaderId,
     this.profilePhoto,
@@ -30,6 +32,7 @@ class UserModel {
       phone: json['phone'] ?? '',
       role: json['role'] ?? 'User',
       status: json['status'] ?? 'Active',
+      designation: json['designation']?.toString(),
       advisorCode: json['Advisor_code'],
       leaderId: json['leader_id'] is int ? json['leader_id'] : int.tryParse(json['leader_id']?.toString() ?? ''),
       profilePhoto: json['profile_photo'],
