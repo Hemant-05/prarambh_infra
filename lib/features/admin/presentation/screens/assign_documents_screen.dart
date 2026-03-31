@@ -5,12 +5,19 @@ import 'package:file_picker/file_picker.dart';
 import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../data/models/advisor_application_model.dart';
 import '../providers/admin_document_provider.dart';
 
 class AssignDocumentsScreen extends StatefulWidget {
-  final AdvisorApplicationModel advisor;
-  const AssignDocumentsScreen({super.key, required this.advisor});
+  final String advisorId;
+  final String advisorName;
+  final String advisorCode;
+
+  const AssignDocumentsScreen({
+    super.key,
+    required this.advisorId,
+    required this.advisorName,
+    required this.advisorCode,
+  });
 
   @override
   State<AssignDocumentsScreen> createState() => _AssignDocumentsScreenState();
@@ -46,7 +53,7 @@ class _AssignDocumentsScreenState extends State<AssignDocumentsScreen> {
         final success = await provider.uploadDocument(
           name: name,
           category: 'Personal', // Backend uses 'Personal' for advisor-specific docs
-          userId: widget.advisor.id, // Attach it to this specific advisor!
+          userId: widget.advisorId, // Attach it to this specific advisor!
           documentFile: file,
         );
         if (success) successCount++;
@@ -108,14 +115,14 @@ class _AssignDocumentsScreenState extends State<AssignDocumentsScreen> {
                 children: [
                   CircleAvatar(
                     radius: 30, backgroundColor: Colors.grey[300],
-                    child: Text(widget.advisor.name.substring(0, 2).toUpperCase(), style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: primaryBlue)),
+                    child: Text(widget.advisorName.substring(0, widget.advisorName.length > 1 ? 2 : 1).toUpperCase(), style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: primaryBlue)),
                   ),
                   const SizedBox(width: 16),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(widget.advisor.name, style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
-                      Text('Advisor ID: ${widget.advisor.displayId}', style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey[500])),
+                      Text(widget.advisorName, style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+                      Text('Advisor ID: ${widget.advisorCode}', style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey[500])),
                     ],
                   ),
                 ],

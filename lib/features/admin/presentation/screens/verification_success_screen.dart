@@ -29,7 +29,11 @@ class VerificationSuccessScreen extends StatelessWidget {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AssignDocumentsScreen(advisor: advisor),
+                    builder: (context) => AssignDocumentsScreen(
+                      advisorId: advisor.id,
+                      advisorName: advisor.name,
+                      advisorCode: advisor.displayId,
+                    ),
                   ),
                 );
               },

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/widgets/back_button.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/assign_documents_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -575,10 +576,22 @@ class _BrokerProfileScreenState extends State<BrokerProfileScreen> {
 
                   // ── Documents ──────────────────────────────────────────
                   _card(cardColor, [
-                    _sectionTitle(
-                      Icons.folder_outlined,
-                      'Documents',
-                      primaryBlue,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _sectionTitle(
+                          Icons.folder_outlined,
+                          'Documents',
+                          primaryBlue,
+                        ),
+                        TextButton(onPressed: (){
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => AssignDocumentsScreen(
+                            advisorId: p.id,
+                            advisorName: p.name,
+                            advisorCode: p.advisorCode,
+                          )));
+                        }, child: Text("Manage",style: TextStyle(color: primaryBlue,fontWeight: FontWeight.bold,fontSize: 12),))
+                      ],
                     ),
                     const SizedBox(height: 16),
                     if (p.docAddressCardFront != null) ...[
@@ -623,48 +636,9 @@ class _BrokerProfileScreenState extends State<BrokerProfileScreen> {
                     const SizedBox(height: 12),
                     p.achievements.isEmpty
                         ? _emptyState('No achievements yet')
-                        : Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
+                        : Column(
                             children: p.achievements
-                                .map(
-                                  (a) => Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Colors.amber.withOpacity(0.15),
-                                          Colors.orange.withOpacity(0.1),
-                                        ],
-                                      ),
-                                      borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(
-                                        color: Colors.amber.withOpacity(0.3),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(
-                                          Icons.emoji_events,
-                                          size: 16,
-                                          color: Colors.amber,
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          '${a}',
-                                          style: GoogleFonts.montserrat(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                )
+                                .map((a) => _achievementCard(a, primaryBlue, isDark))
                                 .toList(),
                           ),
                   ]),
@@ -1305,6 +1279,109 @@ class _BrokerProfileScreenState extends State<BrokerProfileScreen> {
       ),
     ),
   );
+
+  Widget _achievementCard(dynamic a, Color primaryBlue, bool isDark) {
+    String title = 'Achievement';
+    String type = 'General';
+    String description = '';
+    String time = '';
+
+    if (a is Map) {
+      title = a['title']?.toString() ?? 'Achievement';
+      type = a['type']?.toString() ?? 'General';
+      description = a['description']?.toString() ?? '';
+      time = a['time']?.toString() ?? a['time_of_achievement']?.toString() ?? '';
+    } else {
+      title = a.toString();
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey[900] : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.amber.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.amber.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.emoji_events, color: Colors.amber, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            title,
+                            style: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                        ),
+                        _badge(type.toUpperCase(), Colors.amber),
+                      ],
+                    ),
+                    if (description.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        description,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                    if (time.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Icon(Icons.access_time, size: 12, color: Colors.grey[500]),
+                          const SizedBox(width: 4),
+                          Text(
+                            time,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 10,
+                              color: Colors.grey[500],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // -- Full-Screen Image Viewer --------------------------------------------------
