@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_team_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'package:prarambh_infra/features/auth/presentation/providers/auth_provider.dart';
@@ -53,7 +54,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
       _buildDashboardContent(context),
       const AdvisorProjectsScreen(),
       const SalesPipelineScreen(),
-      _buildPlaceholderScreen('Team Management', Icons.people_outline),
+      const AdvisorTeamScreen(),
       _buildPlaceholderScreen('My Profile', Icons.person_outline),
     ];
 
