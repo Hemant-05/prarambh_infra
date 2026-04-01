@@ -584,13 +584,28 @@ class _BrokerProfileScreenState extends State<BrokerProfileScreen> {
                           'Documents',
                           primaryBlue,
                         ),
-                        TextButton(onPressed: (){
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => AssignDocumentsScreen(
-                            advisorId: p.id,
-                            advisorName: p.name,
-                            advisorCode: p.advisorCode,
-                          )));
-                        }, child: Text("Manage",style: TextStyle(color: primaryBlue,fontWeight: FontWeight.bold,fontSize: 12),))
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AssignDocumentsScreen(
+                                  advisorId: p.id,
+                                  advisorName: p.name,
+                                  advisorCode: p.advisorCode,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            "Manage",
+                            style: TextStyle(
+                              color: primaryBlue,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -638,7 +653,10 @@ class _BrokerProfileScreenState extends State<BrokerProfileScreen> {
                         ? _emptyState('No achievements yet')
                         : Column(
                             children: p.achievements
-                                .map((a) => _achievementCard(a, primaryBlue, isDark))
+                                .map(
+                                  (a) =>
+                                      _achievementCard(a, primaryBlue, isDark),
+                                )
                                 .toList(),
                           ),
                   ]),
@@ -1290,7 +1308,8 @@ class _BrokerProfileScreenState extends State<BrokerProfileScreen> {
       title = a['title']?.toString() ?? 'Achievement';
       type = a['type']?.toString() ?? 'General';
       description = a['description']?.toString() ?? '';
-      time = a['time']?.toString() ?? a['time_of_achievement']?.toString() ?? '';
+      time =
+          a['time']?.toString() ?? a['time_of_achievement']?.toString() ?? '';
     } else {
       title = a.toString();
     }
@@ -1322,7 +1341,11 @@ class _BrokerProfileScreenState extends State<BrokerProfileScreen> {
                   color: Colors.amber.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.emoji_events, color: Colors.amber, size: 20),
+                child: const Icon(
+                  Icons.emoji_events,
+                  color: Colors.amber,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1360,7 +1383,11 @@ class _BrokerProfileScreenState extends State<BrokerProfileScreen> {
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          Icon(Icons.access_time, size: 12, color: Colors.grey[500]),
+                          Icon(
+                            Icons.access_time,
+                            size: 12,
+                            color: Colors.grey[500],
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             time,
@@ -1472,11 +1499,12 @@ class _ImageViewerScreenState extends State<_ImageViewerScreen> {
                 },
                 errorBuilder: (_, __, ___) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted)
+                    if (mounted) {
                       setState(() {
                         _isLoading = false;
                         _hasError = true;
                       });
+                    }
                   });
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.center,

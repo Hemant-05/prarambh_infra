@@ -46,7 +46,7 @@ class AdminLeadProvider extends ChangeNotifier {
     _isSaving = true; notifyListeners();
     try {
       final success = await repository.addLead(data);
-      if (success) await fetchLeads(stage: 'suspecting');
+      if (success) await fetchLeads();
       return success;
     } catch (e) {
       debugPrint('Add Lead Error: $e');
@@ -63,6 +63,9 @@ class AdminLeadProvider extends ChangeNotifier {
       if (extraData != null) data.addAll(extraData);
 
       final success = await repository.updateLead(leadId, data);
+      if(success){
+        fetchLeads();
+      }
       return success;
     } catch (e) {
       debugPrint('Update Lead Stage Error: $e');

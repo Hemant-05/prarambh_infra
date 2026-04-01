@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart'; // NEW: Required for FormData
 import '../../../../data/datasources/remote/api_client.dart';
 import '../../../admin/data/models/lead_models.dart';
 
@@ -11,7 +12,16 @@ class AdvisorLeadRepository {
       final response = await apiClient.getLeads(advisorCode, stage, null);
       if (response['status'] == true || response['status'] == 'success') {
         final List data = response['data'] ?? [];
-        List<LeadModel> leads = data.map((e) => LeadModel.fromJson(e)).toList();
+        List<LeadModel> leads = [];
+        for (var item in data) {
+          try {
+            if (item is Map<String, dynamic>) {
+              leads.add(LeadModel.fromJson(item));
+            }
+          } catch (e) {
+            // Ignore malformed lead
+          }
+        }
 
         // Local filter fallback just in case backend returns everything
         if (stage != null && stage.isNotEmpty) {
@@ -32,7 +42,8 @@ class AdvisorLeadRepository {
 
   Future<bool> updateLead(String leadId, Map<String, dynamic> data) async {
     try {
-      final response = await apiClient.updateLead(leadId, data);
+      final formData = FormData.fromMap(data);
+      final response = await apiClient.updateLead(leadId, formData);
       return response['status'] == true || response['status'] == 'success';
     } catch (e) { rethrow; }
   }

@@ -60,10 +60,11 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
       // Platform default is the safest bet to avoid Android null component crashes
       await launchUrl(url);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Could not open link')));
+      }
     }
   }
 

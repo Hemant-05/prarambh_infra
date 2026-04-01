@@ -25,53 +25,79 @@ class AdminProjectProvider extends ChangeNotifier {
   // --- Inventory Stats ---
   int get totalUnitsCount => _inventory.length;
 
-  int get availableUnitsCount =>
-      _inventory
-          .where((u) => u.availabilityStatus.toLowerCase() == 'available')
-          .length;
+  int get availableUnitsCount => _inventory
+      .where((u) => u.availabilityStatus.toLowerCase() == 'available')
+      .length;
 
-  int get bookedUnitsCount =>
-      _inventory
-          .where((u) => u.availabilityStatus.toLowerCase() == 'booked')
-          .length;
+  int get bookedUnitsCount => _inventory
+      .where((u) => u.availabilityStatus.toLowerCase() == 'booked')
+      .length;
 
-  int get soldUnitsCount =>
-      _inventory
-          .where(
-            (u) =>
-                u.availabilityStatus.toLowerCase() == 'sold' ||
-                u.availabilityStatus.toLowerCase() == 'sold out',
-          )
-          .length;
+  int get soldUnitsCount => _inventory
+      .where(
+        (u) =>
+            u.availabilityStatus.toLowerCase() == 'sold' ||
+            u.availabilityStatus.toLowerCase() == 'sold out',
+      )
+      .length;
 
   Future<void> fetchProjects() async {
-    _isLoading = true; notifyListeners();
+    _isLoading = true;
+    notifyListeners();
     try {
       _projects = await repository.getAllProjects();
     } catch (e) {
       debugPrint('Fetch Projects Error: $e');
     } finally {
-      _isLoading = false; notifyListeners();
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
   Future<bool> createProject({
-    required String projectName, required String developerName, required String description,
-    required String reraNumber, required String projectType, required String constructionStatus,
-    required String fullAddress, required String location, required String city,
-    required String marketValue, required String totalPlots, required String buildArea,
-    required String ratePerSqft, required String budgetRange, required String amenities,
-    required String specialties, File? videoFile, File? brochureFile, required List<File> projectImages,
+    required String projectName,
+    required String developerName,
+    required String description,
+    required String reraNumber,
+    required String projectType,
+    required String constructionStatus,
+    required String fullAddress,
+    required String location,
+    required String city,
+    required String marketValue,
+    required String totalPlots,
+    required String buildArea,
+    required String ratePerSqft,
+    required String budgetRange,
+    required String amenities,
+    required String specialties,
+    File? videoFile,
+    File? brochureFile,
+    required List<File> projectImages,
   }) async {
-    _isSaving = true; notifyListeners();
+    _isSaving = true;
+    notifyListeners();
     try {
       final success = await repository.addProject(
-        projectName: projectName, developerName: developerName, description: description,
-        reraNumber: reraNumber, projectType: projectType, constructionStatus: constructionStatus,
-        fullAddress: fullAddress, location: location, city: city, marketValue: marketValue,
-        totalPlots: totalPlots, buildArea: buildArea, ratePerSqft: ratePerSqft,
-        budgetRange: budgetRange, amenities: amenities, specialties: specialties,
-        videoFile: videoFile, brochureFile: brochureFile, projectImages: projectImages,
+        projectName: projectName,
+        developerName: developerName,
+        description: description,
+        reraNumber: reraNumber,
+        projectType: projectType,
+        constructionStatus: constructionStatus,
+        fullAddress: fullAddress,
+        location: location,
+        city: city,
+        marketValue: marketValue,
+        totalPlots: totalPlots,
+        buildArea: buildArea,
+        ratePerSqft: ratePerSqft,
+        budgetRange: budgetRange,
+        amenities: amenities,
+        specialties: specialties,
+        videoFile: videoFile,
+        brochureFile: brochureFile,
+        projectImages: projectImages,
       );
       if (success) await fetchProjects();
       return success;
@@ -79,26 +105,59 @@ class AdminProjectProvider extends ChangeNotifier {
       debugPrint('Create Project Error: $e');
       return false;
     } finally {
-      _isSaving = false; notifyListeners();
+      _isSaving = false;
+      notifyListeners();
     }
   }
 
   Future<bool> modifyProject({
-    required String id, String? projectName, String? developerName, String? description,
-    String? projectType, String? constructionStatus, String? fullAddress, String? location,
-    String? city, String? marketValue, String? totalPlots, String? buildArea,
-    String? ratePerSqft, String? specialties, String? amenities, String? budgetRange,
-    String? reraNumber, String? status, File? videoFile, File? brochureFile, List<File>? projectImages,
+    required String id,
+    String? projectName,
+    String? developerName,
+    String? description,
+    String? projectType,
+    String? constructionStatus,
+    String? fullAddress,
+    String? location,
+    String? city,
+    String? marketValue,
+    String? totalPlots,
+    String? buildArea,
+    String? ratePerSqft,
+    String? specialties,
+    String? amenities,
+    String? budgetRange,
+    String? reraNumber,
+    String? status,
+    File? videoFile,
+    File? brochureFile,
+    List<File>? projectImages,
   }) async {
-    _isSaving = true; notifyListeners();
+    _isSaving = true;
+    notifyListeners();
     try {
       final success = await repository.updateProject(
-        id: id, projectName: projectName, developerName: developerName, description: description,
-        projectType: projectType, constructionStatus: constructionStatus, fullAddress: fullAddress,
-        location: location, city: city, marketValue: marketValue, totalPlots: totalPlots,
-        buildArea: buildArea, ratePerSqft: ratePerSqft, specialties: specialties,
-        amenities: amenities, budgetRange: budgetRange, reraNumber: reraNumber, status: status,
-        videoFile: videoFile, brochureFile: brochureFile, projectImages: projectImages,
+        id: id,
+        projectName: projectName,
+        developerName: developerName,
+        description: description,
+        projectType: projectType,
+        constructionStatus: constructionStatus,
+        fullAddress: fullAddress,
+        location: location,
+        city: city,
+        marketValue: marketValue,
+        totalPlots: totalPlots,
+        buildArea: buildArea,
+        ratePerSqft: ratePerSqft,
+        specialties: specialties,
+        amenities: amenities,
+        budgetRange: budgetRange,
+        reraNumber: reraNumber,
+        status: status,
+        videoFile: videoFile,
+        brochureFile: brochureFile,
+        projectImages: projectImages,
       );
       if (success) await fetchProjects();
       return success;
@@ -106,12 +165,14 @@ class AdminProjectProvider extends ChangeNotifier {
       debugPrint('Update Project Error: $e');
       return false;
     } finally {
-      _isSaving = false; notifyListeners();
+      _isSaving = false;
+      notifyListeners();
     }
   }
 
   Future<bool> removeProject(String projectId) async {
-    _isSaving = true; notifyListeners();
+    _isSaving = true;
+    notifyListeners();
     try {
       final success = await repository.deleteProject(projectId);
       if (success) _projects.removeWhere((p) => p.id.toString() == projectId);
@@ -120,23 +181,27 @@ class AdminProjectProvider extends ChangeNotifier {
       debugPrint('Delete Project Error: $e');
       return false;
     } finally {
-      _isSaving = false; notifyListeners();
+      _isSaving = false;
+      notifyListeners();
     }
   }
 
   Future<void> fetchInventory(String projectId) async {
-    _isLoadingInventory = true; notifyListeners();
+    _isLoadingInventory = true;
+    notifyListeners();
     try {
       _inventory = await repository.getUnits(projectId: projectId);
     } catch (e) {
       debugPrint('Fetch Inventory Error: $e');
     } finally {
-      _isLoadingInventory = false; notifyListeners();
+      _isLoadingInventory = false;
+      notifyListeners();
     }
   }
 
   Future<bool> bulkUploadUnits(String projectId, File csvFile) async {
-    _isSaving = true; notifyListeners();
+    _isSaving = true;
+    notifyListeners();
     try {
       final success = await repository.bulkUploadUnits(projectId, csvFile);
       if (success) await fetchInventory(projectId);
@@ -145,12 +210,27 @@ class AdminProjectProvider extends ChangeNotifier {
       debugPrint('Bulk Upload Error: $e');
       return false;
     } finally {
-      _isSaving = false; notifyListeners();
+      _isSaving = false;
+      notifyListeners();
     }
   }
 
-  Future<bool> createUnit(Map<String, dynamic> data, String projectId, {List<File>? unitImages}) async {
-    _isSaving = true; notifyListeners();
+  Future<UnitModel> getUnitDetails(String unitId) async {
+    try {
+      return await repository.getUnitDetails(unitId);
+    } catch (e) {
+      debugPrint('Get Unit Details Error: $e');
+      rethrow;
+    }
+  }
+
+  Future<bool> createUnit(
+    Map<String, dynamic> data,
+    String projectId, {
+    List<File>? unitImages,
+  }) async {
+    _isSaving = true;
+    notifyListeners();
     try {
       final success = await repository.addUnit(
         projectId: projectId,
@@ -176,12 +256,19 @@ class AdminProjectProvider extends ChangeNotifier {
       debugPrint('Create Unit Error: $e');
       return false;
     } finally {
-      _isSaving = false; notifyListeners();
+      _isSaving = false;
+      notifyListeners();
     }
   }
 
-  Future<bool> modifyUnit(String unitId, Map<String, dynamic> data, String projectId, {List<File>? unitImages}) async {
-    _isSaving = true; notifyListeners();
+  Future<bool> modifyUnit(
+    String unitId,
+    Map<String, dynamic> data,
+    String projectId, {
+    List<File>? unitImages,
+  }) async {
+    _isSaving = true;
+    notifyListeners();
     try {
       final success = await repository.updateUnit(
         unitId: unitId,
@@ -208,12 +295,14 @@ class AdminProjectProvider extends ChangeNotifier {
       debugPrint('Update Unit Error: $e');
       return false;
     } finally {
-      _isSaving = false; notifyListeners();
+      _isSaving = false;
+      notifyListeners();
     }
   }
 
   Future<bool> removeUnit(String unitId, String projectId) async {
-    _isSaving = true; notifyListeners();
+    _isSaving = true;
+    notifyListeners();
     try {
       final success = await repository.deleteUnit(unitId);
       if (success) _inventory.removeWhere((u) => u.id.toString() == unitId);
@@ -222,7 +311,8 @@ class AdminProjectProvider extends ChangeNotifier {
       debugPrint('Delete Unit Error: $e');
       return false;
     } finally {
-      _isSaving = false; notifyListeners();
+      _isSaving = false;
+      notifyListeners();
     }
   }
 }

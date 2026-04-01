@@ -17,7 +17,7 @@ class AdvisorScheduleScreen extends StatefulWidget {
 class _AdvisorScheduleScreenState extends State<AdvisorScheduleScreen> {
   DateTime _selectedDate = DateTime.now();
   late ScrollController _scrollController;
-  List<DateTime> _daysList = [];
+  final List<DateTime> _daysList = [];
 
   @override
   void initState() {

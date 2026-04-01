@@ -43,7 +43,9 @@ class UnitModel {
   factory UnitModel.fromJson(Map<String, dynamic> json) {
     return UnitModel(
       id: json['id'] != null ? int.tryParse(json['id'].toString()) ?? 0 : 0,
-      projectId: json['project_id'] != null ? int.tryParse(json['project_id'].toString()) ?? 0 : 0,
+      projectId: json['project_id'] != null
+          ? int.tryParse(json['project_id'].toString()) ?? 0
+          : 0,
       towerName: json['tower_name']?.toString() ?? '',
       floorNumber: json['floor_number']?.toString() ?? '',
       unitNumber: json['unit_number']?.toString() ?? '',
@@ -51,13 +53,16 @@ class UnitModel {
       propertyType: json['property_type']?.toString() ?? '',
       saleCategory: json['sale_category']?.toString() ?? '',
       facing: json['facing']?.toString() ?? '',
-      location: json['Location']?.toString() ?? json['location']?.toString() ?? '',
+      location:
+          json['Location']?.toString() ?? json['location']?.toString() ?? '',
       plotNumber: json['plot_number']?.toString() ?? '',
       plotDimensions: json['plot_dimensions']?.toString() ?? '',
       areaSqft: double.tryParse(json['area_sqft']?.toString() ?? '0') ?? 0,
-      ratePerSqft: double.tryParse(json['rate_per_sqft']?.toString() ?? '0') ?? 0,
+      ratePerSqft:
+          double.tryParse(json['rate_per_sqft']?.toString() ?? '0') ?? 0,
       size: json['size']?.toString() ?? '',
-      availabilityStatus: json['availability_status']?.toString() ?? 'Available',
+      availabilityStatus:
+          json['availability_status']?.toString() ?? 'Available',
       unitImages: _parseImages(json['unit_images']),
     );
   }
@@ -80,7 +85,7 @@ class UnitModel {
       String url = img.toString().trim();
       // Backend returns relative paths like "uploads/units/..."
       if (!url.startsWith('http')) {
-        return "https://workiees.com/" + (url.startsWith('/') ? url.substring(1) : url);
+        return "https://workiees.com/${url.startsWith('/') ? url.substring(1) : url}";
       }
       return url;
     }).toList();

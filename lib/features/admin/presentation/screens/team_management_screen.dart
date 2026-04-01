@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:graphview/GraphView.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/back_button.dart';
 import '../providers/admin_team_provider.dart';
 import '../../data/models/team_models.dart';
 import 'broker_profile_screen.dart';
@@ -23,7 +22,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
 
   /// Controls the pan/zoom of the GraphView canvas
   final TransformationController _transformController =
-  TransformationController();
+      TransformationController();
 
   /// Key placed on the root node widget — lets us read its real render position
   final GlobalKey _rootNodeKey = GlobalKey();
@@ -110,9 +109,9 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
       if (!mounted) return;
 
       final rootBox =
-      _rootNodeKey.currentContext?.findRenderObject() as RenderBox?;
+          _rootNodeKey.currentContext?.findRenderObject() as RenderBox?;
       final viewerBox =
-      _viewerKey.currentContext?.findRenderObject() as RenderBox?;
+          _viewerKey.currentContext?.findRenderObject() as RenderBox?;
 
       if (rootBox == null || viewerBox == null) return;
 
@@ -192,11 +191,11 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
           : const Color(0xFFF5F7FA),
       floatingActionButton: _showTreeFab && _graphInitialized
           ? FloatingActionButton(
-        onPressed: _centerOnRoot,
-        backgroundColor: primaryBlue,
-        tooltip: 'Center on Root',
-        child: const Icon(Icons.my_location, color: Colors.white),
-      )
+              onPressed: _centerOnRoot,
+              backgroundColor: primaryBlue,
+              tooltip: 'Center on Root',
+              child: const Icon(Icons.my_location, color: Colors.white),
+            )
           : null,
       appBar: AppBar(
         backgroundColor: primaryBlue,
@@ -266,20 +265,34 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
               ),
               decoration: InputDecoration(
                 hintText: 'Search by name, code or role...',
-                hintStyle: GoogleFonts.montserrat(color: Colors.grey, fontSize: 13),
-                prefixIcon: const Icon(Icons.search, color: Colors.grey, size: 20),
+                hintStyle: GoogleFonts.montserrat(
+                  color: Colors.grey,
+                  fontSize: 13,
+                ),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  color: Colors.grey,
+                  size: 20,
+                ),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                  icon: const Icon(Icons.clear, color: Colors.grey, size: 18),
-                  onPressed: () {
-                    _searchController.clear();
-                    FocusScope.of(context).unfocus();
-                  },
-                )
+                        icon: const Icon(
+                          Icons.clear,
+                          color: Colors.grey,
+                          size: 18,
+                        ),
+                        onPressed: () {
+                          _searchController.clear();
+                          FocusScope.of(context).unfocus();
+                        },
+                      )
                     : null,
                 filled: true,
                 fillColor: isDark ? Colors.grey[900] : Colors.white,
-                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 0,
+                  horizontal: 16,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
@@ -298,93 +311,122 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
 
           // --- Rest of the Content ---
           Expanded(
-            child: provider.isLoading || provider.teamTree == null || !_graphInitialized
+            child:
+                provider.isLoading ||
+                    provider.teamTree == null ||
+                    !_graphInitialized
                 ? Center(child: CircularProgressIndicator(color: primaryBlue))
                 : TabBarView(
-              controller: _tabController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                // ── Tab 1: GraphView Tree ─────────────────────────────────
-                Column(
-                  children: [
-                    // Layout chips
-                    Container(
-                      height: 58,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        border: Border(
-                          bottom: BorderSide(
-                            color: Colors.grey.withOpacity(0.1),
+                    controller: _tabController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      // ── Tab 1: GraphView Tree ─────────────────────────────────
+                      Column(
+                        children: [
+                          // Layout chips
+                          Container(
+                            height: 58,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.transparent,
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Colors.grey.withOpacity(0.1),
+                                ),
+                              ),
+                            ),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              child: Row(
+                                children: [
+                                  _chip(
+                                    "Top-Down",
+                                    Icons.arrow_downward,
+                                    0,
+                                    primaryBlue,
+                                    isDark,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  _chip(
+                                    "Left-Right",
+                                    Icons.arrow_forward,
+                                    1,
+                                    primaryBlue,
+                                    isDark,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  _chip(
+                                    "Bottom-Up",
+                                    Icons.arrow_upward,
+                                    2,
+                                    primaryBlue,
+                                    isDark,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        child: Row(
-                          children: [
-                            _chip("Top-Down", Icons.arrow_downward, 0, primaryBlue, isDark),
-                            const SizedBox(width: 10),
-                            _chip("Left-Right", Icons.arrow_forward, 1, primaryBlue, isDark),
-                            const SizedBox(width: 10),
-                            _chip("Bottom-Up", Icons.arrow_upward, 2, primaryBlue, isDark),
-                          ],
-                        ),
-                      ),
-                    ),
 
-                    // Graph Canvas — key lets us read the viewport size
-                    Expanded(
-                      key: _viewerKey,
-                      child: InteractiveViewer(
-                        transformationController: _transformController,
-                        constrained: false,
-                        boundaryMargin: const EdgeInsets.all(800),
-                        minScale: 0.08,
-                        maxScale: 3.5,
-                        child: GraphView(
-                          graph: graph,
-                          algorithm: BuchheimWalkerAlgorithm(
-                            algorithmConfig,
-                            TreeEdgeRenderer(algorithmConfig),
+                          // Graph Canvas — key lets us read the viewport size
+                          Expanded(
+                            key: _viewerKey,
+                            child: InteractiveViewer(
+                              transformationController: _transformController,
+                              constrained: false,
+                              boundaryMargin: const EdgeInsets.all(800),
+                              minScale: 0.08,
+                              maxScale: 3.5,
+                              child: GraphView(
+                                graph: graph,
+                                algorithm: BuchheimWalkerAlgorithm(
+                                  algorithmConfig,
+                                  TreeEdgeRenderer(algorithmConfig),
+                                ),
+                                paint: Paint()
+                                  ..color = primaryBlue.withOpacity(0.4)
+                                  ..strokeWidth = 1.8
+                                  ..strokeCap = StrokeCap.round
+                                  ..style = PaintingStyle.stroke,
+                                builder: (Node node) {
+                                  final advisorNode =
+                                      node.key!.value as AdvisorNode;
+                                  return _buildNodeWidget(
+                                    advisorNode,
+                                    primaryBlue,
+                                    isDark,
+                                  );
+                                },
+                              ),
+                            ),
                           ),
-                          paint: Paint()
-                            ..color = primaryBlue.withOpacity(0.4)
-                            ..strokeWidth = 1.8
-                            ..strokeCap = StrokeCap.round
-                            ..style = PaintingStyle.stroke,
-                          builder: (Node node) {
-                            final advisorNode = node.key!.value as AdvisorNode;
-                            return _buildNodeWidget(
-                              advisorNode,
-                              primaryBlue,
-                              isDark,
-                            );
-                          },
-                        ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
 
-                // ── Tab 2: List View ─────────────────────────────────────
-                flatList.isEmpty
-                    ? Center(
-                  child: Text(
-                    "No advisors found.",
-                    style: GoogleFonts.montserrat(color: Colors.grey),
+                      // ── Tab 2: List View ─────────────────────────────────────
+                      flatList.isEmpty
+                          ? Center(
+                              child: Text(
+                                "No advisors found.",
+                                style: GoogleFonts.montserrat(
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            )
+                          : ListView(
+                              padding: const EdgeInsets.all(20),
+                              children: flatList
+                                  .map(
+                                    (n) =>
+                                        _buildListCard(n, primaryBlue, isDark),
+                                  )
+                                  .toList(),
+                            ),
+                    ],
                   ),
-                )
-                    : ListView(
-                  padding: const EdgeInsets.all(20),
-                  children: flatList.map((n) => _buildListCard(n, primaryBlue, isDark)).toList(),
-                ),
-              ],
-            ),
           ),
         ],
       ),
@@ -394,12 +436,12 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
   // ── Layout chip ───────────────────────────────────────────────────────────
 
   Widget _chip(
-      String title,
-      IconData icon,
-      int index,
-      Color blue,
-      bool isDark,
-      ) {
+    String title,
+    IconData icon,
+    int index,
+    Color blue,
+    bool isDark,
+  ) {
     final bool sel = _currentLayoutType == index;
     return GestureDetector(
       onTap: () => _changeLayout(index),
@@ -443,7 +485,8 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
     final bool isRoot = node.id == 'root';
 
     // --- NEW: Match Logic for Highlight ---
-    final bool isMatch = _searchQuery.isNotEmpty &&
+    final bool isMatch =
+        _searchQuery.isNotEmpty &&
         (node.name.toLowerCase().contains(_searchQuery) ||
             node.code.toLowerCase().contains(_searchQuery) ||
             node.role.toLowerCase().contains(_searchQuery));
@@ -462,11 +505,11 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
       onTap: isRoot
           ? null
           : () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => BrokerProfileScreen(advisorId: node.id),
-        ),
-      ),
+              context,
+              MaterialPageRoute(
+                builder: (_) => BrokerProfileScreen(advisorId: node.id),
+              ),
+            ),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         width: 170,
@@ -488,7 +531,9 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
             BoxShadow(
               color: isMatch
                   ? Colors.orange.withOpacity(0.5)
-                  : (isRoot ? blue.withOpacity(0.18) : Colors.black.withOpacity(0.05)),
+                  : (isRoot
+                        ? blue.withOpacity(0.18)
+                        : Colors.black.withOpacity(0.05)),
               blurRadius: isMatch ? 15 : (isRoot ? 16 : 8),
               offset: const Offset(0, 4),
             ),
@@ -503,13 +548,15 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
                 color: Colors.white,
                 shape: BoxShape.circle,
                 border: Border.all(
-                    color: isMatch ? Colors.orange : blue.withOpacity(0.4),
-                    width: 1.5
+                  color: isMatch ? Colors.orange : blue.withOpacity(0.4),
+                  width: 1.5,
                 ),
               ),
               child: CircleAvatar(
                 radius: 20,
-                backgroundColor: isMatch ? Colors.orange.withOpacity(0.1) : blue.withOpacity(0.1),
+                backgroundColor: isMatch
+                    ? Colors.orange.withOpacity(0.1)
+                    : blue.withOpacity(0.1),
                 child: Text(
                   initials,
                   style: GoogleFonts.montserrat(
@@ -554,7 +601,9 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: isMatch ? Colors.orange.withOpacity(0.1) : blue.withOpacity(0.1),
+                  color: isMatch
+                      ? Colors.orange.withOpacity(0.1)
+                      : blue.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -593,11 +642,11 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
       onTap: node.id == 'root'
           ? null
           : () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => BrokerProfileScreen(advisorId: node.id),
-        ),
-      ),
+              context,
+              MaterialPageRoute(
+                builder: (_) => BrokerProfileScreen(advisorId: node.id),
+              ),
+            ),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),

@@ -78,10 +78,11 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
       if (await canLaunchUrl(url)) {
         await launchUrl(url, mode: LaunchMode.externalApplication);
       } else {
-        if (mounted)
+        if (mounted) {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(const SnackBar(content: Text('Could not open PDF.')));
+        }
       }
     }
   }
@@ -179,10 +180,11 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
                                   : null,
                               documentFile: newFile,
                             );
-                        if (success && mounted)
+                        if (success && mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Document Updated')),
                           );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryBlue,
@@ -241,10 +243,11 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
       final success = await context
           .read<AdminDocumentProvider>()
           .deleteDocument(doc.id);
-      if (success && mounted)
+      if (success && mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Document Deleted')));
+      }
     }
   }
 

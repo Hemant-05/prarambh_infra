@@ -30,7 +30,7 @@ class AdvisorLeadProvider extends ChangeNotifier {
     _isSaving = true; notifyListeners();
     try {
       final success = await repository.addLead(data);
-      if (success) await fetchLeads(advisorCode: advisorCode, stage: 'suspecting');
+      if (success) await fetchLeads(advisorCode: advisorCode);
       return success;
     } catch (e) {
       debugPrint('Add Lead Error: $e');
@@ -47,7 +47,7 @@ class AdvisorLeadProvider extends ChangeNotifier {
       if (extraData != null) data.addAll(extraData);
 
       final success = await repository.updateLead(leadId, data);
-      await fetchLeads(advisorCode: advisorCode, stage: newStage);
+      await fetchLeads(advisorCode: advisorCode);
       return success;
     } catch (e) {
       debugPrint('Update Lead Stage Error: $e');
@@ -62,7 +62,7 @@ class AdvisorLeadProvider extends ChangeNotifier {
     _isSaving = true; notifyListeners();
     try {
       final success = await repository.addLeadNote(leadId, title, time);
-      if (success) await fetchLeads(advisorCode: advisorCode, stage: currentStage);
+      if (success) await fetchLeads(advisorCode: advisorCode);
       return success;
     } catch (e) {
       debugPrint('Add Lead Note Error: $e');

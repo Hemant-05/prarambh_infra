@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '../../../../data/datasources/remote/api_client.dart';
 import '../models/lead_models.dart';
 
@@ -11,7 +13,16 @@ class AdminLeadRepository {
       final response = await apiClient.getLeads(advisorCode, stage, null);
       if (response['status'] == true || response['status'] == 'success') {
         final List data = response['data'] ?? [];
-        List<LeadModel> leads = data.map((e) => LeadModel.fromJson(e)).toList();
+        List<LeadModel> leads = [];
+        for (var item in data) {
+          try {
+            if (item is Map<String, dynamic>) {
+              leads.add(LeadModel.fromJson(item));
+            }
+          } catch (e) {
+            // safely ignore
+          }
+        }
 
         if (stage != null && stage.isNotEmpty) {
           leads = leads.where((l) => l.stage.toLowerCase() == stage.toLowerCase()).toList();
@@ -27,7 +38,13 @@ class AdminLeadRepository {
       final response = await apiClient.getUnassignedLeads();
       if (response['status'] == true || response['status'] == 'success') {
         final List data = response['data'] ?? [];
-        return data.map((e) => LeadModel.fromJson(e)).toList();
+        List<LeadModel> leads = [];
+        for (var item in data) {
+          try {
+            if (item is Map<String, dynamic>) leads.add(LeadModel.fromJson(item));
+          } catch (_) {}
+        }
+        return leads;
       }
       throw Exception(response['message']);
     } catch (e) { rethrow; }
@@ -52,7 +69,8 @@ class AdminLeadRepository {
 
   Future<bool> updateLead(String leadId, Map<String, dynamic> data) async {
     try {
-      final response = await apiClient.updateLead(leadId, data);
+      final formData = FormData.fromMap(data);
+      final response = await apiClient.updateLead(leadId, formData);
       return response['status'] == true || response['status'] == 'success';
     } catch (e) { rethrow; }
   }
@@ -103,7 +121,13 @@ class AdminLeadRepository {
       final response = await apiClient.getPriorityLeads(null);
       if (response['status']) {
         final List data = response['data'] ?? [];
-        return data.map((e) => LeadModel.fromJson(e)).toList();
+        List<LeadModel> leads = [];
+        for (var item in data) {
+          try {
+            if (item is Map<String, dynamic>) leads.add(LeadModel.fromJson(item));
+          } catch (_) {}
+        }
+        return leads;
       }
       throw Exception(response['message']);
     } catch (e) { rethrow; }

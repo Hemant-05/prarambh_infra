@@ -5,6 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import 'dart:math';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:dio/dio.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../admin/data/models/lead_models.dart';
@@ -16,6 +19,7 @@ import '../../../admin/presentation/providers/admin_project_provider.dart';
 import '../../../admin/presentation/providers/admin_deal_provider.dart';
 import '../../../admin/presentation/screens/deal_management_screen.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import 'advisor_unit_details_screen.dart';
 import '../providers/advisor_lead_provider.dart';
 
 class LeadDetailsScreen extends StatefulWidget {
@@ -37,6 +41,13 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
   late String currentStage;
   late int attemptCounter;
   String? rejectionReason;
+
+  // Priority toggle
+  late bool _isPriorityToggle;
+
+  // Selected property state (full objects for rich display)
+  UnitModel? _selectedUnit;
+  ProjectModel? _selectedProject;
 
   String? selectedProperty;
   int? selectedPropertyId;
@@ -63,6 +74,7 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
     _currentLead = widget.lead;
     currentStage = _currentLead.stage.toLowerCase();
     attemptCounter = _currentLead.communicationAttempt;
+    _isPriorityToggle = _currentLead.isPriority;
     selectedProperty = _currentLead.propertyId > 0
         ? "Property ID: ${_currentLead.propertyId}"
         : null;
@@ -75,26 +87,38 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
         : null;
 
     if (_currentLead.notes.isNotEmpty) {
-      try {
-        final decodedNotes = jsonDecode(_currentLead.notes);
-        if (decodedNotes is List) {
-          for (var item in decodedNotes) {
-            _noteHistory.add({
-              "date": item['date']?.toString() ?? '',
-              "note": item['note']?.toString() ?? '',
-            });
-          }
-        }
-      } catch (e) {
-        _noteHistory.add({
-          "date": _currentLead.createdAt,
-          "note": _currentLead.notes,
-        });
-      }
+      _parseLeadNotes(_currentLead.notes);
+      // Sort history to ensure latest is always on top
+      _noteHistory.sort((a, b) {
+        final d1 = DateTime.tryParse(a['date'] ?? '') ?? DateTime(1970);
+        final d2 = DateTime.tryParse(b['date'] ?? '') ?? DateTime(1970);
+        return d2.compareTo(d1);
+      });
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AdminProjectProvider>().fetchProjects();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (selectedPropertyId != null) {
+        try {
+          final provider = context.read<AdminProjectProvider>();
+          final unit = await provider.getUnitDetails(selectedPropertyId.toString());
+          if (provider.projects.isEmpty) {
+            await provider.fetchProjects();
+          }
+          ProjectModel? proj;
+          try {
+            proj = provider.projects.firstWhere((p) => p.id == unit.projectId);
+          } catch (_) {}
+
+          if (mounted) {
+            setState(() {
+              _selectedUnit = unit;
+              if (proj != null) _selectedProject = proj;
+            });
+          }
+        } catch (e) {
+          debugPrint('Error fetching property data: $e');
+        }
+      }
     });
   }
 
@@ -112,9 +136,35 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
   // ACTIONS & CORE LOGIC
   // ======================================================================
   Future<void> _launchWhatsApp() async {
-    String message = selectedProperty != null
-        ? "Hello! Here are the details for $selectedProperty as discussed."
-        : "Hello! Greetings from Prarambh Infra. How can we help you today?";
+    String message;
+    if (_selectedUnit != null && _selectedProject != null) {
+      final unit = _selectedUnit!;
+      final project = _selectedProject!;
+      final price = unit.calculatedPrice;
+      final priceStr = price >= 10000000
+          ? '₹${(price / 10000000).toStringAsFixed(2)} Cr'
+          : price >= 100000
+          ? '₹${(price / 100000).toStringAsFixed(2)} L'
+          : '₹${price.toStringAsFixed(0)}';
+      message =
+          """🏠 *Property Detail from Prarambh Infra*
+
+Project: ${project.projectName}
+Unit: ${unit.towerName} - ${unit.unitNumber}
+Configuration: ${unit.configuration}
+Floor: ${unit.floorNumber}
+Facing: ${unit.facing}
+Area: ${unit.areaSqft.toStringAsFixed(0)} sq.ft
+💰 Price: $priceStr
+
+Please feel free to contact us for more information.""";
+    } else if (selectedProperty != null) {
+      message =
+          "Hello! Here are the details for $selectedProperty as discussed.";
+    } else {
+      message =
+          "Hello! Greetings from Prarambh Infra. How can we help you today?";
+    }
 
     final Uri url = Uri.parse(
       "https://wa.me/91${_currentLead.clientNumber}?text=${Uri.encodeComponent(message)}",
@@ -122,11 +172,42 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not open WhatsApp')),
         );
+      }
     }
+  }
+
+  Future<void> _togglePriority() async {
+    final newPriority = !_isPriorityToggle;
+    setState(() => _isPriorityToggle = newPriority);
+    final extraData = {
+      'is_priority': newPriority ? 1 : 0,
+      'communication_attempt': attemptCounter,
+      'property_id': selectedPropertyId,
+      'reminder': visitDate ?? '',
+      'meeting_point': meetingPoint ?? '',
+    };
+    bool success = false;
+    if (widget.isAdmin) {
+      success = await context.read<AdminLeadProvider>().updateLeadStage(
+        _currentLead.id,
+        currentStage,
+        extraData: extraData,
+      );
+    } else {
+      final advisorCode =
+          context.read<AuthProvider>().currentUser?.advisorCode ?? '';
+      success = await context.read<AdvisorLeadProvider>().updateLeadStage(
+        _currentLead.id,
+        currentStage,
+        advisorCode,
+        extraData: extraData,
+      );
+    }
+    if (!success && mounted) setState(() => _isPriorityToggle = !newPriority);
   }
 
   Future<void> _launchDialer() async {
@@ -134,10 +215,11 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
     } else {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Could not open Dialer')));
+      }
     }
   }
 
@@ -237,8 +319,11 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
       "property_id": selectedPropertyId,
       "reminder": visitDate ?? '',
       "meeting_point": meetingPoint ?? '',
-      "notes": jsonEncode(_noteHistory),
     };
+
+    if (note != null && note.isNotEmpty) {
+      extraData["notes"] = jsonEncode(_noteHistory);
+    }
 
     bool success = false;
 
@@ -289,162 +374,52 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
     }
   }
 
-  void _addNoteToHistory() {
+  Future<void> _addNoteToHistory() async {
     if (noteController.text.isNotEmpty) {
       String newNote = noteController.text;
       noteController.clear();
-      _updateStageInDb(currentStage, note: newNote);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Note added successfully")));
+      
+      setState(() {
+        _noteHistory.insert(0, {
+          "date": DateTime.now().toString().split('.')[0],
+          "note": newNote,
+        });
+      });
+      
+      bool success = false;
+      if (widget.isAdmin) {
+        success = await context.read<AdminLeadProvider>().addLeadNote(
+          _currentLead.id, 
+          newNote, 
+          DateTime.now().toString()
+        );
+      } else {
+        final advisorCode = context.read<AuthProvider>().currentUser?.advisorCode ?? '';
+        success = await context.read<AdvisorLeadProvider>().addLeadNote(
+          _currentLead.id, 
+          newNote, 
+          DateTime.now().toString(), 
+          advisorCode, 
+          currentStage
+        );
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(success ? "Note added successfully" : "Failed to add note on server"))
+        );
+      }
     }
   }
 
-  void _showCascadedPropertySheet(Function(String, int) onSelect) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return SizedBox(
-          height: MediaQuery.of(context).size.height * 0.7,
-          child: Consumer<AdminProjectProvider>(
-            builder: (context, provider, child) {
-              if (provider.isLoading)
-                return const Center(child: CircularProgressIndicator());
-
-              return Column(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Text(
-                      "Select Project",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: provider.projects.length,
-                      itemBuilder: (context, index) {
-                        final project = provider.projects[index];
-                        return ListTile(
-                          leading: const Icon(
-                            Icons.business,
-                            color: Colors.blue,
-                          ),
-                          title: Text(
-                            project.projectName,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            "${project.city} • ${project.projectType}",
-                          ),
-                          trailing: const Icon(
-                            Icons.arrow_forward_ios,
-                            size: 14,
-                          ),
-                          onTap: () async {
-                            await provider.fetchInventory(
-                              project.id.toString(),
-                            );
-                            if (ctx.mounted) {
-                              Navigator.pop(ctx);
-                              _showUnitSelectionSheet(
-                                project,
-                                provider.inventory,
-                                onSelect,
-                              );
-                            }
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  void _showUnitSelectionSheet(
-    ProjectModel project,
-    List<UnitModel> units,
-    Function(String, int) onSelect,
+  void _showCascadedPropertySheet(
+    Function(String, int, UnitModel, ProjectModel) onSelect,
   ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return SizedBox(
-          height: MediaQuery.of(context).size.height * 0.7,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Text(
-                  "Select Unit in ${project.projectName}",
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: units.isEmpty
-                    ? const Center(
-                        child: Text("No units available in this project."),
-                      )
-                    : ListView.builder(
-                        itemCount: units.length,
-                        itemBuilder: (context, index) {
-                          final unit = units[index];
-                          bool isAvailable =
-                              unit.availabilityStatus.toLowerCase() ==
-                              'available';
-                          return ListTile(
-                            enabled: isAvailable,
-                            leading: Icon(
-                              Icons.apartment,
-                              color: isAvailable ? Colors.green : Colors.red,
-                            ),
-                            title: Text(
-                              "${unit.towerName} - ${unit.unitNumber}",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: isAvailable ? Colors.black : Colors.grey,
-                              ),
-                            ),
-                            subtitle: Text(
-                              "₹${unit.calculatedPrice.toStringAsFixed(0)} • ${unit.availabilityStatus}",
-                            ),
-                            onTap: () {
-                              onSelect(
-                                "${project.projectName} (${unit.towerName}-${unit.unitNumber})",
-                                unit.id,
-                              );
-                              Navigator.pop(ctx);
-                            },
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
-        );
-      },
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _PropertyBrowserSheet(onSelect: onSelect),
     );
   }
 
@@ -462,7 +437,7 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
     Color statusColor = primaryBlue;
     if (currentStage == "closed") statusColor = Colors.grey;
     if (currentStage == "site visit") statusColor = Colors.orange;
-    if (currentStage == "booking") statusColor = Colors.green;
+    if (currentStage == "booking" || currentStage == "pending_verification") statusColor = Colors.green;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -482,13 +457,9 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.edit, color: primaryBlue),
-            onPressed: _showEditLeadSheet,
-          ),
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: statusColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
@@ -506,35 +477,252 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        physics: const BouncingScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildClientInfoCard(cardColor, primaryBlue, textColor),
-            const SizedBox(height: 24),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildClientInfoCard(cardColor, primaryBlue, textColor),
+                const SizedBox(height: 24),
 
-            if ([
-              'suspecting',
-              'prospecting',
-              'site visit',
-            ].contains(currentStage))
-              _buildAttemptCounter(cardColor, primaryBlue),
+                if ([
+                  'suspecting',
+                  'prospecting',
+                  'site visit',
+                ].contains(currentStage))
+                  _buildAttemptCounter(cardColor, primaryBlue),
+                
+                if (currentStage == "suspecting")
+                  _buildSuspectingActions(primaryBlue),
+                if (currentStage == "closed") _buildRejectionInfo(),
 
-            if (currentStage == "suspecting")
-              _buildSuspectingActions(primaryBlue),
-            if (currentStage == "closed") _buildRejectionInfo(),
-            if (currentStage == "prospecting")
-              _buildProspectingInfo(primaryBlue),
-            if (currentStage == "site visit") _buildSiteVisitInfo(primaryBlue),
-            if (currentStage == "booking")
-              _buildBookingFlow(primaryBlue, cardColor),
-          ],
-        ),
+                // Unified Sections: Property & Notes (Shown if property exists or for all stages)
+                if (selectedPropertyId != null)
+                  _buildClickablePropertyCard(selectedProperty!),
+
+                if(currentStage != 'closed')
+                  _buildNoteHistorySection(),
+                const SizedBox(height: 24),
+
+                if (currentStage == "prospecting")
+                  _buildProspectingInfo(primaryBlue),
+                if (currentStage == "site visit") _buildSiteVisitInfo(primaryBlue),
+                if (currentStage == "booking" || currentStage == "pending_verification")
+                  _buildBookingFlow(primaryBlue, cardColor),
+              ],
+            ),
+          ),
+          if (_isLoading)
+            Container(
+              color: Colors.black26,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }
+
+  // ======================================================================
+  // Robust Recursive Note Parsing
+  // ======================================================================
+  void _parseLeadNotes(String raw) {
+    if (raw.isEmpty || raw == '[]' || raw == 'null') return;
+
+    // Clean up basic string artifacts if any
+    String cleaned = raw.trim();
+    if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
+       cleaned = cleaned.substring(1, cleaned.length - 1).replaceAll(r'\"', '"');
+    }
+
+    try {
+      // 1. Try Standard JSON Decoding
+      final decoded = jsonDecode(cleaned);
+      if (decoded is List) {
+        for (var item in decoded) {
+          if (item is Map) {
+            String note = (item['note'] ?? item['title'] ?? '').toString();
+            String date = (item['date'] ?? item['time'] ?? '').toString();
+            
+            // If the note itself looks like trapped JSON, parse it recursively
+            if (note.contains('{') && (note.contains('note:') || note.contains('title:'))) {
+              _parseLeadNotes(note);
+            } else if (note.isNotEmpty) {
+              _addUniqueNote(note, date);
+            }
+          }
+        }
+        return;
+      }
+    } catch (_) {
+      // 2. Fallback to Regex for malformed unquoted strings
+      final regex = RegExp(r'\{(?:note|title|date|time):\s*(.*?)\s*,\s*(?:note|title|date|time):\s*(.*?)\s*\}');
+      final matches = regex.allMatches(cleaned);
+      
+      if (matches.isNotEmpty) {
+        for (var match in matches) {
+          String val1 = match.group(1)?.trim() ?? '';
+          String val2 = match.group(2)?.trim() ?? '';
+          String matchText = match.group(0)!;
+          
+          String note = '';
+          String date = '';
+          
+          if (matchText.contains('note:')) {
+             if (matchText.indexOf('note:') < matchText.indexOf('date:')) {
+               note = val1; date = val2;
+             } else {
+               note = val2; date = val1;
+             }
+          } else if (matchText.contains('title:')) {
+             if (matchText.indexOf('title:') < matchText.indexOf('time:')) {
+               note = val1; date = val2;
+             } else {
+               note = val2; date = val1;
+             }
+          }
+          
+          if (note.contains('{')) {
+            _parseLeadNotes(note);
+          } else if (note.isNotEmpty) {
+            _addUniqueNote(note, date);
+          }
+        }
+        return;
+      }
+    }
+
+    if (cleaned.isNotEmpty && cleaned != '[]') {
+      _addUniqueNote(cleaned, _currentLead.createdAt);
+    }
+  }
+
+  void _addUniqueNote(String note, String date) {
+    if (note.trim().isEmpty) return;
+    // Basic de-duplication
+    final alreadyExists = _noteHistory.any((n) => n['note'] == note && n['date'] == date);
+    if (!alreadyExists) {
+      _noteHistory.add({"note": note, "date": date});
+    }
+  }
+
+  String _formatNoteDate(String dateStr) {
+    try {
+      if (dateStr.isEmpty) return 'Recent';
+      final parts = dateStr.split(' ');
+      if (parts.length >= 2) {
+        // Handle YYYY-MM-DD HH:MM:SS
+        final dateObj = DateTime.tryParse(dateStr);
+        if (dateObj != null) {
+          final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          String hour = dateObj.hour > 12 ? (dateObj.hour - 12).toString() : dateObj.hour.toString();
+          if (hour == '0') hour = '12';
+          final ampm = dateObj.hour >= 12 ? 'PM' : 'AM';
+          final minute = dateObj.minute.toString().padLeft(2, '0');
+          return '${months[dateObj.month - 1]} ${dateObj.day}, $hour:$minute $ampm';
+        }
+      }
+      return dateStr; // Fallback to raw string
+    } catch (_) {
+      return dateStr;
+    }
+  }
+
+  bool _showAllNotes = false;
+
+  // ======================================================================
+  // NEW SITE VISIT FEATURES: PHOTO & LOCATION
+  // ======================================================================
+  Future<void> _pickAndUploadSiteVisitPhoto() async {
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 70,
+    );
+    
+    if (image != null) {
+      setState(() => _isLoading = true);
+      try {
+        final file = File(image.path);
+        bool success = false;
+        
+        final data = {
+          'site_visit_photo': await MultipartFile.fromFile(file.path),
+        };
+        
+        if (widget.isAdmin) {
+          success = await context.read<AdminLeadProvider>().updateLeadStage(
+            _currentLead.id, 
+            currentStage, 
+            extraData: data
+          );
+        } else {
+          final advisorCode = context.read<AuthProvider>().currentUser?.advisorCode ?? '';
+          success = await context.read<AdvisorLeadProvider>().updateLeadStage(
+            _currentLead.id, 
+            currentStage, 
+            advisorCode, 
+            extraData: data
+          );
+        }
+        
+        if (success) {
+          // Sync with updated provider state to get the new photo URL
+          final updatedLeads = context.read<AdvisorLeadProvider>().leads;
+          final freshLead = updatedLeads.firstWhere(
+            (l) => l.id == _currentLead.id,
+            orElse: () => _currentLead,
+          );
+          
+          setState(() {
+            _currentLead = freshLead;
+          });
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Photo uploaded successfully!'))
+            );
+          }
+        }
+      } catch (e) {
+        debugPrint('Upload Photo Error: $e');
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showEditLocationDialog() {
+    final ctrl = TextEditingController(text: meetingPoint);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Edit Meeting Point"),
+        content: TextField(
+          controller: ctrl,
+          decoration: const InputDecoration(hintText: "Enter meetup location"),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          ElevatedButton(
+            onPressed: () async {
+              final newLoc = ctrl.text.trim();
+              if (newLoc.isEmpty) return;
+              
+              Navigator.pop(ctx);
+              setState(() => meetingPoint = newLoc);
+              await _updateStageInDb(currentStage, note: "Updated location to: $newLoc");
+            },
+            child: const Text("Update"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _isLoading = false;
 
   // ======================================================================
   // VISUAL COMPONENTS
@@ -597,6 +785,52 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: _togglePriority,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: _isPriorityToggle ? Colors.amber.withOpacity(0.15) : Colors.grey.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                                border: _isPriorityToggle ? Border.all(color: Colors.amber.shade300) : Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    _isPriorityToggle ? Icons.star : Icons.star_border,
+                                    color: _isPriorityToggle ? Colors.amber : Colors.grey.shade600,
+                                    size: 14,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text("Priority", style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: _isPriorityToggle ? Colors.amber.shade700 : Colors.grey.shade700)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          GestureDetector(
+                            onTap: _showEditLeadSheet,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: primaryBlue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: primaryBlue.withOpacity(0.3)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.edit, color: primaryBlue, size: 14),
+                                  const SizedBox(width: 4),
+                                  Text("Edit Details", style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: primaryBlue)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -623,7 +857,7 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
           Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
-              initiallyExpanded: true,
+              initiallyExpanded: false,
               title: Text(
                 'PERSONAL INFORMATION',
                 style: GoogleFonts.montserrat(
@@ -719,6 +953,19 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
                               textColor,
                             ),
                           ),
+                          Expanded(
+                            child: _buildInfoItem(
+                              'Owns House',
+                              _currentLead.ownsHouse == '1' ? 'Yes' : 'No',
+                              textColor,
+                              icon: Icons.home,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -885,104 +1132,186 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
   }
 
   Widget _buildNoteHistorySection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryBlue = AppColors.getPrimaryBlue(context);
+    final notesToShow = _showAllNotes ? _noteHistory : _noteHistory.take(3).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              "Broker Notes",
-              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: primaryBlue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.sticky_note_2_outlined,
+                color: primaryBlue,
+                size: 16,
+              ),
             ),
-            const Icon(Icons.history, size: 16, color: Colors.grey),
+            const SizedBox(width: 10),
+            Text(
+              'Broker Notes',
+              style: GoogleFonts.montserrat(
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
+            ),
+            const Spacer(),
+            if (_noteHistory.length > 3)
+              TextButton(
+                onPressed: () => setState(() => _showAllNotes = !_showAllNotes),
+                child: Text(
+                  _showAllNotes ? 'Show Less' : 'View All (${_noteHistory.length})',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: primaryBlue,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
           ],
         ),
-        const SizedBox(height: 16),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _noteHistory.length > 3 ? 3 : _noteHistory.length,
-          itemBuilder: (context, index) {
-            final note = _noteHistory[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16.0, left: 8.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Column(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: Colors.grey,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      if (index !=
-                          (_noteHistory.length > 3
-                              ? 2
-                              : _noteHistory.length - 1))
-                        Container(
-                          width: 1,
-                          height: 30,
-                          color: Colors.grey.shade300,
-                        ),
-                    ],
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          note['note']!,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          note['date']!,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey.shade500,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
+        const SizedBox(height: 12),
+        if (_noteHistory.isEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            width: double.infinity,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.grey[850] : Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.notes, color: Colors.grey.shade400, size: 28),
+                const SizedBox(height: 8),
+                Text(
+                  'No notes yet. Add your first note below.',
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                ),
+              ],
+            ),
+          )
+        else
+          ...notesToShow.map((note) {
+            final index = _noteHistory.indexOf(note);
+            final noteColors = [Colors.blue, Colors.purple, Colors.teal, Colors.orange, Colors.green];
+            final accent = noteColors[index % noteColors.length];
+            
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey[850] : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey.shade100),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
+              child: ListTile(
+                contentPadding: const EdgeInsets.all(14),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: accent.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.edit_note, color: accent, size: 20),
+                ),
+                title: Text(
+                  note['note'] ?? '',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: isDark ? Colors.white : Colors.black87,
+                    height: 1.5,
+                  ),
+                ),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          _formatNoteDate(note['date'] ?? ''),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             );
-          },
-        ),
-        const SizedBox(height: 8),
+          }),
+        const SizedBox(height: 12),
         Container(
-          padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
+            color: isDark ? Colors.grey[850] : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: primaryBlue.withOpacity(0.3)),
+            boxShadow: [
+              BoxShadow(
+                color: primaryBlue.withOpacity(0.06),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: noteController,
-                  decoration: const InputDecoration(
-                    hintText: "Add a new note...",
+                  style: GoogleFonts.montserrat(fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'Write a note...',
+                    hintStyle: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 12,
+                    ),
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                   ),
                 ),
               ),
-              IconButton(
-                onPressed: _addNoteToHistory,
-                icon: const Icon(Icons.send, color: Colors.blue),
+              Container(
+                margin: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: primaryBlue,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: IconButton(
+                  onPressed: _addNoteToHistory,
+                  icon: const Icon(
+                    Icons.send_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  padding: const EdgeInsets.all(10),
+                  constraints: const BoxConstraints(),
+                ),
               ),
             ],
           ),
@@ -1040,11 +1369,7 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (visitDate != null) _buildReminderBanner(),
-        if (selectedProperty != null)
-          _buildClickablePropertyCard(selectedProperty!),
-        const SizedBox(height: 24),
-        _buildNoteHistorySection(),
-        const SizedBox(height: 24),
+        const SizedBox(height: 12),
         Text(
           "Update Status",
           style: GoogleFonts.montserrat(
@@ -1115,36 +1440,44 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
                     "Meetup Details",
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      visitDate ?? "Scheduled",
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.amber,
+                  if (!widget.isAdmin)
+                    GestureDetector(
+                      onTap: _showEditLocationDialog,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: primaryBlue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit, color: primaryBlue, size: 12),
+                            const SizedBox(width: 4),
+                            Text("Edit", style: TextStyle(color: primaryBlue, fontSize: 10, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 12),
               Row(
                 children: [
-                  const Icon(Icons.location_on, color: Colors.red, size: 20),
+                  const Icon(Icons.alarm, color: Colors.amber, size: 18),
+                  const SizedBox(width: 8),
+                  Text(visitDate ?? "Scheduled", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.location_on, color: Colors.red, size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       meetingPoint ?? "Meeting Point Unset",
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -1155,10 +1488,54 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        if (selectedProperty != null)
-          _buildClickablePropertyCard(selectedProperty!),
-        const SizedBox(height: 16),
-        _buildNoteHistorySection(),
+        
+        // Site Visit Photo Section
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade100),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Site Visit Photo", style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13)),
+                  if (!widget.isAdmin)
+                   IconButton(onPressed: _pickAndUploadSiteVisitPhoto, icon: Icon(Icons.add_a_photo, color: primaryBlue, size: 20)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (_currentLead.siteVisitPhoto.isNotEmpty)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(_currentLead.siteVisitPhoto, height: 180, width: double.infinity, fit: BoxFit.cover, errorBuilder: (c, e, s) => Container(height: 180, color: Colors.grey[200], child: const Icon(Icons.broken_image, color: Colors.grey))),
+                )
+              else if (!widget.isAdmin)
+                InkWell(
+                  onTap: _pickAndUploadSiteVisitPhoto,
+                  child: Container(
+                    height: 100,
+                    width: double.infinity,
+                    decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade200, style: BorderStyle.solid)),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.camera_alt, color: Colors.grey[400], size: 30),
+                        const SizedBox(height: 4),
+                        Text("Upload Photo with Client", style: TextStyle(color: Colors.grey[500], fontSize: 11)),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                const Text("No photo uploaded.", style: TextStyle(color: Colors.grey, fontSize: 12)),
+            ],
+          ),
+        ),
         const SizedBox(height: 24),
 
         _buildActionTile(
@@ -1344,7 +1721,7 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
   }
 
   Widget _buildAdvisorDocumentUploadFlow(Color primaryBlue) {
-    if (_isPendingVerification) return _buildPendingVerificationView();
+    if (currentStage == 'pending_verification' || _isPendingVerification) return _buildPendingVerificationView();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1387,13 +1764,16 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
           child: ElevatedButton.icon(
             onPressed: () async {
               if (_aadhaarController.text.isEmpty ||
-                  _panController.text.isEmpty)
+                  _panController.text.isEmpty) {
                 return;
+              }
               await _updateStageInDb(
-                'booking',
+                'pending_verification',
                 note: "Documents submitted. Pending Admin verification.",
               );
-              setState(() => _isPendingVerification = true);
+              if (mounted) {
+                setState(() => currentStage = 'pending_verification');
+              }
             },
             icon: const Icon(Icons.send, color: Colors.white),
             label: const Text(
@@ -1643,49 +2023,181 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
   }
 
   Widget _buildClickablePropertyCard(String propName) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(8),
-              image: const DecorationImage(
-                image: AssetImage("assets/images/logos.png"),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Interested Property",
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.grey,
-                    fontWeight: FontWeight.bold,
-                  ),
+    final primaryBlue = AppColors.getPrimaryBlue(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: _selectedUnit != null && _selectedProject != null
+          ? () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => AdvisorUnitDetailsScreen(
+                  unit: _selectedUnit!,
+                  project: _selectedProject!,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  propName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+              ),
+            )
+          : null,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              primaryBlue.withOpacity(0.08),
+              primaryBlue.withOpacity(0.03),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: primaryBlue.withOpacity(0.25)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: primaryBlue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'INTERESTED PROPERTY',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: primaryBlue,
+                      ),
+                    ),
                   ),
+                  const Spacer(),
+                  if (_selectedUnit != null)
+                    Icon(Icons.open_in_new, size: 14, color: primaryBlue),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                propName,
+                style: GoogleFonts.montserrat(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              if (_selectedUnit != null) ...[
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    _unitChip(
+                      Icons.apartment,
+                      _selectedUnit!.configuration,
+                      Colors.blue,
+                    ),
+                    _unitChip(
+                      Icons.layers,
+                      _selectedUnit!.floorNumber,
+                      Colors.purple,
+                    ),
+                    _unitChip(
+                      Icons.explore,
+                      _selectedUnit!.facing,
+                      Colors.teal,
+                    ),
+                    _unitChip(
+                      Icons.square_foot,
+                      '${_selectedUnit!.areaSqft.toStringAsFixed(0)} sqft',
+                      Colors.orange,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      () {
+                        final price = _selectedUnit!.calculatedPrice;
+                        return price >= 10000000
+                            ? '₹${(price / 10000000).toStringAsFixed(2)} Cr'
+                            : '₹${(price / 100000).toStringAsFixed(2)} L';
+                      }(),
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: primaryBlue,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            _selectedUnit!.availabilityStatus.toLowerCase() ==
+                                'available'
+                            ? Colors.green.shade50
+                            : Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color:
+                              _selectedUnit!.availabilityStatus.toLowerCase() ==
+                                  'available'
+                              ? Colors.green.shade200
+                              : Colors.red.shade200,
+                        ),
+                      ),
+                      child: Text(
+                        _selectedUnit!.availabilityStatus,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color:
+                              _selectedUnit!.availabilityStatus.toLowerCase() ==
+                                  'available'
+                              ? Colors.green.shade700
+                              : Colors.red.shade700,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _unitChip(IconData icon, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label.isEmpty ? 'N/A' : label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: color,
             ),
           ),
         ],
@@ -2018,9 +2530,11 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
               const SizedBox(height: 8),
               InkWell(
                 onTap: () => _showCascadedPropertySheet(
-                  (prop, unitId) => setSheetState(() {
+                  (prop, unitId, unit, project) => setSheetState(() {
                     localSelectedProp = prop;
                     selectedPropertyId = unitId;
+                    _selectedUnit = unit;
+                    _selectedProject = project;
                   }),
                 ),
                 child: Container(
@@ -2316,9 +2830,11 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
               const SizedBox(height: 24),
               InkWell(
                 onTap: () => _showCascadedPropertySheet(
-                  (prop, unitId) => setSheetState(() {
+                  (prop, unitId, unit, project) => setSheetState(() {
                     localProp = prop;
                     selectedPropertyId = unitId;
+                    _selectedUnit = unit;
+                    _selectedProject = project;
                   }),
                 ),
                 child: Container(
@@ -2865,6 +3381,573 @@ class _EditLeadFormState extends State<_EditLeadForm> {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ======================================================================
+// PROPERTY BROWSER SHEET (Full-featured search & filter property selector)
+// ======================================================================
+class _PropertyBrowserSheet extends StatefulWidget {
+  final Function(String, int, UnitModel, ProjectModel) onSelect;
+  const _PropertyBrowserSheet({required this.onSelect});
+  @override
+  State<_PropertyBrowserSheet> createState() => _PropertyBrowserSheetState();
+}
+
+class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
+  String _searchQuery = '';
+  String? _selectedConfig;
+  String? _selectedType;
+  String? _selectedCategory;
+  String? _selectedFacing;
+  RangeValues _priceRange = const RangeValues(0, 10000000);
+  bool _filtersExpanded = false;
+
+  final List<String> _configs = ['2BHK', '3BHK', '4BHK', 'Villa', 'Plot'];
+  final List<String> _types = ['Apartment', 'Plot', 'Villa'];
+  final List<String> _categories = ['Buy', 'Rent'];
+  final List<String> _facings = ['East', 'West', 'North', 'South'];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AdminProjectProvider>().fetchProjects();
+    });
+  }
+
+  bool _unitMatchesFilters(UnitModel u) {
+    if (_selectedConfig != null && u.configuration != _selectedConfig)
+      return false;
+    if (_selectedType != null && u.propertyType != _selectedType) return false;
+    if (_selectedCategory != null && u.saleCategory != _selectedCategory)
+      return false;
+    if (_selectedFacing != null && u.facing != _selectedFacing) return false;
+    if (u.calculatedPrice < _priceRange.start ||
+        u.calculatedPrice > _priceRange.end)
+      return false;
+    return true;
+  }
+
+  Widget _filterChip(String label, String? selected, VoidCallback onTap) {
+    final isSelected = selected == label;
+    final primaryBlue = AppColors.getPrimaryBlue(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? primaryBlue : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? primaryBlue : Colors.grey.shade300,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: isSelected ? Colors.white : Colors.black87,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterSection(
+    String title,
+    List<String> options,
+    String? selected,
+    Function(String) onSelect,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade500,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: options
+              .map((o) => _filterChip(o, selected, () => onSelect(o)))
+              .toList(),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final primaryBlue = AppColors.getPrimaryBlue(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Consumer<AdminProjectProvider>(
+      builder: (context, provider, _) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.92,
+          decoration: BoxDecoration(
+            color: isDark ? Colors.grey[900] : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: Column(
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Browse Properties',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: TextField(
+                        onChanged: (v) =>
+                            setState(() => _searchQuery = v.toLowerCase()),
+                        decoration: InputDecoration(
+                          hintText: 'Search projects or units...',
+                          hintStyle: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 13,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.search,
+                            color: Colors.grey.shade400,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    GestureDetector(
+                      onTap: () =>
+                          setState(() => _filtersExpanded = !_filtersExpanded),
+                      child: Row(
+                        children: [
+                          Icon(Icons.tune, size: 16, color: primaryBlue),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Filters',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: primaryBlue,
+                            ),
+                          ),
+                          const Spacer(),
+                          Icon(
+                            _filtersExpanded
+                                ? Icons.expand_less
+                                : Icons.expand_more,
+                            color: primaryBlue,
+                            size: 18,
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_filtersExpanded) ...[
+                      const SizedBox(height: 12),
+                      _buildFilterSection(
+                        'Configuration',
+                        _configs,
+                        _selectedConfig,
+                        (v) => setState(
+                          () =>
+                              _selectedConfig = _selectedConfig == v ? null : v,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildFilterSection(
+                        'Property Type',
+                        _types,
+                        _selectedType,
+                        (v) => setState(
+                          () => _selectedType = _selectedType == v ? null : v,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildFilterSection(
+                        'Sale Category',
+                        _categories,
+                        _selectedCategory,
+                        (v) => setState(
+                          () => _selectedCategory = _selectedCategory == v
+                              ? null
+                              : v,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildFilterSection(
+                        'Facing',
+                        _facings,
+                        _selectedFacing,
+                        (v) => setState(
+                          () =>
+                              _selectedFacing = _selectedFacing == v ? null : v,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Text(
+                            'Price:',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '\u20b9${(_priceRange.start / 100000).toStringAsFixed(0)}L - \u20b9${(_priceRange.end / 100000).toStringAsFixed(0)}L',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: primaryBlue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      RangeSlider(
+                        values: _priceRange,
+                        min: 0,
+                        max: 10000000,
+                        divisions: 100,
+                        activeColor: primaryBlue,
+                        onChanged: (v) => setState(() => _priceRange = v),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: provider.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: provider.projects.length,
+                        itemBuilder: (context, i) {
+                          final project = provider.projects[i];
+                          if (_searchQuery.isNotEmpty &&
+                              !project.projectName.toLowerCase().contains(
+                                _searchQuery,
+                              ) &&
+                              !project.city.toLowerCase().contains(
+                                _searchQuery,
+                              )) {
+                            return const SizedBox.shrink();
+                          }
+                          return _ProjectCard(
+                            project: project,
+                            primaryBlue: primaryBlue,
+                            isDark: isDark,
+                            searchQuery: _searchQuery,
+                            unitFilter: _unitMatchesFilters,
+                            onSelectUnit: (unit) {
+                              widget.onSelect(
+                                '${project.projectName} (${unit.towerName}-${unit.unitNumber})',
+                                unit.id,
+                                unit,
+                                project,
+                              );
+                              Navigator.pop(context);
+                            },
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ProjectCard extends StatefulWidget {
+  final ProjectModel project;
+  final Color primaryBlue;
+  final bool isDark;
+  final String searchQuery;
+  final bool Function(UnitModel) unitFilter;
+  final Function(UnitModel) onSelectUnit;
+
+  const _ProjectCard({
+    required this.project,
+    required this.primaryBlue,
+    required this.isDark,
+    required this.searchQuery,
+    required this.unitFilter,
+    required this.onSelectUnit,
+  });
+
+  @override
+  State<_ProjectCard> createState() => _ProjectCardState();
+}
+
+class _ProjectCardState extends State<_ProjectCard> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final project = widget.project;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: widget.isDark ? Colors.grey[850] : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          onExpansionChanged: (val) async {
+            setState(() => _expanded = val);
+            if (val)
+              await context.read<AdminProjectProvider>().fetchInventory(
+                project.id.toString(),
+              );
+          },
+          leading: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: widget.primaryBlue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(Icons.apartment, color: widget.primaryBlue, size: 22),
+          ),
+          title: Text(
+            project.projectName,
+            style: GoogleFonts.montserrat(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+          subtitle: Text(
+            '${project.city} \u2022 ${project.projectType}',
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+          ),
+          trailing: Icon(
+            _expanded ? Icons.expand_less : Icons.expand_more,
+            color: widget.primaryBlue,
+          ),
+          children: [
+            Consumer<AdminProjectProvider>(
+              builder: (context, provider, _) {
+                if (provider.isLoading)
+                  return const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  );
+                final units = provider.inventory.where((u) {
+                  if (u.projectId != project.id) return false;
+                  if (!widget.unitFilter(u)) return false;
+                  if (widget.searchQuery.isNotEmpty) {
+                    final q = widget.searchQuery;
+                    return u.unitNumber.toLowerCase().contains(q) ||
+                        u.towerName.toLowerCase().contains(q) ||
+                        u.configuration.toLowerCase().contains(q);
+                  }
+                  return true;
+                }).toList();
+
+                if (units.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Center(
+                      child: Text(
+                        'No matching units',
+                        style: TextStyle(
+                          color: Colors.grey.shade500,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: units.map((unit) {
+                    final isAvailable =
+                        unit.availabilityStatus.toLowerCase() == 'available';
+                    final price = unit.calculatedPrice;
+                    final priceStr = price >= 10000000
+                        ? '\u20b9${(price / 10000000).toStringAsFixed(2)} Cr'
+                        : '\u20b9${(price / 100000).toStringAsFixed(2)} L';
+
+                    return GestureDetector(
+                      onTap: isAvailable
+                          ? () => widget.onSelectUnit(unit)
+                          : null,
+                      child: Container(
+                        margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: isAvailable
+                              ? widget.primaryBlue.withOpacity(0.04)
+                              : Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isAvailable
+                                ? widget.primaryBlue.withOpacity(0.2)
+                                : Colors.grey.shade200,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        '${unit.towerName} - ${unit.unitNumber}',
+                                        style: GoogleFonts.montserrat(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                          color: isAvailable
+                                              ? null
+                                              : Colors.grey,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          unit.configuration,
+                                          style: TextStyle(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                            color: widget.primaryBlue,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Floor: ${unit.floorNumber} \u2022 ${unit.facing} \u2022 ${unit.areaSqft.toStringAsFixed(0)} sqft',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey.shade500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  priceStr,
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: isAvailable
+                                        ? widget.primaryBlue
+                                        : Colors.grey,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isAvailable
+                                        ? Colors.green.shade50
+                                        : Colors.red.shade50,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    unit.availabilityStatus,
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      color: isAvailable
+                                          ? Colors.green.shade700
+                                          : Colors.red.shade700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -64,7 +64,12 @@ class LeadModel {
       keyDecisionMaker: json['key_decision_maker'] == 1 || json['key_decision_maker'] == '1' || json['key_decision_maker'] == true,
 
       isPriority: json['is_priority'] == 1 || json['is_priority'] == true,
-      siteVisitPhoto: json['site_visit_photo']?.toString() ?? '',
+      siteVisitPhoto: (() {
+        String rawPhoto = json['site_visit_photo']?.toString() ?? '';
+        if (rawPhoto.isEmpty) return '';
+        if (rawPhoto.startsWith('http')) return rawPhoto;
+        return "https://workiees.com/${rawPhoto.startsWith('/') ? rawPhoto.substring(1) : rawPhoto}";
+      })(),
 
       stage: (json['stage'] == null || json['stage'].toString().isEmpty) ? 'suspecting' : json['stage'].toString(),
 

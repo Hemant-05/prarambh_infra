@@ -23,11 +23,16 @@ class DealManagementScreen extends StatefulWidget {
 class _DealManagementScreenState extends State<DealManagementScreen> {
   final _tokenAmountCtrl = TextEditingController();
   final _totalAmountCtrl = TextEditingController();
-  
+
   String _selectedPlan = 'Select Plan';
   String _tokenPaymentMode = 'online';
   String _tokenDate = 'Select Date';
   List<Map<String, dynamic>> _installments = [];
+
+  bool _isTokenAmountLocked = false;
+  bool _isTokenDateLocked = false;
+  bool _isPaymentPlanLocked = false;
+  bool _isTotalAmountLocked = false;
 
   final List<String> _plans = [
     'Select Plan',
@@ -48,24 +53,41 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
 
   void _initData() {
     _tokenAmountCtrl.text = widget.deal.tokenAmount ?? '';
-    _tokenPaymentMode = (widget.deal.tokenPaymentMode ?? 'online').toLowerCase();
-    if (_tokenPaymentMode != 'online' && _tokenPaymentMode != 'cash' && _tokenPaymentMode != 'cheque') {
-      _tokenPaymentMode = 'online'; // Fallback if API returned something totally invalid
+    if (_tokenAmountCtrl.text.isNotEmpty && _tokenAmountCtrl.text != '0') {
+      _isTokenAmountLocked = true;
     }
-    
+
+    _tokenPaymentMode = (widget.deal.tokenPaymentMode ?? 'online')
+        .toLowerCase();
+    if (_tokenPaymentMode != 'online' &&
+        _tokenPaymentMode != 'cash' &&
+        _tokenPaymentMode != 'cheque') {
+      _tokenPaymentMode = 'online'; 
+    }
+
     if (widget.deal.tokenDate != null && widget.deal.tokenDate!.isNotEmpty) {
       _tokenDate = widget.deal.tokenDate!;
+      _isTokenDateLocked = true;
     }
 
     _totalAmountCtrl.text = widget.deal.paymentAmount ?? '';
-    if (widget.deal.paymentPlan != null && _plans.contains(widget.deal.paymentPlan)) {
+    if (_totalAmountCtrl.text.isNotEmpty && _totalAmountCtrl.text != '0') {
+      _isTotalAmountLocked = true;
+    }
+
+    if (widget.deal.paymentPlan != null &&
+        _plans.contains(widget.deal.paymentPlan)) {
       _selectedPlan = widget.deal.paymentPlan!;
+      _isPaymentPlanLocked = true;
     } else if (widget.isReraApproved) {
       _selectedPlan = '100% Upfront (RERA Approved)';
+      _isPaymentPlanLocked = true;
     }
 
     if (widget.deal.installments.isNotEmpty) {
-      _installments = widget.deal.installments.map((e) => Map<String, dynamic>.from(e)).toList();
+      _installments = widget.deal.installments
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
     }
   }
 
@@ -74,21 +96,32 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
     if (total <= 0 || _selectedPlan == 'Select Plan') return;
 
     List<double> percentages = [];
-    if (_selectedPlan.contains('100%')) percentages = [1.0];
-    else if (_selectedPlan == '50% - 50%') percentages = [0.5, 0.5];
-    else if (_selectedPlan == '25% - 75%') percentages = [0.25, 0.75];
-    else if (_selectedPlan == '33% - 33% - 34%') percentages = [0.33, 0.33, 0.34];
-    else if (_selectedPlan == '25% - 25% - 50%') percentages = [0.25, 0.25, 0.50];
-    else if (_selectedPlan == '25% - 25% - 25% - 25%') percentages = [0.25, 0.25, 0.25, 0.25];
-    else if (_selectedPlan.contains('20%')) percentages = [0.2, 0.2, 0.2, 0.2, 0.2];
+    if (_selectedPlan.contains('100%')) {
+      percentages = [1.0];
+    } else if (_selectedPlan == '50% - 50%')
+      percentages = [0.5, 0.5];
+    else if (_selectedPlan == '25% - 75%')
+      percentages = [0.25, 0.75];
+    else if (_selectedPlan == '33% - 33% - 34%')
+      percentages = [0.33, 0.33, 0.34];
+    else if (_selectedPlan == '25% - 25% - 50%')
+      percentages = [0.25, 0.25, 0.50];
+    else if (_selectedPlan == '25% - 25% - 25% - 25%')
+      percentages = [0.25, 0.25, 0.25, 0.25];
+    else if (_selectedPlan.contains('20%'))
+      percentages = [0.2, 0.2, 0.2, 0.2, 0.2];
 
     setState(() {
-      _installments = percentages.map((p) => {
-        "amount": (total * p).toStringAsFixed(0),
-        "date": "Select Date",
-        "status": "Pending",
-        "percent": "${(p * 100).toInt()}%",
-      }).toList();
+      _installments = percentages
+          .map(
+            (p) => {
+              "amount": (total * p).toStringAsFixed(0),
+              "date": "Select Date",
+              "status": "Pending",
+              "percent": "${(p * 100).toInt()}%",
+            },
+          )
+          .toList();
     });
   }
 
@@ -100,10 +133,13 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
       lastDate: DateTime(2030),
     );
     if (picked != null) {
-      String formatted = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+      String formatted =
+          "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
       setState(() {
-        if (type == 'token') _tokenDate = formatted;
-        else if (type == 'installment' && index != null) _installments[index]['date'] = formatted;
+        if (type == 'token') {
+          _tokenDate = formatted;
+        } else if (type == 'installment' && index != null)
+          _installments[index]['date'] = formatted;
       });
     }
   }
@@ -115,11 +151,14 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
     final cardColor = isDark ? Colors.grey[900] : Colors.white;
 
     int paidCount = _installments.where((i) => i['status'] == 'Paid').length;
-    bool isFullyPaid = _installments.isNotEmpty && paidCount == _installments.length;
+    bool isFullyPaid =
+        _installments.isNotEmpty && paidCount == _installments.length;
     String overallStatus = isFullyPaid ? 'Complete' : 'Pending';
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF3F4F6),
+      backgroundColor: isDark
+          ? const Color(0xFF121212)
+          : const Color(0xFFF3F4F6),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -142,9 +181,17 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                 onPressed: provider.isSaving
                     ? null
                     : () async {
-                        if (_installments.isNotEmpty && _installments.any((i) => (i['date'] ?? 'Select Date') == 'Select Date')) {
+                        if (_installments.isNotEmpty &&
+                            _installments.any(
+                              (i) =>
+                                  (i['date'] ?? 'Select Date') == 'Select Date',
+                            )) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please select due dates for all installments.')),
+                            const SnackBar(
+                              content: Text(
+                                'Please select due dates for all installments.',
+                              ),
+                            ),
                           );
                           return;
                         }
@@ -157,13 +204,21 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                           status: overallStatus,
                           tokenAmount: _tokenAmountCtrl.text,
                           tokenPaymentMode: _tokenPaymentMode,
-                          tokenDate: _tokenDate != 'Select Date' ? _tokenDate : null,
-                          paymentPlan: _selectedPlan != 'Select Plan' ? _selectedPlan : null,
+                          tokenDate: _tokenDate != 'Select Date'
+                              ? _tokenDate
+                              : null,
+                          paymentPlan: _selectedPlan != 'Select Plan'
+                              ? _selectedPlan
+                              : null,
                         );
 
                         if (success && mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Deal Configuration Saved successfully!')),
+                            SnackBar(
+                              content: Text(
+                                'Deal Configuration Saved successfully!',
+                              ),
+                            ),
                           );
                           Navigator.pop(context);
                         }
@@ -171,7 +226,9 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryBlue,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: provider.isSaving
                     ? const CircularProgressIndicator(color: Colors.white)
@@ -198,9 +255,13 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isFullyPaid ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                color: isFullyPaid
+                    ? Colors.green.withOpacity(0.1)
+                    : Colors.orange.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: isFullyPaid ? Colors.green : Colors.orange),
+                border: Border.all(
+                  color: isFullyPaid ? Colors.green : Colors.orange,
+                ),
               ),
               child: Row(
                 children: [
@@ -222,7 +283,13 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
             const SizedBox(height: 24),
 
             // Token Details Card
-            Text("Token / Booking Information", style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold)),
+            Text(
+              "Token / Booking Information",
+              style: GoogleFonts.montserrat(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(16),
@@ -230,79 +297,156 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                 color: cardColor,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.grey.withOpacity(0.2)),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Text("Received Token Amount (₹)", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[600])),
-                   const SizedBox(height: 8),
-                   TextField(
-                     controller: _tokenAmountCtrl,
-                     keyboardType: TextInputType.number,
-                     decoration: InputDecoration(
-                       filled: true, fillColor: Colors.grey.withOpacity(0.05),
-                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
-                     ),
-                   ),
-                   const SizedBox(height: 16),
-                   
-                   Row(
-                     children: [
-                       Expanded(
-                         child: Column(
-                           crossAxisAlignment: CrossAxisAlignment.start,
-                           children: [
-                             Text("Payment Mode", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[600])),
-                             const SizedBox(height: 8),
-                             DropdownButtonFormField<String>(
-                               value: _tokenPaymentMode,
-                               decoration: InputDecoration(
-                                 filled: true, fillColor: Colors.grey.withOpacity(0.05),
-                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
-                               ),
-                               items: ['online', 'cash', 'cheque'].map((e) => DropdownMenuItem(value: e, child: Text(e.toUpperCase(), style: GoogleFonts.montserrat(fontSize: 13)))).toList(),
-                               onChanged: (val) => setState(() => _tokenPaymentMode = val!),
-                             ),
-                           ],
-                         )
-                       ),
-                       const SizedBox(width: 12),
-                       Expanded(
-                         child: Column(
-                           crossAxisAlignment: CrossAxisAlignment.start,
-                           children: [
-                             Text("Receiving Date", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[600])),
-                             const SizedBox(height: 8),
-                             GestureDetector(
-                               onTap: () => _pickDate('token', null),
-                               child: Container(
-                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                                 decoration: BoxDecoration(
-                                   color: Colors.grey.withOpacity(0.05),
-                                   borderRadius: BorderRadius.circular(8),
-                                   border: Border.all(color: Colors.grey.shade400)
-                                 ),
-                                 child: Row(
-                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                   children: [
-                                     Text(_tokenDate, style: TextStyle(fontSize: 13, color: _tokenDate == 'Select Date' ? Colors.red : Colors.grey[800], fontWeight: FontWeight.bold)),
-                                     Icon(Icons.calendar_month, size: 16, color: Colors.grey[600])
-                                   ],
-                                 ),
-                               ),
-                             ),
-                           ],
-                         ),
-                       ),
-                     ],
-                   )
+                  Text(
+                    "Received Token Amount (₹)",
+                    style: GoogleFonts.montserrat(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _tokenAmountCtrl,
+                    keyboardType: TextInputType.number,
+                    enabled: !_isTokenAmountLocked,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.grey.withOpacity(0.05),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Payment Mode",
+                              style: GoogleFonts.montserrat(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            DropdownButtonFormField<String>(
+                              initialValue: _tokenPaymentMode,
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: Colors.grey.withOpacity(0.05),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                  ),
+                                ),
+                              ),
+                              items: ['online', 'cash', 'cheque']
+                                  .map(
+                                    (e) => DropdownMenuItem(
+                                      value: e,
+                                      child: Text(
+                                        e.toUpperCase(),
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: _isTokenAmountLocked
+                                  ? null
+                                  : (val) => setState(() => _tokenPaymentMode = val!),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Receiving Date",
+                              style: GoogleFonts.montserrat(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            GestureDetector(
+                              onTap: _isTokenDateLocked ? null : () => _pickDate('token', null),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.grey.shade400,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      _tokenDate,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: _tokenDate == 'Select Date'
+                                            ? Colors.red
+                                            : Colors.grey[800],
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.calendar_month,
+                                      size: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
 
-            Text("Payment Configuration", style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold)),
+            Text(
+              "Payment Configuration",
+              style: GoogleFonts.montserrat(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(16),
@@ -310,42 +454,92 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                 color: cardColor,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: primaryBlue.withOpacity(0.5)),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Total Payable Amount (₹)", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[600])),
+                  Text(
+                    "Total Payable Amount (₹)",
+                    style: GoogleFonts.montserrat(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[600],
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _totalAmountCtrl,
                     keyboardType: TextInputType.number,
+                    enabled: !_isTotalAmountLocked,
                     onChanged: (v) => _generateInstallments(),
                     decoration: InputDecoration(
-                      filled: true, fillColor: Colors.grey.withOpacity(0.05),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+                      filled: true,
+                      fillColor: Colors.grey.withOpacity(0.05),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
 
-                  Text("Installment Plan", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[600])),
+                  Text(
+                    "Installment Plan",
+                    style: GoogleFonts.montserrat(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[600],
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
-                    value: _selectedPlan,
+                    initialValue: _selectedPlan,
                     decoration: InputDecoration(
-                      filled: true, fillColor: Colors.grey.withOpacity(0.05),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+                      filled: true,
+                      fillColor: Colors.grey.withOpacity(0.05),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
                     ),
-                    items: _plans.map((e) => DropdownMenuItem(value: e, child: Text(e, style: GoogleFonts.montserrat(fontSize: 13)))).toList(),
-                    onChanged: widget.isReraApproved ? null : (val) {
-                      setState(() => _selectedPlan = val!);
-                      _generateInstallments();
-                    },
+                    items: _plans
+                        .map(
+                          (e) => DropdownMenuItem(
+                            value: e,
+                            child: Text(
+                              e,
+                              style: GoogleFonts.montserrat(fontSize: 13),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (widget.isReraApproved || _isPaymentPlanLocked)
+                        ? null
+                        : (val) {
+                            setState(() => _selectedPlan = val!);
+                            _generateInstallments();
+                          },
                   ),
-                  if (widget.isReraApproved)
+                  if (widget.isReraApproved || _isPaymentPlanLocked)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
-                      child: Text("Locked to 100% Upfront due to RERA compliance.", style: TextStyle(fontSize: 10, color: Colors.orange.shade800, fontWeight: FontWeight.bold)),
+                      child: Text(
+                        widget.isReraApproved 
+                            ? "Locked to 100% Upfront due to RERA compliance."
+                            : "Payment Plan is locked after initial configuration.",
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.orange.shade800,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                 ],
               ),
@@ -357,16 +551,33 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Installment Tracker", style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold)),
+                  Text(
+                    "Installment Tracker",
+                    style: GoogleFonts.montserrat(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: isFullyPaid ? Colors.green.shade50 : Colors.blue.shade50,
+                      color: isFullyPaid
+                          ? Colors.green.shade50
+                          : Colors.blue.shade50,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      isFullyPaid ? "ALL PAID" : "$paidCount / ${_installments.length} PAID",
-                      style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: isFullyPaid ? Colors.green : primaryBlue),
+                      isFullyPaid
+                          ? "ALL PAID"
+                          : "$paidCount / ${_installments.length} PAID",
+                      style: GoogleFonts.montserrat(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: isFullyPaid ? Colors.green : primaryBlue,
+                      ),
                     ),
                   ),
                 ],
@@ -384,36 +595,72 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                   decoration: BoxDecoration(
                     color: isPaid ? Colors.green.withOpacity(0.05) : cardColor,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: isPaid ? Colors.green : Colors.grey.shade300),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+                    border: Border.all(
+                      color: isPaid ? Colors.green : Colors.grey.shade300,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 10,
+                      ),
+                    ],
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(color: isPaid ? Colors.green : primaryBlue, shape: BoxShape.circle),
-                        child: Text(inst['percent'] ?? '', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                        decoration: BoxDecoration(
+                          color: isPaid ? Colors.green : primaryBlue,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          inst['percent'] ?? '',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text("₹ ${inst['amount'] ?? '0'}", style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: isPaid ? Colors.green : Colors.black87)),
+                            Text(
+                              "₹ ${inst['amount'] ?? '0'}",
+                              style: GoogleFonts.montserrat(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: isPaid ? Colors.green : Colors.black87,
+                              ),
+                            ),
                             const SizedBox(height: 4),
                             GestureDetector(
-                              onTap: isPaid ? null : () => _pickDate('installment', idx),
+                              onTap: isPaid
+                                  ? null
+                                  : () => _pickDate('installment', idx),
                               child: Row(
                                 children: [
-                                  Icon(Icons.calendar_month, size: 14, color: Colors.grey[600]),
+                                  Icon(
+                                    Icons.calendar_month,
+                                    size: 14,
+                                    color: Colors.grey[600],
+                                  ),
                                   const SizedBox(width: 4),
                                   Text(
                                     inst['date'] ?? 'Select Date',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: (inst['date'] ?? 'Select Date') == 'Select Date' ? Colors.red : Colors.grey[600],
+                                      color:
+                                          (inst['date'] ?? 'Select Date') ==
+                                              'Select Date'
+                                          ? Colors.red
+                                          : Colors.grey[600],
                                       fontWeight: FontWeight.bold,
-                                      decoration: isPaid ? null : TextDecoration.underline,
+                                      decoration: isPaid
+                                          ? null
+                                          : TextDecoration.underline,
                                     ),
                                   ),
                                 ],
@@ -424,14 +671,22 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                       ),
                       Column(
                         children: [
-                          Text(isPaid ? "Paid" : "Pending", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isPaid ? Colors.green : Colors.orange)),
+                          Text(
+                            isPaid ? "Paid" : "Pending",
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: isPaid ? Colors.green : Colors.orange,
+                            ),
+                          ),
                           Switch(
                             value: isPaid,
                             activeThumbColor: Colors.white,
-                            activeColor: Colors.green,
                             onChanged: (val) {
                               setState(() {
-                                _installments[idx]['status'] = val ? 'Paid' : 'Pending';
+                                _installments[idx]['status'] = val
+                                    ? 'Paid'
+                                    : 'Pending';
                               });
                             },
                           ),
