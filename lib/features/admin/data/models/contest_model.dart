@@ -3,11 +3,12 @@ import 'dart:convert';
 class ContestModel {
   final String id;
   final String title;
-  final String status; // 'Active', 'Inactive', etc.
+  final String status;
   final String rewardText;
   final String targetText;
   final String dateRange;
   final String imageUrl;
+  final String? startDate;
   final String? endDate;
   final List<TopPerformer>? topPerformers;
   final List<String>? rules;
@@ -16,14 +17,54 @@ class ContestModel {
   ContestModel({
     required this.id, required this.title, required this.status,
     required this.rewardText, required this.targetText, required this.dateRange,
-    required this.imageUrl, this.endDate, this.topPerformers, this.rules,
+    required this.imageUrl, this.startDate, this.endDate, this.topPerformers, this.rules,
     required this.participants,
   });
 
-  // Calculate days left dynamically based on end_date
+  // Accurate Time-Based Getters
+  static DateTime? _smartParse(String? dateStr) {
+    if (dateStr == null) return null;
+    // Try standard YYYY-MM-DD
+    DateTime? parsed = DateTime.tryParse(dateStr);
+    if (parsed != null) return parsed;
+
+    // Try DD-MM-YYYY
+    try {
+      final parts = dateStr.split('-');
+      if (parts.length == 3) {
+        if (parts[0].length == 4) return DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+        return DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  bool get isUpcoming {
+    final start = _smartParse(startDate);
+    if (start == null) return false;
+    return DateTime.now().isBefore(start);
+  }
+
+  bool get isLive {
+    final now = DateTime.now();
+    final start = _smartParse(startDate);
+    final end = _smartParse(endDate);
+    if (start == null || end == null) return false;
+    // End of day buffer (23:59:59)
+    final endOfDay = end.add(const Duration(hours: 23, minutes: 59, seconds: 59));
+    return now.isAfter(start) && now.isBefore(endOfDay);
+  }
+
+  bool get isEnded {
+    final end = _smartParse(endDate);
+    if (end == null) return false;
+    // End of day buffer (23:59:59)
+    final endOfDay = end.add(const Duration(hours: 23, minutes: 59, seconds: 59));
+    return DateTime.now().isAfter(endOfDay);
+  }
+
   int get daysLeft {
-    if (endDate == null) return 0;
-    final end = DateTime.tryParse(endDate!);
+    final end = _smartParse(endDate);
     if (end == null) return 0;
     final diff = end.difference(DateTime.now()).inDays;
     return diff > 0 ? diff : 0;
@@ -38,7 +79,7 @@ class ContestModel {
         ? rawUrl
         : (rawUrl.isNotEmpty ? baseUrl + (rawUrl.startsWith('/') ? rawUrl.substring(1) : rawUrl) : '');
 
-    // Safely parse rules (Backend sometimes double-encodes arrays)
+    // Safely parse rules
     List<String> parsedRules = [];
     if (json['rules'] is List) {
       for (var rule in json['rules']) {
@@ -61,9 +102,10 @@ class ContestModel {
       title: json['title'] ?? '',
       status: json['status'] ?? 'Active',
       rewardText: json['reward_name'] ?? json['reward_text'] ?? '',
-      targetText: 'Achieve Target', // Backend currently doesn't send a target text
+      targetText: 'Achieve Target',
       dateRange: "${json['start_date'] ?? ''} - ${json['end_date'] ?? ''}",
       imageUrl: finalImageUrl,
+      startDate: json['start_date'],
       endDate: json['end_date'],
       rules: parsedRules,
       participants: (json['participants'] as List<dynamic>?)?.map((e) => ContestParticipant.fromJson(e)).toList() ?? [],

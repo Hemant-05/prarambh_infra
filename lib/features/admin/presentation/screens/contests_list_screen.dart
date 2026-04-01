@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
+
 import '../providers/admin_contest_provider.dart';
 import 'create_contest_screen.dart';
 import 'contest_details_screen.dart';
@@ -15,8 +16,6 @@ class ContestsListScreen extends StatefulWidget {
 }
 
 class _ContestsListScreenState extends State<ContestsListScreen> {
-  int _selectedFilterIndex = 0;
-  final List<String> _filters = ['All', 'Ending Soon', 'High Reward', 'Newest'];
 
   @override
   void initState() {
@@ -48,12 +47,6 @@ class _ContestsListScreenState extends State<ContestsListScreen> {
             fontSize: 18,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.filter_list, color: isDark ? Colors.white : Colors.black87),
-            onPressed: () {},
-          ),
-        ],
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
@@ -77,17 +70,6 @@ class _ContestsListScreenState extends State<ContestsListScreen> {
       ),
       body: Column(
         children: [
-          // Filter Chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            child: Row(
-              children: List.generate(_filters.length, (index) {
-                return _buildFilterChip(_filters[index], _selectedFilterIndex == index, primaryBlue, index);
-              }),
-            ),
-          ),
-
           Expanded(
             child: provider.isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -98,7 +80,20 @@ class _ContestsListScreenState extends State<ContestsListScreen> {
               itemCount: provider.contests.length,
               itemBuilder: (context, index) {
                 final contest = provider.contests[index];
-                final isLive = contest.status.toUpperCase() == 'LIVE';
+                
+                // Functional Status Logic
+                String statusText = 'INACTIVE';
+                Color statusColor = Colors.grey;
+                if (contest.isLive) {
+                  statusText = 'LIVE';
+                  statusColor = Colors.deepOrange;
+                } else if (contest.isUpcoming) {
+                  statusText = 'UPCOMING';
+                  statusColor = Colors.blue;
+                } else if (contest.isEnded) {
+                  statusText = 'ENDED';
+                  statusColor = Colors.red;
+                }
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 16),
@@ -118,11 +113,11 @@ class _ContestsListScreenState extends State<ContestsListScreen> {
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.circle, size: 8, color: isLive ? Colors.deepOrange : Colors.grey),
+                                Icon(Icons.circle, size: 8, color: statusColor),
                                 const SizedBox(width: 6),
                                 Text(
-                                  '${contest.status.toUpperCase()}  •  ${contest.rewardText}',
-                                  style: GoogleFonts.montserrat(fontSize: 11, fontWeight: FontWeight.bold, color: isLive ? Colors.deepOrange : Colors.grey[600]),
+                                  '$statusText  •  ${contest.rewardText}',
+                                  style: GoogleFonts.montserrat(fontSize: 11, fontWeight: FontWeight.bold, color: statusColor),
                                 ),
                               ],
                             ),
@@ -139,8 +134,8 @@ class _ContestsListScreenState extends State<ContestsListScreen> {
                             ElevatedButton(
                               onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ContestDetailsScreen(contest: contest))),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: isLive ? primaryBlue : Colors.grey[200],
-                                foregroundColor: isLive ? Colors.white : Colors.grey[600],
+                                backgroundColor: !contest.isEnded ? primaryBlue : Colors.grey[200],
+                                foregroundColor: !contest.isEnded ? Colors.white : Colors.grey[600],
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -148,7 +143,7 @@ class _ContestsListScreenState extends State<ContestsListScreen> {
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                               child: Text(
-                                isLive ? 'View Details' : 'Coming Soon',
+                                contest.isEnded ? 'Contest Ended' : 'View Details',
                                 style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -156,7 +151,6 @@ class _ContestsListScreenState extends State<ContestsListScreen> {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      // Reward Image properly loaded from network
                       Container(
                         width: 100,
                         height: 120,
@@ -183,29 +177,6 @@ class _ContestsListScreenState extends State<ContestsListScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildFilterChip(String label, bool isActive, Color primaryBlue, int index) {
-    return GestureDetector(
-      onTap: () => setState(() => _selectedFilterIndex = index),
-      child: Container(
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF1E293B) : Colors.white,
-          border: Border.all(color: isActive ? const Color(0xFF1E293B) : Colors.grey.withOpacity(0.3)),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: GoogleFonts.montserrat(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: isActive ? Colors.white : Colors.blueGrey[700],
-          ),
-        ),
       ),
     );
   }

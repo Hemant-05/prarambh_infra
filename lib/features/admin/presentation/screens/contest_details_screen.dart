@@ -24,19 +24,30 @@ class _ContestDetailsScreenState extends State<ContestDetailsScreen> {
   }
 
   void _initializeTimer() {
-    // If contest is live and has an end date, start ticking
-    if (widget.contest.status.toUpperCase() == 'LIVE' && widget.contest.endDate != null) {
+    if (widget.contest.isUpcoming && widget.contest.startDate != null) {
+      _targetDate = DateTime.tryParse(widget.contest.startDate!);
+    } else if (widget.contest.isLive && widget.contest.endDate != null) {
       _targetDate = DateTime.tryParse(widget.contest.endDate!);
-      if (_targetDate != null) {
-        _updateTimer();
-        _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateTimer());
-      }
+    }
+
+    if (_targetDate != null) {
+      _updateTimer();
+      _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateTimer());
     }
   }
 
   void _updateTimer() {
     if (_targetDate == null || !mounted) return;
     final now = DateTime.now();
+    
+    // If the target date was the start date and we've reached it, 
+    // we should re-initialize to track the end date.
+    if (widget.contest.isUpcoming && now.isAfter(_targetDate!)) {
+      _timer?.cancel();
+      _initializeTimer();
+      return;
+    }
+
     if (_targetDate!.isAfter(now)) {
       setState(() {
         _timeLeft = _targetDate!.difference(now);
@@ -62,7 +73,15 @@ class _ContestDetailsScreenState extends State<ContestDetailsScreen> {
     final primaryBlue = AppColors.getPrimaryBlue(context);
     final cardColor = AppColors.getCardColor(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bool isLive = widget.contest.status.toUpperCase() == 'LIVE';
+    
+    // Functional Status Logic
+    final bool isLive = widget.contest.isLive;
+    final bool isUpcoming = widget.contest.isUpcoming;
+    final bool isEnded = widget.contest.isEnded;
+
+    String timerLabel = 'TIME REMAINING';
+    if (isUpcoming) timerLabel = 'STARTS IN';
+    if (isEnded) timerLabel = 'CONTEST ENDED';
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
@@ -134,11 +153,11 @@ class _ContestDetailsScreenState extends State<ContestDetailsScreen> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.circle, size: 10, color: isLive ? Colors.deepOrange : Colors.grey),
+                            Icon(Icons.circle, size: 10, color: isLive ? Colors.deepOrange : (isUpcoming ? Colors.blue : Colors.grey)),
                             const SizedBox(width: 8),
                             Text(
-                              isLive ? 'LIVE NOW' : widget.contest.status.toUpperCase(),
-                              style: GoogleFonts.montserrat(color: isLive ? Colors.deepOrange : Colors.grey, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 1),
+                              isLive ? 'LIVE NOW' : (isUpcoming ? 'UPCOMING' : (isEnded ? 'ENDED' : widget.contest.status.toUpperCase())),
+                              style: GoogleFonts.montserrat(color: isLive ? Colors.deepOrange : (isUpcoming ? Colors.blue : Colors.grey), fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 1),
                             ),
                           ],
                         ),
@@ -182,7 +201,7 @@ class _ContestDetailsScreenState extends State<ContestDetailsScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'TIME REMAINING',
+                        timerLabel,
                         style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13, color: isDark ? Colors.white : Colors.black87),
                       ),
                       Text(
