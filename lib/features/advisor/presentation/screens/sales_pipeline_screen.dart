@@ -21,7 +21,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authProvider = context.read<AuthProvider>();
@@ -155,6 +155,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
               Tab(text: 'Site Visit'),
               Tab(text: 'Booking'),
               Tab(text: 'Closed'),
+              Tab(text: 'Completed'),
             ],
           ),
         ),
@@ -216,6 +217,14 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                   primaryBlue,
                   isDark,
                 ),
+                _buildStageList(
+                  provider.leads
+                      .where((l) => l.stage.toLowerCase() == 'completed')
+                      .toList(),
+                  cardColor,
+                  primaryBlue,
+                  isDark,
+                ),
               ],
             ),
     );
@@ -253,20 +262,26 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
     // Stage-specific styling
     final isBooking = lead.stage.toLowerCase() == 'booking';
     final isClosed = lead.stage.toLowerCase() == 'closed';
+    final isCompleted = lead.stage.toLowerCase() == 'completed';
 
     // Choose accent and background based on stage
-    Color accentColor = isBooking
-        ? Colors.orange
-        : (isClosed ? Colors.red : primaryBlue);
-    Color? backgroundColor = isBooking
-        ? (isDark
-              ? Colors.orange.withOpacity(0.05)
-              : Colors.orange.withOpacity(0.02))
-        : (isClosed
-              ? (isDark
-                    ? Colors.red.withOpacity(0.05)
-                    : Colors.red.withOpacity(0.02))
-              : cardColor);
+    Color accentColor = isCompleted
+        ? Colors.green
+        : (isBooking ? Colors.orange : (isClosed ? Colors.red : primaryBlue));
+        
+    Color? backgroundColor = isCompleted
+        ? (isDark 
+            ? Colors.green.withOpacity(0.05) 
+            : Colors.green.withOpacity(0.02))
+        : (isBooking
+            ? (isDark
+                  ? Colors.orange.withOpacity(0.05)
+                  : Colors.orange.withOpacity(0.02))
+            : (isClosed
+                  ? (isDark
+                        ? Colors.red.withOpacity(0.05)
+                        : Colors.red.withOpacity(0.02))
+                  : cardColor));
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -354,6 +369,12 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                       const Icon(
                         Icons.do_disturb_alt_rounded,
                         color: Colors.red,
+                        size: 18,
+                      ),
+                    if (isCompleted)
+                      const Icon(
+                        Icons.verified_rounded,
+                        color: Colors.green,
                         size: 18,
                       ),
                   ],

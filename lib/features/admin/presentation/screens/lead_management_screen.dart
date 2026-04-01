@@ -23,7 +23,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AdminLeadProvider>().fetchUnassignedLeads();
@@ -81,6 +81,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
               Tab(text: 'Site Visit'),
               Tab(text: 'Booking'),
               Tab(text: 'Closed'),
+              Tab(text: 'Completed'),
             ],
           ),
         ),
@@ -182,6 +183,14 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                 _buildStageList(
                   provider.leads
                       .where((l) => l.stage.toLowerCase() == 'closed')
+                      .toList(),
+                  cardColor,
+                  primaryBlue,
+                  isDark,
+                ),
+                _buildStageList(
+                  provider.leads
+                      .where((l) => l.stage.toLowerCase() == 'completed')
                       .toList(),
                   cardColor,
                   primaryBlue,
@@ -336,15 +345,24 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
     Color primaryBlue,
     bool isDark,
   ) {
+    final isCompleted = lead.stage.toLowerCase() == 'completed';
+    final accentColor = isCompleted ? Colors.green : primaryBlue;
     final textColor = isDark ? Colors.white : Colors.black87;
+    final backgroundColor = isCompleted
+        ? (isDark 
+            ? Colors.green.withOpacity(0.05) 
+            : Colors.green.withOpacity(0.02))
+        : cardColor;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: cardColor,
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        border: Border.all(
+          color: isCompleted ? Colors.green.withOpacity(0.3) : Colors.grey.withOpacity(0.2),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),
@@ -360,8 +378,11 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
             children: [
               CircleAvatar(
                 radius: 22,
-                backgroundColor: Colors.blue[50],
-                child: Icon(Icons.person_outline, color: primaryBlue),
+                backgroundColor: isCompleted ? Colors.green[50] : Colors.blue[50],
+                child: Icon(
+                  isCompleted ? Icons.verified_rounded : Icons.person_outline, 
+                  color: isCompleted ? Colors.green : primaryBlue
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -387,15 +408,15 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.blue[50],
+                            color: isCompleted ? Colors.green[50] : Colors.blue[50],
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            'SOURCE: ${lead.source.toUpperCase()}',
+                            isCompleted ? 'COMPLETED' : 'SOURCE: ${lead.source.toUpperCase()}',
                             style: GoogleFonts.montserrat(
                               fontSize: 8,
                               fontWeight: FontWeight.bold,
-                              color: primaryBlue,
+                              color: accentColor,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -407,7 +428,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                       lead.clientNumber,
                       style: GoogleFonts.montserrat(
                         fontSize: 13,
-                        color: primaryBlue,
+                        color: accentColor,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

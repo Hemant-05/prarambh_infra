@@ -10,6 +10,7 @@ import '../../data/models/unit_model.dart';
 import '../../data/models/project_model.dart';
 import '../providers/admin_deal_provider.dart';
 import '../providers/admin_project_provider.dart';
+import '../providers/admin_lead_provider.dart';
 
 class DealManagementScreen extends StatefulWidget {
   final DealModel deal;
@@ -273,10 +274,18 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                         );
 
                         if (success && mounted) {
+                          // AUTOMATION: Update Lead status to 'completed'
+                          if (mounted) {
+                            context.read<AdminLeadProvider>().updateLeadStage(
+                              widget.deal.leadId.toString(),
+                              'completed',
+                            );
+                          }
+
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
+                            const SnackBar(
                               content: Text(
-                                'Deal Configuration Saved successfully!',
+                                'Deal Configuration Saved & Lead Completed!',
                               ),
                             ),
                           );

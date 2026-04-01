@@ -24,6 +24,7 @@ import 'package:prarambh_infra/features/admin/presentation/screens/lead_manageme
 import 'package:prarambh_infra/features/admin/presentation/screens/leaderboard_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/admin_recruitment_dashboard_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/team_management_screen.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_achievement_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_attendance_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_contest_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_dashboard_provider.dart';
@@ -91,6 +92,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => di.sl<AdvisorProjectProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdvisorTeamProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdvisorProfileProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdvisorAchievementProvider>()),
       ],
       child: const PraarambhApp(),
     ),

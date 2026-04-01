@@ -6,9 +6,9 @@ class AdminLeaderboardRepository {
 
   AdminLeaderboardRepository({required this.apiClient});
 
-  Future<List<AdvisorRankModel>> getLeaderboard() async {
+  Future<List<AdvisorRankModel>> getLeaderboard({int? month, int? year}) async {
     try {
-      final response = await apiClient.getLeaderboard();
+      final response = await apiClient.getLeaderboard(month, year);
       if (response['status'] == true || response['status'] == 'success') {
         final List data = response['data'] ?? [];
         return data.map((json) => AdvisorRankModel.fromJson(json)).toList();

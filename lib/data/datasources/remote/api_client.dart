@@ -426,7 +426,13 @@ abstract class ApiClient {
   // 12. Performance & Leaderboard
   // ==========================================
   @GET("/leaderboard")
-  Future<dynamic> getLeaderboard();
+  Future<dynamic> getLeaderboard(
+    @Query("month") int? month,
+    @Query("year") int? year,
+  );
+
+  @GET("/achievements/advisor/{advisorCode}")
+  Future<dynamic> getAdvisorAchievements(@Path("advisorCode") String advisorCode);
 
   @POST("/evaluate-level/{id}")
   Future<dynamic> evaluateLevel(@Path("id") String id);

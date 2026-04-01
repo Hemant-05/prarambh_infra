@@ -19,6 +19,7 @@ import 'package:prarambh_infra/features/admin/presentation/providers/admin_proje
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_recruitment_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_team_provider.dart';
+import 'package:prarambh_infra/features/advisor/data/repositories/advisor_achievement_repository.dart';
 import 'package:prarambh_infra/features/advisor/data/repositories/advisor_attendance_repository.dart';
 import 'package:prarambh_infra/features/advisor/data/repositories/advisor_contest_repository.dart';
 import 'package:prarambh_infra/features/advisor/data/repositories/advisor_document_repository.dart';
@@ -27,6 +28,7 @@ import 'package:prarambh_infra/features/advisor/data/repositories/advisor_profil
 import 'package:prarambh_infra/features/advisor/data/repositories/advisor_project_repository.dart';
 import 'package:prarambh_infra/features/advisor/data/repositories/advisor_repository.dart';
 import 'package:prarambh_infra/features/advisor/data/repositories/advisor_team_repository.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_achievement_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_attendance_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_contest_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_dashboard_provider.dart';
@@ -127,6 +129,9 @@ Future<void> init() async {
 
   sl.registerFactory(() => AdvisorProfileProvider(repository: sl()));
   sl.registerLazySingleton(() => AdvisorProfileRepository(apiClient: sl()));
+
+  sl.registerFactory(() => AdvisorAchievementProvider(repository: sl()));
+  sl.registerLazySingleton(() => AdvisorAchievementRepository(apiClient: sl()));
   // ---------------------------------------------------------------------------
   // 3. Core Network
   // ---------------------------------------------------------------------------

@@ -13,6 +13,7 @@ import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_pro
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_schedule_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/document_center_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/sales_pipeline_screen.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_achievement_screen.dart';
 
 class AdvisorDashboardScreen extends StatefulWidget {
   const AdvisorDashboardScreen({super.key});
@@ -592,7 +593,9 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           }),
           _drawerItem(Icons.account_balance_wallet_outlined, 'My Income', () {}),
           _drawerItem(Icons.event_available_outlined, 'Upcoming Installment', () {}),
-          _drawerItem(Icons.military_tech_outlined, 'Achievements', () {}),
+          _drawerItem(Icons.military_tech_outlined, 'Achievements', () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const AdvisorAchievementScreen()));
+          }),
           _drawerItem(Icons.calculate_outlined, 'Calculator - INSTALLMENT', () { Navigator.pushNamed(context, '/installment_calculator'); }),
           _drawerItem(Icons.badge_outlined, 'Meeting & Attendance', () {
             Navigator.push(context, MaterialPageRoute(builder: (context) => const AdvisorScheduleScreen()));
