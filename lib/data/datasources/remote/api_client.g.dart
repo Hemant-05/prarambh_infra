@@ -2112,9 +2112,10 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> getLeaderboard() async {
+  Future<dynamic> getLeaderboard(int? month, int? year) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'month': month, r'year': year};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<dynamic>(
