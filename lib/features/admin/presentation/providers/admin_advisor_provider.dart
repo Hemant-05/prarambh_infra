@@ -108,4 +108,17 @@ class AdminAdvisorProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+  Future<AdvisorApplicationModel?> getSingleAdvisor(String id) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      return await repository.getSingleAdvisor(id);
+    } catch (e) {
+      debugPrint('Get Single Advisor Error: $e');
+      return null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

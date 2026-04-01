@@ -2,9 +2,15 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:dotted_border/dotted_border.dart';
 import 'package:prarambh_infra/core/constant/cons_strings.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_advisor_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_deal_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_lead_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/deal_management_screen.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/review_application_screen.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/lead_details_screen.dart';
+import 'package:prarambh_infra/features/auth/presentation/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -19,6 +25,8 @@ class AdminHomeView extends StatelessWidget {
     final textColor = isDark ? Colors.white : Colors.black87;
 
     final adminState = context.watch<AdminProvider>();
+    final authState = context.watch<AuthProvider>();
+    final currentUser = authState.currentUser;
 
     if (adminState.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -31,8 +39,7 @@ class AdminHomeView extends StatelessWidget {
     final data = adminState.dashboardData;
     if (data == null) return const Center(child: Text('No data available'));
 
-    final double monthlyProgressDec = (data.monthlyProgressPercent / 100.0)
-        .clamp(0.0, 1.0);
+    final double monthlyProgressDec = (data.monthlyProgressPercent / 100.0).clamp(0.0, 1.0);
 
     final int maxLeads = [
       data.suspectingLeads,
@@ -47,426 +54,352 @@ class AdminHomeView extends StatelessWidget {
       return leads / maxLeads;
     }
 
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top Overlapping Header
-          SizedBox(
-            height: 140,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // Curved Blue Background
-                Container(
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: primaryBlue,
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(20),
-                      bottomRight: Radius.circular(20),
-                    ),
-                  ),
-                ),
-                // Overlapping Profile Card
-                Positioned(
-                  top: 20,
-                  left: 20,
-                  right: 20,
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
+    return RefreshIndicator(
+      onRefresh: () => adminState.fetchDashboardData(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top Overlapping Header
+            SizedBox(
+              height: 140,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    height: 80,
                     decoration: BoxDecoration(
-                      color: cardColor,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: primaryBlue, width: 1.5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            CircleAvatar(
-                              radius: 30,
-                              backgroundImage: const AssetImage(logo),
-                              backgroundColor: Colors.grey[200],
-                            ),
-                            Positioned(
-                              bottom: -8,
-                              left: 0,
-                              right: 0,
-                              child: Center(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    'ACTIVE',
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 8,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Amit Jadhav',
-                              style: GoogleFonts.montserrat(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: textColor,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: primaryBlue.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                'ADMIN',
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 10,
-                                  color: primaryBlue,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Gradient Units Sold Card
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF3F51B5),
-                        Color(0xFF5C6BC0),
-                      ], // Matches the purple/blue gradient
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF3F51B5).withOpacity(0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
+                      color: primaryBlue,
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(20),
+                        bottomRight: Radius.circular(20),
                       ),
-                    ],
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Positioned(
+                    top: 20,
+                    left: 20,
+                    right: 20,
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: cardColor,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: primaryBlue, width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Row(
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          Stack(
+                            clipBehavior: Clip.none,
                             children: [
-                              Text(
-                                'Units Sold',
-                                style: GoogleFonts.montserrat(
-                                  color: Colors.white70,
-                                  fontSize: 14,
-                                ),
+                              CircleAvatar(
+                                radius: 32,
+                                backgroundColor: Colors.grey[200],
+                                backgroundImage: currentUser?.profilePhoto != null 
+                                  ? NetworkImage("https://workiees.com/${currentUser!.profilePhoto!}") 
+                                  : const AssetImage(logo) as ImageProvider,
                               ),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.baseline,
-                                textBaseline: TextBaseline.alphabetic,
-                                children: [
-                                  Text(
-                                    data.unitsSold.toString(),
-                                    style: GoogleFonts.montserrat(
-                                      color: Colors.white,
-                                      fontSize: 36,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    ' / ${data.unitsTarget.toString()}',
-                                    style: GoogleFonts.montserrat(
-                                      color: Colors.white70,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
+                              Positioned(
+                                bottom: -2,
+                                right: -2,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                                  child: const Icon(Icons.verified, color: Colors.white, size: 10),
+                                ),
                               ),
                             ],
                           ),
-                          // Custom circular icon placeholder
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white30,
-                                width: 2,
-                                style: BorderStyle.solid,
-                              ), // Dashed would require custom painter
-                            ),
-                            child: const Icon(
-                              Icons.trending_up,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Monthly Progress',
-                            style: GoogleFonts.montserrat(
-                              color: Colors.white70,
-                              fontSize: 12,
-                            ),
-                          ),
-                          Text(
-                            '${data.monthlyProgressPercent}%',
-                            style: GoogleFonts.montserrat(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: LinearProgressIndicator(
-                          value: monthlyProgressDec,
-                          backgroundColor: Colors.white.withOpacity(0.2),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
-                          minHeight: 6,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 30),
-
-                // Sales Overview Section
-                Text(
-                  'Sales Overview',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: cardColor,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 10,
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      _buildSalesRow(
-                        'Suspecting',
-                        data.suspectingLeads.toString(),
-                        getPercent(data.suspectingLeads),
-                        const Color(0xFF2962FF),
-                        null,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildSalesRow(
-                        'Prospecting',
-                        data.prospectingLeads.toString(),
-                        getPercent(data.prospectingLeads),
-                        const Color(0xFF448AFF),
-                        null,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildSalesRow(
-                        'Site Visiting',
-                        data.siteVisitingLeads.toString(),
-                        getPercent(data.siteVisitingLeads),
-                        const Color(0xFFFF9100),
-                        Icons.warning_amber_rounded,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildSalesRow(
-                        'Booking',
-                        data.bookingLeads.toString(),
-                        getPercent(data.bookingLeads),
-                        const Color(0xFF90CAF9),
-                        null,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildSalesRow(
-                        'Referral',
-                        data.referralLeads.toString(),
-                        getPercent(data.referralLeads),
-                        const Color(0xFFBBDEFB),
-                        null,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 30),
-
-                // Pending Verifications
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Pending Verifications',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () =>
-                          Navigator.pushNamed(context, '/advisor_applications'),
-                      child: Text(
-                        'View All',
-                        style: GoogleFonts.montserrat(
-                          color: primaryBlue,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                data.pendingVerifications.isEmpty
-                    ? SizedBox(
-                        height: 50,
-                        width: double.infinity,
-                        child: Text('No Pending Verifications'),
-                      )
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: data.pendingVerifications.length,
-                        itemBuilder: (context, index) {
-                          final ad = data.pendingVerifications[index];
-                          return _buildVerificationCard(
-                            ad['full_name'],
-                            ad['applied_time_ago'],
-                            cardColor,
-                            primaryBlue,
-                            textColor,
-                          );
-                        },
-                      ),
-                const SizedBox(height: 30),
-
-                // Recent Deal Closures
-                Text(
-                  'Recent Deal Closures',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                data.recentClosures.isNotEmpty
-                    ? ListView.builder(
-                        itemCount: data.recentClosures.length,
-                        itemBuilder: (context, index) {
-                          return Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: cardColor,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.03),
-                                  blurRadius: 10,
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  currentUser?.name ?? 'Admin User',
+                                  style: GoogleFonts.montserrat(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    color: textColor,
+                                  ),
+                                ),
+                                Text(
+                                  currentUser?.role.toUpperCase() ?? 'ADMINISTRATOR',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 11,
+                                    color: primaryBlue,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.2,
+                                  ),
                                 ),
                               ],
                             ),
-                            child: Text('${data.recentClosures[index]}'),
-                          );
-                        },
-                      )
-                    : DottedBorder(
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 30),
-                          child: Center(
-                            child: Text(
-                              'No recent closures today',
-                              style: GoogleFonts.montserrat(
-                                color: Colors.grey.shade500,
-                                fontSize: 14,
-                              ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Units Progress Card
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [primaryBlue, primaryBlue.withBlue(255)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(color: primaryBlue.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8)),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Units Sold',
+                                  style: GoogleFonts.montserrat(color: Colors.white.withOpacity(0.9), fontSize: 13, fontWeight: FontWeight.w500),
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Text(
+                                      data.unitsSold.toString(),
+                                      style: GoogleFonts.montserrat(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+                                    ),
+                                    Text(
+                                      ' / ${data.unitsTarget}',
+                                      style: GoogleFonts.montserrat(color: Colors.white70, fontSize: 16),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+                              ),
+                              child: const Icon(Icons.trending_up, color: Colors.white, size: 28),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Monthly Progress', style: GoogleFonts.montserrat(color: Colors.white70, fontSize: 13)),
+                            Text('${data.monthlyProgressPercent}%', style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: LinearProgressIndicator(
+                            value: monthlyProgressDec,
+                            backgroundColor: Colors.white.withOpacity(0.2),
+                            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                            minHeight: 8,
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  // High Priority Leads
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('High Priority Leads', style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+                      const Icon(Icons.priority_high, color: Colors.red, size: 20),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  data.priorityLeads.isEmpty
+                      ? Center(child: Padding(padding: const EdgeInsets.symmetric(vertical: 20), child: Text("No priority leads available", style: GoogleFonts.montserrat(color: Colors.grey))))
+                      : SizedBox(
+                          height: 170,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            clipBehavior: Clip.none,
+                            itemCount: data.priorityLeads.length,
+                            itemBuilder: (context, index) {
+                              final leadData = data.priorityLeads[index];
+                              return _buildPriorityLeadCard(context, Map<String, dynamic>.from(leadData), cardColor, primaryBlue, textColor);
+                            },
+                          ),
+                        ),
+
+                  const SizedBox(height: 30),
+
+                  // Sales Overview
+                  Text('Sales Overview', style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)],
+                    ),
+                    child: Column(
+                      children: [
+                        _buildSalesRow('Suspecting', data.suspectingLeads.toString(), getPercent(data.suspectingLeads), const Color(0xFF2962FF), null),
+                        const SizedBox(height: 16),
+                        _buildSalesRow('Prospecting', data.prospectingLeads.toString(), getPercent(data.prospectingLeads), const Color(0xFF448AFF), null),
+                        const SizedBox(height: 16),
+                        _buildSalesRow('Site Visiting', data.siteVisitingLeads.toString(), getPercent(data.siteVisitingLeads), const Color(0xFFFF9100), Icons.warning_amber_rounded),
+                        const SizedBox(height: 16),
+                        _buildSalesRow('Booking', data.bookingLeads.toString(), getPercent(data.bookingLeads), const Color(0xFF90CAF9), null),
+                        const SizedBox(height: 16),
+                        _buildSalesRow('Referral', data.referralLeads.toString(), getPercent(data.referralLeads), const Color(0xFFBBDEFB), null),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  // Pending Verifications
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Pending Verifications', style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+                      TextButton(
+                        onPressed: () => Navigator.pushNamed(context, '/advisor_applications'),
+                        child: Text('View All', style: GoogleFonts.montserrat(color: primaryBlue, fontWeight: FontWeight.w600)),
                       ),
-                const SizedBox(height: 40),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  data.pendingVerifications.isEmpty
+                      ? Center(child: Padding(padding: const EdgeInsets.symmetric(vertical: 20), child: Text('No pending verifications', style: GoogleFonts.montserrat(color: Colors.grey))))
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: data.pendingVerifications.length,
+                          itemBuilder: (context, index) {
+                            final ad = data.pendingVerifications[index];
+                            return _buildVerificationCard(context, ad['id'].toString(), ad['full_name'].toString(), ad['applied_time_ago'].toString(), ad['profile_photo']?.toString(), cardColor, primaryBlue, textColor);
+                          },
+                        ),
+
+                  const SizedBox(height: 30),
+
+                  // Recent Deal Closures
+                  Text('Recent Deal Closures', style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+                  const SizedBox(height: 16),
+                  data.recentClosures.isNotEmpty
+                      ? ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: data.recentClosures.length,
+                          itemBuilder: (context, index) {
+                            final closure = data.recentClosures[index];
+                            return InkWell(
+                              onTap: () async {
+                                showDialog(context: context, barrierDismissible: false, builder: (context) => const Center(child: CircularProgressIndicator()));
+                                try {
+                                  final deal = await context.read<AdminDealProvider>().getSingleDeal(closure['id'].toString());
+                                  if (deal != null && context.mounted) {
+                                        Navigator.push(context, MaterialPageRoute(builder: (context) => DealManagementScreen(deal: deal),),);
+                                  } else if (context.mounted) {
+                                    Navigator.pop(context);
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) Navigator.pop(context);
+                                }
+                              },
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: cardColor,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.green.withOpacity(0.1)),
+                                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(color: Colors.green.shade50, shape: BoxShape.circle),
+                                      child: const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(closure['client_name']?.toString() ?? 'Unknown Client', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 14, color: textColor)),
+                                          Text((closure['created_at'] ?? '').toString().split(' ')[0], style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+                                        ],
+                                      ),
+                                    ),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        Text('₹${closure['payment_amount']}', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green.shade700)),
+                                        Text('Received', style: GoogleFonts.montserrat(fontSize: 10, color: Colors.green, fontWeight: FontWeight.bold)),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        )
+                      : Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 30),
+                          decoration: BoxDecoration(
+                            color: cardColor,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.withOpacity(0.2), style: BorderStyle.solid),
+                          ),
+                          child: Center(
+                            child: Text('No closures recorded today', style: GoogleFonts.montserrat(color: Colors.grey.shade500, fontSize: 14)),
+                          ),
+                        ),
+                  const SizedBox(height: 40),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  // Helper widget for Sales Overview bars
-  Widget _buildSalesRow(
-    String title,
-    String count,
-    double percent,
-    Color barColor,
-    IconData? icon, {
-    String? subtext,
-  }) {
+  Widget _buildSalesRow(String title, String count, double percent, Color barColor, IconData? icon) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -475,50 +408,18 @@ class AdminHomeView extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(
-                  title,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                if (icon != null) ...[
-                  const SizedBox(width: 4),
-                  Icon(icon, size: 14, color: Colors.orange),
-                ],
+                Text(title, style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w500)),
+                if (icon != null) ...[const SizedBox(width: 4), Icon(icon, size: 14, color: Colors.orange)],
               ],
             ),
             Row(
               children: [
-                Text(
-                  count,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  ' leads',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 11,
-                    color: Colors.grey,
-                  ),
-                ),
+                Text(count, style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.bold)),
+                Text(' leads', style: GoogleFonts.montserrat(fontSize: 11, color: Colors.grey)),
               ],
             ),
           ],
         ),
-        if (subtext != null)
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              subtext,
-              style: GoogleFonts.montserrat(
-                fontSize: 10,
-                color: Colors.redAccent,
-              ),
-            ),
-          ),
         const SizedBox(height: 6),
         ClipRRect(
           borderRadius: BorderRadius.circular(10),
@@ -533,91 +434,107 @@ class AdminHomeView extends StatelessWidget {
     );
   }
 
-  // Helper widget for Pending Verifications list
-  Widget _buildVerificationCard(
-    String name,
-    String time,
-    Color cardColor,
-    Color primaryBlue,
-    Color textColor,
-  ) {
+  Widget _buildVerificationCard(BuildContext context, String id, String name, String time, String? profilePhoto, Color cardColor, Color primaryBlue, Color textColor) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)],
       ),
       child: Row(
         children: [
-          Stack(
-            children: [
-              CircleAvatar(
-                backgroundColor: Colors.grey[300],
-                child: const Icon(Icons.person, color: Colors.white),
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.check_circle,
-                    color: Colors.orange,
-                    size: 12,
-                  ),
-                ),
-              ),
-            ],
+          CircleAvatar(
+            backgroundColor: Colors.grey[300],
+            backgroundImage: profilePhoto != null ? NetworkImage("https://workiees.com/$profilePhoto") : null,
+            child: profilePhoto == null ? const Icon(Icons.person, color: Colors.white) : null,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  style: GoogleFonts.montserrat(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: textColor,
-                  ),
-                ),
-                Text(
-                  time,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
+                Text(name, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 14, color: textColor)),
+                Text(time, style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey)),
               ],
             ),
           ),
           ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryBlue,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            ),
-            child: Text(
-              'Review',
-              style: GoogleFonts.montserrat(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
-            ),
+            onPressed: () async {
+              showDialog(context: context, barrierDismissible: false, builder: (context) => const Center(child: CircularProgressIndicator()));
+              final advisor = await context.read<AdminAdvisorProvider>().getSingleAdvisor(id);
+              if (context.mounted) {
+                Navigator.pop(context);
+                if (advisor != null) {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => ReviewApplicationScreen(advisor: advisor)));
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: primaryBlue, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+            child: Text('Review', style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPriorityLeadCard(BuildContext context, Map<String, dynamic> lead, Color cardColor, Color primaryBlue, Color textColor) {
+    return InkWell(
+      onTap: () async {
+        showDialog(context: context, barrierDismissible: false, builder: (context) => const Center(child: CircularProgressIndicator()));
+        final fetchedLead = await context.read<AdminLeadProvider>().getSingleLead(lead['id'].toString());
+        if (context.mounted) {
+          Navigator.pop(context);
+          if (fetchedLead != null) {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => LeadDetailsScreen(lead: fetchedLead, isAdmin: true)));
+          }
+        }
+      },
+      child: Container(
+        width: 220,
+        margin: const EdgeInsets.only(right: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: primaryBlue.withOpacity(0.1)),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5))],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(color: Colors.red.shade50.withOpacity(0.8), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.red.shade100)),
+                  child: Text((lead['stage'] ?? 'Pending').toString().toUpperCase().replaceAll('_', ' '), style: GoogleFonts.montserrat(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.red.shade700)),
+                ),
+                Text((lead['created_at'] ?? '').toString().split(' ')[0], style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey.shade500, fontWeight: FontWeight.w500)),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Text(lead['client_name']?.toString() ?? 'Unknown Client', style: GoogleFonts.montserrat(fontSize: 15, fontWeight: FontWeight.bold, color: textColor, letterSpacing: -0.2), maxLines: 1, overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Icon(Icons.phone_android, size: 12, color: primaryBlue.withOpacity(0.7)),
+                const SizedBox(width: 4),
+                Text(lead['client_number']?.toString() ?? '', style: GoogleFonts.montserrat(fontSize: 12, color: primaryBlue, fontWeight: FontWeight.w700)),
+              ],
+            ),
+            const Spacer(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('HIGH ATTENTION', style: GoogleFonts.montserrat(fontSize: 9, fontWeight: FontWeight.w800, color: Colors.orange.shade800, letterSpacing: 0.5)),
+                Icon(Icons.arrow_forward_ios, size: 10, color: primaryBlue),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

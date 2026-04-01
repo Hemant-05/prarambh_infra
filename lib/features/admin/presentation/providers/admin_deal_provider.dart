@@ -29,8 +29,8 @@ class AdminDealProvider extends ChangeNotifier {
 
   Future<bool> initiateDeal({
     required String clientName, required String clientNumber,
-    required String advisorCode, required String tokenAmount,
-    required String tokenPaymentMode,
+    required String advisorCode, required String leadId, required String propertyId,
+    String? tokenAmount, String? tokenPaymentMode, String? paymentAmount, String? tokenDate,
     File? aadhaarPhotoFront, File? aadhaarPhotoBack,
     File? panPhotoFront, File? panPhotoBack,
     List<String>? docTitles, List<File>? docFiles,
@@ -40,7 +40,8 @@ class AdminDealProvider extends ChangeNotifier {
       final success = await repository.createDeal(
           clientName: clientName, clientNumber: clientNumber, advisorCode: advisorCode,
           stage: 'booking', dealStatus: 'not verified', tokenAmount: tokenAmount,
-          tokenPaymentMode: tokenPaymentMode,
+          tokenPaymentMode: tokenPaymentMode, paymentAmount: paymentAmount, tokenDate: tokenDate,
+          leadId: leadId, propertyId: propertyId,
           clientAdharFront: aadhaarPhotoFront, clientAdharBack: aadhaarPhotoBack,
           clientPanFront: panPhotoFront, clientPanBack: panPhotoBack,
           docTitles: docTitles, docFiles: docFiles
@@ -76,6 +77,8 @@ class AdminDealProvider extends ChangeNotifier {
     String? tokenPaymentMode,
     String? tokenDate,
     String? paymentPlan,
+    List<String>? docTitles,
+    List<File>? docFiles,
   }) async {
     _isSaving = true; notifyListeners();
     try {
@@ -84,6 +87,7 @@ class AdminDealProvider extends ChangeNotifier {
         totalAmount: totalAmount, status: status,
         tokenAmount: tokenAmount, tokenPaymentMode: tokenPaymentMode,
         tokenDate: tokenDate, paymentPlan: paymentPlan,
+        docTitles: docTitles, docFiles: docFiles,
       );
       if (success) await fetchAllDeals();
       return success;
@@ -92,6 +96,18 @@ class AdminDealProvider extends ChangeNotifier {
       return false;
     } finally {
       _isSaving = false; notifyListeners();
+    }
+  }
+
+  Future<DealModel?> getSingleDeal(String id) async {
+    _isLoading = true; notifyListeners();
+    try {
+      return await repository.getSingleDeal(id);
+    } catch (e) {
+      debugPrint('Get Single Deal Error: $e');
+      return null;
+    } finally {
+      _isLoading = false; notifyListeners();
     }
   }
 }

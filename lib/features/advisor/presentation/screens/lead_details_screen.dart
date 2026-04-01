@@ -64,9 +64,25 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
   final TextEditingController noteController = TextEditingController();
   final List<Map<String, String>> _noteHistory = [];
 
-  final TextEditingController _aadhaarController = TextEditingController();
-  final TextEditingController _panController = TextEditingController();
+  File? _adharFront;
+  File? _adharBack;
+  File? _panFront;
+  File? _panBack;
+
   final TextEditingController _emailController = TextEditingController();
+
+  Future<void> _pickDocument(String type) async {
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    if (image != null) {
+      setState(() {
+        if (type == 'AF') _adharFront = File(image.path);
+        else if (type == 'AB') _adharBack = File(image.path);
+        else if (type == 'PF') _panFront = File(image.path);
+        else if (type == 'PB') _panBack = File(image.path);
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -125,8 +141,6 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
   @override
   void dispose() {
     noteController.dispose();
-    _aadhaarController.dispose();
-    _panController.dispose();
     _emailController.dispose();
     _tokenAmountCtrl.dispose();
     super.dispose();
@@ -1673,6 +1687,8 @@ Please feel free to contact us for more information.""";
                           advisorCode: _currentLead.advisorCode,
                           tokenAmount: _tokenAmountCtrl.text,
                           tokenPaymentMode: _paymentMode,
+                          leadId: _currentLead.id,
+                          propertyId: selectedPropertyId?.toString() ?? '0',
                         );
                         if (success) {
                           await _updateStageInDb(
@@ -1739,60 +1755,144 @@ Please feel free to contact us for more information.""";
           style: TextStyle(color: Colors.grey, fontSize: 12),
         ),
         const SizedBox(height: 16),
-        TextField(
-          controller: _aadhaarController,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: 'Aadhaar Number',
-            prefixIcon: const Icon(Icons.badge),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-        ),
-        const SizedBox(height: 16),
-        TextField(
-          controller: _panController,
-          decoration: InputDecoration(
-            labelText: 'PAN Number',
-            prefixIcon: const Icon(Icons.credit_card),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          ),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.2,
+          children: [
+            _buildDocPickerTile('Aadhar Front', 'AF', _adharFront, primaryBlue),
+            _buildDocPickerTile('Aadhar Back', 'AB', _adharBack, primaryBlue),
+            _buildDocPickerTile('PAN Front', 'PF', _panFront, primaryBlue),
+            _buildDocPickerTile('PAN Back', 'PB', _panBack, primaryBlue),
+          ],
         ),
         const SizedBox(height: 30),
-        SizedBox(
-          width: double.infinity,
-          height: 54,
-          child: ElevatedButton.icon(
-            onPressed: () async {
-              if (_aadhaarController.text.isEmpty ||
-                  _panController.text.isEmpty) {
-                return;
-              }
-              await _updateStageInDb(
-                'pending_verification',
-                note: "Documents submitted. Pending Admin verification.",
-              );
-              if (mounted) {
-                setState(() => currentStage = 'pending_verification');
-              }
-            },
-            icon: const Icon(Icons.send, color: Colors.white),
-            label: const Text(
-              "Submit to Admin",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+        Consumer<AdminDealProvider>(
+          builder: (context, dealProvider, child) {
+            return SizedBox(
+              width: double.infinity,
+              height: 54,
+              child: ElevatedButton.icon(
+                onPressed: dealProvider.isSaving
+                    ? null
+                    : () async {
+                        if (_adharFront == null || _adharBack == null || 
+                            _panFront == null || _panBack == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please upload all 4 documents')),
+                          );
+                          return;
+                        }
+
+                        // Create the unverified deal with 0 tokens and the 4 docs
+                        bool success = await dealProvider.initiateDeal(
+                          clientName: _currentLead.clientName,
+                          clientNumber: _currentLead.clientNumber,
+                          advisorCode: _currentLead.advisorCode,
+                          leadId: _currentLead.id,
+                          propertyId: selectedPropertyId?.toString() ?? '0',
+                          tokenAmount: '0', 
+                          paymentAmount: '0',
+                          tokenPaymentMode: '',
+                          tokenDate: '',
+                          aadhaarPhotoFront: _adharFront,
+                          aadhaarPhotoBack: _adharBack,
+                          panPhotoFront: _panFront,
+                          panPhotoBack: _panBack,
+                        );
+
+                        if (success) {
+                          await _updateStageInDb(
+                            'pending_verification',
+                            note: "Documents submitted. Deal created (Not Verified). Pending Admin verification.",
+                          );
+                          if (mounted) {
+                            setState(() => currentStage = 'pending_verification');
+                          }
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Failed to submit documents')),
+                          );
+                        }
+                      },
+                icon: dealProvider.isSaving
+                    ? const SizedBox(
+                        width: 16, height: 16,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      )
+                    : const Icon(Icons.send, color: Colors.white),
+                label: Text(
+                  dealProvider.isSaving ? "Uploading..." : "Submit to Admin",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryBlue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
               ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryBlue,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
+            );
+          },
         ),
       ],
+    );
+  }
+
+  Widget _buildDocPickerTile(String title, String type, File? file, Color primaryBlue) {
+    return GestureDetector(
+      onTap: () => _pickDocument(type),
+      child: Container(
+        decoration: BoxDecoration(
+          color: file != null ? primaryBlue.withOpacity(0.05) : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: file != null ? primaryBlue : Colors.grey.shade300,
+            width: file != null ? 2 : 1,
+            style: BorderStyle.solid,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (file != null)
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                  child: Image.file(file, width: double.infinity, fit: BoxFit.cover),
+                ),
+              )
+            else
+              Expanded(
+                child: Icon(Icons.upload_file, color: Colors.grey.shade400, size: 32),
+              ),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: file != null ? primaryBlue : Colors.transparent,
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(10)),
+              ),
+              child: Text(
+                file != null ? 'Selected' : title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: file != null ? Colors.white : Colors.grey.shade600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

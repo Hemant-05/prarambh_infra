@@ -10,15 +10,17 @@ class AdminDealRepository {
   Future<bool> createDeal({
     required String clientName, required String clientNumber,
     required String advisorCode, required String stage,
-    required String dealStatus, required String tokenAmount,
-    required String tokenPaymentMode,
+    required String dealStatus, String? paymentAmount, 
+    String? tokenAmount, String? tokenPaymentMode, String? tokenDate,
+    required String leadId, required String propertyId,
     File? clientAdharFront, File? clientAdharBack,
     File? clientPanFront, File? clientPanBack,
     List<String>? docTitles, List<File>? docFiles,
   }) async {
     try {
       final response = await apiClient.createDeal(
-          clientName, clientNumber, advisorCode, stage, dealStatus, tokenAmount, tokenPaymentMode,
+          clientName, clientNumber, advisorCode, stage, dealStatus, 
+          leadId, propertyId, paymentAmount, tokenAmount, tokenPaymentMode, tokenDate,
           clientAdharFront, clientAdharBack, clientPanFront, clientPanBack,
           "[]", "[]", // Empty JSON arrays for notes and installments initially
           docTitles, docFiles
@@ -36,6 +38,8 @@ class AdminDealRepository {
     String? tokenPaymentMode,
     String? tokenDate,
     String? paymentPlan,
+    List<String>? docTitles,
+    List<File>? docFiles,
   }) async {
     try {
       final payload = <String, dynamic>{
@@ -53,6 +57,13 @@ class AdminDealRepository {
       if (tokenPaymentMode != null && tokenPaymentMode.isNotEmpty) payload["token_payment_mode"] = tokenPaymentMode;
       if (tokenDate != null && tokenDate.isNotEmpty) payload["token_date"] = tokenDate;
       
+      if (docTitles != null && docFiles != null && docTitles.length == docFiles.length) {
+        for (int i = 0; i < docTitles.length; i++) {
+          payload["doc_titles[$i]"] = docTitles[i];
+          payload["doc_files[$i]"] = await MultipartFile.fromFile(docFiles[i].path);
+        }
+      }
+
       final formData = FormData.fromMap(payload);
       final response = await apiClient.updateDeal(dealId, formData);
       return response['status'] == true || response['status'] == 'success';

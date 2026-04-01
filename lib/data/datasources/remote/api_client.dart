@@ -202,7 +202,7 @@ abstract class ApiClient {
   Future<dynamic> getSingleUnit(@Path("id") String id);
 
   @MultiPart()
-  @PUT("/units/update/{id}")
+  @POST("/units/update/{id}")
   Future<dynamic> updateUnit(
       @Path("id") String id,
       @Part(name: "project_id") String? projectId,
@@ -320,14 +320,18 @@ abstract class ApiClient {
       @Part(name: "advisor_code") String advisorCode,
       @Part(name: "stage") String stage,
       @Part(name: "deal_status") String dealStatus,
-      @Part(name: "token_amount") String tokenAmount,
-      @Part(name: "token_payment_mode") String tokenPaymentMode,
+      @Part(name: "lead_id") String leadId,
+      @Part(name: "property_id") String propertyId,
+      @Part(name: "payment_amount") String? paymentAmount,
+      @Part(name: "token_amount") String? tokenAmount,
+      @Part(name: "token_payment_mode") String? tokenPaymentMode,
+      @Part(name: "token_date") String? tokenDate,
       @Part(name: "client_adhar_front") File? clientAdharFront,
       @Part(name: "client_adhar_back") File? clientAdharBack,
       @Part(name: "client_pan_front") File? clientPanFront,
       @Part(name: "client_pan_back") File? clientPanBack,
-      @Part(name: "notes") String notes,
-      @Part(name: "installments") String installments,
+      @Part(name: "notes") String? notes,
+      @Part(name: "installments") String? installments,
       @Part(name: "doc_titles[]") List<String>? docTitles,
       @Part(name: "doc_files[]") List<File>? docFiles,
       );

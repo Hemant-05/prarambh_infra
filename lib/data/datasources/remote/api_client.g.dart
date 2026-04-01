@@ -1026,7 +1026,7 @@ class _ApiClient implements ApiClient {
     }
     final _options = _setStreamType<dynamic>(
       Options(
-            method: 'PUT',
+            method: 'POST',
             headers: _headers,
             extra: _extra,
             contentType: 'multipart/form-data',
@@ -1501,14 +1501,18 @@ class _ApiClient implements ApiClient {
     String advisorCode,
     String stage,
     String dealStatus,
-    String tokenAmount,
-    String tokenPaymentMode,
+    String leadId,
+    String propertyId,
+    String? paymentAmount,
+    String? tokenAmount,
+    String? tokenPaymentMode,
+    String? tokenDate,
     File? clientAdharFront,
     File? clientAdharBack,
     File? clientPanFront,
     File? clientPanBack,
-    String notes,
-    String installments,
+    String? notes,
+    String? installments,
     List<String>? docTitles,
     List<File>? docFiles,
   ) async {
@@ -1522,8 +1526,20 @@ class _ApiClient implements ApiClient {
     _data.fields.add(MapEntry('advisor_code', advisorCode));
     _data.fields.add(MapEntry('stage', stage));
     _data.fields.add(MapEntry('deal_status', dealStatus));
-    _data.fields.add(MapEntry('token_amount', tokenAmount));
-    _data.fields.add(MapEntry('token_payment_mode', tokenPaymentMode));
+    _data.fields.add(MapEntry('lead_id', leadId));
+    _data.fields.add(MapEntry('property_id', propertyId));
+    if (paymentAmount != null) {
+      _data.fields.add(MapEntry('payment_amount', paymentAmount));
+    }
+    if (tokenAmount != null) {
+      _data.fields.add(MapEntry('token_amount', tokenAmount));
+    }
+    if (tokenPaymentMode != null) {
+      _data.fields.add(MapEntry('token_payment_mode', tokenPaymentMode));
+    }
+    if (tokenDate != null) {
+      _data.fields.add(MapEntry('token_date', tokenDate));
+    }
     if (clientAdharFront != null) {
       _data.files.add(
         MapEntry(
@@ -1568,8 +1584,12 @@ class _ApiClient implements ApiClient {
         ),
       );
     }
-    _data.fields.add(MapEntry('notes', notes));
-    _data.fields.add(MapEntry('installments', installments));
+    if (notes != null) {
+      _data.fields.add(MapEntry('notes', notes));
+    }
+    if (installments != null) {
+      _data.fields.add(MapEntry('installments', installments));
+    }
     docTitles?.forEach((i) {
       _data.fields.add(MapEntry('doc_titles[]', i));
     });

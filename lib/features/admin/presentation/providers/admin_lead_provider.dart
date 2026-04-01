@@ -114,4 +114,16 @@ class AdminLeadProvider extends ChangeNotifier {
       _isSaving = false; notifyListeners();
     }
   }
+
+  Future<LeadModel?> getSingleLead(String id) async {
+    _isLoading = true; notifyListeners();
+    try {
+      return await repository.getSingleLead(id);
+    } catch (e) {
+      debugPrint('Get Single Lead Error: $e');
+      return null;
+    } finally {
+      _isLoading = false; notifyListeners();
+    }
+  }
 }

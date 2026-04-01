@@ -7,6 +7,7 @@ class AdminDashboardModel {
   final int siteVisitingLeads;
   final int bookingLeads;
   final int referralLeads;
+  final List<dynamic> priorityLeads;
   final List<dynamic> pendingVerifications;
   final List<dynamic> recentClosures;
 
@@ -19,22 +20,27 @@ class AdminDashboardModel {
     required this.siteVisitingLeads,
     required this.bookingLeads,
     required this.referralLeads,
+    required this.priorityLeads,
     required this.pendingVerifications,
     required this.recentClosures,
   });
 
   factory AdminDashboardModel.fromJson(Map<String, dynamic> json) {
+    final up = json['units_progress'] ?? {};
+    final so = json['sales_overview'] ?? {};
+
     return AdminDashboardModel(
-      unitsSold: json['units_sold'] != null ? int.tryParse(json['units_sold'].toString()) ?? 0 : 0,
-      unitsTarget: json['units_target'] != null ? int.tryParse(json['units_target'].toString()) ?? 0 : 0,
-      monthlyProgressPercent: json['monthly_progress'] != null ? int.tryParse(json['monthly_progress'].toString()) ?? 0 : 0,
-      suspectingLeads: json['sales_overview']?['suspecting'] ?? 0,
-      prospectingLeads: json['sales_overview']?['prospecting'] ?? 0,
-      siteVisitingLeads: json['sales_overview']?['site_visiting'] ?? 0,
-      bookingLeads: json['sales_overview']?['booking'] ?? 0,
-      referralLeads: json['sales_overview']?['referral'] ?? 0,
+      unitsSold: int.tryParse(up['sold']?.toString() ?? '0') ?? 0,
+      unitsTarget: int.tryParse(up['total']?.toString() ?? '0') ?? 0,
+      monthlyProgressPercent: int.tryParse(up['monthly_progress']?.toString() ?? '0') ?? 0,
+      suspectingLeads: int.tryParse(so['suspecting']?.toString() ?? '0') ?? 0,
+      prospectingLeads: int.tryParse(so['prospecting']?.toString() ?? '0') ?? 0,
+      siteVisitingLeads: int.tryParse(so['site_visiting']?.toString() ?? '0') ?? 0,
+      bookingLeads: int.tryParse(so['booking']?.toString() ?? '0') ?? 0,
+      referralLeads: int.tryParse(so['referral']?.toString() ?? '0') ?? 0,
+      priorityLeads: json['priority_leads'] is List ? json['priority_leads'] : [],
       pendingVerifications: json['pending_verifications'] is List ? json['pending_verifications'] : [],
-      recentClosures: json['recent_closures'] is List ? json['recent_closures'] : [],
+      recentClosures: json['recent_deal_closures'] is List ? json['recent_deal_closures'] : [],
     );
   }
 }

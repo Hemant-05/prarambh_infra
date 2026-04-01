@@ -1,10 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../data/models/deal_model.dart';
+import '../../data/models/unit_model.dart';
+import '../../data/models/project_model.dart';
 import '../providers/admin_deal_provider.dart';
+import '../providers/admin_project_provider.dart';
 
 class DealManagementScreen extends StatefulWidget {
   final DealModel deal;
@@ -23,6 +28,8 @@ class DealManagementScreen extends StatefulWidget {
 class _DealManagementScreenState extends State<DealManagementScreen> {
   final _tokenAmountCtrl = TextEditingController();
   final _totalAmountCtrl = TextEditingController();
+  final _docTitleCtrl = TextEditingController();
+  File? _newPropertyDoc;
 
   String _selectedPlan = 'Select Plan';
   String _tokenPaymentMode = 'online';
@@ -31,8 +38,12 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
 
   bool _isTokenAmountLocked = false;
   bool _isTokenDateLocked = false;
+  bool _isTokenPaymentModeLocked = false;
   bool _isPaymentPlanLocked = false;
   bool _isTotalAmountLocked = false;
+  
+  UnitModel? _unit;
+  bool _isLoadingUnit = false;
 
   final List<String> _plans = [
     'Select Plan',
@@ -49,36 +60,73 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
   void initState() {
     super.initState();
     _initData();
+    _fetchUnitDetails();
+  }
+
+  Future<void> _fetchUnitDetails() async {
+    if (widget.deal.propertyId == 0) return;
+    
+    setState(() => _isLoadingUnit = true);
+    try {
+      final projectProvider = context.read<AdminProjectProvider>();
+      
+      // Fetch unit details
+      final unit = await projectProvider.getUnitDetails(widget.deal.propertyId.toString());
+      
+      // Ensure projects are fetched to find the project name
+      if (projectProvider.projects.isEmpty) {
+        await projectProvider.fetchProjects();
+      }
+      
+      if (mounted) {
+        setState(() {
+          _unit = unit;
+          _isLoadingUnit = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching unit: $e');
+      if (mounted) setState(() => _isLoadingUnit = false);
+    }
   }
 
   void _initData() {
+    // Only lock fields if they have meaningful data AND the deal is somewhat finalized
+    // For now, let's keep them editable if the deal is not verified
+    bool isVerified = widget.deal.dealStatus.toLowerCase() == 'verified';
+
     _tokenAmountCtrl.text = widget.deal.tokenAmount ?? '';
-    if (_tokenAmountCtrl.text.isNotEmpty && _tokenAmountCtrl.text != '0') {
+    double tAmt = double.tryParse(_tokenAmountCtrl.text) ?? 0;
+    if (tAmt > 0 && isVerified) {
       _isTokenAmountLocked = true;
     }
 
-    _tokenPaymentMode = (widget.deal.tokenPaymentMode ?? 'online')
-        .toLowerCase();
+    _tokenPaymentMode = (widget.deal.tokenPaymentMode ?? 'online').toLowerCase();
     if (_tokenPaymentMode != 'online' &&
         _tokenPaymentMode != 'cash' &&
         _tokenPaymentMode != 'cheque') {
       _tokenPaymentMode = 'online'; 
+    } 
+
+    if (isVerified && (widget.deal.tokenPaymentMode?.isNotEmpty ?? false) && tAmt > 0) {
+      _isTokenPaymentModeLocked = true;
     }
 
-    if (widget.deal.tokenDate != null && widget.deal.tokenDate!.isNotEmpty) {
+    if (widget.deal.tokenDate != null && widget.deal.tokenDate!.isNotEmpty && tAmt > 0 && isVerified) {
       _tokenDate = widget.deal.tokenDate!;
       _isTokenDateLocked = true;
     }
 
     _totalAmountCtrl.text = widget.deal.paymentAmount ?? '';
-    if (_totalAmountCtrl.text.isNotEmpty && _totalAmountCtrl.text != '0') {
+    double pAmt = double.tryParse(_totalAmountCtrl.text) ?? 0;
+    if (pAmt > 0 && isVerified) {
       _isTotalAmountLocked = true;
     }
 
     if (widget.deal.paymentPlan != null &&
         _plans.contains(widget.deal.paymentPlan)) {
       _selectedPlan = widget.deal.paymentPlan!;
-      _isPaymentPlanLocked = true;
+      if (isVerified) _isPaymentPlanLocked = true;
     } else if (widget.isReraApproved) {
       _selectedPlan = '100% Upfront (RERA Approved)';
       _isPaymentPlanLocked = true;
@@ -123,6 +171,14 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
           )
           .toList();
     });
+  }
+
+  Future<void> _pickPropertyDoc() async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    if (image != null) {
+      setState(() => _newPropertyDoc = File(image.path));
+    }
   }
 
   Future<void> _pickDate(String type, int? index) async {
@@ -210,6 +266,10 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                           paymentPlan: _selectedPlan != 'Select Plan'
                               ? _selectedPlan
                               : null,
+                          docTitles: _newPropertyDoc != null 
+                              ? [_docTitleCtrl.text.isEmpty ? 'Property Document' : _docTitleCtrl.text] 
+                              : null,
+                          docFiles: _newPropertyDoc != null ? [_newPropertyDoc!] : null,
                         );
 
                         if (success && mounted) {
@@ -279,6 +339,115 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                   ),
                 ],
               ),
+            ),
+            // Client Documents Gallery
+            Text(
+              "Client KYC Documents",
+              style: GoogleFonts.montserrat(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 1.2,
+                children: [
+                  _buildDocumentViewerTile("Aadhaar Front", widget.deal.clientAdharFront),
+                  _buildDocumentViewerTile("Aadhaar Back", widget.deal.clientAdharBack),
+                  _buildDocumentViewerTile("PAN Front", widget.deal.clientPanFront),
+                  _buildDocumentViewerTile("PAN Back", widget.deal.clientPanBack),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Property Details Section
+            Text(
+              "Property Details",
+              style: GoogleFonts.montserrat(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: _isLoadingUnit 
+                ? const Center(child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: CircularProgressIndicator(),
+                  ))
+                : _unit == null
+                  ? Center(child: Text("Property information not available", style: TextStyle(color: Colors.grey[600])))
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildPropertyDetailItem(
+                          context, 
+                          Icons.business, 
+                          "Project", 
+                          context.read<AdminProjectProvider>().projects.firstWhere(
+                            (p) => p.id == _unit!.projectId, 
+                            orElse: () => ProjectModel(
+                              id: 0, projectName: 'Project #${_unit!.projectId}', 
+                              description: '', developerName: '', reraNumber: '', 
+                              projectType: '', constructionStatus: '', status: '', 
+                              fullAddress: '', locationMapUrl: '', city: '', 
+                              marketValue: 0, totalPlots: 0, buildArea: '', 
+                              budgetRange: '', ratePerSqft: 0, videoUrl: '', 
+                              brochureUrl: '', brochureFile: '', images: [], 
+                              amenities: [], specialties: [], createdAt: DateTime.now()
+                            )
+                          ).projectName
+                        ),
+                        const Divider(height: 24),
+                        GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: 2,
+                          childAspectRatio: 3,
+                          children: [
+                            _buildPropertyDetailItem(context, Icons.confirmation_number_outlined, "Unit #", _unit!.unitNumber),
+                            _buildPropertyDetailItem(context, Icons.layers_outlined, "Tower/Floor", "${_unit!.towerName} / ${_unit!.floorNumber}"),
+                            _buildPropertyDetailItem(context, Icons.home_work_outlined, "Type", _unit!.propertyType),
+                            _buildPropertyDetailItem(context, Icons.king_bed_outlined, "Config", _unit!.configuration),
+                            _buildPropertyDetailItem(context, Icons.square_foot_outlined, "Area", "${_unit!.areaSqft} sqft"),
+                            _buildPropertyDetailItem(context, Icons.explore_outlined, "Facing", _unit!.facing),
+                          ],
+                        ),
+                      ],
+                    ),
             ),
             const SizedBox(height: 24),
 
@@ -372,7 +541,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                                     ),
                                   )
                                   .toList(),
-                              onChanged: _isTokenAmountLocked
+                              onChanged: _isTokenPaymentModeLocked
                                   ? null
                                   : (val) => setState(() => _tokenPaymentMode = val!),
                             ),
@@ -424,7 +593,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                                     Icon(
                                       Icons.calendar_month,
                                       size: 16,
-                                      color: Colors.grey[600],
+                                      color: _isTokenDateLocked ? Colors.grey[400] : Colors.grey[600],
                                     ),
                                   ],
                                 ),
@@ -546,6 +715,92 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
             ),
             const SizedBox(height: 24),
 
+            // Additional Documents Upload (Property Docs)
+            Text(
+              "Upload Additional Property Documents",
+              style: GoogleFonts.montserrat(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Document Title",
+                    style: GoogleFonts.montserrat(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _docTitleCtrl,
+                    decoration: InputDecoration(
+                      hintText: "e.g. Layout Plan, Agreement",
+                      filled: true,
+                      fillColor: Colors.grey.withOpacity(0.05),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  GestureDetector(
+                    onTap: _pickPropertyDoc,
+                    child: Container(
+                      height: 100,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: _newPropertyDoc != null ? Colors.green.withOpacity(0.05) : Colors.grey.withOpacity(0.05),
+                        border: Border.all(
+                          color: _newPropertyDoc != null ? Colors.green : Colors.grey.shade300,
+                          style: BorderStyle.solid,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _newPropertyDoc != null ? Icons.check_circle : Icons.upload_file,
+                            color: _newPropertyDoc != null ? Colors.green : Colors.grey[400],
+                            size: 32,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _newPropertyDoc != null ? "Document Selected" : "Tap to browse files",
+                            style: TextStyle(
+                              color: _newPropertyDoc != null ? Colors.green : Colors.grey[600],
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
             // Installments Tracker
             if (_installments.isNotEmpty) ...[
               Row(
@@ -637,7 +892,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                             ),
                             const SizedBox(height: 4),
                             GestureDetector(
-                              onTap: isPaid
+                              onTap: (isPaid || (inst['date'] != null && inst['date'] != 'Select Date'))
                                   ? null
                                   : () => _pickDate('installment', idx),
                               child: Row(
@@ -645,7 +900,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                                   Icon(
                                     Icons.calendar_month,
                                     size: 14,
-                                    color: Colors.grey[600],
+                                    color: (isPaid || (inst['date'] != null && inst['date'] != 'Select Date')) ? Colors.grey[400] : Colors.grey[600],
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
@@ -658,7 +913,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                                           ? Colors.red
                                           : Colors.grey[600],
                                       fontWeight: FontWeight.bold,
-                                      decoration: isPaid
+                                      decoration: (isPaid || (inst['date'] != null && inst['date'] != 'Select Date'))
                                           ? null
                                           : TextDecoration.underline,
                                     ),
@@ -697,6 +952,122 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                 );
               }),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPropertyDetailItem(BuildContext context, IconData icon, String label, String value) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: AppColors.getPrimaryBlue(context)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(label, style: TextStyle(fontSize: 10, color: Colors.grey[600], fontWeight: FontWeight.w500)),
+              Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDocumentViewerTile(String title, String? imageUrl) {
+    bool hasImage = imageUrl != null && imageUrl.isNotEmpty;
+    String fullUrl = '';
+    if (hasImage) {
+      fullUrl = imageUrl.startsWith('http') ? imageUrl : 'https://workiees.com/$imageUrl';
+    }
+
+    return GestureDetector(
+      onTap: hasImage ? () => _showFullScreenImage(title, fullUrl) : null,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: hasImage
+                  ? ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                      child: Image.network(
+                        fullUrl,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (ctx, err, stack) => Icon(Icons.broken_image, color: Colors.grey[400]),
+                      ),
+                    )
+                  : Icon(Icons.insert_drive_file, color: Colors.grey[300], size: 40),
+            ),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(11)),
+                border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.2))),
+              ),
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.montserrat(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showFullScreenImage(String title, String url) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            InteractiveViewer(
+              child: Image.network(url, fit: BoxFit.contain),
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+            Positioned(
+              bottom: 40,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  title,
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
           ],
         ),
       ),
