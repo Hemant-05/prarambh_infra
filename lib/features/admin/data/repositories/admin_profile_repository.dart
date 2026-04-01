@@ -8,10 +8,10 @@ class AdminProfileRepository {
 
   Future<AdminProfileModel> getProfile(String userId) async {
     try {
-      final response = await apiClient.getSingleUser(userId);
+      final response = await apiClient.getAdvisorProfile(userId);
       // Safely check status
       if (response['status'] == true || response['status'] == 'success') {
-        return AdminProfileModel.fromJson(response['data']);
+        return AdminProfileModel.fromJson(response['data']['advisor_details']);
       }
       throw Exception(response['message'] ?? 'Failed to load profile');
     } catch (e) {
@@ -21,7 +21,7 @@ class AdminProfileRepository {
 
   Future<bool> updateProfile(String userId, Map<String, dynamic> data) async {
     try {
-      final response = await apiClient.updateUserProfile(userId, data);
+      final response = await apiClient.updateAdvisor(userId, data);
       return response['status'] == true || response['status'] == 'success';
     } catch (e) {
       rethrow;
@@ -30,7 +30,7 @@ class AdminProfileRepository {
 
   Future<bool> deleteUser(String userId) async {
     try {
-      final response = await apiClient.deleteUser(userId);
+      final response = await apiClient.deleteAdvisor(userId);
       return response['status'] == true || response['status'] == 'success';
     } catch (e) {
       rethrow;

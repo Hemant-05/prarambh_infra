@@ -14,7 +14,7 @@ class AdminProfileModel {
   factory AdminProfileModel.fromJson(Map<String, dynamic> json) {
     return AdminProfileModel(
       id: json['id']?.toString() ?? '',
-      name: json['name'] ?? '',
+      name: json['name'] ?? json['full_name'] ?? 'Admin User',
       email: json['email'] ?? '',
       phone: json['phone'] ?? '',
       role: json['role'] ?? 'Admin',

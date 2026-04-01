@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prarambh_infra/core/constant/cons_strings.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/admin_profile_provider.dart';
+import 'edit_admin_profile_screen.dart';
+import 'admin_change_password_screen.dart';
 
 class AdminProfileScreen extends StatefulWidget {
   const AdminProfileScreen({super.key});
@@ -25,235 +28,239 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final primaryBlue = AppColors.getPrimaryBlue(context);
-    final cardColor = AppColors.getCardColor(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black87;
+    final bgColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
+    final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xFF1E293B);
     final provider = context.watch<AdminProfileProvider>();
 
-    if (provider.isLoading || provider.profile == null) {
+    if (provider.isLoading) {
       return const Center(child: CircularProgressIndicator());
+    }
+
+    if (provider.profile == null) {
+      final userId = context.read<AuthProvider>().currentUser?.id.toString() ?? '1';
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, color: Colors.red.shade300, size: 64),
+            const SizedBox(height: 16),
+            Text(
+              'Profile unavailable',
+              style: GoogleFonts.montserrat(
+                color: textColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => context.read<AdminProfileProvider>().fetchProfile(userId),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryBlue,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text(
+                'Retry Connection',
+                style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     final profile = provider.profile!;
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        children: [
-          // Header Profile Section
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 40),
-            decoration: BoxDecoration(
-              color: primaryBlue,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
-            ),
-            child: Column(
-              children: [
-                Stack(
+    return Scaffold(
+      backgroundColor: bgColor,
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 240,
+            floating: false,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: primaryBlue,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [primaryBlue, const Color(0xFF1E40AF)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor: Colors.white,
-                      child: CircleAvatar(
-                        radius: 46,
-                        backgroundImage: const AssetImage(
-                          'assets/images/logos.png',
+                    const SizedBox(height: 40),
+                    Stack(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white.withOpacity(0.5), width: 3),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 20,
+                                spreadRadius: 5,
+                              )
+                            ],
+                          ),
+                          child: CircleAvatar(
+                            radius: 45,
+                            backgroundColor: Colors.white,
+                            child: CircleAvatar(
+                              radius: 42,
+                              backgroundImage: const AssetImage(logo),
+                              backgroundColor: Colors.grey[200],
+                            ),
+                          ),
                         ),
-                        backgroundColor: Colors.grey[200],
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4)],
+                            ),
+                            child: Icon(Icons.verified_user, size: 14, color: primaryBlue),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      profile.name,
+                      style: GoogleFonts.montserrat(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
                       ),
                     ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.camera_alt,
-                          size: 16,
-                          color: primaryBlue,
-                        ),
+                    const SizedBox(height: 4),
+                    Text(
+                      profile.role.toUpperCase(),
+                      style: GoogleFonts.montserrat(
+                        color: Colors.white.withOpacity(0.8),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 2,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  profile.name,
-                  style: GoogleFonts.montserrat(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    profile.role,
-                    style: GoogleFonts.montserrat(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'ACCOUNT SETTINGS',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[600],
-                    letterSpacing: 1,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    color: cardColor,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.withOpacity(0.2)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.02),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      _buildProfileItem(
-                        Icons.person_outline,
-                        'Edit Personal Info',
-                        profile.email,
-                        isDark,
-                        onTap: () {},
-                      ),
-                      const Divider(height: 1),
-                      _buildProfileItem(
-                        Icons.lock_outline,
-                        'Change Password',
-                        'Update your security credentials',
-                        isDark,
-                        onTap: () {},
-                      ),
-                      const Divider(height: 1),
-                      _buildProfileItem(
-                        Icons.notifications_none,
-                        'Notifications',
-                        'Manage alerts and emails',
-                        isDark,
-                        onTap: () {},
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 30),
-
-                Text(
-                  'SYSTEM',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[600],
-                    letterSpacing: 1,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    color: cardColor,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.withOpacity(0.2)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.02),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      _buildProfileItem(
-                        Icons.privacy_tip_outlined,
-                        'Privacy Policy',
-                        'Read our terms and conditions',
-                        isDark,
-                        onTap: () {},
-                      ),
-                      const Divider(height: 1),
-                      _buildProfileItem(
-                        Icons.help_outline,
-                        'Help & Support',
-                        'Contact technical support',
-                        isDark,
-                        onTap: () {},
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // Logout Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      context.read<AuthProvider>().logout();
-                      Navigator.pushReplacementNamed(context, '/login');
-                    },
-                    icon: const Icon(Icons.logout, color: Colors.redAccent),
-                    label: Text(
-                      'Log Out',
-                      style: GoogleFonts.montserrat(
-                        color: Colors.redAccent,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSectionHeader('PROFILE SETTINGS'),
+                  const SizedBox(height: 16),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red.withOpacity(0.1),
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    child: Column(
+                      children: [
+                        _buildActionTile(
+                          icon: Icons.person_outline_rounded,
+                          title: 'Edit Personal Info',
+                          subtitle: profile.email,
+                          color: Colors.blue,
+                          isDark: isDark,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (c) => const EditAdminProfileScreen()),
+                          ),
+                        ),
+                        _buildDivider(isDark),
+                        _buildActionTile(
+                          icon: Icons.lock_reset_rounded,
+                          title: 'Change Password',
+                          subtitle: 'Secure your administrative access',
+                          color: Colors.indigo,
+                          isDark: isDark,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (c) => const AdminChangePasswordScreen()),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  
+                  // Logout Button (Professional redesign)
+                  Container(
+                    width: double.infinity,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      gradient: LinearGradient(
+                        colors: [Colors.red.shade400, Colors.red.shade600],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.red.withOpacity(0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          context.read<AuthProvider>().logout();
+                          Navigator.pushReplacementNamed(context, '/login');
+                        },
+                        borderRadius: BorderRadius.circular(20),
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.logout_rounded, color: Colors.white, size: 20),
+                              const SizedBox(width: 12),
+                              Text(
+                                'SIGN OUT',
+                                style: GoogleFonts.montserrat(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 40),
-              ],
+                  const SizedBox(height: 40),
+                ],
+              ),
             ),
           ),
         ],
@@ -261,37 +268,73 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     );
   }
 
-  Widget _buildProfileItem(
-    IconData icon,
-    String title,
-    String subtitle,
-    bool isDark, {
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title,
+      style: GoogleFonts.montserrat(
+        fontSize: 11,
+        fontWeight: FontWeight.w800,
+        color: Colors.grey.shade500,
+        letterSpacing: 1.5,
+      ),
+    );
+  }
+
+  Widget _buildDivider(bool isDark) {
+    return Divider(
+      height: 1,
+      indent: 70,
+      endIndent: 20,
+      color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade100,
+    );
+  }
+
+  Widget _buildActionTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required bool isDark,
     required VoidCallback onTap,
   }) {
     return ListTile(
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       leading: Container(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
         ),
-        child: Icon(icon, color: Colors.blue[800], size: 22),
+        child: Icon(icon, color: color, size: 22),
       ),
       title: Text(
         title,
         style: GoogleFonts.montserrat(
           fontWeight: FontWeight.bold,
-          fontSize: 14,
-          color: isDark ? Colors.white : Colors.black87,
+          fontSize: 15,
+          color: isDark ? Colors.white : const Color(0xFF1E293B),
         ),
       ),
-      subtitle: Text(
-        subtitle,
-        style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey[500]),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Text(
+          subtitle,
+          style: GoogleFonts.montserrat(
+            fontSize: 12,
+            color: Colors.grey.shade500,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ),
-      trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+      trailing: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: Colors.grey.withOpacity(0.05),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.chevron_right_rounded, color: Colors.grey, size: 20),
+      ),
     );
   }
 }
