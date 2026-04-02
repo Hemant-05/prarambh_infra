@@ -43,7 +43,11 @@ import 'package:prarambh_infra/features/auth/presentation/screens/forgot_passwor
 import 'package:prarambh_infra/features/recruitment/presentation/providers/recruitment_provider.dart';
 import 'package:prarambh_infra/features/recruitment/presentation/screens/advisor_registration_screen.dart';
 import 'package:prarambh_infra/features/recruitment/presentation/screens/recruiter_dashboard_screen.dart';
+import 'package:prarambh_infra/features/client/presentation/providers/client_dashboard_provider.dart';
+import 'package:prarambh_infra/features/client/presentation/providers/property_filter_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:prarambh_infra/core/navigation/nav_service.dart';
+import 'package:prarambh_infra/core/widgets/server_error_screen.dart';
 import 'injection_container.dart' as di;
 
 import 'features/auth/presentation/providers/auth_provider.dart';
@@ -93,6 +97,8 @@ void main() async {
         ChangeNotifierProvider(create: (_) => di.sl<AdvisorTeamProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdvisorProfileProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdvisorAchievementProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<ClientDashboardProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<PropertyFilterProvider>()),
       ],
       child: const PraarambhApp(),
     ),
@@ -118,6 +124,7 @@ class PraarambhApp extends StatelessWidget {
         primaryColor: const Color(0xFF1976D2),
       ),
       themeMode: ThemeMode.system,
+      navigatorKey: NavService.navigatorKey,
       initialRoute: '/splash',
       routes: {
         '/splash': (context) => const SplashScreen(),
@@ -143,6 +150,7 @@ class PraarambhApp extends StatelessWidget {
         '/recruiter_dashboard' : (context) => const RecruiterDashboardScreen(),
         '/installment_calculator': (context) => const InstallmentCalculatorScreen(),
         '/advisor_leaderboard': (context) => const AdvisorLeaderboardScreen(),
+        '/server_error': (context) => const ServerErrorScreen(),
       },
     );
   }

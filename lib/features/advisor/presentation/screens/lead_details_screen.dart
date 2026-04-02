@@ -73,13 +73,20 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
 
   Future<void> _pickDocument(String type) async {
     final picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
     if (image != null) {
       setState(() {
-        if (type == 'AF') _adharFront = File(image.path);
-        else if (type == 'AB') _adharBack = File(image.path);
-        else if (type == 'PF') _panFront = File(image.path);
-        else if (type == 'PB') _panBack = File(image.path);
+        if (type == 'AF')
+          _adharFront = File(image.path);
+        else if (type == 'AB')
+          _adharBack = File(image.path);
+        else if (type == 'PF')
+          _panFront = File(image.path);
+        else if (type == 'PB')
+          _panBack = File(image.path);
       });
     }
   }
@@ -116,7 +123,9 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
       if (selectedPropertyId != null) {
         try {
           final provider = context.read<AdminProjectProvider>();
-          final unit = await provider.getUnitDetails(selectedPropertyId.toString());
+          final unit = await provider.getUnitDetails(
+            selectedPropertyId.toString(),
+          );
           if (provider.projects.isEmpty) {
             await provider.fetchProjects();
           }
@@ -392,35 +401,42 @@ Please feel free to contact us for more information.""";
     if (noteController.text.isNotEmpty) {
       String newNote = noteController.text;
       noteController.clear();
-      
+
       setState(() {
         _noteHistory.insert(0, {
           "date": DateTime.now().toString().split('.')[0],
           "note": newNote,
         });
       });
-      
+
       bool success = false;
       if (widget.isAdmin) {
         success = await context.read<AdminLeadProvider>().addLeadNote(
-          _currentLead.id, 
-          newNote, 
-          DateTime.now().toString()
+          _currentLead.id,
+          newNote,
+          DateTime.now().toString(),
         );
       } else {
-        final advisorCode = context.read<AuthProvider>().currentUser?.advisorCode ?? '';
+        final advisorCode =
+            context.read<AuthProvider>().currentUser?.advisorCode ?? '';
         success = await context.read<AdvisorLeadProvider>().addLeadNote(
-          _currentLead.id, 
-          newNote, 
-          DateTime.now().toString(), 
-          advisorCode, 
-          currentStage
+          _currentLead.id,
+          newNote,
+          DateTime.now().toString(),
+          advisorCode,
+          currentStage,
         );
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(success ? "Note added successfully" : "Failed to add note on server"))
+          SnackBar(
+            content: Text(
+              success
+                  ? "Note added successfully"
+                  : "Failed to add note on server",
+            ),
+          ),
         );
       }
     }
@@ -451,7 +467,8 @@ Please feel free to contact us for more information.""";
     Color statusColor = primaryBlue;
     if (currentStage == "closed") statusColor = Colors.grey;
     if (currentStage == "site visit") statusColor = Colors.orange;
-    if (currentStage == "booking" || currentStage == "pending_verification") statusColor = Colors.green;
+    if (currentStage == "booking" || currentStage == "pending_verification")
+      statusColor = Colors.green;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -508,7 +525,7 @@ Please feel free to contact us for more information.""";
                   'site visit',
                 ].contains(currentStage))
                   _buildAttemptCounter(cardColor, primaryBlue),
-                
+
                 if (currentStage == "suspecting")
                   _buildSuspectingActions(primaryBlue),
                 if (currentStage == "closed") _buildRejectionInfo(),
@@ -517,14 +534,15 @@ Please feel free to contact us for more information.""";
                 if (selectedPropertyId != null)
                   _buildClickablePropertyCard(selectedProperty!),
 
-                if(currentStage != 'closed')
-                  _buildNoteHistorySection(),
+                if (currentStage != 'closed') _buildNoteHistorySection(),
                 const SizedBox(height: 24),
 
                 if (currentStage == "prospecting")
                   _buildProspectingInfo(primaryBlue),
-                if (currentStage == "site visit") _buildSiteVisitInfo(primaryBlue),
-                if (currentStage == "booking" || currentStage == "pending_verification")
+                if (currentStage == "site visit")
+                  _buildSiteVisitInfo(primaryBlue),
+                if (currentStage == "booking" ||
+                    currentStage == "pending_verification")
                   _buildBookingFlow(primaryBlue, cardColor),
               ],
             ),
@@ -548,7 +566,7 @@ Please feel free to contact us for more information.""";
     // Clean up basic string artifacts if any
     String cleaned = raw.trim();
     if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
-       cleaned = cleaned.substring(1, cleaned.length - 1).replaceAll(r'\"', '"');
+      cleaned = cleaned.substring(1, cleaned.length - 1).replaceAll(r'\"', '"');
     }
 
     try {
@@ -559,9 +577,10 @@ Please feel free to contact us for more information.""";
           if (item is Map) {
             String note = (item['note'] ?? item['title'] ?? '').toString();
             String date = (item['date'] ?? item['time'] ?? '').toString();
-            
+
             // If the note itself looks like trapped JSON, parse it recursively
-            if (note.contains('{') && (note.contains('note:') || note.contains('title:'))) {
+            if (note.contains('{') &&
+                (note.contains('note:') || note.contains('title:'))) {
               _parseLeadNotes(note);
             } else if (note.isNotEmpty) {
               _addUniqueNote(note, date);
@@ -572,32 +591,38 @@ Please feel free to contact us for more information.""";
       }
     } catch (_) {
       // 2. Fallback to Regex for malformed unquoted strings
-      final regex = RegExp(r'\{(?:note|title|date|time):\s*(.*?)\s*,\s*(?:note|title|date|time):\s*(.*?)\s*\}');
+      final regex = RegExp(
+        r'\{(?:note|title|date|time):\s*(.*?)\s*,\s*(?:note|title|date|time):\s*(.*?)\s*\}',
+      );
       final matches = regex.allMatches(cleaned);
-      
+
       if (matches.isNotEmpty) {
         for (var match in matches) {
           String val1 = match.group(1)?.trim() ?? '';
           String val2 = match.group(2)?.trim() ?? '';
           String matchText = match.group(0)!;
-          
+
           String note = '';
           String date = '';
-          
+
           if (matchText.contains('note:')) {
-             if (matchText.indexOf('note:') < matchText.indexOf('date:')) {
-               note = val1; date = val2;
-             } else {
-               note = val2; date = val1;
-             }
+            if (matchText.indexOf('note:') < matchText.indexOf('date:')) {
+              note = val1;
+              date = val2;
+            } else {
+              note = val2;
+              date = val1;
+            }
           } else if (matchText.contains('title:')) {
-             if (matchText.indexOf('title:') < matchText.indexOf('time:')) {
-               note = val1; date = val2;
-             } else {
-               note = val2; date = val1;
-             }
+            if (matchText.indexOf('title:') < matchText.indexOf('time:')) {
+              note = val1;
+              date = val2;
+            } else {
+              note = val2;
+              date = val1;
+            }
           }
-          
+
           if (note.contains('{')) {
             _parseLeadNotes(note);
           } else if (note.isNotEmpty) {
@@ -616,7 +641,9 @@ Please feel free to contact us for more information.""";
   void _addUniqueNote(String note, String date) {
     if (note.trim().isEmpty) return;
     // Basic de-duplication
-    final alreadyExists = _noteHistory.any((n) => n['note'] == note && n['date'] == date);
+    final alreadyExists = _noteHistory.any(
+      (n) => n['note'] == note && n['date'] == date,
+    );
     if (!alreadyExists) {
       _noteHistory.add({"note": note, "date": date});
     }
@@ -630,8 +657,23 @@ Please feel free to contact us for more information.""";
         // Handle YYYY-MM-DD HH:MM:SS
         final dateObj = DateTime.tryParse(dateStr);
         if (dateObj != null) {
-          final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          String hour = dateObj.hour > 12 ? (dateObj.hour - 12).toString() : dateObj.hour.toString();
+          final months = [
+            'Jan',
+            'Feb',
+            'Mar',
+            'Apr',
+            'May',
+            'Jun',
+            'Jul',
+            'Aug',
+            'Sep',
+            'Oct',
+            'Nov',
+            'Dec',
+          ];
+          String hour = dateObj.hour > 12
+              ? (dateObj.hour - 12).toString()
+              : dateObj.hour.toString();
           if (hour == '0') hour = '12';
           final ampm = dateObj.hour >= 12 ? 'PM' : 'AM';
           final minute = dateObj.minute.toString().padLeft(2, '0');
@@ -655,33 +697,34 @@ Please feel free to contact us for more information.""";
       source: ImageSource.camera,
       imageQuality: 70,
     );
-    
+
     if (image != null) {
       setState(() => _isLoading = true);
       try {
         final file = File(image.path);
         bool success = false;
-        
+
         final data = {
           'site_visit_photo': await MultipartFile.fromFile(file.path),
         };
-        
+
         if (widget.isAdmin) {
           success = await context.read<AdminLeadProvider>().updateLeadStage(
-            _currentLead.id, 
-            currentStage, 
-            extraData: data
+            _currentLead.id,
+            currentStage,
+            extraData: data,
           );
         } else {
-          final advisorCode = context.read<AuthProvider>().currentUser?.advisorCode ?? '';
+          final advisorCode =
+              context.read<AuthProvider>().currentUser?.advisorCode ?? '';
           success = await context.read<AdvisorLeadProvider>().updateLeadStage(
-            _currentLead.id, 
-            currentStage, 
-            advisorCode, 
-            extraData: data
+            _currentLead.id,
+            currentStage,
+            advisorCode,
+            extraData: data,
           );
         }
-        
+
         if (success) {
           // Sync with updated provider state to get the new photo URL
           final updatedLeads = context.read<AdvisorLeadProvider>().leads;
@@ -689,14 +732,14 @@ Please feel free to contact us for more information.""";
             (l) => l.id == _currentLead.id,
             orElse: () => _currentLead,
           );
-          
+
           setState(() {
             _currentLead = freshLead;
           });
-          
+
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Photo uploaded successfully!'))
+              const SnackBar(content: Text('Photo uploaded successfully!')),
             );
           }
         }
@@ -719,15 +762,21 @@ Please feel free to contact us for more information.""";
           decoration: const InputDecoration(hintText: "Enter meetup location"),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Cancel"),
+          ),
           ElevatedButton(
             onPressed: () async {
               final newLoc = ctrl.text.trim();
               if (newLoc.isEmpty) return;
-              
+
               Navigator.pop(ctx);
               setState(() => meetingPoint = newLoc);
-              await _updateStageInDb(currentStage, note: "Updated location to: $newLoc");
+              await _updateStageInDb(
+                currentStage,
+                note: "Updated location to: $newLoc",
+              );
             },
             child: const Text("Update"),
           ),
@@ -805,21 +854,41 @@ Please feel free to contact us for more information.""";
                           GestureDetector(
                             onTap: _togglePriority,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
                               decoration: BoxDecoration(
-                                color: _isPriorityToggle ? Colors.amber.withOpacity(0.15) : Colors.grey.withOpacity(0.1),
+                                color: _isPriorityToggle
+                                    ? Colors.amber.withOpacity(0.15)
+                                    : Colors.grey.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(20),
-                                border: _isPriorityToggle ? Border.all(color: Colors.amber.shade300) : Border.all(color: Colors.grey.shade300),
+                                border: _isPriorityToggle
+                                    ? Border.all(color: Colors.amber.shade300)
+                                    : Border.all(color: Colors.grey.shade300),
                               ),
                               child: Row(
                                 children: [
                                   Icon(
-                                    _isPriorityToggle ? Icons.star : Icons.star_border,
-                                    color: _isPriorityToggle ? Colors.amber : Colors.grey.shade600,
+                                    _isPriorityToggle
+                                        ? Icons.star
+                                        : Icons.star_border,
+                                    color: _isPriorityToggle
+                                        ? Colors.amber
+                                        : Colors.grey.shade600,
                                     size: 14,
                                   ),
                                   const SizedBox(width: 4),
-                                  Text("Priority", style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: _isPriorityToggle ? Colors.amber.shade700 : Colors.grey.shade700)),
+                                  Text(
+                                    "Priority",
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: _isPriorityToggle
+                                          ? Colors.amber.shade700
+                                          : Colors.grey.shade700,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -828,17 +897,33 @@ Please feel free to contact us for more information.""";
                           GestureDetector(
                             onTap: _showEditLeadSheet,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
                               decoration: BoxDecoration(
                                 color: primaryBlue.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: primaryBlue.withOpacity(0.3)),
+                                border: Border.all(
+                                  color: primaryBlue.withOpacity(0.3),
+                                ),
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.edit, color: primaryBlue, size: 14),
+                                  Icon(
+                                    Icons.edit,
+                                    color: primaryBlue,
+                                    size: 14,
+                                  ),
                                   const SizedBox(width: 4),
-                                  Text("Edit Details", style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: primaryBlue)),
+                                  Text(
+                                    "Edit Details",
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: primaryBlue,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -1148,7 +1233,9 @@ Please feel free to contact us for more information.""";
   Widget _buildNoteHistorySection() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryBlue = AppColors.getPrimaryBlue(context);
-    final notesToShow = _showAllNotes ? _noteHistory : _noteHistory.take(3).toList();
+    final notesToShow = _showAllNotes
+        ? _noteHistory
+        : _noteHistory.take(3).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1180,7 +1267,9 @@ Please feel free to contact us for more information.""";
               TextButton(
                 onPressed: () => setState(() => _showAllNotes = !_showAllNotes),
                 child: Text(
-                  _showAllNotes ? 'Show Less' : 'View All (${_noteHistory.length})',
+                  _showAllNotes
+                      ? 'Show Less'
+                      : 'View All (${_noteHistory.length})',
                   style: TextStyle(
                     fontSize: 12,
                     color: primaryBlue,
@@ -1215,15 +1304,23 @@ Please feel free to contact us for more information.""";
         else
           ...notesToShow.map((note) {
             final index = _noteHistory.indexOf(note);
-            final noteColors = [Colors.blue, Colors.purple, Colors.teal, Colors.orange, Colors.green];
+            final noteColors = [
+              Colors.blue,
+              Colors.purple,
+              Colors.teal,
+              Colors.orange,
+              Colors.green,
+            ];
             final accent = noteColors[index % noteColors.length];
-            
+
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
                 color: isDark ? Colors.grey[850] : Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey.shade100),
+                border: Border.all(
+                  color: isDark ? Colors.grey[800]! : Colors.grey.shade100,
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.04),
@@ -1256,7 +1353,10 @@ Please feel free to contact us for more information.""";
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.grey.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(6),
@@ -1458,7 +1558,10 @@ Please feel free to contact us for more information.""";
                     GestureDetector(
                       onTap: _showEditLocationDialog,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: primaryBlue.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(6),
@@ -1467,7 +1570,14 @@ Please feel free to contact us for more information.""";
                           children: [
                             Icon(Icons.edit, color: primaryBlue, size: 12),
                             const SizedBox(width: 4),
-                            Text("Edit", style: TextStyle(color: primaryBlue, fontSize: 10, fontWeight: FontWeight.bold)),
+                            Text(
+                              "Edit",
+                              style: TextStyle(
+                                color: primaryBlue,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -1479,7 +1589,13 @@ Please feel free to contact us for more information.""";
                 children: [
                   const Icon(Icons.alarm, color: Colors.amber, size: 18),
                   const SizedBox(width: 8),
-                  Text(visitDate ?? "Scheduled", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                  Text(
+                    visitDate ?? "Scheduled",
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -1502,7 +1618,7 @@ Please feel free to contact us for more information.""";
           ),
         ),
         const SizedBox(height: 16),
-        
+
         // Site Visit Photo Section
         Container(
           padding: const EdgeInsets.all(16),
@@ -1517,16 +1633,39 @@ Please feel free to contact us for more information.""";
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Site Visit Photo", style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13)),
+                  Text(
+                    "Site Visit Photo",
+                    style: GoogleFonts.montserrat(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
                   if (!widget.isAdmin)
-                   IconButton(onPressed: _pickAndUploadSiteVisitPhoto, icon: Icon(Icons.add_a_photo, color: primaryBlue, size: 20)),
+                    IconButton(
+                      onPressed: _pickAndUploadSiteVisitPhoto,
+                      icon: Icon(
+                        Icons.add_a_photo,
+                        color: primaryBlue,
+                        size: 20,
+                      ),
+                    ),
                 ],
               ),
               const SizedBox(height: 12),
               if (_currentLead.siteVisitPhoto.isNotEmpty)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(_currentLead.siteVisitPhoto, height: 180, width: double.infinity, fit: BoxFit.cover, errorBuilder: (c, e, s) => Container(height: 180, color: Colors.grey[200], child: const Icon(Icons.broken_image, color: Colors.grey))),
+                  child: Image.network(
+                    _currentLead.siteVisitPhoto,
+                    height: 180,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (c, e, s) => Container(
+                      height: 180,
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.broken_image, color: Colors.grey),
+                    ),
+                  ),
                 )
               else if (!widget.isAdmin)
                 InkWell(
@@ -1534,19 +1673,39 @@ Please feel free to contact us for more information.""";
                   child: Container(
                     height: 100,
                     width: double.infinity,
-                    decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade200, style: BorderStyle.solid)),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.grey.shade200,
+                        style: BorderStyle.solid,
+                      ),
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.camera_alt, color: Colors.grey[400], size: 30),
+                        Icon(
+                          Icons.camera_alt,
+                          color: Colors.grey[400],
+                          size: 30,
+                        ),
                         const SizedBox(height: 4),
-                        Text("Upload Photo with Client", style: TextStyle(color: Colors.grey[500], fontSize: 11)),
+                        Text(
+                          "Upload Photo with Client",
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 11,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 )
               else
-                const Text("No photo uploaded.", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                const Text(
+                  "No photo uploaded.",
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
             ],
           ),
         ),
@@ -1609,135 +1768,43 @@ Please feel free to contact us for more information.""";
   }
 
   Widget _buildAdminTokenCollectionFlow() {
-    if (_isDealVerified) return _buildVerifiedDealView();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.orange.shade50,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.orange.shade200),
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.orange, width: 1),
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.orange.withOpacity(0.1),
+      ),
+      padding: const EdgeInsets.all(30),
+      alignment: Alignment.center,
+      child: Column(
+        children: [
+          const Icon(Icons.timer, color: Colors.orange, size: 40),
+          const SizedBox(height: 20),
+          const Text(
+            "Deal Verification Pending",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          child: const Row(
-            children: [
-              Icon(Icons.admin_panel_settings, color: Colors.orange),
-              SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  "Admin Action: Verify documents and collect initial token.",
-                  style: TextStyle(
-                    color: Colors.orange,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
+          const SizedBox(height: 8),
+          const Text(
+            "Verify deal & review documents and collecting token...",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey),
           ),
-        ),
-        const SizedBox(height: 24),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _tokenAmountCtrl,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Token Amount (₹)',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: DropdownButtonFormField<String>(
-                initialValue: _paymentMode,
-                decoration: InputDecoration(
-                  labelText: 'Mode',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                items: ['Online', 'Cash', 'Cheque']
-                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                    .toList(),
-                onChanged: (v) => setState(() => _paymentMode = v!),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 30),
-        Consumer<AdminDealProvider>(
-          builder: (context, dealProvider, child) {
-            return SizedBox(
-              width: double.infinity,
-              height: 54,
-              child: ElevatedButton.icon(
-                onPressed: dealProvider.isSaving
-                    ? null
-                    : () async {
-                        if (_tokenAmountCtrl.text.isEmpty) return;
-                        final success = await dealProvider.initiateDeal(
-                          clientName: _currentLead.clientName,
-                          clientNumber: _currentLead.clientNumber,
-                          advisorCode: _currentLead.advisorCode,
-                          tokenAmount: _tokenAmountCtrl.text,
-                          tokenPaymentMode: _paymentMode,
-                          leadId: _currentLead.id,
-                          propertyId: selectedPropertyId?.toString() ?? '0',
-                        );
-                        if (success) {
-                          await _updateStageInDb(
-                            'booking',
-                            note:
-                                "Admin verified. Token received via $_paymentMode.",
-                          );
-                          setState(() {
-                            _isDealVerified = true;
-                            _generatedTokenId = "TKN-${Random().nextInt(9999)}";
-                          });
-                        }
-                      },
-                icon: dealProvider.isSaving
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Icon(Icons.verified, color: Colors.white),
-                label: Text(
-                  dealProvider.isSaving
-                      ? "Processing..."
-                      : "Verify & Create Deal",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ],
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: Text("Go to Deal Section...\nDo the token process",textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildAdvisorDocumentUploadFlow(Color primaryBlue) {
-    if (currentStage == 'pending_verification' || _isPendingVerification) return _buildPendingVerificationView();
+    if (currentStage == 'pending_verification' || _isPendingVerification)
+      return _buildPendingVerificationView();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1779,10 +1846,14 @@ Please feel free to contact us for more information.""";
                 onPressed: dealProvider.isSaving
                     ? null
                     : () async {
-                        if (_adharFront == null || _adharBack == null || 
-                            _panFront == null || _panBack == null) {
+                        if (_adharFront == null ||
+                            _adharBack == null ||
+                            _panFront == null ||
+                            _panBack == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please upload all 4 documents')),
+                            const SnackBar(
+                              content: Text('Please upload all 4 documents'),
+                            ),
                           );
                           return;
                         }
@@ -1794,7 +1865,7 @@ Please feel free to contact us for more information.""";
                           advisorCode: _currentLead.advisorCode,
                           leadId: _currentLead.id,
                           propertyId: selectedPropertyId?.toString() ?? '0',
-                          tokenAmount: '0', 
+                          tokenAmount: '0',
                           paymentAmount: '0',
                           tokenPaymentMode: '',
                           tokenDate: '',
@@ -1807,21 +1878,30 @@ Please feel free to contact us for more information.""";
                         if (success) {
                           await _updateStageInDb(
                             'pending_verification',
-                            note: "Documents submitted. Deal created (Not Verified). Pending Admin verification.",
+                            note:
+                                "Documents submitted. Deal created (Not Verified). Pending Admin verification.",
                           );
                           if (mounted) {
-                            setState(() => currentStage = 'pending_verification');
+                            setState(
+                              () => currentStage = 'pending_verification',
+                            );
                           }
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Failed to submit documents')),
+                            const SnackBar(
+                              content: Text('Failed to submit documents'),
+                            ),
                           );
                         }
                       },
                 icon: dealProvider.isSaving
                     ? const SizedBox(
-                        width: 16, height: 16,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
                       )
                     : const Icon(Icons.send, color: Colors.white),
                 label: Text(
@@ -1846,12 +1926,19 @@ Please feel free to contact us for more information.""";
     );
   }
 
-  Widget _buildDocPickerTile(String title, String type, File? file, Color primaryBlue) {
+  Widget _buildDocPickerTile(
+    String title,
+    String type,
+    File? file,
+    Color primaryBlue,
+  ) {
     return GestureDetector(
       onTap: () => _pickDocument(type),
       child: Container(
         decoration: BoxDecoration(
-          color: file != null ? primaryBlue.withOpacity(0.05) : Colors.grey.shade50,
+          color: file != null
+              ? primaryBlue.withOpacity(0.05)
+              : Colors.grey.shade50,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: file != null ? primaryBlue : Colors.grey.shade300,
@@ -1865,20 +1952,32 @@ Please feel free to contact us for more information.""";
             if (file != null)
               Expanded(
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-                  child: Image.file(file, width: double.infinity, fit: BoxFit.cover),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(10),
+                  ),
+                  child: Image.file(
+                    file,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               )
             else
               Expanded(
-                child: Icon(Icons.upload_file, color: Colors.grey.shade400, size: 32),
+                child: Icon(
+                  Icons.upload_file,
+                  color: Colors.grey.shade400,
+                  size: 32,
+                ),
               ),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
                 color: file != null ? primaryBlue : Colors.transparent,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(10)),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(10),
+                ),
               ),
               child: Text(
                 file != null ? 'Selected' : title,

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:prarambh_infra/core/constant/cons_strings.dart';
+import 'package:prarambh_infra/core/navigation/nav_service.dart';
 
 class DioClient {
   late final Dio dio;
@@ -62,28 +63,40 @@ class AppInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     // Global Error Handling
+    bool isServerError = false;
+
     switch (err.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        debugPrint("Timeout Error: ${err.message}");
+      case DioExceptionType.connectionError:
+        isServerError = true;
+        debugPrint("Connectivity/Timeout Error: ${err.message}");
         break;
       case DioExceptionType.badResponse:
         debugPrint(
           "Bad Response: ${err.response?.statusCode} - ${err.response?.data}",
         );
+        // Handle 5xx Server Errors
+        if (err.response != null && err.response!.statusCode! >= 500) {
+          isServerError = true;
+        }
+        
         // e.g., Handle 401 Unauthorized by logging the user out globally
         if (err.response?.statusCode == 401) {
           // trigger logout logic
         }
         break;
-      case DioExceptionType.connectionError:
-        debugPrint("No Internet Connection");
-        break;
       default:
         debugPrint("Unknown Error: ${err.message}");
         break;
     }
+
+    if (isServerError) {
+      // Navigate to Server Error Screen globally
+      NavService.pushNamed('/server_error');
+    }
+
     super.onError(err, handler);
   }
 }

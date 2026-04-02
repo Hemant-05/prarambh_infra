@@ -14,8 +14,21 @@ import 'package:prarambh_infra/features/auth/presentation/providers/auth_provide
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 
-class AdminHomeView extends StatelessWidget {
+class AdminHomeView extends StatefulWidget {
   const AdminHomeView({super.key});
+
+  @override
+  State<AdminHomeView> createState() => _AdminHomeViewState();
+}
+
+class _AdminHomeViewState extends State<AdminHomeView> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AdminProvider>().fetchDashboardData();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,17 +41,10 @@ class AdminHomeView extends StatelessWidget {
     final authState = context.watch<AuthProvider>();
     final currentUser = authState.currentUser;
 
-    if (adminState.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (adminState.errorMessage != null) {
-      return Center(child: Text('Error: ${adminState.errorMessage}'));
-    }
-
     final data = adminState.dashboardData;
-    if (data == null) return const Center(child: Text('No data available'));
-
+    if(data == null){
+      return const Center(child: Text('No data available'));
+    }
     final double monthlyProgressDec = (data.monthlyProgressPercent / 100.0).clamp(0.0, 1.0);
 
     final int maxLeads = [
@@ -56,7 +62,10 @@ class AdminHomeView extends StatelessWidget {
 
     return RefreshIndicator(
       onRefresh: () => adminState.fetchDashboardData(),
-      child: SingleChildScrollView(
+      child:
+      adminState.isLoading? const Center(child: CircularProgressIndicator()) :
+      adminState.errorMessage != null ? Center(child: Text('Error: ${adminState.errorMessage}')) :
+      SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,8 +112,8 @@ class AdminHomeView extends StatelessWidget {
                               CircleAvatar(
                                 radius: 32,
                                 backgroundColor: Colors.grey[200],
-                                backgroundImage: currentUser?.profilePhoto != null 
-                                  ? NetworkImage("https://workiees.com/${currentUser!.profilePhoto!}") 
+                                backgroundImage: currentUser?.profilePhoto != null
+                                  ? NetworkImage("https://workiees.com/${currentUser!.profilePhoto!}")
                                   : const AssetImage(logo) as ImageProvider,
                               ),
                               Positioned(
@@ -512,7 +521,6 @@ class AdminHomeView extends StatelessWidget {
                   decoration: BoxDecoration(color: Colors.red.shade50.withOpacity(0.8), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.red.shade100)),
                   child: Text((lead['stage'] ?? 'Pending').toString().toUpperCase().replaceAll('_', ' '), style: GoogleFonts.montserrat(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.red.shade700)),
                 ),
-                Text((lead['created_at'] ?? '').toString().split(' ')[0], style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey.shade500, fontWeight: FontWeight.w500)),
               ],
             ),
             const SizedBox(height: 14),
@@ -526,6 +534,7 @@ class AdminHomeView extends StatelessWidget {
               ],
             ),
             const Spacer(),
+            Text((lead['created_at'] ?? '').toString().split(' ')[0], style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey.shade500, fontWeight: FontWeight.w500)),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

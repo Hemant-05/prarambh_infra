@@ -94,20 +94,29 @@ class AuthProvider extends ChangeNotifier {
     required String phone,
     required String password,
   }) async {
-    _setLoading(true);
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
     try {
+      // 1. Perform registration
       await authRepository.register(
         fullName: fullName,
         email: email,
         phone: phone,
         password: password,
       );
-      _errorMessage = null;
-      _setLoading(false);
+
+      // 2. Perform auto-login to set _currentUser and save credentials
+      _currentUser = await authRepository.loginUser(email, password);
+
+      _isLoading = false;
+      notifyListeners();
       return true; // Success
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
-      _setLoading(false);
+      _isLoading = false;
+      notifyListeners();
       return false; // Failed
     }
   }
