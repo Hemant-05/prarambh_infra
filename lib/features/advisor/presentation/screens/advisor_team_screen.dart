@@ -133,8 +133,10 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
-    final primaryBlue = AppColors.getPrimaryBlue(context);
+    final primaryBlue = Theme.of(context).primaryColor;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
     final provider = context.watch<AdvisorTeamProvider>();
 
     if (provider.teamTree != null && !_graphInitialized) {
@@ -156,7 +158,7 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
     }
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       // THE FIX: Bottom-Left root button
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: _showTreeFab && _graphInitialized
@@ -175,7 +177,7 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
             child: TextField(
               controller: _searchController,
-              style: GoogleFonts.montserrat(color: isDark ? Colors.white : Colors.black87, fontSize: 14),
+              style: GoogleFonts.montserrat(color: textColor, fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'Search member by name, code or role...',
                 hintStyle: GoogleFonts.montserrat(color: Colors.grey, fontSize: 13),
@@ -183,10 +185,11 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(icon: const Icon(Icons.clear, color: Colors.grey, size: 18), onPressed: () { _searchController.clear(); FocusScope.of(context).unfocus(); })
                     : null,
-                filled: true, fillColor: isDark ? Colors.grey[900] : Colors.white,
+                filled: true, 
+                fillColor: cardColor,
                 contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.withOpacity(0.2))),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.withOpacity(0.2))),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.getBorderColor(context))),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.getBorderColor(context))),
                 focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: primaryBlue)),
               ),
             ),
@@ -195,7 +198,7 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
           // 2. Tab Bar
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            decoration: BoxDecoration(color: isDark ? Colors.grey[900] : Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.withOpacity(0.1))),
+            decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.getBorderColor(context))),
             child: TabBar(
               controller: _tabController,
               indicator: BoxDecoration(
@@ -229,15 +232,15 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
                     Container(
                       height: 50,
                       width: double.infinity,
-                      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.1)))),
+                      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.getBorderColor(context)))),
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                         child: Row(
                           children: [
-                            _chip("Top-Down", Icons.arrow_downward, 0, primaryBlue, isDark), const SizedBox(width: 10),
-                            _chip("Left-Right", Icons.arrow_forward, 1, primaryBlue, isDark), const SizedBox(width: 10),
-                            _chip("Bottom-Up", Icons.arrow_upward, 2, primaryBlue, isDark),
+                            _chip(context, "Top-Down", Icons.arrow_downward, 0, primaryBlue, isDark), const SizedBox(width: 10),
+                            _chip(context, "Left-Right", Icons.arrow_forward, 1, primaryBlue, isDark), const SizedBox(width: 10),
+                            _chip(context, "Bottom-Up", Icons.arrow_upward, 2, primaryBlue, isDark),
                           ],
                         ),
                       ),
@@ -258,7 +261,7 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
                             ..strokeWidth = 2.0
                             ..strokeCap = StrokeCap.round
                             ..style = PaintingStyle.stroke,
-                          builder: (Node node) => _buildNodeWidget(node.key!.value as AdvisorTeamNode, primaryBlue, isDark),
+                          builder: (Node node) => _buildNodeWidget(context, node.key!.value as AdvisorTeamNode, primaryBlue, isDark),
                         ),
                       ),
                     ),
@@ -268,12 +271,18 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
                 // --- TAB 2: LIST VIEW ---
                 flatList.isEmpty
                     ? Center(child: Text("No members found.", style: GoogleFonts.montserrat(color: Colors.grey)))
-                    : ListView.builder(
-                  padding: const EdgeInsets.all(20),
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: flatList.length,
-                  itemBuilder: (context, index) => _buildListCard(flatList[index], primaryBlue, isDark),
-                ),
+                    : RefreshIndicator(
+                      onRefresh: () {
+                        final advisorId = context.read<AuthProvider>().currentUser?.id.toString() ?? '';
+                        return provider.fetchTeamTree(advisorId);
+                      },
+                      child: ListView.builder(
+                          padding: const EdgeInsets.all(20),
+                          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                          itemCount: flatList.length,
+                          itemBuilder: (context, index) => _buildListCard(context, flatList[index], primaryBlue, isDark),
+                        ),
+                    ),
               ],
             ),
           ),
@@ -284,32 +293,38 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
 
   // --- WIDGET BUILDERS ---
 
-  Widget _chip(String title, IconData icon, int index, Color blue, bool isDark) {
+  Widget _chip(BuildContext context, String title, IconData icon, int index, Color blue, bool isDark) {
     final bool sel = _currentLayoutType == index;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+    final cardColor = Theme.of(context).cardColor;
+
     return GestureDetector(
       onTap: () => _changeLayout(index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: sel ? blue : (isDark ? Colors.grey[850] : Colors.white),
+          color: sel ? blue : cardColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: sel ? blue : Colors.grey.withOpacity(0.2)),
+          border: Border.all(color: sel ? blue : AppColors.getBorderColor(context)),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 13, color: sel ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600])),
+            Icon(icon, size: 13, color: sel ? Colors.white : secondaryTextColor),
             const SizedBox(width: 5),
-            Text(title, style: GoogleFonts.montserrat(fontWeight: sel ? FontWeight.bold : FontWeight.w600, fontSize: 12, color: sel ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600]))),
+            Text(title, style: GoogleFonts.montserrat(fontWeight: sel ? FontWeight.bold : FontWeight.w600, fontSize: 12, color: sel ? Colors.white : secondaryTextColor)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildNodeWidget(AdvisorTeamNode node, Color blue, bool isDark) {
+  Widget _buildNodeWidget(BuildContext context, AdvisorTeamNode node, Color blue, bool isDark) {
     final authProvider = context.read<AuthProvider>();
     final isRoot = node.advisorCode == authProvider.currentUser?.advisorCode;
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
 
     final bool isMatch = _searchQuery.isNotEmpty && (node.fullName.toLowerCase().contains(_searchQuery) || node.advisorCode.toLowerCase().contains(_searchQuery) || node.designation.toLowerCase().contains(_searchQuery));
 
@@ -322,7 +337,7 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
       width: 170,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isRoot ? (isDark ? const Color(0xFF1E293B) : const Color(0xFFF0F4FF)) : (isDark ? Colors.grey[900] : Colors.white),
+        color: isRoot ? (isDark ? const Color(0xFF1E293B) : const Color(0xFFF0F4FF)) : cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: isMatch ? Colors.orange : (isRoot ? blue : blue.withOpacity(0.25)), width: isMatch ? 3.0 : (isRoot ? 2.0 : 1.0)),
         boxShadow: [BoxShadow(color: isMatch ? Colors.orange.withOpacity(0.5) : (isRoot ? blue.withOpacity(0.18) : Colors.black.withOpacity(0.05)), blurRadius: isMatch ? 15 : (isRoot ? 16 : 8), offset: const Offset(0, 4))],
@@ -341,9 +356,9 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
             ),
           ),
           const SizedBox(height: 8),
-          Text(node.fullName, textAlign: TextAlign.center, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 11, color: isDark ? Colors.white : Colors.black87), maxLines: 1, overflow: TextOverflow.ellipsis),
+          Text(node.fullName, textAlign: TextAlign.center, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 11, color: textColor), maxLines: 1, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 4),
-          Text(node.designation, style: GoogleFonts.montserrat(fontSize: 9, color: isDark ? Colors.grey[400] : Colors.grey[600])),
+          Text(node.designation, style: GoogleFonts.montserrat(fontSize: 9, color: secondaryTextColor)),
           const SizedBox(height: 2),
           Text('#${node.advisorCode}', style: GoogleFonts.montserrat(fontSize: 10, color: isMatch ? Colors.orange : blue, fontWeight: FontWeight.bold)),
         ],
@@ -354,7 +369,11 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
     return card;
   }
 
-  Widget _buildListCard(AdvisorTeamNode node, Color blue, bool isDark) {
+  Widget _buildListCard(BuildContext context, AdvisorTeamNode node, Color blue, bool isDark) {
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     String initials = '?';
     final parts = node.fullName.trim().split(' ').where((s) => s.isNotEmpty).toList();
     if (parts.isNotEmpty) initials = parts.length > 1 ? '${parts[0][0]}${parts[1][0]}'.toUpperCase() : parts[0][0].toUpperCase();
@@ -365,13 +384,17 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
     else if (node.status.toLowerCase() == 'pending') { statusBg = Colors.orange.shade50; statusText = Colors.orange.shade800; }
     else if (node.status.toLowerCase() == 'inactive') { statusBg = Colors.red.shade50; statusText = Colors.red.shade700; }
 
+    if (isDark) {
+        statusBg = statusText.withOpacity(0.15);
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey[900] : Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+        border: Border.all(color: AppColors.getBorderColor(context)),
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 6, offset: const Offset(0, 3))],
       ),
       child: Row(
@@ -388,15 +411,15 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(node.fullName, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 15, color: isDark ? Colors.white : Colors.black87)),
+                Text(node.fullName, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 15, color: textColor)),
                 const SizedBox(height: 4),
                 Text('#${node.advisorCode}', style: GoogleFonts.montserrat(fontSize: 11, color: blue, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.calendar_today, size: 12, color: Colors.blueGrey[400]),
+                    Icon(Icons.calendar_today, size: 12, color: secondaryTextColor),
                     const SizedBox(width: 4),
-                    Text('Joined ${node.createdAt}', style: GoogleFonts.montserrat(fontSize: 10, color: Colors.blueGrey[500], fontWeight: FontWeight.w600)),
+                    Text('Joined ${node.createdAt}', style: GoogleFonts.montserrat(fontSize: 10, color: secondaryTextColor, fontWeight: FontWeight.w600)),
                   ],
                 )
               ],
@@ -408,8 +431,8 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: Colors.blueGrey.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-                child: Text(node.designation.toUpperCase(), style: GoogleFonts.montserrat(fontSize: 9, color: isDark ? Colors.grey[400] : Colors.blueGrey[800], fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+                decoration: BoxDecoration(color: blue.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                child: Text(node.designation.toUpperCase(), style: GoogleFonts.montserrat(fontSize: 9, color: blue, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
               ),
               const SizedBox(height: 8),
               Container(

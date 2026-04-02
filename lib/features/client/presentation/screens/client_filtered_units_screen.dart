@@ -14,34 +14,38 @@ class ClientFilteredUnitsScreen extends StatelessWidget {
     final dashboardProvider = context.watch<ClientDashboardProvider>();
     final filterProvider = context.watch<PropertyFilterProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryBlue = AppColors.getPrimaryBlue(context);
+    final primaryBlue = Theme.of(context).primaryColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
 
     // Apply Filter logic
     final filteredUnits = filterProvider.getFilteredUnits(dashboardProvider.units);
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: BackButton(color: isDark ? Colors.white : Colors.black87),
+        leading: BackButton(color: textColor),
         title: Text(
           "Found ${filteredUnits.length} Units",
           style: GoogleFonts.montserrat(
-            color: isDark ? Colors.white : const Color(0xFF0D1B34),
+            color: textColor,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
         ),
       ),
       body: filteredUnits.isEmpty
-          ? _buildEmptyState(isDark)
+          ? _buildEmptyState(context, isDark)
           : ListView.builder(
               padding: const EdgeInsets.all(20),
               physics: const BouncingScrollPhysics(),
               itemCount: filteredUnits.length,
               itemBuilder: (context, index) {
                 final unit = filteredUnits[index];
+                final cardColor = Theme.of(context).cardColor;
+                final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
                 return GestureDetector(
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => ClientUnitDetailsScreen(unit: unit)));
@@ -50,8 +54,9 @@ class ClientFilteredUnitsScreen extends StatelessWidget {
                     margin: const EdgeInsets.only(bottom: 20),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.grey[900] : Colors.white,
+                      color: cardColor,
                       borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.getBorderColor(context)),
                       boxShadow: [
                         BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 5))
                       ],
@@ -75,20 +80,20 @@ class ClientFilteredUnitsScreen extends StatelessWidget {
                             children: [
                               Text(
                                 "${unit.towerName} - ${unit.unitNumber}",
-                                style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : Colors.black87),
+                                style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 16, color: textColor),
                                 maxLines: 1, overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 "${unit.configuration} | Floor ${unit.floorNumber}",
-                                style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey[500], fontWeight: FontWeight.w500),
+                                style: GoogleFonts.montserrat(fontSize: 12, color: secondaryTextColor, fontWeight: FontWeight.w500),
                               ),
                               const SizedBox(height: 8),
                               Row(
                                 children: [
                                   Icon(Icons.location_on, size: 14, color: primaryBlue),
                                   const SizedBox(width: 4),
-                                  Expanded(child: Text(unit.location, style: GoogleFonts.montserrat(fontSize: 11, color: Colors.grey[600]), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                  Expanded(child: Text(unit.location, style: GoogleFonts.montserrat(fontSize: 11, color: secondaryTextColor?.withOpacity(0.8)), maxLines: 1, overflow: TextOverflow.ellipsis)),
                                 ],
                               ),
                               const SizedBox(height: 10),
@@ -101,8 +106,8 @@ class ClientFilteredUnitsScreen extends StatelessWidget {
                                   const Spacer(),
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(6)),
-                                    child: Text(unit.availabilityStatus, style: GoogleFonts.montserrat(fontSize: 9, color: Colors.green[700], fontWeight: FontWeight.bold)),
+                                    decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                                    child: Text(unit.availabilityStatus, style: GoogleFonts.montserrat(fontSize: 9, color: Colors.green, fontWeight: FontWeight.bold)),
                                   ),
                                 ],
                               ),
@@ -118,21 +123,24 @@ class ClientFilteredUnitsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(bool isDark) {
+  Widget _buildEmptyState(BuildContext context, bool isDark) {
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search_off_rounded, size: 80, color: Colors.grey[300]),
+          Icon(Icons.search_off_rounded, size: 80, color: Theme.of(context).dividerColor),
           const SizedBox(height: 16),
           Text(
             "No units match your filters",
-            style: GoogleFonts.montserrat(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.grey[700]),
+            style: GoogleFonts.montserrat(fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
           ),
           const SizedBox(height: 8),
           Text(
             "Try adjusting your price range or BHK",
-            style: GoogleFonts.montserrat(fontSize: 14, color: Colors.grey[500]),
+            style: GoogleFonts.montserrat(fontSize: 14, color: secondaryTextColor),
           ),
         ],
       ),

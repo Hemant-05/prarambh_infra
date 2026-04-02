@@ -35,9 +35,9 @@ class _AdvisorLeaderboardScreenState extends State<AdvisorLeaderboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryBlue = AppColors.getPrimaryBlue(context);
+    final primaryBlue = Theme.of(context).primaryColor;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA);
+    final bgColor = Theme.of(context).scaffoldBackgroundColor;
     final provider = context.watch<AdvisorLeaderboardProvider>();
 
     return Scaffold(
@@ -86,7 +86,7 @@ class _AdvisorLeaderboardScreenState extends State<AdvisorLeaderboardScreen> {
                               style: GoogleFonts.montserrat(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : Colors.black87,
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
                               ),
                             ),
                           ),
@@ -105,7 +105,7 @@ class _AdvisorLeaderboardScreenState extends State<AdvisorLeaderboardScreen> {
                                   style: GoogleFonts.montserrat(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : Colors.black87,
+                                    color: Theme.of(context).textTheme.bodyLarge?.color,
                                   ),
                                 ),
                                 Row(
@@ -165,7 +165,8 @@ class _AdvisorLeaderboardScreenState extends State<AdvisorLeaderboardScreen> {
 
   Widget _buildPodiumProfile(AdvisorLeaderboardModel advisor, int rank, Color primaryBlue, bool isDark, {bool isCenter = false}) {
     final double avatarSize = isCenter ? 45 : 35;
-    final textColor = isDark ? Colors.white : Colors.black87;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -181,7 +182,7 @@ class _AdvisorLeaderboardScreenState extends State<AdvisorLeaderboardScreen> {
               ),
               child: CircleAvatar(
                 radius: avatarSize,
-                backgroundColor: primaryBlue.withValues(alpha: 0.1),
+                backgroundColor: primaryBlue.withOpacity(0.1),
                 backgroundImage: NetworkImage(_getImageUrl(advisor.profilePhoto)),
                 onBackgroundImageError: (_, __) {},
                 child: advisor.profilePhoto == null || advisor.profilePhoto!.isEmpty ? Text(
@@ -203,7 +204,7 @@ class _AdvisorLeaderboardScreenState extends State<AdvisorLeaderboardScreen> {
                   color: isCenter ? Colors.amber : (rank == 2 ? Colors.grey[400] : Colors.brown[300]),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
+                    color: Theme.of(context).scaffoldBackgroundColor,
                     width: 2,
                   ),
                 ),
@@ -236,7 +237,7 @@ class _AdvisorLeaderboardScreenState extends State<AdvisorLeaderboardScreen> {
           style: GoogleFonts.montserrat(
             fontWeight: FontWeight.w500,
             fontSize: 10,
-            color: Colors.grey[600],
+            color: secondaryTextColor,
           ),
           textAlign: TextAlign.center,
           maxLines: 1,
@@ -257,8 +258,9 @@ class _AdvisorLeaderboardScreenState extends State<AdvisorLeaderboardScreen> {
   }
 
   Widget _buildListItem(AdvisorLeaderboardModel advisor, int rank, Color primaryBlue, bool isDark) {
-    final cardColor = AppColors.getCardColor(context);
-    final textColor = isDark ? Colors.white : Colors.black87;
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -266,9 +268,10 @@ class _AdvisorLeaderboardScreenState extends State<AdvisorLeaderboardScreen> {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.getBorderColor(context)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -283,14 +286,14 @@ class _AdvisorLeaderboardScreenState extends State<AdvisorLeaderboardScreen> {
               style: GoogleFonts.montserrat(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: Colors.grey[500],
+                color: secondaryTextColor,
               ),
             ),
           ),
           const SizedBox(width: 8),
           CircleAvatar(
             radius: 20,
-            backgroundColor: primaryBlue.withValues(alpha: 0.1),
+            backgroundColor: primaryBlue.withOpacity(0.1),
             backgroundImage: NetworkImage(_getImageUrl(advisor.profilePhoto)),
             onBackgroundImageError: (_, __) {},
             child: advisor.profilePhoto == null || advisor.profilePhoto!.isEmpty ? Text(
@@ -319,7 +322,7 @@ class _AdvisorLeaderboardScreenState extends State<AdvisorLeaderboardScreen> {
                   advisor.designation,
                   style: GoogleFonts.montserrat(
                     fontSize: 11,
-                    color: Colors.grey[600],
+                    color: secondaryTextColor,
                   ),
                 ),
               ],
@@ -330,7 +333,7 @@ class _AdvisorLeaderboardScreenState extends State<AdvisorLeaderboardScreen> {
             style: GoogleFonts.montserrat(
               fontWeight: FontWeight.bold,
               fontSize: 14,
-              color: const Color(0xFF2E7D32),
+              color: isDark ? Colors.greenAccent : const Color(0xFF2E7D32),
             ),
           ),
         ],
@@ -339,18 +342,21 @@ class _AdvisorLeaderboardScreenState extends State<AdvisorLeaderboardScreen> {
   }
 
   Widget _buildEmptyState(Color primaryBlue) {
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+    final hintColor = Theme.of(context).hintColor;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.leaderboard_outlined, size: 80, color: Colors.grey[300]),
+          Icon(Icons.leaderboard_outlined, size: 80, color: hintColor.withOpacity(0.3)),
           const SizedBox(height: 16),
           Text(
             'No leaderboard data available',
             style: GoogleFonts.montserrat(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: Colors.grey[500],
+              color: secondaryTextColor,
             ),
           ),
         ],

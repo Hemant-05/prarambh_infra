@@ -32,10 +32,10 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
     final provider = context.watch<ClientDashboardProvider>();
     final user = context.watch<AuthProvider>().currentUser;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryBlue = AppColors.getPrimaryBlue(context);
+    final primaryBlue = Theme.of(context).primaryColor;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: provider.isLoading
           ? Center(child: CircularProgressIndicator(color: primaryBlue))
           : SafeArea(
@@ -84,6 +84,9 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   }
 
   Widget _buildHeader(String name, String profilePhoto, bool isDark) {
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
       child: Row(
@@ -96,7 +99,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                 "Let's Find your",
                 style: GoogleFonts.montserrat(
                   fontSize: 16,
-                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  color: secondaryTextColor,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -105,19 +108,19 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                 style: GoogleFonts.montserrat(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : const Color(0xFF0D1B34),
+                  color: textColor,
                 ),
               ),
             ],
           ),
           CircleAvatar(
             radius: 28,
-            backgroundColor: Colors.blue.shade50,
+            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
             backgroundImage: profilePhoto.isNotEmpty ? NetworkImage(profilePhoto) : null,
-            child: profilePhoto.isEmpty ? Icon(Icons.person, color: Colors.blue[700]) : null,
+            child: profilePhoto.isEmpty ? Icon(Icons.person, color: Theme.of(context).primaryColor) : null,
           ),
           IconButton(onPressed: (){
-            context.read<AuthProvider>().logout;
+            context.read<AuthProvider>().logout();
             Navigator.pushNamed(context, '/login');
           }, icon: Icon(Icons.logout, color: isDark ? Colors.white54 : Colors.red, size: 24),)
         ],
@@ -126,6 +129,9 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   }
 
   Widget _buildSearchBar(BuildContext context, Color primaryBlue, bool isDark) {
+    final cardColor = Theme.of(context).cardColor;
+    final hintColor = Theme.of(context).hintColor;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       child: Row(
@@ -136,20 +142,21 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[900] : Colors.white,
+                  color: cardColor,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.getBorderColor(context)),
                   boxShadow: [
                     BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))
                   ],
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.search, color: isDark ? Colors.grey[400] : Colors.blue.shade300, size: 22),
+                    Icon(Icons.search, color: isDark ? hintColor : primaryBlue.withOpacity(0.6), size: 22),
                     const SizedBox(width: 12),
                     Text(
                       "Search by Address, City, or ZIP",
                       style: GoogleFonts.montserrat(
-                        color: Colors.grey[400],
+                        color: hintColor,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -180,6 +187,9 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   }
 
   Widget _buildCategoryTabs(ClientDashboardProvider provider, Color activeColor, bool isDark) {
+    final cardColor = Theme.of(context).cardColor;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       physics: const BouncingScrollPhysics(),
@@ -194,14 +204,14 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 decoration: BoxDecoration(
-                  color: isSelected ? activeColor.withOpacity(0.1) : (isDark ? Colors.grey[900] : Colors.white),
+                  color: isSelected ? activeColor.withOpacity(0.1) : cardColor,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: isSelected ? activeColor : Colors.transparent),
+                  border: Border.all(color: isSelected ? activeColor : AppColors.getBorderColor(context)),
                 ),
                 child: Text(
                   cat,
                   style: GoogleFonts.montserrat(
-                    color: isSelected ? activeColor : (isDark ? Colors.grey[400] : Colors.grey[700]),
+                    color: isSelected ? activeColor : secondaryTextColor,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                     fontSize: 13,
                   ),
@@ -215,6 +225,10 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   }
 
   Widget _buildFeaturedList(List<ProjectModel> projects, bool isDark) {
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     // If no projects, show a nice placeholder
     if (projects.isEmpty) return const SizedBox();
 
@@ -236,8 +250,9 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
               width: 240,
               margin: const EdgeInsets.only(right: 20),
               decoration: BoxDecoration(
-                color: isDark ? Colors.grey[900] : Colors.white,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: AppColors.getBorderColor(context)),
                 boxShadow: [
                   BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5))
                 ],
@@ -262,8 +277,8 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                           top: 18, right: 18,
                           child: Container(
                             padding: const EdgeInsets.all(6),
-                            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                            child: Icon(Icons.bookmark, color: Colors.blue[600], size: 16),
+                            decoration: BoxDecoration(color: cardColor.withOpacity(0.8), shape: BoxShape.circle),
+                            child: Icon(Icons.bookmark, color: Theme.of(context).primaryColor, size: 16),
                           ),
                         ),
                       ],
@@ -279,16 +294,16 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                           style: GoogleFonts.montserrat(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : const Color(0xFF0D1B34),
+                            color: textColor,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
                             Text(
-                              "₹${item.budgetRange}/month",
+                              "₹${item.budgetRange}",
                               style: GoogleFonts.montserrat(
-                                color: Colors.blue[600],
+                                color: Theme.of(context).primaryColor,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
@@ -298,13 +313,13 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            Icon(Icons.location_on, color: Colors.grey[400], size: 14),
+                            Icon(Icons.location_on, color: secondaryTextColor?.withOpacity(0.5), size: 14),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
                                 item.city,
                                 style: GoogleFonts.montserrat(
-                                  color: Colors.grey[500],
+                                  color: secondaryTextColor,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -327,6 +342,9 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   }
 
   Widget _buildNearYouHeader(bool isDark) {
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Row(
@@ -337,14 +355,14 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
             style: GoogleFonts.montserrat(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : const Color(0xFF0D1B34),
+              color: textColor,
             ),
           ),
           Text(
             "More",
             style: GoogleFonts.montserrat(
               fontSize: 14,
-              color: Colors.grey[500],
+              color: secondaryTextColor,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -354,6 +372,10 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   }
 
   Widget _buildNearYouList(List<ProjectModel> projects, bool isDark) {
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     if (projects.isEmpty) return const SizedBox();
 
     return Padding(
@@ -373,8 +395,9 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isDark ? Colors.grey[900] : Colors.white,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.getBorderColor(context)),
                 boxShadow: [
                   BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))
                 ],
@@ -400,42 +423,42 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                           children: [
                             Icon(Icons.star, color: Colors.amber[600], size: 14),
                             const SizedBox(width: 4),
-                            Text("4.9", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold)),
+                            Text("4.9", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: textColor)),
                             const Spacer(),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(4)),
-                              child: Text(item.projectType.toUpperCase(), style: GoogleFonts.montserrat(fontSize: 8, color: Colors.blue[700], fontWeight: FontWeight.bold)),
+                              decoration: BoxDecoration(color: Theme.of(context).primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+                              child: Text(item.projectType.toUpperCase(), style: GoogleFonts.montserrat(fontSize: 8, color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
                             ),
                           ],
                         ),
                         const SizedBox(height: 4),
                         Text(
                           item.projectName,
-                          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 15, color: isDark ? Colors.white : Colors.black87),
+                          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 15, color: textColor),
                           maxLines: 1, overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 2),
                         Row(
                           children: [
-                            Icon(Icons.location_on, color: Colors.grey[400], size: 12),
+                            Icon(Icons.location_on, color: secondaryTextColor?.withOpacity(0.5), size: 12),
                             const SizedBox(width: 2),
-                            Expanded(child: Text(item.city, style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey[500]), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                            Expanded(child: Text(item.city, style: GoogleFonts.montserrat(fontSize: 10, color: secondaryTextColor), maxLines: 1, overflow: TextOverflow.ellipsis)),
                           ],
                         ),
                         const SizedBox(height: 6),
                         Row(
                           children: [
-                            Icon(Icons.aspect_ratio, size: 12, color: Colors.grey[400]),
+                            Icon(Icons.aspect_ratio, size: 12, color: secondaryTextColor?.withOpacity(0.5)),
                             const SizedBox(width: 4),
-                            Text("1,225", style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold)),
+                            Text("${item.buildArea}", style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: textColor)),
                             const SizedBox(width: 12),
-                            Icon(Icons.bed, size: 12, color: Colors.grey[400]),
+                            Icon(Icons.bed, size: 12, color: secondaryTextColor?.withOpacity(0.5)),
                             const SizedBox(width: 4),
-                            Text("3.0", style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold)),
+                            Text("3.0", style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: textColor)),
                             const Spacer(),
-                            Text("₹${item.ratePerSqft}", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue[600])),
-                            Text("/month", style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey[500])),
+                            Text("₹${item.ratePerSqft}", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
+                            Text("/sqft", style: GoogleFonts.montserrat(fontSize: 10, color: secondaryTextColor)),
                           ],
                         ),
                       ],
@@ -450,6 +473,9 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
     );
   }
   Widget _buildUnitsHeader(bool isDark) {
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Row(
@@ -460,14 +486,14 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
             style: GoogleFonts.montserrat(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : const Color(0xFF0D1B34),
+              color: textColor,
             ),
           ),
           Text(
             "More",
             style: GoogleFonts.montserrat(
               fontSize: 14,
-              color: Colors.grey[500],
+              color: secondaryTextColor,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -477,6 +503,10 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   }
 
   Widget _buildUnitsList(List<UnitModel> units, bool isDark) {
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     if (units.isEmpty) return const SizedBox();
 
     return SizedBox(
@@ -496,8 +526,9 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
               width: 180,
               margin: const EdgeInsets.only(right: 16),
               decoration: BoxDecoration(
-                color: isDark ? Colors.grey[900] : Colors.white,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.getBorderColor(context)),
                 boxShadow: [
                   BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))
                 ],
@@ -524,17 +555,17 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                       children: [
                         Text(
                           "${item.towerName} - ${item.unitNumber}",
-                          style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                          style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold, color: textColor),
                           maxLines: 1, overflow: TextOverflow.ellipsis,
                         ),
                         Text(
                           item.configuration,
-                          style: GoogleFonts.montserrat(fontSize: 11, color: Colors.grey[500], fontWeight: FontWeight.bold),
+                          style: GoogleFonts.montserrat(fontSize: 11, color: secondaryTextColor, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           "₹${(item.calculatedPrice / 100000).toStringAsFixed(1)} Lakh",
-                          style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.blue[600]),
+                          style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
                         ),
                       ],
                     ),

@@ -32,10 +32,11 @@ class _AdminHomeViewState extends State<AdminHomeView> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryBlue = AppColors.getPrimaryBlue(context);
-    final cardColor = AppColors.getCardColor(context);
+    final primaryBlue = Theme.of(context).primaryColor;
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyMedium?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black87;
 
     final adminState = context.watch<AdminProvider>();
     final authState = context.watch<AuthProvider>();
@@ -95,10 +96,10 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                       decoration: BoxDecoration(
                         color: cardColor,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: primaryBlue, width: 1.5),
+                        border: Border.all(color: AppColors.getBorderColor(context), width: 1.5),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 5),
                           ),
@@ -111,7 +112,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                             children: [
                               CircleAvatar(
                                 radius: 32,
-                                backgroundColor: Colors.grey[200],
+                                backgroundColor: AppColors.getBorderColor(context),
                                 backgroundImage: currentUser?.profilePhoto != null
                                   ? NetworkImage("https://workiees.com/${currentUser!.profilePhoto!}")
                                   : const AssetImage(logo) as ImageProvider,
@@ -171,13 +172,19 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [primaryBlue, primaryBlue.withBlue(255)],
+                        colors: isDark 
+                           ? [primaryBlue.withOpacity(0.8), primaryBlue.withOpacity(0.6)]
+                           : [primaryBlue, primaryBlue.withBlue(255)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
-                        BoxShadow(color: primaryBlue.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8)),
+                        BoxShadow(
+                          color: isDark ? Colors.transparent : primaryBlue.withOpacity(0.3), 
+                          blurRadius: 15, 
+                          offset: const Offset(0, 8),
+                        ),
                       ],
                     ),
                     child: Column(
@@ -253,7 +260,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                   ),
                   const SizedBox(height: 16),
                   data.priorityLeads.isEmpty
-                      ? Center(child: Padding(padding: const EdgeInsets.symmetric(vertical: 20), child: Text("No priority leads available", style: GoogleFonts.montserrat(color: Colors.grey))))
+                      ? Center(child: Padding(padding: const EdgeInsets.symmetric(vertical: 20), child: Text("No priority leads available", style: GoogleFonts.montserrat(color: secondaryTextColor))))
                       : SizedBox(
                           height: 170,
                           child: ListView.builder(
@@ -277,19 +284,25 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                     decoration: BoxDecoration(
                       color: cardColor,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)],
+                      boxShadow: [
+                        BoxShadow(
+                          color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.03), 
+                          blurRadius: 10,
+                        ),
+                      ],
+                      border: isDark ? Border.all(color: AppColors.getBorderColor(context)) : null,
                     ),
                     child: Column(
                       children: [
-                        _buildSalesRow('Suspecting', data.suspectingLeads.toString(), getPercent(data.suspectingLeads), const Color(0xFF2962FF), null),
+                        _buildSalesRow(context, 'Suspecting', data.suspectingLeads.toString(), getPercent(data.suspectingLeads), const Color(0xFF2962FF), null),
                         const SizedBox(height: 16),
-                        _buildSalesRow('Prospecting', data.prospectingLeads.toString(), getPercent(data.prospectingLeads), const Color(0xFF448AFF), null),
+                        _buildSalesRow(context, 'Prospecting', data.prospectingLeads.toString(), getPercent(data.prospectingLeads), const Color(0xFF448AFF), null),
                         const SizedBox(height: 16),
-                        _buildSalesRow('Site Visiting', data.siteVisitingLeads.toString(), getPercent(data.siteVisitingLeads), const Color(0xFFFF9100), Icons.warning_amber_rounded),
+                        _buildSalesRow(context, 'Site Visiting', data.siteVisitingLeads.toString(), getPercent(data.siteVisitingLeads), const Color(0xFFFF9100), Icons.warning_amber_rounded),
                         const SizedBox(height: 16),
-                        _buildSalesRow('Booking', data.bookingLeads.toString(), getPercent(data.bookingLeads), const Color(0xFF90CAF9), null),
+                        _buildSalesRow(context, 'Booking', data.bookingLeads.toString(), getPercent(data.bookingLeads), const Color(0xFF90CAF9), null),
                         const SizedBox(height: 16),
-                        _buildSalesRow('Referral', data.referralLeads.toString(), getPercent(data.referralLeads), const Color(0xFFBBDEFB), null),
+                        _buildSalesRow(context, 'Referral', data.referralLeads.toString(), getPercent(data.referralLeads), const Color(0xFFBBDEFB), null),
                       ],
                     ),
                   ),
@@ -309,7 +322,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                   ),
                   const SizedBox(height: 12),
                   data.pendingVerifications.isEmpty
-                      ? Center(child: Padding(padding: const EdgeInsets.symmetric(vertical: 20), child: Text('No pending verifications', style: GoogleFonts.montserrat(color: Colors.grey))))
+                      ? Center(child: Padding(padding: const EdgeInsets.symmetric(vertical: 20), child: Text('No pending verifications', style: GoogleFonts.montserrat(color: secondaryTextColor))))
                       : ListView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
@@ -332,6 +345,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                           itemCount: data.recentClosures.length,
                           itemBuilder: (context, index) {
                             final closure = data.recentClosures[index];
+                            final statusColor = Colors.green;
                             return InkWell(
                               onTap: () async {
                                 showDialog(context: context, barrierDismissible: false, builder: (context) => const Center(child: CircularProgressIndicator()));
@@ -353,15 +367,21 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                                 decoration: BoxDecoration(
                                   color: cardColor,
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.green.withOpacity(0.1)),
-                                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+                                  border: Border.all(color: statusColor.withOpacity(0.1)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.02), 
+                                      blurRadius: 10, 
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
                                 ),
                                 child: Row(
                                   children: [
                                     Container(
                                       padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(color: Colors.green.shade50, shape: BoxShape.circle),
-                                      child: const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                                      decoration: BoxDecoration(color: statusColor.withOpacity(0.1), shape: BoxShape.circle),
+                                      child: Icon(Icons.check_circle, color: statusColor, size: 20),
                                     ),
                                     const SizedBox(width: 16),
                                     Expanded(
@@ -369,15 +389,15 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(closure['client_name']?.toString() ?? 'Unknown Client', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 14, color: textColor)),
-                                          Text((closure['created_at'] ?? '').toString().split(' ')[0], style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+                                          Text((closure['created_at'] ?? '').toString().split(' ')[0], style: GoogleFonts.montserrat(fontSize: 12, color: secondaryTextColor, fontWeight: FontWeight.w500)),
                                         ],
                                       ),
                                     ),
                                     Column(
                                       crossAxisAlignment: CrossAxisAlignment.end,
                                       children: [
-                                        Text('₹${closure['payment_amount']}', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green.shade700)),
-                                        Text('Received', style: GoogleFonts.montserrat(fontSize: 10, color: Colors.green, fontWeight: FontWeight.bold)),
+                                        Text('₹${closure['payment_amount']}', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.greenAccent : Colors.green.shade700)),
+                                        Text('Received', style: GoogleFonts.montserrat(fontSize: 10, color: statusColor, fontWeight: FontWeight.bold)),
                                       ],
                                     ),
                                   ],
@@ -392,10 +412,10 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                           decoration: BoxDecoration(
                             color: cardColor,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.withOpacity(0.2), style: BorderStyle.solid),
+                            border: Border.all(color: AppColors.getBorderColor(context)),
                           ),
                           child: Center(
-                            child: Text('No closures recorded today', style: GoogleFonts.montserrat(color: Colors.grey.shade500, fontSize: 14)),
+                            child: Text('No closures recorded today', style: GoogleFonts.montserrat(color: secondaryTextColor, fontSize: 14)),
                           ),
                         ),
                   const SizedBox(height: 40),
@@ -408,7 +428,10 @@ class _AdminHomeViewState extends State<AdminHomeView> {
     );
   }
 
-  Widget _buildSalesRow(String title, String count, double percent, Color barColor, IconData? icon) {
+  Widget _buildSalesRow(BuildContext context, String title, String count, double percent, Color barColor, IconData? icon) {
+    final textColor = Theme.of(context).textTheme.bodyMedium?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -417,14 +440,14 @@ class _AdminHomeViewState extends State<AdminHomeView> {
           children: [
             Row(
               children: [
-                Text(title, style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w500)),
+                Text(title, style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w500, color: textColor)),
                 if (icon != null) ...[const SizedBox(width: 4), Icon(icon, size: 14, color: Colors.orange)],
               ],
             ),
             Row(
               children: [
-                Text(count, style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.bold)),
-                Text(' leads', style: GoogleFonts.montserrat(fontSize: 11, color: Colors.grey)),
+                Text(count, style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.bold, color: textColor)),
+                Text(' leads', style: GoogleFonts.montserrat(fontSize: 11, color: secondaryTextColor)),
               ],
             ),
           ],
@@ -434,7 +457,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
           borderRadius: BorderRadius.circular(10),
           child: LinearProgressIndicator(
             value: percent,
-            backgroundColor: Colors.grey[200],
+            backgroundColor: AppColors.getBorderColor(context),
             valueColor: AlwaysStoppedAnimation<Color>(barColor),
             minHeight: 8,
           ),
@@ -443,19 +466,27 @@ class _AdminHomeViewState extends State<AdminHomeView> {
     );
   }
 
-  Widget _buildVerificationCard(BuildContext context, String id, String name, String time, String? profilePhoto, Color cardColor, Color primaryBlue, Color textColor) {
+  Widget _buildVerificationCard(BuildContext context, String id, String name, String time, String? profilePhoto, Color cardColor, Color primaryBlue, Color? textColor) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)],
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.03), 
+            blurRadius: 10,
+          ),
+        ],
+        border: isDark ? Border.all(color: AppColors.getBorderColor(context)) : null,
       ),
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: Colors.grey[300],
+            backgroundColor: AppColors.getBorderColor(context),
             backgroundImage: profilePhoto != null ? NetworkImage("https://workiees.com/$profilePhoto") : null,
             child: profilePhoto == null ? const Icon(Icons.person, color: Colors.white) : null,
           ),
@@ -465,7 +496,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 14, color: textColor)),
-                Text(time, style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey)),
+                Text(time, style: GoogleFonts.montserrat(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color)),
               ],
             ),
           ),
@@ -480,7 +511,11 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: primaryBlue, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryBlue, 
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
             child: Text('Review', style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
           ),
         ],
@@ -488,7 +523,10 @@ class _AdminHomeViewState extends State<AdminHomeView> {
     );
   }
 
-  Widget _buildPriorityLeadCard(BuildContext context, Map<String, dynamic> lead, Color cardColor, Color primaryBlue, Color textColor) {
+  Widget _buildPriorityLeadCard(BuildContext context, Map<String, dynamic> lead, Color cardColor, Color primaryBlue, Color? textColor) {
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return InkWell(
       onTap: () async {
         showDialog(context: context, barrierDismissible: false, builder: (context) => const Center(child: CircularProgressIndicator()));
@@ -507,8 +545,14 @@ class _AdminHomeViewState extends State<AdminHomeView> {
         decoration: BoxDecoration(
           color: cardColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: primaryBlue.withOpacity(0.1)),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5))],
+          border: Border.all(color: AppColors.getBorderColor(context)),
+          boxShadow: [
+            BoxShadow(
+              color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.04), 
+              blurRadius: 15, 
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -518,7 +562,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(color: Colors.red.shade50.withOpacity(0.8), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.red.shade100)),
+                  decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.red.withOpacity(0.2))),
                   child: Text((lead['stage'] ?? 'Pending').toString().toUpperCase().replaceAll('_', ' '), style: GoogleFonts.montserrat(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.red.shade700)),
                 ),
               ],
@@ -534,7 +578,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
               ],
             ),
             const Spacer(),
-            Text((lead['created_at'] ?? '').toString().split(' ')[0], style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey.shade500, fontWeight: FontWeight.w500)),
+            Text((lead['created_at'] ?? '').toString().split(' ')[0], style: GoogleFonts.montserrat(fontSize: 10, color: secondaryTextColor, fontWeight: FontWeight.w500)),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

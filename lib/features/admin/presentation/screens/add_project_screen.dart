@@ -133,27 +133,25 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryBlue = AppColors.getPrimaryBlue(context);
-    final cardColor = AppColors.getCardColor(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isEditing = widget.existingProject != null; // NEW: Flag for UI logic
+    final primaryBlue = Theme.of(context).primaryColor;
+    final cardColor = Theme.of(context).cardColor;
+    final isEditing = widget.existingProject != null;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF121212)
-          : const Color(0xFFF5F7FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).cardColor,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: textColor),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          isEditing ? 'Update Project' : 'Add Project', // Dynamic Title
+          isEditing ? 'Update Project' : 'Add Project',
           style: GoogleFonts.montserrat(
-            color: Colors.black,
+            color: textColor,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
@@ -212,7 +210,10 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       bottomNavigationBar: SafeArea(
         child: Container(
           padding: const EdgeInsets.all(20),
-          color: Colors.white,
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            border: Border(top: BorderSide(color: AppColors.getBorderColor(context))),
+          ),
           child: Consumer<AdminProjectProvider>(
             builder: (context, provider, child) {
               return Row(
@@ -221,6 +222,10 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => setState(() => _currentStep = 0),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: AppColors.getBorderColor(context)),
+                          foregroundColor: textColor,
+                        ),
                         child: const Text('Back'),
                       ),
                     )
@@ -228,6 +233,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                     Expanded(
                       child: TextButton(
                         onPressed: () => Navigator.pop(context),
+                        style: TextButton.styleFrom(foregroundColor: textColor),
                         child: const Text('Cancel'),
                       ),
                     ),
@@ -333,6 +339,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryBlue,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -377,6 +384,8 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
 
   // --- STEP 1: Basic Info & Location ---
   Widget _buildStep1(Color primaryBlue, Color cardColor) {
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Column(
       children: [
         _buildCard(cardColor, primaryBlue, 'Basic Details', Icons.business, [
@@ -433,13 +442,14 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                     style: GoogleFonts.montserrat(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[600],
+                      color: secondaryTextColor,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Switch(
                     value: _reraApproved,
-                    activeThumbColor: primaryBlue,
+                    activeTrackColor: primaryBlue.withOpacity(0.5),
+                    activeColor: primaryBlue,
                     onChanged: (v) => setState(() => _reraApproved = v),
                   ),
                 ],
@@ -535,10 +545,14 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
-                color: Colors.blue[50],
+                decoration: BoxDecoration(
+                  color: primaryBlue.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: Column(
                   children: [
                     Icon(Icons.image, color: primaryBlue),
+                    const SizedBox(height: 8),
                     Text(
                       'Select Gallery Images',
                       style: GoogleFonts.montserrat(
@@ -560,21 +574,28 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                     .map(
                       (img) => Stack(
                         children: [
-                          Image.file(
-                            img,
-                            width: 60,
-                            height: 60,
-                            fit: BoxFit.cover,
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              img,
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                            ),
                           ),
                           Positioned(
                             right: 0,
                             child: GestureDetector(
                               onTap: () =>
                                   setState(() => _selectedImages.remove(img)),
-                              child: const Icon(
-                                Icons.cancel,
-                                color: Colors.red,
-                                size: 20,
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(color: Colors.white70, shape: BoxShape.circle),
+                                child: const Icon(
+                                  Icons.cancel,
+                                  color: Colors.red,
+                                  size: 20,
+                                ),
                               ),
                             ),
                           ),
@@ -586,66 +607,60 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
             ),
           const SizedBox(height: 20),
 
-          ListTile(
+          _buildMediaListTile(
+            context,
             onTap: _pickVideo,
-            tileColor: Colors.grey[100],
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            leading: Icon(
-              Icons.videocam,
-              color: _selectedVideo != null ? Colors.green : Colors.grey,
-            ),
-            title: Text(
-              _selectedVideo != null
-                  ? 'New Video Selected'
-                  : (isEditing && widget.existingProject!.videoUrl.isNotEmpty
-                        ? 'Replace Existing Video'
-                        : 'Select Preview Video'),
-              style: GoogleFonts.montserrat(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            trailing: _selectedVideo != null
-                ? IconButton(
-                    icon: const Icon(Icons.clear, color: Colors.red),
-                    onPressed: () => setState(() => _selectedVideo = null),
-                  )
-                : null,
+            icon: Icons.videocam,
+            iconColor: _selectedVideo != null ? Colors.green : Colors.grey,
+            title: _selectedVideo != null
+                ? 'New Video Selected'
+                : (isEditing && widget.existingProject!.videoUrl.isNotEmpty
+                      ? 'Replace Existing Video'
+                      : 'Select Preview Video'),
+            onClear: _selectedVideo != null ? () => setState(() => _selectedVideo = null) : null,
           ),
           const SizedBox(height: 12),
 
-          ListTile(
+          _buildMediaListTile(
+            context,
             onTap: _pickBrochure,
-            tileColor: Colors.grey[100],
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            leading: Icon(
-              Icons.picture_as_pdf,
-              color: _selectedBrochure != null ? Colors.redAccent : Colors.grey,
-            ),
-            title: Text(
-              _selectedBrochure != null
-                  ? 'New Brochure Selected'
-                  : (isEditing && widget.existingProject!.brochureUrl.isNotEmpty
-                        ? 'Replace Existing Brochure'
-                        : 'Select Brochure PDF'),
-              style: GoogleFonts.montserrat(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            trailing: _selectedBrochure != null
-                ? IconButton(
-                    icon: const Icon(Icons.clear, color: Colors.red),
-                    onPressed: () => setState(() => _selectedBrochure = null),
-                  )
-                : null,
+            icon: Icons.picture_as_pdf,
+            iconColor: _selectedBrochure != null ? Colors.redAccent : Colors.grey,
+            title: _selectedBrochure != null
+                ? 'New Brochure Selected'
+                : (isEditing && widget.existingProject!.brochureUrl.isNotEmpty
+                      ? 'Replace Existing Brochure'
+                      : 'Select Brochure PDF'),
+            onClear: _selectedBrochure != null ? () => setState(() => _selectedBrochure = null) : null,
           ),
         ]),
       ],
+    );
+  }
+
+  Widget _buildMediaListTile(BuildContext context, {required VoidCallback onTap, required IconData icon, required Color iconColor, required String title, VoidCallback? onClear}) {
+    return ListTile(
+      onTap: onTap,
+      tileColor: Theme.of(context).dividerColor.withOpacity(0.05),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: AppColors.getBorderColor(context)),
+      ),
+      leading: Icon(icon, color: iconColor),
+      title: Text(
+        title,
+        style: GoogleFonts.montserrat(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).textTheme.bodyLarge?.color,
+        ),
+      ),
+      trailing: onClear != null
+          ? IconButton(
+              icon: const Icon(Icons.clear, color: Colors.red),
+              onPressed: onClear,
+            )
+          : null,
     );
   }
 
@@ -662,7 +677,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: primaryBlue.withOpacity(0.3)),
+        border: Border.all(color: AppColors.getBorderColor(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -676,7 +691,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                 style: GoogleFonts.montserrat(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
             ],
@@ -694,6 +709,8 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
     bool isNumber = false,
     int maxLines = 1,
   }) {
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -702,7 +719,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
           style: GoogleFonts.montserrat(
             fontSize: 10,
             fontWeight: FontWeight.bold,
-            color: Colors.grey[600],
+            color: secondaryTextColor,
           ),
         ),
         const SizedBox(height: 8),
@@ -710,21 +727,25 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
           controller: controller,
           maxLines: maxLines,
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-          style: GoogleFonts.montserrat(fontSize: 13),
+          style: GoogleFonts.montserrat(fontSize: 13, color: Theme.of(context).textTheme.bodyLarge?.color),
           decoration: InputDecoration(
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 12,
             ),
             filled: true,
-            fillColor: Colors.grey[50],
+            fillColor: Theme.of(context).dividerColor.withOpacity(0.05),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey.shade200),
+              borderSide: BorderSide(color: AppColors.getBorderColor(context)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey.shade200),
+              borderSide: BorderSide(color: AppColors.getBorderColor(context)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Theme.of(context).primaryColor),
             ),
           ),
         ),
@@ -738,6 +759,8 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
     List<String> items,
     ValueChanged<String?> onChanged,
   ) {
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -746,25 +769,26 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
           style: GoogleFonts.montserrat(
             fontSize: 10,
             fontWeight: FontWeight.bold,
-            color: Colors.grey[600],
+            color: secondaryTextColor,
           ),
         ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: Colors.grey[50],
+            color: Theme.of(context).dividerColor.withOpacity(0.05),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: AppColors.getBorderColor(context)),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: value,
               isExpanded: true,
+              dropdownColor: Theme.of(context).cardColor,
               icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
               style: GoogleFonts.montserrat(
                 fontSize: 13,
-                color: Colors.black87,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
               items: items.map((String item) {
                 return DropdownMenuItem<String>(value: item, child: Text(item));

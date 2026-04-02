@@ -129,26 +129,27 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
 
   @override
   Widget build(BuildContext context) {
-    final primaryBlue = AppColors.getPrimaryBlue(context);
-    final cardColor = AppColors.getCardColor(context);
+    final primaryBlue = Theme.of(context).primaryColor;
+    final cardColor = Theme.of(context).cardColor;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final provider = context.watch<AdvisorLeadProvider>();
 
     return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF121212)
-          : const Color(0xFFF5F7FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(50),
         child: AppBar(
-          backgroundColor: isDark ? Colors.grey[900] : Colors.white,
-          elevation: 1,
+          backgroundColor: cardColor,
+          elevation: 0,
           bottom: TabBar(
             controller: _tabController,
             isScrollable: true,
             indicatorColor: primaryBlue,
+            indicatorWeight: 3,
             labelColor: primaryBlue,
-            unselectedLabelColor: Colors.grey[600],
+            unselectedLabelColor: isDark ? Colors.white38 : Colors.grey[600],
+            labelStyle: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13),
+            unselectedLabelStyle: GoogleFonts.montserrat(fontWeight: FontWeight.w500, fontSize: 13),
             tabs: const [
               Tab(text: 'Suspecting'),
               Tab(text: 'Prospecting'),
@@ -158,11 +159,13 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
               Tab(text: 'Completed'),
             ],
           ),
+          shape: Border(bottom: BorderSide(color: AppColors.getBorderColor(context))),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddLeadDialog,
         backgroundColor: primaryBlue,
+        elevation: 4,
         icon: const Icon(Icons.add, color: Colors.white),
         label: Text(
           'Add Lead',
@@ -173,7 +176,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
         ),
       ),
       body: provider.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator(color: primaryBlue))
           : TabBarView(
               controller: _tabController,
               children: [
@@ -236,20 +239,35 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
     Color primaryBlue,
     bool isDark,
   ) {
+    final hintColor = Theme.of(context).hintColor;
+
     if (leads.isEmpty)
       return Center(
-        child: Text(
-          "No leads in this stage.",
-          style: GoogleFonts.montserrat(color: Colors.grey),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.assignment_late_outlined, size: 48, color: hintColor.withOpacity(0.5)),
+            const SizedBox(height: 16),
+            Text(
+              "No leads in this stage.",
+              style: GoogleFonts.montserrat(color: hintColor, fontWeight: FontWeight.w500),
+            ),
+          ],
         ),
       );
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      physics: const BouncingScrollPhysics(),
-      itemCount: leads.length,
-      itemBuilder: (context, index) {
-        return _buildPipelineCard(leads[index], cardColor, primaryBlue, isDark);
+    return RefreshIndicator(
+      onRefresh: () {
+        final advisorCode = context.read<AuthProvider>().currentUser?.advisorCode ?? '';
+        return context.read<AdvisorLeadProvider>().fetchLeads(advisorCode: advisorCode);
       },
+      child: ListView.builder(
+        padding: const EdgeInsets.all(20),
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        itemCount: leads.length,
+        itemBuilder: (context, index) {
+          return _buildPipelineCard(leads[index], cardColor, primaryBlue, isDark);
+        },
+      ),
     );
   }
 
@@ -260,27 +278,31 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
     bool isDark,
   ) {
     // Stage-specific styling
-    final isBooking = lead.stage.toLowerCase() == 'booking';
+    final isBooking = lead.stage.toLowerCase() == 'booking' || lead.stage.toLowerCase() == 'pending_verification';
     final isClosed = lead.stage.toLowerCase() == 'closed';
     final isCompleted = lead.stage.toLowerCase() == 'completed';
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
 
     // Choose accent and background based on stage
     Color accentColor = isCompleted
-        ? Colors.green
-        : (isBooking ? Colors.orange : (isClosed ? Colors.red : primaryBlue));
+        ? (isDark ? Colors.greenAccent : Colors.green[700]!)
+        : (isBooking 
+            ? (isDark ? Colors.orangeAccent : Colors.orange[800]!) 
+            : (isClosed ? Colors.redAccent : primaryBlue));
         
-    Color? backgroundColor = isCompleted
+    Color backgroundColor = isCompleted
         ? (isDark 
-            ? Colors.green.withOpacity(0.05) 
-            : Colors.green.withOpacity(0.02))
+            ? Colors.green.withOpacity(0.1) 
+            : Colors.green.withOpacity(0.05))
         : (isBooking
             ? (isDark
-                  ? Colors.orange.withOpacity(0.05)
-                  : Colors.orange.withOpacity(0.02))
+                  ? Colors.orange.withOpacity(0.1)
+                  : Colors.orange.withOpacity(0.05))
             : (isClosed
                   ? (isDark
-                        ? Colors.red.withOpacity(0.05)
-                        : Colors.red.withOpacity(0.02))
+                        ? Colors.red.withOpacity(0.1)
+                        : Colors.red.withOpacity(0.05))
                   : cardColor));
 
     return Container(
@@ -289,13 +311,13 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
         color: backgroundColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isBooking || isClosed
-              ? accentColor.withOpacity(0.3)
-              : Colors.grey.withOpacity(0.2),
+          color: isBooking || isClosed || isCompleted
+              ? accentColor.withOpacity(isDark ? 0.4 : 0.2)
+              : AppColors.getBorderColor(context),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -318,7 +340,6 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Row: Source Tag & Stage Icon
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -349,15 +370,19 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                             decoration: BoxDecoration(
                               color: Colors.amber.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.amber.shade300),
+                              border: Border.all(color: Colors.amber.withOpacity(0.3)),
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.star, color: Colors.amber.shade700, size: 10),
+                                Icon(Icons.star, color: isDark ? Colors.amberAccent : Colors.amber[700], size: 10),
                                 const SizedBox(width: 4),
                                 Text(
                                   "PRIORITY",
-                                  style: GoogleFonts.montserrat(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.amber.shade700),
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 9, 
+                                    fontWeight: FontWeight.bold, 
+                                    color: isDark ? Colors.amberAccent : Colors.amber[700],
+                                  ),
                                 ),
                               ],
                             ),
@@ -366,51 +391,49 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                       ],
                     ),
                     if (isClosed)
-                      const Icon(
+                      Icon(
                         Icons.do_disturb_alt_rounded,
-                        color: Colors.red,
+                        color: isDark ? Colors.redAccent : Colors.red,
                         size: 18,
                       ),
                     if (isCompleted)
-                      const Icon(
+                      Icon(
                         Icons.verified_rounded,
-                        color: Colors.green,
+                        color: isDark ? Colors.greenAccent : Colors.green,
                         size: 18,
                       ),
                   ],
                 ),
                 const SizedBox(height: 12),
 
-                // Name and Phone
                 Text(
                   lead.clientName,
                   style: GoogleFonts.montserrat(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: textColor,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.phone, size: 14, color: Colors.grey[600]),
+                    Icon(Icons.phone, size: 14, color: secondaryTextColor),
                     const SizedBox(width: 6),
                     Text(
                       lead.clientNumber,
                       style: GoogleFonts.montserrat(
                         fontSize: 13,
-                        color: Colors.grey[600],
+                        color: secondaryTextColor,
                       ),
                     ),
                   ],
                 ),
 
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Divider(height: 1, color: AppColors.getBorderColor(context)),
                 ),
 
-                // Footer Row: Attempts & Created Date
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -432,7 +455,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                       lead.createdAt,
                       style: GoogleFonts.montserrat(
                         fontSize: 11,
-                        color: Colors.grey[500],
+                        color: secondaryTextColor,
                       ),
                     ),
                   ],

@@ -4,6 +4,7 @@ import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_pro
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_team_screen.dart';
 import 'package:provider/provider.dart';
 
+import 'package:prarambh_infra/core/theme/app_colors.dart';
 import 'package:prarambh_infra/features/auth/presentation/providers/auth_provider.dart';
 import '../providers/advisor_dashboard_provider.dart';
 import '../../data/models/advisor_dashboard_model.dart';
@@ -24,7 +25,6 @@ class AdvisorDashboardScreen extends StatefulWidget {
 
 class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
   String _selectedSalesTab = 'Month';
-  final Color _primaryBlue = const Color(0xFF0056A4);
   int _selectedIndex = 0;
 
   final List<String> _appBarTitles = [
@@ -52,6 +52,9 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final primaryBlue = Theme.of(context).primaryColor;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final List<Widget> screens = [
       _buildDashboardContent(context),
       const AdvisorProjectsScreen(),
@@ -61,12 +64,12 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       drawer: _buildDrawer(),
       appBar: AppBar(
-        backgroundColor: _primaryBlue,
         elevation: 0,
         centerTitle: false,
+        backgroundColor: primaryBlue,
         title: Text(
           _appBarTitles[_selectedIndex],
           style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
@@ -74,14 +77,22 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))]),
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.05), 
+              blurRadius: 10, 
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
           type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: _primaryBlue,
-          unselectedItemColor: Colors.grey.shade500,
+          backgroundColor: Theme.of(context).cardColor,
+          selectedItemColor: primaryBlue,
+          unselectedItemColor: isDark ? Colors.white60 : Colors.grey.shade500,
           selectedLabelStyle: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold),
           unselectedLabelStyle: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.w600),
           elevation: 0,
@@ -107,9 +118,10 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
   Widget _buildDashboardContent(BuildContext context) {
     final provider = context.watch<AdvisorDashboardProvider>();
     final advisor = context.read<AuthProvider>().currentUser;
+    final primaryBlue = Theme.of(context).primaryColor;
 
     if (provider.isLoading || provider.data == null) {
-      return Center(child: CircularProgressIndicator(color: _primaryBlue));
+      return Center(child: CircularProgressIndicator(color: primaryBlue));
     }
 
     final data = provider.data!;
@@ -121,35 +133,35 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTopProfileCard(data),
+            _buildTopProfileCard(context, data),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 20),
-                  _buildSectionTitle('Career Progress'),
-                  _buildCareerProgress(data),
+                  _buildSectionTitle(context, 'Career Progress'),
+                  _buildCareerProgress(context, data),
                   const SizedBox(height: 24),
 
-                  _buildSalesConversionHeader(),
-                  _buildSalesConversionCards(data.sales),
+                  _buildSalesConversionHeader(context),
+                  _buildSalesConversionCards(context, data.sales),
                   const SizedBox(height: 24),
 
-                  _buildSectionTitle('Quick Actions'),
-                  _buildQuickActionsGrid(),
+                  _buildSectionTitle(context, 'Quick Actions'),
+                  _buildQuickActionsGrid(context),
                   const SizedBox(height: 24),
 
-                  _buildPendingActionsHeader(data.pendingActions.length),
-                  _buildPendingActionsList(data.pendingActions),
+                  _buildPendingActionsHeader(context, data.pendingActions.length),
+                  _buildPendingActionsList(context, data.pendingActions),
                   const SizedBox(height: 24),
 
-                  _buildSectionTitle('Promotion Status'),
-                  _buildPromotionStatusTable(data.promotionStatus),
+                  _buildSectionTitle(context, 'Promotion Status'),
+                  _buildPromotionStatusTable(context, data.promotionStatus),
                   const SizedBox(height: 24),
 
-                  _buildActiveContestsHeader(),
-                  _buildActiveContestsList(data.activeContests),
+                  _buildActiveContestsHeader(context),
+                  _buildActiveContestsList(context, data.activeContests),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -161,45 +173,36 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
   }
 
   // ==========================================
-  // PLACEHOLDER SCREEN WIDGET
-  // ==========================================
-  Widget _buildPlaceholderScreen(String title, IconData icon) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(color: Colors.blue.shade50, shape: BoxShape.circle),
-            child: Icon(icon, size: 64, color: _primaryBlue.withOpacity(0.5)),
-          ),
-          const SizedBox(height: 24),
-          Text('$title Screen', style: GoogleFonts.montserrat(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87)),
-          const SizedBox(height: 8),
-          Text('Coming Soon', style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey)),
-        ],
-      ),
-    );
-  }
-
-  // ==========================================
   // UI WIDGET COMPONENTS
   // ==========================================
-  Widget _buildTopProfileCard(AdvisorDashboardModel data) {
+  Widget _buildTopProfileCard(BuildContext context, AdvisorDashboardModel data) {
+    final primaryBlue = Theme.of(context).primaryColor;
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyMedium?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
         Container(
           height: 60,
-          decoration: BoxDecoration(color: _primaryBlue, borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24))),
+          decoration: BoxDecoration(color: primaryBlue, borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24))),
         ),
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 20),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardColor,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+            border: Border.all(color: AppColors.getBorderColor(context)),
+            boxShadow: [
+               BoxShadow(
+                 color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.05), 
+                 blurRadius: 10, 
+                 offset: const Offset(0, 4),
+               ),
+            ],
           ),
           child: Row(
             children: [
@@ -208,9 +211,9 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                 children: [
                   CircleAvatar(
                     radius: 35,
-                    backgroundColor: Colors.blue.shade50,
+                    backgroundColor: primaryBlue.withOpacity(0.1),
                     backgroundImage: data.profilePhoto.isNotEmpty ? NetworkImage(data.profilePhoto) : null,
-                    child: data.profilePhoto.isEmpty ? Icon(Icons.person, size: 30, color: _primaryBlue) : null,
+                    child: data.profilePhoto.isEmpty ? Icon(Icons.person, size: 30, color: primaryBlue) : null,
                   ),
                   Positioned(
                     bottom: -8, left: 0, right: 0,
@@ -231,28 +234,28 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(data.name, style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+                    Text(data.name, style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
                     const SizedBox(height: 4),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(4)),
-                      child: Text(data.role, style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blue[700])),
+                      decoration: BoxDecoration(color: primaryBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+                      child: Text(data.role, style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: primaryBlue)),
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Icon(Icons.badge_outlined, size: 14, color: Colors.grey[600]),
+                        Icon(Icons.badge_outlined, size: 14, color: secondaryTextColor),
                         const SizedBox(width: 4),
-                        Text('ID: ${data.advisorId}', style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey[700], fontWeight: FontWeight.bold)),
+                        Text('ID: ${data.advisorId}', style: GoogleFonts.montserrat(fontSize: 12, color: textColor, fontWeight: FontWeight.bold)),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.person_outline, size: 14, color: Colors.grey[600]),
+                        Icon(Icons.person_outline, size: 14, color: secondaryTextColor),
                         const SizedBox(width: 4),
-                        Text('Parent: ', style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey[700])),
-                        Expanded(child: Text(data.parentName, style: GoogleFonts.montserrat(fontSize: 12, color: Colors.blue[700], fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                        Text('Parent: ', style: GoogleFonts.montserrat(fontSize: 12, color: secondaryTextColor)),
+                        Expanded(child: Text(data.parentName, style: GoogleFonts.montserrat(fontSize: 12, color: primaryBlue, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis)),
                       ],
                     ),
                   ],
@@ -265,19 +268,27 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     );
   }
 
-  Widget _buildCareerProgress(AdvisorDashboardModel data) {
+  Widget _buildCareerProgress(BuildContext context, AdvisorDashboardModel data) {
+    final primaryBlue = Theme.of(context).primaryColor;
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyMedium?.color;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _primaryBlue.withOpacity(0.3)),
+        border: Border.all(color: primaryBlue.withOpacity(0.3)),
       ),
       child: Row(
         children: [
           Container(
             width: 60, height: 60,
-            decoration: BoxDecoration(color: const Color(0xFF1E2A47), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(
+              color: isDark ? primaryBlue.withOpacity(0.2) : const Color(0xFF1E2A47), 
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -298,43 +309,61 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(data.currentLevel, style: GoogleFonts.montserrat(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(data.currentLevel, style: GoogleFonts.montserrat(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Text('NEXT: ${data.nextLevel}', style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: _primaryBlue)),
+                    Text('NEXT: ${data.nextLevel}', style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: primaryBlue)),
                     const SizedBox(width: 4),
-                    Icon(Icons.arrow_outward, size: 12, color: _primaryBlue),
+                    Icon(Icons.arrow_outward, size: 12, color: primaryBlue),
                   ],
                 ),
               ],
             ),
           ),
-          Text('${data.progressPercent}%', style: GoogleFonts.montserrat(fontSize: 28, fontWeight: FontWeight.bold, color: const Color(0xFF1E2A47))),
+          Text(
+            '${data.progressPercent}%', 
+            style: GoogleFonts.montserrat(fontSize: 28, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E2A47)),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSalesConversionHeader() {
+  Widget _buildSalesConversionHeader(BuildContext context) {
+    final primaryBlue = Theme.of(context).primaryColor;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildSectionTitle('Sales Conversion'),
+        _buildSectionTitle(context, 'Sales Conversion'),
         Container(
           padding: const EdgeInsets.all(2),
-          decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(20)),
+          decoration: BoxDecoration(color: AppColors.getBorderColor(context), borderRadius: BorderRadius.circular(20)),
           child: Row(
             children: ['Month', 'Quarter', 'Year'].map((e) => GestureDetector(
               onTap: () => setState(() => _selectedSalesTab = e),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: _selectedSalesTab == e ? Colors.white : Colors.transparent,
+                  color: _selectedSalesTab == e ? (isDark ? primaryBlue : Colors.white) : Colors.transparent,
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: _selectedSalesTab == e ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4)] : [],
+                  boxShadow: _selectedSalesTab == e ? [
+                    BoxShadow(
+                      color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.05), 
+                      blurRadius: 4,
+                    )
+                  ] : [],
                 ),
-                child: Text(e, style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.w600, color: _selectedSalesTab == e ? _primaryBlue : Colors.grey[600])),
+                child: Text(
+                  e, 
+                  style: GoogleFonts.montserrat(
+                    fontSize: 10, 
+                    fontWeight: FontWeight.w600, 
+                    color: _selectedSalesTab == e ? (isDark ? Colors.white : primaryBlue) : Theme.of(context).textTheme.bodySmall?.color,
+                  ),
+                ),
               ),
             )).toList(),
           ),
@@ -343,36 +372,48 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     );
   }
 
-  Widget _buildSalesConversionCards(SalesConversion sales) {
+  Widget _buildSalesConversionCards(BuildContext context, SalesConversion sales) {
     return Padding(
       padding: const EdgeInsets.only(top: 12),
       child: Row(
         children: [
-          Expanded(child: _buildSalesCard(sales.suspecting.toString(), 'SUSPECTING', const Color(0xFFF0F8FF), Colors.blue)),
+          Expanded(child: _buildSalesCard(context, sales.suspecting.toString(), 'SUSPECTING', const Color(0xFF2962FF))),
           const SizedBox(width: 12),
-          Expanded(child: _buildSalesCard(sales.prospecting.toString(), 'PROSPECTING', const Color(0xFFFCE4EC), Colors.pink)),
+          Expanded(child: _buildSalesCard(context, sales.prospecting.toString(), 'PROSPECTING', const Color(0xFF448AFF))),
           const SizedBox(width: 12),
-          Expanded(child: _buildSalesCard(sales.siteVisit.toString(), 'SITE VISIT', const Color(0xFFE8F5E9), Colors.green)),
+          Expanded(child: _buildSalesCard(context, sales.siteVisit.toString(), 'SITE VISIT', const Color(0xFFFF9100))),
         ],
       ),
     );
   }
 
-  Widget _buildSalesCard(String value, String label, Color bgColor, Color textColor) {
+  Widget _buildSalesCard(BuildContext context, String value, String label, Color accentColor) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? Theme.of(context).cardColor : accentColor.withOpacity(0.1);
+    final valueColor = isDark ? Colors.white : Colors.black87;
+    final labelColor = isDark ? accentColor : Colors.black87;
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+          color: cardColor, 
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: accentColor.withOpacity(isDark ? 0.4 : 0.1)),
+      ),
       child: Column(
         children: [
-          Text(value, style: GoogleFonts.montserrat(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87)),
+          Text(value, style: GoogleFonts.montserrat(fontSize: 24, fontWeight: FontWeight.bold, color: valueColor)),
           const SizedBox(height: 4),
-          Text(label, style: GoogleFonts.montserrat(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.black87)),
+          Text(label, style: GoogleFonts.montserrat(fontSize: 9, fontWeight: FontWeight.bold, color: labelColor)),
         ],
       ),
     );
   }
 
-  Widget _buildQuickActionsGrid() {
+  Widget _buildQuickActionsGrid(BuildContext context) {
+    final primaryBlue = Theme.of(context).primaryColor;
+    final cardColor = Theme.of(context).cardColor;
+
     final actions = [
       {'icon': Icons.description_outlined, 'label': 'Document\nView'},
       {'icon': Icons.account_balance_wallet_outlined, 'label': 'My Income'},
@@ -396,13 +437,17 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           },
           borderRadius: BorderRadius.circular(12),
           child: Container(
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: _primaryBlue.withOpacity(0.2))),
+            decoration: BoxDecoration(
+                color: cardColor, 
+                borderRadius: BorderRadius.circular(12), 
+                border: Border.all(color: primaryBlue.withOpacity(0.2))
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(actions[index]['icon'] as IconData, color: _primaryBlue, size: 28),
+                Icon(actions[index]['icon'] as IconData, color: primaryBlue, size: 28),
                 const SizedBox(height: 8),
-                Text(actions[index]['label'] as String, textAlign: TextAlign.center, style: GoogleFonts.montserrat(fontSize: 10, color: _primaryBlue, fontWeight: FontWeight.w500)),
+                Text(actions[index]['label'] as String, textAlign: TextAlign.center, style: GoogleFonts.montserrat(fontSize: 10, color: primaryBlue, fontWeight: FontWeight.w500)),
               ],
             ),
           ),
@@ -411,23 +456,27 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     );
   }
 
-  Widget _buildPendingActionsHeader(int count) {
+  Widget _buildPendingActionsHeader(BuildContext context, int count) {
+    final primaryBlue = Theme.of(context).primaryColor;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildSectionTitle('Pending Actions'),
-        Text('$count Tasks', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: _primaryBlue)),
+        _buildSectionTitle(context, 'Pending Actions'),
+        Text('$count Tasks', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: primaryBlue)),
       ],
     );
   }
 
-  Widget _buildPendingActionsList(List<PendingAction> actions) {
+  Widget _buildPendingActionsList(BuildContext context, List<PendingAction> actions) {
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+    final cardColor = Theme.of(context).cardColor;
+
     if (actions.isEmpty) {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade300)),
-        child: Center(child: Text("No pending tasks! 🎉", style: GoogleFonts.montserrat(color: Colors.grey))),
+        decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.getBorderColor(context))),
+        child: Center(child: Text("No pending tasks! 🎉", style: GoogleFonts.montserrat(color: secondaryTextColor))),
       );
     }
 
@@ -435,12 +484,16 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     List<IconData> icons = [Icons.shortcut, Icons.assignment_outlined, Icons.calendar_today_outlined, Icons.schedule];
 
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade300)),
+      decoration: BoxDecoration(
+        color: cardColor, 
+        borderRadius: BorderRadius.circular(12), 
+        border: Border.all(color: AppColors.getBorderColor(context)),
+      ),
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: actions.length,
-        separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey.shade200),
+        separatorBuilder: (context, index) => Divider(height: 1, color: AppColors.getBorderColor(context)),
         itemBuilder: (context, index) {
           final action = actions[index];
           return ListTile(
@@ -449,51 +502,62 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
               decoration: BoxDecoration(color: iconColors[index % iconColors.length].withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
               child: Icon(icons[index % icons.length], color: iconColors[index % iconColors.length]),
             ),
-            title: Text(action.title, style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.bold)),
-            subtitle: Text(action.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.montserrat(fontSize: 11, color: Colors.grey)),
-            trailing: Text(action.time, style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.grey[600])),
+            title: Text(action.title, style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyMedium?.color)),
+            subtitle: Text(action.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.montserrat(fontSize: 11, color: secondaryTextColor)),
+            trailing: Text(action.time, style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.w600, color: secondaryTextColor)),
           );
         },
       ),
     );
   }
 
-  Widget _buildPromotionStatusTable(List<PromotionMetric> metrics) {
+  Widget _buildPromotionStatusTable(BuildContext context, List<PromotionMetric> metrics) {
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+    final cardColor = Theme.of(context).cardColor;
+    final primaryBlue = Theme.of(context).primaryColor;
+
     if (metrics.isEmpty) {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade300)),
-        child: Center(child: Text("No promotion metrics set yet.", style: GoogleFonts.montserrat(color: Colors.grey))),
+        decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.getBorderColor(context))),
+        child: Center(child: Text("No promotion metrics set yet.", style: GoogleFonts.montserrat(color: secondaryTextColor))),
       );
     }
 
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)),
+      decoration: BoxDecoration(
+        color: cardColor, 
+        borderRadius: BorderRadius.circular(12), 
+        border: Border.all(color: AppColors.getBorderColor(context)),
+      ),
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: const BorderRadius.vertical(top: Radius.circular(12))),
+            decoration: BoxDecoration(
+              color: AppColors.getBorderColor(context).withOpacity(0.5), 
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            ),
             child: Row(
               children: [
-                Expanded(flex: 2, child: Text('METRIC', style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey[600]))),
-                Expanded(child: Text('TARGET', textAlign: TextAlign.center, style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey[600]))),
-                Expanded(child: Text('ACHIEVED', textAlign: TextAlign.right, style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey[600]))),
+                Expanded(flex: 2, child: Text('METRIC', style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: secondaryTextColor))),
+                Expanded(child: Text('TARGET', textAlign: TextAlign.center, style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: secondaryTextColor))),
+                Expanded(child: Text('ACHIEVED', textAlign: TextAlign.right, style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: secondaryTextColor))),
               ],
             ),
           ),
           ...metrics.map((m) => Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.shade100))),
+            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.getBorderColor(context)))),
             child: Row(
               children: [
                 Expanded(
                   flex: 2,
-                  child: Text(m.metric, style: GoogleFonts.montserrat(fontSize: 13, fontWeight: m.metric.contains('Team Booking') ? FontWeight.bold : FontWeight.w500)),
+                  child: Text(m.metric, style: GoogleFonts.montserrat(fontSize: 13, fontWeight: m.metric.contains('Team Booking') ? FontWeight.bold : FontWeight.w500, color: Theme.of(context).textTheme.bodyMedium?.color)),
                 ),
-                Expanded(child: Text(m.target, textAlign: TextAlign.center, style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold))),
-                Expanded(child: Text(m.achieved, textAlign: TextAlign.right, style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold, color: _primaryBlue))),
+                Expanded(child: Text(m.target, textAlign: TextAlign.center, style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyMedium?.color))),
+                Expanded(child: Text(m.achieved, textAlign: TextAlign.right, style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold, color: primaryBlue))),
               ],
             ),
           )),
@@ -502,27 +566,32 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     );
   }
 
-  Widget _buildActiveContestsHeader() {
+  Widget _buildActiveContestsHeader(BuildContext context) {
+    final primaryBlue = Theme.of(context).primaryColor;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildSectionTitle('Active Contests'),
+        _buildSectionTitle(context, 'Active Contests'),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(4)),
-          child: Text('RUNNING', style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: _primaryBlue)),
+          decoration: BoxDecoration(color: primaryBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+          child: Text('RUNNING', style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: primaryBlue)),
         ),
       ],
     );
   }
 
-  Widget _buildActiveContestsList(List<ActiveContest> contests) {
+  Widget _buildActiveContestsList(BuildContext context, List<ActiveContest> contests) {
+    final cardColor = Theme.of(context).cardColor;
+    final primaryBlue = Theme.of(context).primaryColor;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     if (contests.isEmpty) {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.blue.withOpacity(0.5))),
-        child: Center(child: Text("No active contests right now.", style: GoogleFonts.montserrat(color: Colors.grey))),
+        decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.getBorderColor(context))),
+        child: Center(child: Text("No active contests right now.", style: GoogleFonts.montserrat(color: secondaryTextColor))),
       );
     }
 
@@ -535,25 +604,32 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
       itemBuilder: (context, index) {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: _primaryBlue.withOpacity(0.5))),
+          decoration: BoxDecoration(
+            color: cardColor, 
+            borderRadius: BorderRadius.circular(12), 
+            border: Border.all(color: AppColors.getBorderColor(context)),
+          ),
           child: ListTile(
             leading: Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8)),
-              child: Icon(icons[index % icons.length], color: _primaryBlue),
+              decoration: BoxDecoration(color: primaryBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+              child: Icon(icons[index % icons.length], color: primaryBlue),
             ),
-            title: Text(contests[index].title, style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.bold)),
-            subtitle: contests[index].subtitle != null ? Text(contests[index].subtitle!, style: GoogleFonts.montserrat(fontSize: 11, color: _primaryBlue)) : null,
-            trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+            title: Text(contests[index].title, style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyMedium?.color)),
+            subtitle: contests[index].subtitle != null ? Text(contests[index].subtitle!, style: GoogleFonts.montserrat(fontSize: 11, color: primaryBlue)) : null,
+            trailing: Icon(Icons.chevron_right, color: secondaryTextColor),
+            onTap: () {
+               // Navigator to contest details
+            },
           ),
         );
       },
     );
   }
 
-  Widget _buildSectionTitle(String title) => Text(
+  Widget _buildSectionTitle(BuildContext context, String title) => Text(
     title,
-    style: GoogleFonts.montserrat(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+    style: GoogleFonts.montserrat(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyMedium?.color),
   );
 
   // ==========================================
@@ -562,49 +638,52 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
   Widget _buildDrawer() {
     final provider = context.watch<AdvisorDashboardProvider>();
     final data = provider.data;
+    final primaryBlue = Theme.of(context).primaryColor;
+    final textColor = Theme.of(context).textTheme.bodyMedium?.color;
 
     return Drawer(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
           Container(
             padding: const EdgeInsets.only(top: 60, bottom: 20),
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             child: Column(
               children: [
                 CircleAvatar(
                   radius: 40,
-                  backgroundColor: Colors.blue.shade50,
+                  backgroundColor: primaryBlue.withOpacity(0.1),
                   backgroundImage: data != null && data.profilePhoto.isNotEmpty ? NetworkImage(data.profilePhoto) : null,
-                  child: data == null || data.profilePhoto.isEmpty ? Icon(Icons.person, size: 35, color: _primaryBlue) : null,
+                  child: data == null || data.profilePhoto.isEmpty ? Icon(Icons.person, size: 35, color: primaryBlue) : null,
                 ),
                 const SizedBox(height: 12),
-                Text(data?.name ?? 'Loading...', style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text('${data?.role.toUpperCase() ?? ''} : #${data?.advisorId ?? ''}', style: GoogleFonts.montserrat(fontSize: 12, color: _primaryBlue, fontWeight: FontWeight.bold)),
+                Text(data?.name ?? 'Loading...', style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+                Text('${data?.role.toUpperCase() ?? ''} : #${data?.advisorId ?? ''}', style: GoogleFonts.montserrat(fontSize: 12, color: primaryBlue, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
-          const Divider(),
-          _drawerItem(Icons.description_outlined, 'Document View', () {
+          Divider(color: AppColors.getBorderColor(context)),
+          _drawerItem(context, Icons.description_outlined, 'Document View', () {
             Navigator.push(context, MaterialPageRoute(builder: (context) => const DocumentCenterScreen()));
           }),
-          _drawerItem(Icons.emoji_events_outlined, 'Contests', () {
+          _drawerItem(context, Icons.emoji_events_outlined, 'Contests', () {
             Navigator.push(context, MaterialPageRoute(builder: (context) => const AdvisorContestsListScreen()));
           }),
-          _drawerItem(Icons.account_balance_wallet_outlined, 'My Income', () {}),
-          _drawerItem(Icons.event_available_outlined, 'Upcoming Installment', () {}),
-          _drawerItem(Icons.military_tech_outlined, 'Achievements', () {
+          _drawerItem(context, Icons.account_balance_wallet_outlined, 'My Income', () {}),
+          _drawerItem(context, Icons.event_available_outlined, 'Upcoming Installment', () {}),
+          _drawerItem(context, Icons.military_tech_outlined, 'Achievements', () {
             Navigator.push(context, MaterialPageRoute(builder: (context) => const AdvisorAchievementScreen()));
           }),
-          _drawerItem(Icons.calculate_outlined, 'Calculator - INSTALLMENT', () { Navigator.pushNamed(context, '/installment_calculator'); }),
-          _drawerItem(Icons.badge_outlined, 'Meeting & Attendance', () {
+          _drawerItem(context, Icons.calculate_outlined, 'Calculator - INSTALLMENT', () { Navigator.pushNamed(context, '/installment_calculator'); }),
+          _drawerItem(context, Icons.badge_outlined, 'Meeting & Attendance', () {
             Navigator.push(context, MaterialPageRoute(builder: (context) => const AdvisorScheduleScreen()));
           }),
-          _drawerItem(Icons.leaderboard_outlined, 'Leader board', () { Navigator.pushNamed(context, '/advisor_leaderboard'); }),
-          _drawerItem(Icons.people_outline, 'My Recruitment', () { Navigator.pushNamed(context, '/recruiter_dashboard'); }),
-          _drawerItem(Icons.campaign_outlined, 'Promotions', () {}),
-          _drawerItem(Icons.groups_outlined, 'Business plan - click 6 points', () {}),
-          const Divider(),
+          _drawerItem(context, Icons.leaderboard_outlined, 'Leader board', () { Navigator.pushNamed(context, '/advisor_leaderboard'); }),
+          _drawerItem(context, Icons.people_outline, 'My Recruitment', () { Navigator.pushNamed(context, '/recruiter_dashboard'); }),
+          _drawerItem(context, Icons.campaign_outlined, 'Promotions', () {}),
+          _drawerItem(context, Icons.groups_outlined, 'Business plan - click 6 points', () {}),
+          Divider(color: AppColors.getBorderColor(context)),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
             title: Text('Log Out', style: GoogleFonts.montserrat(color: Colors.red, fontWeight: FontWeight.bold)),
@@ -618,10 +697,10 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     );
   }
 
-  Widget _drawerItem(IconData icon, String title, VoidCallback onTap) {
+  Widget _drawerItem(BuildContext context, IconData icon, String title, VoidCallback onTap) {
     return ListTile(
-      leading: Icon(icon, color: Colors.grey[700]),
-      title: Text(title, style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87)),
+      leading: Icon(icon, color: Theme.of(context).textTheme.bodySmall?.color),
+      title: Text(title, style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(context).textTheme.bodyMedium?.color)),
       onTap: onTap,
     );
   }

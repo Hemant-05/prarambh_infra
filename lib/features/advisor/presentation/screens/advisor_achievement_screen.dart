@@ -27,25 +27,26 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<AdvisorAchievementProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryBlue = AppColors.getPrimaryBlue(context);
+    final primaryBlue = Theme.of(context).primaryColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: BackButton(color: isDark ? Colors.white : Colors.black87),
+        leading: BackButton(color: textColor),
         title: Text(
           "My Achievements",
           style: GoogleFonts.montserrat(
-            color: isDark ? Colors.white : Colors.black87,
+            color: textColor,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.share_outlined, color: isDark ? Colors.white : Colors.black87),
+            icon: Icon(Icons.share_outlined, color: textColor),
             onPressed: () {}, // Share functionality
           ),
         ],
@@ -54,76 +55,84 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
           ? Center(child: CircularProgressIndicator(color: primaryBlue))
           : provider.error != null
               ? Center(child: Text(provider.error!, style: const TextStyle(color: Colors.red)))
-              : SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Trophy Case Header
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "Trophy Case",
-                              style: GoogleFonts.montserrat(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : Colors.black87,
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {},
-                              child: Text(
-                                "View All",
+              : RefreshIndicator(
+                  onRefresh: () {
+                    final advisorCode = context.read<AuthProvider>().currentUser?.advisorCode ?? '';
+                    return provider.fetchAchievements(advisorCode);
+                  },
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Trophy Case Header
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Trophy Case",
                                 style: GoogleFonts.montserrat(
-                                  color: primaryBlue,
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                                  color: textColor,
                                 ),
                               ),
-                            ),
-                          ],
+                              TextButton(
+                                onPressed: () {},
+                                child: Text(
+                                  "View All",
+                                  style: GoogleFonts.montserrat(
+                                    color: primaryBlue,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
 
-                      // Trophy Case Horizontal List
-                      _buildTrophyCase(provider.achievements, isDark),
+                        // Trophy Case Horizontal List
+                        _buildTrophyCase(context, provider.achievements, isDark),
 
-                      const SizedBox(height: 24),
+                        const SizedBox(height: 24),
 
-                      // Achievement KPI Summary (Static placeholders based on mockup or data if available)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          children: [
-                            Expanded(child: _buildKPICard("LIFETIME VOLUME", "₹15 Cr", Icons.bar_chart_rounded, const Color(0xFFE3F2FD), Colors.blue, isDark)),
-                            const SizedBox(width: 16),
-                            Expanded(child: _buildKPICard("COMMISSION", "₹35 L", Icons.account_balance_wallet_outlined, const Color(0xFFFFF3E0), Colors.orange, isDark)),
-                          ],
+                        // Achievement KPI Summary (Static placeholders based on mockup or data if available)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            children: [
+                              Expanded(child: _buildKPICard(context, "LIFETIME VOLUME", "₹15 Cr", Icons.bar_chart_rounded, const Color(0xFFE3F2FD), Colors.blue)),
+                              const SizedBox(width: 16),
+                              Expanded(child: _buildKPICard(context, "COMMISSION", "₹35 L", Icons.account_balance_wallet_outlined, const Color(0xFFFFF3E0), Colors.orange)),
+                            ],
+                          ),
                         ),
-                      ),
 
-                      const SizedBox(height: 32),
+                        const SizedBox(height: 32),
 
-                      // Filter Pills
-                      _buildYearFilters(provider, primaryBlue, isDark),
+                        // Filter Pills
+                        _buildYearFilters(provider, primaryBlue, isDark),
 
-                      const SizedBox(height: 10),
+                        const SizedBox(height: 10),
 
-                      // Achievements Timeline
-                      _buildAchievementTimeline(provider.filteredAchievements, isDark),
-                      
-                      const SizedBox(height: 40),
-                    ],
+                        // Achievements Timeline
+                        _buildAchievementTimeline(context, provider.filteredAchievements, isDark),
+                        
+                        const SizedBox(height: 40),
+                      ],
+                    ),
                   ),
                 ),
     );
   }
 
-  Widget _buildTrophyCase(List<AchievementModel> achievements, bool isDark) {
+  Widget _buildTrophyCase(BuildContext context, List<AchievementModel> achievements, bool isDark) {
     if (achievements.isEmpty) return const SizedBox();
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
 
     return SizedBox(
       height: 210,
@@ -138,25 +147,32 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
               width: 160,
               margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
               decoration: BoxDecoration(
-                color: isDark ? Colors.grey[900] : Colors.white,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                border: Border.all(color: AppColors.getBorderColor(context)),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
+                  BoxShadow(
+                    color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.05), 
+                    blurRadius: 10, 
+                    offset: const Offset(0, 4),
+                  )
                 ],
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
+                   Container(
                     width: 100, height: 100,
                     decoration: BoxDecoration(
-                      color: Colors.grey[50], // Base neutral color
+                      color: Theme.of(context).scaffoldBackgroundColor,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     padding: const EdgeInsets.all(12),
                     child: index == 0 
-                      ? Image.network('https://cdn-icons-png.flaticon.com/512/1910/1910340.png', fit: BoxFit.contain) // Trophy Icon Example
+                      ? Opacity(
+                          opacity: isDark ? 0.9 : 1.0,
+                          child: Image.network('https://cdn-icons-png.flaticon.com/512/1910/1910340.png', fit: BoxFit.contain),
+                        )
                       : Icon(achievement.icon, size: 50, color: achievement.color),
                   ),
                   const SizedBox(height: 16),
@@ -166,7 +182,7 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
                     style: GoogleFonts.montserrat(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: textColor,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -177,7 +193,7 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
                     style: GoogleFonts.montserrat(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: Colors.amber[700],
+                      color: isDark ? Colors.amber[300] : Colors.amber[700],
                     ),
                   ),
                 ],
@@ -187,19 +203,24 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
     );
   }
 
-  Widget _buildKPICard(String label, String value, IconData icon, Color bgColor, Color iconColor, bool isDark) {
+  Widget _buildKPICard(BuildContext context, String label, String value, IconData icon, Color bgColor, Color iconColor) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey[900] : bgColor.withOpacity(0.4),
+        color: isDark ? cardColor : bgColor.withOpacity(0.4),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: iconColor.withOpacity(0.1)),
+        border: Border.all(color: isDark ? iconColor.withOpacity(0.3) : AppColors.getBorderColor(context)),
       ),
       child: Stack(
         children: [
           Positioned(
             right: 0, top: 0,
-            child: Icon(icon, color: iconColor.withOpacity(0.15), size: 32),
+            child: Icon(icon, color: iconColor.withOpacity(isDark ? 0.3 : 0.15), size: 32),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,7 +230,7 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
                 style: GoogleFonts.montserrat(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  color: secondaryTextColor,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -219,11 +240,10 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
                 style: GoogleFonts.montserrat(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87,
+                  color: textColor,
                 ),
               ),
               const SizedBox(height: 5),
-              // Mini chart line bar (static decorative component)
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -252,6 +272,8 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
 
   Widget _buildYearFilters(AdvisorAchievementProvider provider, Color activeColor, bool isDark) {
     final years = provider.availableYears;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return SizedBox(
       height: 45,
       child: ListView.builder(
@@ -268,17 +290,17 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
                 style: GoogleFonts.montserrat(
                   fontSize: 14,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  color: isSelected ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[700]),
+                  color: isSelected ? Colors.white : secondaryTextColor,
                 ),
               ),
               selected: isSelected,
               onSelected: (_) => provider.selectYear(years[index]),
               selectedColor: activeColor,
-              backgroundColor: isDark ? Colors.grey[850] : Colors.white,
+              backgroundColor: Theme.of(context).cardColor,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
-                side: BorderSide(color: isSelected ? activeColor : Colors.grey.withOpacity(0.1)),
+                side: BorderSide(color: isSelected ? activeColor : AppColors.getBorderColor(context)),
               ),
               showCheckmark: false,
             ),
@@ -288,16 +310,21 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
     );
   }
 
-  Widget _buildAchievementTimeline(List<AchievementModel> achievements, bool isDark) {
+  Widget _buildAchievementTimeline(BuildContext context, List<AchievementModel> achievements, bool isDark) {
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+    final primaryBlue = Theme.of(context).primaryColor;
+
     if (achievements.isEmpty) {
       return Padding(
         padding: const EdgeInsets.only(top: 40),
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey.withOpacity(0.5)),
+              Icon(Icons.inventory_2_outlined, size: 64, color: secondaryTextColor?.withOpacity(0.5)),
               const SizedBox(height: 16),
-              Text("No achievements found for this period.", style: GoogleFonts.montserrat(color: Colors.grey)),
+              Text("No achievements found for this period.", style: GoogleFonts.montserrat(color: secondaryTextColor)),
             ],
           ),
         ),
@@ -321,18 +348,18 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
                   Container(
                     width: 40, height: 40,
                     decoration: BoxDecoration(
-                      color: index == 0 ? Colors.blue.shade50 : Colors.grey.shade50,
+                      color: index == 0 ? primaryBlue.withOpacity(0.1) : Theme.of(context).scaffoldBackgroundColor,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: index == 0 ? Colors.blue.shade100 : Colors.grey.shade200),
+                      border: Border.all(color: index == 0 ? primaryBlue.withOpacity(0.2) : AppColors.getBorderColor(context)),
                     ),
-                    child: Icon(achievement.icon, color: index == 0 ? Colors.blue : Colors.grey[600], size: 18),
+                    child: Icon(achievement.icon, color: index == 0 ? primaryBlue : secondaryTextColor, size: 18),
                   ),
                   if (index != achievements.length - 1)
                     Expanded(
                       child: Container(
                         width: 2,
                         margin: const EdgeInsets.symmetric(vertical: 4),
-                        color: Colors.grey.withOpacity(0.2),
+                        color: AppColors.getBorderColor(context),
                       ),
                     ),
                 ],
@@ -345,11 +372,15 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.grey[900] : Colors.white,
+                      color: cardColor,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                      border: Border.all(color: AppColors.getBorderColor(context)),
                       boxShadow: [
-                        BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 5, offset: const Offset(0, 2))
+                         BoxShadow(
+                           color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.02), 
+                           blurRadius: 5, 
+                           offset: const Offset(0, 2),
+                         ),
                       ],
                     ),
                     child: Column(
@@ -364,7 +395,7 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
                                 style: GoogleFonts.montserrat(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color: isDark ? Colors.white : Colors.black87,
+                                  color: textColor,
                                 ),
                               ),
                             ),
@@ -379,7 +410,7 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
                                 style: GoogleFonts.montserrat(
                                   fontSize: 9, 
                                   fontWeight: FontWeight.bold, 
-                                  color: Colors.green
+                                  color: isDark ? Colors.greenAccent : Colors.green[700],
                                 ),
                               ),
                             ),
@@ -390,7 +421,7 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
                           achievement.formattedDate,
                           style: GoogleFonts.montserrat(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: secondaryTextColor,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -400,7 +431,7 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
                             achievement.description,
                             style: GoogleFonts.montserrat(
                               fontSize: 13,
-                              color: isDark ? Colors.grey[400] : Colors.grey[700],
+                              color: secondaryTextColor,
                               height: 1.4,
                             ),
                           ),

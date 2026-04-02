@@ -79,7 +79,7 @@ class AdminDealRepository {
 
   Future<List<DealModel>> getAllDeals() async {
     try {
-      final response = await apiClient.getAllDeals();
+      final response = await apiClient.getAllDeals('');
       if (response['status']) {
         final List data = response['data'] ?? [];
         return data.map((json) => DealModel.fromJson(json)).toList();

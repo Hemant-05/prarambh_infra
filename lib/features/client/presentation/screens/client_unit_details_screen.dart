@@ -29,11 +29,12 @@ class _ClientUnitDetailsScreenState extends State<ClientUnitDetailsScreen> with 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryBlue = AppColors.getPrimaryBlue(context);
+    final primaryBlue = Theme.of(context).primaryColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
     final unit = widget.unit;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           // Hero Image Section
@@ -48,8 +49,9 @@ class _ClientUnitDetailsScreenState extends State<ClientUnitDetailsScreen> with 
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: const BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+                  border: Border.all(color: AppColors.getBorderColor(context)),
                   boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, spreadRadius: 5)],
                 ),
                 child: ListView(
@@ -57,7 +59,7 @@ class _ClientUnitDetailsScreenState extends State<ClientUnitDetailsScreen> with 
                   padding: EdgeInsets.zero,
                   children: [
                     // Handle bar
-                    Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.withOpacity(0.3), borderRadius: BorderRadius.circular(10)))),
+                    Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor.withOpacity(0.3), borderRadius: BorderRadius.circular(10)))),
                     const SizedBox(height: 24),
                     
                     // Title and Price Row
@@ -70,10 +72,10 @@ class _ClientUnitDetailsScreenState extends State<ClientUnitDetailsScreen> with 
                             children: [
                               Text(
                                 "${unit.towerName} - Unit ${unit.unitNumber}",
-                                style: GoogleFonts.montserrat(fontSize: 22, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF0D1B34)),
+                                style: GoogleFonts.montserrat(fontSize: 22, fontWeight: FontWeight.bold, color: textColor),
                               ),
                               const SizedBox(height: 4),
-                              Text(unit.location, style: GoogleFonts.montserrat(fontSize: 14, color: Colors.grey[500])),
+                              Text(unit.location, style: GoogleFonts.montserrat(fontSize: 14, color: Theme.of(context).textTheme.bodySmall?.color)),
                             ],
                           ),
                         ),
@@ -84,7 +86,7 @@ class _ClientUnitDetailsScreenState extends State<ClientUnitDetailsScreen> with 
                               "₹${(unit.calculatedPrice / 100000).toStringAsFixed(2)} Lakh",
                               style: GoogleFonts.montserrat(fontSize: 20, fontWeight: FontWeight.bold, color: primaryBlue),
                             ),
-                            Text("Total Value", style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey[500])),
+                            Text("Total Value", style: GoogleFonts.montserrat(fontSize: 10, color: Theme.of(context).textTheme.bodySmall?.color)),
                           ],
                         ),
                       ],
@@ -93,12 +95,12 @@ class _ClientUnitDetailsScreenState extends State<ClientUnitDetailsScreen> with 
                     const SizedBox(height: 32),
                     
                     // Stats Row
-                    _buildStatsRow(unit),
+                    _buildStatsRow(context, unit),
                     
                     const SizedBox(height: 32),
                     
                     // Tab Bar
-                    _buildTabBar(primaryBlue, isDark),
+                    _buildTabBar(context, primaryBlue, isDark),
                     
                     const SizedBox(height: 24),
                     
@@ -109,7 +111,7 @@ class _ClientUnitDetailsScreenState extends State<ClientUnitDetailsScreen> with 
                         controller: _tabController,
                         physics: const NeverScrollableScrollPhysics(),
                         children: [
-                          _buildDescription(unit, isDark),
+                          _buildDescription(context, unit, isDark),
                           _buildGallery(unit),
                         ],
                       ),
@@ -121,7 +123,7 @@ class _ClientUnitDetailsScreenState extends State<ClientUnitDetailsScreen> with 
           ),
           
           // Bottom Action Bar
-          _buildBottomAction(primaryBlue, isDark),
+          _buildBottomAction(context, primaryBlue, isDark),
         ],
       ),
     );
@@ -148,8 +150,8 @@ class _ClientUnitDetailsScreenState extends State<ClientUnitDetailsScreen> with 
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  CircleAvatar(backgroundColor: Colors.white.withOpacity(0.3), child: BackButton(color: Colors.white)),
-                  CircleAvatar(backgroundColor: Colors.white.withOpacity(0.3), child: Icon(Icons.favorite_border, color: Colors.white)),
+                  CircleAvatar(backgroundColor: Colors.white.withOpacity(0.3), child: const BackButton(color: Colors.white)),
+                  CircleAvatar(backgroundColor: Colors.white.withOpacity(0.3), child: const Icon(Icons.favorite_border, color: Colors.white)),
                 ],
               ),
             ),
@@ -159,38 +161,43 @@ class _ClientUnitDetailsScreenState extends State<ClientUnitDetailsScreen> with 
     );
   }
 
-  Widget _buildStatsRow(UnitModel unit) {
+  Widget _buildStatsRow(BuildContext context, UnitModel unit) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _statItem(Icons.square_foot, "${unit.areaSqft.toInt()} Sqft", "Area"),
-        _statItem(Icons.bed, unit.configuration, "Config"),
-        _statItem(Icons.layers, "Floor ${unit.floorNumber}", "Level"),
-        _statItem(Icons.explore, unit.facing, "Facing"),
+        _statItem(context, Icons.square_foot, "${unit.areaSqft.toInt()} Sqft", "Area"),
+        _statItem(context, Icons.bed, unit.configuration, "Config"),
+        _statItem(context, Icons.layers, "Floor ${unit.floorNumber}", "Level"),
+        _statItem(context, Icons.explore, unit.facing, "Facing"),
       ],
     );
   }
 
-  Widget _statItem(IconData icon, String value, String label) {
+  Widget _statItem(BuildContext context, IconData icon, String value, String label) {
+    final primaryBlue = Theme.of(context).primaryColor;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Column(
       children: [
         Container(
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: Colors.blue.withOpacity(0.05), borderRadius: BorderRadius.circular(16)),
-          child: Icon(icon, color: Colors.blue[600], size: 24),
+          decoration: BoxDecoration(color: primaryBlue.withOpacity(0.05), borderRadius: BorderRadius.circular(16)),
+          child: Icon(icon, color: primaryBlue, size: 24),
         ),
         const SizedBox(height: 8),
-        Text(value, style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold)),
-        Text(label, style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey[500])),
+        Text(value, style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
+        Text(label, style: GoogleFonts.montserrat(fontSize: 10, color: secondaryTextColor)),
       ],
     );
   }
 
-  Widget _buildTabBar(Color primaryBlue, bool isDark) {
+  Widget _buildTabBar(BuildContext context, Color primaryBlue, bool isDark) {
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return TabBar(
       controller: _tabController,
       labelColor: primaryBlue,
-      unselectedLabelColor: Colors.grey[500],
+      unselectedLabelColor: secondaryTextColor,
       indicatorColor: primaryBlue,
       indicatorWeight: 3,
       labelStyle: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 16),
@@ -198,50 +205,55 @@ class _ClientUnitDetailsScreenState extends State<ClientUnitDetailsScreen> with 
     );
   }
 
-  Widget _buildDescription(UnitModel unit, bool isDark) {
+  Widget _buildDescription(BuildContext context, UnitModel unit, bool isDark) {
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           "Unit Details",
-          style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+          style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
         ),
         const SizedBox(height: 12),
         Text(
           "This ${unit.configuration} unit is located on floor ${unit.floorNumber} facing ${unit.facing}. It offers ${unit.areaSqft} sqft of prime residential space in active ${unit.saleCategory} category. Perfect for those looking for a premium lifestyle with ${unit.propertyType} amenities.",
-          style: GoogleFonts.montserrat(fontSize: 14, color: Colors.grey[600], height: 1.6),
+          style: GoogleFonts.montserrat(fontSize: 14, color: secondaryTextColor, height: 1.6),
         ),
         const SizedBox(height: 32),
         Text(
           "Facilities",
-          style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+          style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
         ),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-             _facilityIcon(Icons.wifi, "High-speed WiFi"),
-             _facilityIcon(Icons.pool, "Common Pool"),
-             _facilityIcon(Icons.security, "24/7 Security"),
-             _facilityIcon(Icons.park, "Green Park"),
+             _facilityIcon(context, Icons.wifi, "High-speed WiFi"),
+             _facilityIcon(context, Icons.pool, "Common Pool"),
+             _facilityIcon(context, Icons.security, "24/7 Security"),
+             _facilityIcon(context, Icons.park, "Green Park"),
           ],
         ),
       ],
     );
   }
 
-  Widget _facilityIcon(IconData icon, String label) {
+  Widget _facilityIcon(BuildContext context, IconData icon, String label) {
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Column(
       children: [
-        Icon(icon, color: Colors.grey[400], size: 28),
+        Icon(icon, color: secondaryTextColor?.withOpacity(0.5), size: 28),
         const SizedBox(height: 8),
-        Text(label, style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey[500])),
+        Text(label, style: GoogleFonts.montserrat(fontSize: 10, color: secondaryTextColor)),
       ],
     );
   }
 
   Widget _buildGallery(UnitModel unit) {
-    if (unit.unitImages.isEmpty) return Center(child: Text("No images available"));
+    if (unit.unitImages.isEmpty) return Center(child: Text("No images available", style: GoogleFonts.montserrat(color: Theme.of(context).textTheme.bodySmall?.color)));
     return GridView.builder(
       padding: EdgeInsets.zero,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12),
@@ -255,13 +267,16 @@ class _ClientUnitDetailsScreenState extends State<ClientUnitDetailsScreen> with 
     );
   }
 
-  Widget _buildBottomAction(Color primaryBlue, bool isDark) {
+  Widget _buildBottomAction(BuildContext context, Color primaryBlue, bool isDark) {
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Positioned(
       bottom: 0, left: 0, right: 0,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          color: Theme.of(context).cardColor,
+          border: Border(top: BorderSide(color: AppColors.getBorderColor(context))),
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5))],
         ),
         child: Row(
@@ -270,7 +285,7 @@ class _ClientUnitDetailsScreenState extends State<ClientUnitDetailsScreen> with 
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Rate", style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey[500])),
+                Text("Rate", style: GoogleFonts.montserrat(fontSize: 12, color: secondaryTextColor)),
                 Text("₹${widget.unit.ratePerSqft}/sqft", style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: primaryBlue)),
               ],
             ),

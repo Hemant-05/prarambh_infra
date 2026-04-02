@@ -41,11 +41,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryBlue = AppColors.getPrimaryBlue(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final mutedText = isDark
-        ? AppColors.textMutedDark
-        : AppColors.textMutedLight;
+    final primaryBlue = Theme.of(context).primaryColor;
+    final secondaryTextColor = AppColors.getSecondaryTextColor(context);
 
     return AuthBackground(
       child: Center(
@@ -56,7 +53,7 @@ class _SplashScreenState extends State<SplashScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.getCardColor(context),
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
@@ -90,7 +87,7 @@ class _SplashScreenState extends State<SplashScreen> {
               'V 1.0.0',
               style: GoogleFonts.montserrat(
                 fontSize: 12,
-                color: mutedText, // Removed hardcoded Colors.grey
+                color: secondaryTextColor,
                 fontWeight: FontWeight.w500,
               ),
             ),

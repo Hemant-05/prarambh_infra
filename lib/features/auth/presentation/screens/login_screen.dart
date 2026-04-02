@@ -90,13 +90,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = AppColors.getCardColor(context);
-    final primaryBlue = AppColors.getPrimaryBlue(context);
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
-    final mutedText = isDark
-        ? AppColors.textMutedDark
-        : AppColors.textMutedLight;
+    final cardColor = Theme.of(context).cardColor;
+    final primaryBlue = Theme.of(context).primaryColor;
+    final textColor = Theme.of(context).textTheme.bodyMedium?.color;
 
     return AuthBackground(
       child: LayoutBuilder(
@@ -118,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       decoration: BoxDecoration(
                         color: cardColor,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: borderColor),
+                        border: Border.all(color: AppColors.getBorderColor(context)),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.05),
@@ -130,7 +126,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // NEW: Radio Buttons for Login Type
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -146,6 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: GoogleFonts.montserrat(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 13,
+                                  color: textColor,
                                 ),
                               ),
                               const SizedBox(width: 20),
@@ -161,55 +157,46 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: GoogleFonts.montserrat(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 13,
+                                  color: textColor,
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 16),
 
-                          // NEW: Conditional Advisor Code Field
                           if (_loginType == 'Advisor') ...[
-                            _buildTextFieldLabel('Advisor Code'),
+                            _buildTextFieldLabel('Advisor Code', textColor),
                             const SizedBox(height: 8),
                             _buildTextField(
+                              context: context,
                               controller: _advisorCodeController,
                               hint: 'e.g. ADV-9082',
                               icon: Icons.badge_outlined,
-                              isDark: isDark,
-                              primaryBlue: primaryBlue,
-                              borderColor: borderColor,
-                              mutedText: mutedText,
                             ),
                             const SizedBox(height: 20),
                           ],
 
                           if (_loginType == 'User') ...[
-                            _buildTextFieldLabel('Email Address'),
+                            _buildTextFieldLabel('Email Address', textColor),
                             const SizedBox(height: 8),
                             _buildTextField(
+                              context: context,
                               controller: _emailController,
                               hint: 'hemantsahu123@gmail.com',
                               icon: Icons.email_outlined,
-                              isDark: isDark,
-                              primaryBlue: primaryBlue,
-                              borderColor: borderColor,
-                              mutedText: mutedText,
                             ),
                             const SizedBox(height: 20),
                           ],
 
-                          _buildTextFieldLabel('Password'),
+                          _buildTextFieldLabel('Password', textColor),
                           const SizedBox(height: 8),
                           _buildTextField(
+                            context: context,
                             controller: _passwordController,
                             hint: 'hemant0312',
                             icon: Icons.lock_outline,
                             isPassword: !_isPasswordVisible,
                             onTogglePassword: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
-                            isDark: isDark,
-                            primaryBlue: primaryBlue,
-                            borderColor: borderColor,
-                            mutedText: mutedText,
                           ),
                           const SizedBox(height: 12),
                           Align(
@@ -262,7 +249,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             children: [
                               Text(
                                 "Don't have an account ? ",
-                                style: GoogleFonts.montserrat(fontSize: 12),
+                                style: GoogleFonts.montserrat(fontSize: 12, color: textColor),
                               ),
                               GestureDetector(
                                 onTap: () {
@@ -293,24 +280,23 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildTextFieldLabel(String label) {
+  Widget _buildTextFieldLabel(String label, Color? color) {
     return Text(
       label,
-      style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w600),
+      style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w600, color: color),
     );
   }
 
   Widget _buildTextField({
+    required BuildContext context,
     required String hint,
     required IconData icon,
     bool isPassword = false,
-    required bool isDark,
     required TextEditingController controller,
-    required Color primaryBlue,
-    required Color borderColor,
-    required Color mutedText,
     VoidCallback? onTogglePassword,
   }) {
+    final mutedText = AppColors.getSecondaryTextColor(context);
+    
     return TextFormField(
       obscureText: isPassword,
       controller: controller,
@@ -328,15 +314,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: onTogglePassword,
               )
             : null,
-        contentPadding: const EdgeInsets.symmetric(vertical: 16),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: borderColor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: primaryBlue),
-        ),
       ),
     );
   }

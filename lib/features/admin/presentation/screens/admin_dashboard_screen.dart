@@ -7,7 +7,6 @@ import 'package:prarambh_infra/features/admin/presentation/screens/team_manageme
 import 'admin_deals_screen.dart';
 
 import 'package:provider/provider.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../widgets/admin_drawer.dart';
 import '../widgets/admin_home_view.dart';
 
@@ -49,19 +48,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryBlue = AppColors.getPrimaryBlue(context);
+    final primaryBlue = Theme.of(context).primaryColor;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       drawer: const AdminDrawer(),
 
       appBar: AppBar(
-        backgroundColor: primaryBlue,
+        backgroundColor: isDark ? Theme.of(context).cardColor : primaryBlue,
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
-          // 3. UPDATE THIS: Use the current index to grab the right title
           _pageTitles[_currentIndex],
           style: GoogleFonts.montserrat(
             color: Colors.white,
@@ -82,19 +81,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
-          // When you tap a tab, setState updates the index,
-          // which rebuilds the body AND the AppBar title instantly!
           setState(() => _currentIndex = index);
         },
         type: BottomNavigationBarType.fixed,
-        backgroundColor: primaryBlue,
+        backgroundColor: isDark ? Theme.of(context).cardColor : primaryBlue,
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white70,
         selectedLabelStyle: GoogleFonts.montserrat(
           fontSize: 10,
           fontWeight: FontWeight.w600,
+          color: Colors.white,
         ),
-        unselectedLabelStyle: GoogleFonts.montserrat(fontSize: 10),
+        unselectedLabelStyle: GoogleFonts.montserrat(fontSize: 10, color: Colors.white70),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.business), label: 'Project'),

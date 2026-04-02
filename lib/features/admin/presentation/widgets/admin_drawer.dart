@@ -10,9 +10,8 @@ class AdminDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryBlue = AppColors.getPrimaryBlue(context);
-    final textColor = isDark ? Colors.white : Colors.black87;
+    final primaryBlue = Theme.of(context).primaryColor;
+    final textColor = Theme.of(context).textTheme.bodyMedium?.color;
 
     return Drawer(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -22,10 +21,8 @@ class AdminDrawer extends StatelessWidget {
           // Profile Section
           CircleAvatar(
             radius: 40,
-            backgroundImage: const AssetImage(
-              logo,
-            ), // Replace with actual profile image
-            backgroundColor: Colors.grey[200],
+            backgroundImage: const AssetImage(logo),
+            backgroundColor: AppColors.getBorderColor(context),
           ),
           const SizedBox(height: 12),
           Text(
@@ -45,7 +42,7 @@ class AdminDrawer extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          Divider(color: Colors.grey.withOpacity(0.2), thickness: 1),
+          Divider(color: AppColors.getBorderColor(context), thickness: 1),
 
           // Menu Items
           Expanded(
@@ -54,59 +51,59 @@ class AdminDrawer extends StatelessWidget {
               physics: const BouncingScrollPhysics(),
               children: [
                 _buildDrawerItem(
+                  context: context,
                   icon: Icons.description_outlined,
                   title: 'Document Management',
-                  textColor: textColor,
                   onTap: () {
                     Navigator.pushNamed(context, '/docs_management');
                   },
                 ),
                 _buildDrawerItem(
+                  context: context,
                   icon: Icons.emoji_events_outlined,
                   title: 'Contests',
-                  textColor: textColor,
                   onTap: () {
                     Navigator.pushNamed(context, '/contests_list');
                   },
                 ),
                 _buildDrawerItem(
+                  context: context,
                   icon: Icons.leaderboard_outlined,
                   title: 'Leader board',
-                  textColor: textColor,
                   onTap: () {
                     Navigator.pushNamed(context, '/leaderboard');
                   },
                 ),
                 _buildDrawerItem(
+                  context: context,
                   icon: Icons.co_present_outlined,
                   title: 'Meeting & Attendance',
-                  textColor: textColor,
                   onTap: () {
                     Navigator.pop(context); // close drawer
                     Navigator.pushNamed(context, '/meeting_management');
                   },
                 ),
                 _buildDrawerItem(
+                  context: context,
                   icon: Icons.campaign_outlined,
                   title: 'Leads',
-                  textColor: textColor,
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(context, '/lead_management');
                   },
                 ),
                 _buildDrawerItem(
+                  context: context,
                   icon: Icons.people_outline,
                   title: 'Advisor Application',
-                  textColor: textColor,
                   onTap: () {
                     Navigator.pushNamed(context, '/advisor_applications');
                   },
                 ),
                 _buildDrawerItem(
+                  context: context,
                   icon: Icons.campaign_outlined,
                   title: 'Recruitment by Broker',
-                  textColor: textColor,
                   onTap: () {
                     Navigator.pop(context); // close drawer
                     Navigator.pushNamed(context, '/admin_recruitment_dashboard');
@@ -117,7 +114,7 @@ class AdminDrawer extends StatelessWidget {
           ),
 
           // Logout Button
-          Divider(color: Colors.grey.withOpacity(0.2), thickness: 1),
+          Divider(color: AppColors.getBorderColor(context), thickness: 1),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
             title: Text(
@@ -140,18 +137,21 @@ class AdminDrawer extends StatelessWidget {
   }
 
   Widget _buildDrawerItem({
+    required BuildContext context,
     required IconData? icon,
     required String title,
-    required Color textColor,
     bool isSubItem = false,
-    VoidCallback? onTap, // Add this parameter
+    VoidCallback? onTap,
   }) {
+    final textColor = Theme.of(context).textTheme.bodyMedium?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return ListTile(
       contentPadding: EdgeInsets.only(
         left: isSubItem ? 56.0 : 24.0,
         right: 24.0,
       ),
-      leading: icon != null ? Icon(icon, color: Colors.grey[600]) : null,
+      leading: icon != null ? Icon(icon, color: secondaryTextColor) : null,
       title: Text(
         title,
         style: GoogleFonts.montserrat(
@@ -164,3 +164,4 @@ class AdminDrawer extends StatelessWidget {
     );
   }
 }
+

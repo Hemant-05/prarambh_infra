@@ -201,6 +201,9 @@ abstract class ApiClient {
   @GET("/units/{id}")
   Future<dynamic> getSingleUnit(@Path("id") String id);
 
+  @GET("/units/sales/{id}")
+  Future<dynamic> getUnitSales(@Path("id") String id);
+
   @MultiPart()
   @POST("/units/update/{id}")
   Future<dynamic> updateUnit(
@@ -264,6 +267,9 @@ abstract class ApiClient {
   // ==========================================
   @POST("/leads/add")
   Future<dynamic> addLead(@Body() dynamic body);
+
+  @POST("/leads/interested")
+  Future<dynamic> createInterestedLead(@Body() dynamic body);
 
   @MultiPart()
   @POST("/leads/update/{id}")
@@ -343,7 +349,7 @@ abstract class ApiClient {
   Future<dynamic> addDealNote(@Path("id") String id, @Body() dynamic body);
 
   @GET("/deals")
-  Future<dynamic> getAllDeals();
+  Future<dynamic> getAllDeals(@Query("advisor_code") String? advisorCode);
 
   @GET("/deals/{id}")
   Future<dynamic> getSingleDeal(@Path("id") String id);
@@ -362,6 +368,9 @@ abstract class ApiClient {
 
   @GET("/meetings")
   Future<dynamic> getAllMeetings();
+
+  @GET("/meetings/daily")
+  Future<dynamic> getDailyMeetings(@Query("date") String? date);
 
   @GET("/meetings/{id}")
   Future<dynamic> getSingleMeeting(@Path("id") String id);
@@ -423,19 +432,25 @@ abstract class ApiClient {
   Future<dynamic> deleteContest(@Path("id") String id);
 
   // ==========================================
-  // 12. Performance & Leaderboard
+  // 12. Performance, Promotions & Leaderboard
   // ==========================================
   @GET("/leaderboard")
   Future<dynamic> getLeaderboard(
-    @Query("month") int? month,
-    @Query("year") int? year,
-  );
+      @Query("month") int? month,
+      @Query("year") int? year,
+      );
 
   @GET("/achievements/advisor/{advisorCode}")
   Future<dynamic> getAdvisorAchievements(@Path("advisorCode") String advisorCode);
 
   @POST("/evaluate-level/{id}")
   Future<dynamic> evaluateLevel(@Path("id") String id);
+
+  @POST("/promotions/evaluate/{id}")
+  Future<dynamic> evaluateSinglePromotion(@Path("id") String id);
+
+  @POST("/promotions/evaluate-company")
+  Future<dynamic> evaluateCompanyPromotions();
 
   // ==========================================
   // 13. Dashboards & Analytics
@@ -452,14 +467,24 @@ abstract class ApiClient {
   @GET("/recruitment/dashboard")
   Future<dynamic> getRecruitmentDashboard(@Query("leader_id") String? leaderId);
 
+  @GET("/performance/dashboard")
+  Future<dynamic> getPerformanceDashboard(@Query("advisor_code") String advisorCode);
+
   // ==========================================
-  // 14. Team Hierarchy
+  // 14. Team Hierarchy & Activity
   // ==========================================
   @GET("/team/tree")
   Future<dynamic> getTeamTree(@Query("leader_id") String? leaderId);
 
   @GET("/team/advisor/{id}")
   Future<dynamic> getAdvisorTeam(@Path("id") String advisorId);
+
+  @GET("/team/activity")
+  Future<dynamic> getTeamActivity(
+      @Query("advisor_code") String advisorCode,
+      @Query("month") int? month,
+      @Query("year") int? year,
+      );
 
   // ==========================================
   // 15. Blogs
@@ -528,4 +553,16 @@ abstract class ApiClient {
 
   @GET("/user-property/my/{id}")
   Future<dynamic> getMyProperties(@Path("id") String id);
+
+  // ==========================================
+  // 18. Income & Installments
+  // ==========================================
+  @GET("/income/advisor/{advisorCode}")
+  Future<dynamic> getAdvisorIncome(@Path("advisorCode") String advisorCode);
+
+  @GET("/income/analytics")
+  Future<dynamic> getIncomeAnalytics();
+
+  @GET("/installments/upcoming")
+  Future<dynamic> getUpcomingInstallments(@Query("advisor_code") String? advisorCode);
 }

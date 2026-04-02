@@ -65,11 +65,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = AppColors.getCardColor(context);
-    final primaryBlue = AppColors.getPrimaryBlue(context);
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
-    final mutedText = isDark ? AppColors.textMutedDark : AppColors.textMutedLight;
+    final cardColor = Theme.of(context).cardColor;
+    final primaryBlue = Theme.of(context).primaryColor;
+    final textColor = Theme.of(context).textTheme.bodyMedium?.color;
     
     final isLoading = context.watch<AuthProvider>().isLoading;
 
@@ -95,7 +93,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         decoration: BoxDecoration(
                           color: cardColor,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: borderColor),
+                          border: Border.all(color: AppColors.getBorderColor(context)),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.05),
@@ -107,52 +105,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            _buildTextFieldLabel('Full Name'),
+                            _buildTextFieldLabel('Full Name', textColor),
                             const SizedBox(height: 8),
                             _buildTextField(
+                              context: context,
                               hint: 'hemant sahu',
                               icon: Icons.person_outline,
-                              primaryBlue: primaryBlue,
-                              borderColor: borderColor,
-                              mutedText: mutedText,
                               controller: _fullNameController,
                               validator: (v) => v!.isEmpty ? 'Enter full name' : null,
                             ),
                             const SizedBox(height: 16),
-                            _buildTextFieldLabel('Email Address'),
+                            _buildTextFieldLabel('Email Address', textColor),
                             const SizedBox(height: 8),
                             _buildTextField(
+                              context: context,
                               hint: 'hemantsahu123@gmail.com',
                               icon: Icons.email_outlined,
-                              primaryBlue: primaryBlue,
-                              borderColor: borderColor,
-                              mutedText: mutedText,
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
                               validator: (v) => !v!.contains('@') ? 'Enter valid email' : null,
                             ),
                             const SizedBox(height: 16),
-                            _buildTextFieldLabel('Phone Number'),
+                            _buildTextFieldLabel('Phone Number', textColor),
                             const SizedBox(height: 8),
                             _buildTextField(
+                              context: context,
                               hint: '90998752146',
                               icon: Icons.phone_outlined,
-                              primaryBlue: primaryBlue,
-                              borderColor: borderColor,
-                              mutedText: mutedText,
                               controller: _phoneController,
                               keyboardType: TextInputType.phone,
                               validator: (v) => v!.length < 10 ? 'Enter valid phone' : null,
                             ),
                             const SizedBox(height: 16),
-                            _buildTextFieldLabel('Password'),
+                            _buildTextFieldLabel('Password', textColor),
                             const SizedBox(height: 8),
                             _buildTextField(
+                              context: context,
                               hint: '***********',
                               icon: Icons.lock_outline,
-                              primaryBlue: primaryBlue,
-                              borderColor: borderColor,
-                              mutedText: mutedText,
                               controller: _passwordController,
                               obscureText: true,
                               validator: (v) => v!.length < 6 ? 'Password too short' : null,
@@ -189,7 +179,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               children: [
                                 Text(
                                   "Already have an account ? ",
-                                  style: GoogleFonts.montserrat(fontSize: 12),
+                                  style: GoogleFonts.montserrat(fontSize: 12, color: textColor),
                                 ),
                                 GestureDetector(
                                   onTap: () => Navigator.pop(context),
@@ -219,24 +209,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildTextFieldLabel(String label) {
+  Widget _buildTextFieldLabel(String label, Color? color) {
     return Text(
       label,
-      style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w600),
+      style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w600, color: color),
     );
   }
 
   Widget _buildTextField({
+    required BuildContext context,
     required String hint,
     required IconData icon,
-    required Color primaryBlue,
-    required Color borderColor,
-    required Color mutedText,
     required TextEditingController controller,
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
   }) {
+    final mutedText = AppColors.getSecondaryTextColor(context);
+    
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
@@ -247,23 +237,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         hintText: hint,
         hintStyle: GoogleFonts.montserrat(color: mutedText, fontSize: 14),
         prefixIcon: Icon(icon, color: mutedText, size: 20),
-        contentPadding: const EdgeInsets.symmetric(vertical: 16),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: borderColor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: primaryBlue),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Colors.redAccent),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Colors.redAccent),
-        ),
+        errorStyle: GoogleFonts.montserrat(fontSize: 10),
       ),
     );
   }

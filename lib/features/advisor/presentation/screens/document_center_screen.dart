@@ -74,20 +74,52 @@ class _DocumentCenterScreenState extends State<DocumentCenterScreen> {
   }
 
   // --- UI HELPER FOR ICONS & COLORS ---
-  Map<String, dynamic> _getIconStyle(String title, String category) {
+  Map<String, dynamic> _getIconStyle(String title, String category, bool isDark) {
     String t = title.toLowerCase();
     String c = category.toLowerCase();
 
-    if (t.contains('welcome') || t.contains('rules')) return {'icon': Icons.verified_user_outlined, 'color': Colors.blue[700], 'bg': Colors.blue[50]};
-    if (t.contains('application') || t.contains('form')) return {'icon': Icons.assignment_outlined, 'color': Colors.orange[700], 'bg': Colors.orange[50]};
-    if (c.contains('brochure')) return {'icon': Icons.folder_outlined, 'color': Colors.purple[600], 'bg': Colors.purple[50]};
-    if (c.contains('site map') || t.contains('map')) return {'icon': Icons.map_outlined, 'color': Colors.teal[600], 'bg': Colors.teal[50]};
-    if (t.contains('plan') || c.contains('business')) return {'icon': Icons.trending_up, 'color': Colors.blue[600], 'bg': Colors.blue[50]};
-    if (t.contains('circular') || c.contains('marketing')) return {'icon': Icons.campaign_outlined, 'color': Colors.red[400], 'bg': Colors.red[50]};
-    if (t.contains('rera') || c.contains('legal')) return {'icon': Icons.stars, 'color': Colors.amber[700], 'bg': Colors.amber[50]};
-    if (t.contains('id card') || c.contains('personal')) return {'icon': Icons.badge_outlined, 'color': Colors.cyan[600], 'bg': Colors.cyan[50]};
+    Color baseColor;
+    Color bgColor;
 
-    return {'icon': Icons.description_outlined, 'color': Colors.grey[600], 'bg': Colors.grey[100]};
+    if (t.contains('welcome') || t.contains('rules')) {
+      baseColor = isDark ? Colors.blueAccent : Colors.blue[700]!;
+    } else if (t.contains('application') || t.contains('form')) {
+      baseColor = isDark ? Colors.orangeAccent : Colors.orange[700]!;
+    } else if (c.contains('brochure')) {
+      baseColor = isDark ? Colors.purpleAccent : Colors.purple[600]!;
+    } else if (c.contains('site map') || t.contains('map')) {
+      baseColor = isDark ? Colors.tealAccent : Colors.teal[600]!;
+    } else if (t.contains('plan') || c.contains('business')) {
+      baseColor = isDark ? Colors.blueAccent : Colors.blue[600]!;
+    } else if (t.contains('circular') || c.contains('marketing')) {
+      baseColor = isDark ? Colors.redAccent : Colors.red[400]!;
+    } else if (t.contains('rera') || c.contains('legal')) {
+      baseColor = isDark ? Colors.amberAccent : Colors.amber[700]!;
+    } else if (t.contains('id card') || c.contains('personal')) {
+      baseColor = isDark ? Colors.cyanAccent : Colors.cyan[600]!;
+    } else {
+      baseColor = isDark ? Colors.white70 : Colors.grey[600]!;
+    }
+
+    bgColor = baseColor.withOpacity(isDark ? 0.15 : 0.1);
+
+    return {
+      'icon': _getIconFor(t, c),
+      'color': baseColor,
+      'bg': bgColor,
+    };
+  }
+
+  IconData _getIconFor(String t, String c) {
+    if (t.contains('welcome') || t.contains('rules')) return Icons.verified_user_outlined;
+    if (t.contains('application') || t.contains('form')) return Icons.assignment_outlined;
+    if (c.contains('brochure')) return Icons.folder_outlined;
+    if (c.contains('site map') || t.contains('map')) return Icons.map_outlined;
+    if (t.contains('plan') || c.contains('business')) return Icons.trending_up;
+    if (t.contains('circular') || c.contains('marketing')) return Icons.campaign_outlined;
+    if (t.contains('rera') || c.contains('legal')) return Icons.stars;
+    if (t.contains('id card') || c.contains('personal')) return Icons.badge_outlined;
+    return Icons.description_outlined;
   }
 
   @override
@@ -95,6 +127,10 @@ class _DocumentCenterScreenState extends State<DocumentCenterScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryBlue = AppColors.getPrimaryBlue(context);
     final provider = context.watch<AdvisorDocumentProvider>();
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+    final hintColor = Theme.of(context).hintColor;
 
     // Generate dynamic categories from the fetched documents
     List<String> categories = ['All'];
@@ -108,11 +144,20 @@ class _DocumentCenterScreenState extends State<DocumentCenterScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.transparent, elevation: 0, centerTitle: true,
+        backgroundColor: Colors.transparent, 
+        elevation: 0, 
+        centerTitle: true,
         leading: backButton(isDark: isDark),
-        title: Text('Document Center', style: GoogleFonts.montserrat(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(
+          'Document Center', 
+          style: GoogleFonts.montserrat(
+            color: textColor, 
+            fontWeight: FontWeight.bold, 
+            fontSize: 18,
+          ),
+        ),
       ),
       body: Column(
         children: [
@@ -121,16 +166,17 @@ class _DocumentCenterScreenState extends State<DocumentCenterScreen> {
             padding: const EdgeInsets.all(20),
             child: Container(
               decoration: BoxDecoration(
-                color: isDark ? Colors.grey[850] : Colors.white,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                border: Border.all(color: AppColors.getBorderColor(context)),
               ),
               child: TextField(
                 onChanged: (val) => setState(() => _searchQuery = val),
+                style: GoogleFonts.montserrat(color: textColor, fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'Search for brochures, forms...',
-                  hintStyle: GoogleFonts.montserrat(color: Colors.grey, fontSize: 14),
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                  hintStyle: GoogleFonts.montserrat(color: hintColor, fontSize: 14),
+                  prefixIcon: Icon(Icons.search, color: hintColor),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 16),
                 ),
@@ -156,18 +202,18 @@ class _DocumentCenterScreenState extends State<DocumentCenterScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: isSelected ? primaryBlue : (isDark ? Colors.grey[800] : Colors.white),
+                        color: isSelected ? primaryBlue : cardColor,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: isSelected ? primaryBlue : Colors.grey.withOpacity(0.3)),
+                        border: Border.all(color: isSelected ? primaryBlue : AppColors.getBorderColor(context)),
                       ),
                       child: Row(
                         children: [
-                          if (cat == 'All') Icon(Icons.grid_view, size: 14, color: isSelected ? Colors.white : Colors.grey[600]),
+                          if (cat == 'All') Icon(Icons.grid_view, size: 14, color: isSelected ? Colors.white : secondaryTextColor),
                           if (cat == 'All') const SizedBox(width: 6),
                           Text(
                             cat,
                             style: GoogleFonts.montserrat(
-                              color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                              color: isSelected ? Colors.white : (isSelected ? Colors.white : secondaryTextColor),
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                               fontSize: 13,
                             ),
@@ -186,7 +232,16 @@ class _DocumentCenterScreenState extends State<DocumentCenterScreen> {
             child: provider.isLoading
                 ? Center(child: CircularProgressIndicator(color: primaryBlue))
                 : filteredDocs.isEmpty
-                ? Center(child: Text('No documents found.', style: GoogleFonts.montserrat(color: Colors.grey)))
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.folder_off_outlined, size: 48, color: hintColor.withOpacity(0.5)),
+                        const SizedBox(height: 16),
+                        Text('No documents found.', style: GoogleFonts.montserrat(color: hintColor)),
+                      ],
+                    ),
+                  )
                 : ListView.separated(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               physics: const BouncingScrollPhysics(),
@@ -196,20 +251,26 @@ class _DocumentCenterScreenState extends State<DocumentCenterScreen> {
                 if (index == filteredDocs.length) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Center(child: Text('End of list', style: GoogleFonts.montserrat(color: Colors.grey, fontSize: 12))),
+                    child: Center(child: Text('End of list', style: GoogleFonts.montserrat(color: hintColor, fontSize: 12))),
                   );
                 }
 
                 final doc = filteredDocs[index];
-                final style = _getIconStyle(doc.name, doc.category);
+                final style = _getIconStyle(doc.name, doc.category, isDark);
 
                 return Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[850] : Colors.white,
+                    color: cardColor,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.withOpacity(0.1)),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2))],
+                    border: Border.all(color: AppColors.getBorderColor(context)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.02), 
+                        blurRadius: 8, 
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Row(
                     children: [
@@ -225,25 +286,24 @@ class _DocumentCenterScreenState extends State<DocumentCenterScreen> {
                           children: [
                             Text(
                               doc.name,
-                              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 14, color: isDark ? Colors.white : Colors.black87),
+                              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 14, color: textColor),
                               maxLines: 1, overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 4),
                             Text(
                               '${doc.type} • 1.2 MB', // Mocking size as API currently lacks it
-                              style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey[500]),
+                              style: GoogleFonts.montserrat(fontSize: 12, color: secondaryTextColor),
                             ),
                           ],
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.visibility, color: Color(0xFF0056A4)), // Dark blue eye icon
+                        icon: Icon(Icons.visibility, color: primaryBlue),
                         onPressed: () => _viewDocument(doc),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.download_outlined, color: Colors.grey),
+                        icon: Icon(Icons.download_outlined, color: secondaryTextColor),
                         onPressed: () {
-                          // Download logic can go here
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Downloading...')));
                         },
                       ),

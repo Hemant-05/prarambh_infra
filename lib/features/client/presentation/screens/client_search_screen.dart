@@ -26,15 +26,16 @@ class _ClientSearchScreenState extends State<ClientSearchScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<ClientDashboardProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryBlue = AppColors.getPrimaryBlue(context);
+    final primaryBlue = Theme.of(context).primaryColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: BackButton(color: isDark ? Colors.white : Colors.black87),
-        title: _buildSearchTextField(provider, primaryBlue, isDark),
+        leading: BackButton(color: textColor),
+        title: _buildSearchTextField(context, provider, primaryBlue, isDark),
         centerTitle: false,
       ),
       body: SingleChildScrollView(
@@ -45,12 +46,12 @@ class _ClientSearchScreenState extends State<ClientSearchScreen> {
             const SizedBox(height: 20),
             
             // Recent Search Section
-            if (provider.recentSearches.isNotEmpty) _buildRecentSearchSection(provider, isDark),
+            if (provider.recentSearches.isNotEmpty) _buildRecentSearchSection(context, provider, isDark),
             
             const SizedBox(height: 32),
             
             // Recent View Section
-            if (provider.recentViews.isNotEmpty) _buildRecentViewSection(provider.recentViews, isDark),
+            if (provider.recentViews.isNotEmpty) _buildRecentViewSection(context, provider.recentViews, isDark),
             
             const SizedBox(height: 40),
           ],
@@ -59,12 +60,17 @@ class _ClientSearchScreenState extends State<ClientSearchScreen> {
     );
   }
 
-  Widget _buildSearchTextField(ClientDashboardProvider provider, Color accentColor, bool isDark) {
+  Widget _buildSearchTextField(BuildContext context, ClientDashboardProvider provider, Color accentColor, bool isDark) {
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Container(
       height: 50,
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey[900] : Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.getBorderColor(context)),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))
         ],
@@ -72,17 +78,17 @@ class _ClientSearchScreenState extends State<ClientSearchScreen> {
       child: TextField(
         controller: _searchController,
         autofocus: true,
-        style: GoogleFonts.montserrat(fontSize: 14, color: isDark ? Colors.white : Colors.black87),
+        style: GoogleFonts.montserrat(fontSize: 14, color: textColor),
         onSubmitted: (value) {
           provider.addSearch(value);
           // Navigate to results or filter list (for now just history)
         },
         decoration: InputDecoration(
           hintText: "Search property...",
-          hintStyle: GoogleFonts.montserrat(color: Colors.grey[400], fontSize: 13),
+          hintStyle: GoogleFonts.montserrat(color: secondaryTextColor, fontSize: 13),
           prefixIcon: Icon(Icons.search, color: accentColor, size: 20),
           suffixIcon: IconButton(
-            icon: Icon(Icons.close, color: Colors.grey[400], size: 18),
+            icon: Icon(Icons.close, color: secondaryTextColor, size: 18),
             onPressed: () => _searchController.clear(),
           ),
           border: InputBorder.none,
@@ -92,7 +98,10 @@ class _ClientSearchScreenState extends State<ClientSearchScreen> {
     );
   }
 
-  Widget _buildRecentSearchSection(ClientDashboardProvider provider, bool isDark) {
+  Widget _buildRecentSearchSection(BuildContext context, ClientDashboardProvider provider, bool isDark) {
+    final textColor = Theme.of(context).textTheme.titleLarge?.color ?? Theme.of(context).textTheme.bodyLarge?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -103,7 +112,7 @@ class _ClientSearchScreenState extends State<ClientSearchScreen> {
             style: GoogleFonts.montserrat(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : const Color(0xFF0D1B34),
+              color: textColor,
             ),
           ),
         ),
@@ -114,12 +123,12 @@ class _ClientSearchScreenState extends State<ClientSearchScreen> {
             query,
             style: GoogleFonts.montserrat(
               fontSize: 15,
-              color: Colors.grey[600],
+              color: secondaryTextColor,
               fontWeight: FontWeight.w500,
             ),
           ),
           trailing: IconButton(
-            icon: Icon(Icons.close, color: Colors.grey[400], size: 18),
+            icon: Icon(Icons.close, color: secondaryTextColor?.withOpacity(0.5), size: 18),
             onPressed: () => provider.removeSearch(query),
           ),
           onTap: () {
@@ -130,7 +139,10 @@ class _ClientSearchScreenState extends State<ClientSearchScreen> {
     );
   }
 
-  Widget _buildRecentViewSection(List<ProjectModel> views, bool isDark) {
+  Widget _buildRecentViewSection(BuildContext context, List<ProjectModel> views, bool isDark) {
+    final textColor = Theme.of(context).textTheme.titleLarge?.color ?? Theme.of(context).textTheme.bodyLarge?.color;
+    final primaryBlue = Theme.of(context).primaryColor;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -141,7 +153,7 @@ class _ClientSearchScreenState extends State<ClientSearchScreen> {
             style: GoogleFonts.montserrat(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : const Color(0xFF0D1B34),
+              color: textColor,
             ),
           ),
         ),
@@ -153,14 +165,19 @@ class _ClientSearchScreenState extends State<ClientSearchScreen> {
           itemCount: views.length,
           itemBuilder: (context, index) {
             final item = views[index];
+            final cardColor = Theme.of(context).cardColor;
+            final bodyTextColor = Theme.of(context).textTheme.bodyLarge?.color;
+            final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
             return GestureDetector(
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ClientPropertyDetailsScreen(project: item))),
               child: Container(
                 margin: const EdgeInsets.only(bottom: 16),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[900] : Colors.white,
+                  color: cardColor,
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.getBorderColor(context)),
                   boxShadow: [
                     BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))
                   ],
@@ -180,8 +197,8 @@ class _ClientSearchScreenState extends State<ClientSearchScreen> {
                       child: Container(
                         margin: const EdgeInsets.all(6),
                         padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                        child: Icon(Icons.favorite, color: Colors.blue[600], size: 12),
+                        decoration: BoxDecoration(color: Theme.of(context).cardColor, shape: BoxShape.circle),
+                        child: Icon(Icons.favorite, color: primaryBlue, size: 12),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -193,42 +210,41 @@ class _ClientSearchScreenState extends State<ClientSearchScreen> {
                             children: [
                               Icon(Icons.star, color: Colors.amber[600], size: 14),
                               const SizedBox(width: 4),
-                              Text("4.9", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold)),
+                              Text("4.9", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: bodyTextColor)),
                               const Spacer(),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(4)),
-                                child: Text(item.projectType.toUpperCase(), style: GoogleFonts.montserrat(fontSize: 8, color: Colors.blue[700], fontWeight: FontWeight.bold)),
+                                decoration: BoxDecoration(color: primaryBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+                                child: Text(item.projectType.toUpperCase(), style: GoogleFonts.montserrat(fontSize: 8, color: primaryBlue, fontWeight: FontWeight.bold)),
                               ),
                             ],
                           ),
                           const SizedBox(height: 4),
                           Text(
                             item.projectName,
-                            style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 15, color: isDark ? Colors.white : Colors.black87),
+                            style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 15, color: bodyTextColor),
                             maxLines: 1, overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 2),
                           Row(
                             children: [
-                              Icon(Icons.location_on, color: Colors.grey[400], size: 12),
+                              Icon(Icons.location_on, color: secondaryTextColor?.withOpacity(0.5), size: 12),
                               const SizedBox(width: 2),
-                              Expanded(child: Text(item.city, style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey[500]), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                              Expanded(child: Text(item.city, style: GoogleFonts.montserrat(fontSize: 10, color: secondaryTextColor), maxLines: 1, overflow: TextOverflow.ellipsis)),
                             ],
                           ),
                           const SizedBox(height: 6),
                           Row(
                             children: [
-                              Icon(Icons.aspect_ratio, size: 12, color: Colors.grey[400]),
+                              Icon(Icons.aspect_ratio, size: 12, color: secondaryTextColor?.withOpacity(0.5)),
                               const SizedBox(width: 4),
-                              Text("1,225", style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold)),
+                              Text("1,225", style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: bodyTextColor)),
                               const SizedBox(width: 12),
-                              Icon(Icons.bed, size: 12, color: Colors.grey[400]),
+                              Icon(Icons.bed, size: 12, color: secondaryTextColor?.withOpacity(0.5)),
                               const SizedBox(width: 4),
-                              Text("3.0", style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold)),
+                              Text("3.0", style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: bodyTextColor)),
                               const Spacer(),
-                              Text("₹${item.ratePerSqft}", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue[600])),
-                              Text("/month", style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey[500])),
+                              Text("₹${item.budgetRange}", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: primaryBlue)),
                             ],
                           ),
                         ],

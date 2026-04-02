@@ -95,13 +95,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = AppColors.getCardColor(context);
-    final primaryBlue = AppColors.getPrimaryBlue(context);
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
-    final mutedText = isDark
-        ? AppColors.textMutedDark
-        : AppColors.textMutedLight;
+    final cardColor = Theme.of(context).cardColor;
+    final primaryBlue = Theme.of(context).primaryColor;
+    final textColor = Theme.of(context).textTheme.bodyMedium?.color;
 
     // Watch the provider to rebuild UI when step changes
     final authState = context.watch<AuthProvider>();
@@ -123,7 +119,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: IconButton(
-                        icon: const Icon(Icons.arrow_back_ios),
+                        icon: Icon(Icons.arrow_back_ios, color: textColor),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
@@ -135,7 +131,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       decoration: BoxDecoration(
                         color: cardColor,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: borderColor),
+                        border: Border.all(color: AppColors.getBorderColor(context)),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.05),
@@ -169,7 +165,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 : 'Your new password must be different from previous used passwords.',
                             style: GoogleFonts.montserrat(
                               fontSize: 12,
-                              color: mutedText,
+                              color: AppColors.getSecondaryTextColor(context),
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -177,32 +173,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                           // DYNAMIC FIELDS BASED ON STEP
                           if (step == ForgotPasswordStep.email) ...[
-                            _buildTextFieldLabel('Email Address'),
+                            _buildTextFieldLabel('Email Address', textColor),
                             const SizedBox(height: 8),
                             _buildTextField(
+                              context: context,
                               controller: _emailController,
                               hint: 'Enter your email',
                               icon: Icons.email_outlined,
-                              primaryBlue: primaryBlue,
-                              borderColor: borderColor,
-                              mutedText: mutedText,
                             ),
                           ] else if (step == ForgotPasswordStep.otp) ...[
-                            _buildTextFieldLabel('6-Digit OTP'),
+                            _buildTextFieldLabel('6-Digit OTP', textColor),
                             const SizedBox(height: 8),
                             _buildTextField(
+                              context: context,
                               controller: _otpController,
                               hint: 'Enter OTP',
                               icon: Icons.security_outlined,
                               isNumber: true,
-                              primaryBlue: primaryBlue,
-                              borderColor: borderColor,
-                              mutedText: mutedText,
                             ),
                           ] else ...[
-                            _buildTextFieldLabel('New Password'),
+                            _buildTextFieldLabel('New Password', textColor),
                             const SizedBox(height: 8),
                             _buildTextField(
+                              context: context,
                               controller: _passwordController,
                               hint: 'Enter new password',
                               icon: Icons.lock_outline,
@@ -210,14 +203,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               onTogglePassword: () => setState(
                                 () => _isPasswordVisible = !_isPasswordVisible,
                               ),
-                              primaryBlue: primaryBlue,
-                              borderColor: borderColor,
-                              mutedText: mutedText,
                             ),
                             const SizedBox(height: 16),
-                            _buildTextFieldLabel('Confirm Password'),
+                            _buildTextFieldLabel('Confirm Password', textColor),
                             const SizedBox(height: 8),
                             _buildTextField(
+                              context: context,
                               controller: _confirmPasswordController,
                               hint: 'Re-enter password',
                               icon: Icons.lock_outline,
@@ -226,9 +217,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 () => _isConfirmPasswordVisible =
                                     !_isConfirmPasswordVisible,
                               ),
-                              primaryBlue: primaryBlue,
-                              borderColor: borderColor,
-                              mutedText: mutedText,
                             ),
                           ],
 
@@ -280,24 +268,24 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  Widget _buildTextFieldLabel(String label) {
+  Widget _buildTextFieldLabel(String label, Color? color) {
     return Text(
       label,
-      style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w600),
+      style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w600, color: color),
     );
   }
 
   Widget _buildTextField({
+    required BuildContext context,
     required String hint,
     required IconData icon,
     bool isPassword = false,
     bool isNumber = false,
     required TextEditingController controller,
-    required Color primaryBlue,
-    required Color borderColor,
-    required Color mutedText,
     VoidCallback? onTogglePassword,
   }) {
+    final mutedText = AppColors.getSecondaryTextColor(context);
+    
     return TextFormField(
       obscureText: isPassword,
       controller: controller,
@@ -316,15 +304,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 onPressed: onTogglePassword,
               )
             : null,
-        contentPadding: const EdgeInsets.symmetric(vertical: 16),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: borderColor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: primaryBlue),
-        ),
       ),
     );
   }

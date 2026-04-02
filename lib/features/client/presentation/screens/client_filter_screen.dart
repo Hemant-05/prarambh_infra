@@ -12,18 +12,19 @@ class ClientFilterScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<PropertyFilterProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryBlue = AppColors.getPrimaryBlue(context);
+    final primaryBlue = Theme.of(context).primaryColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: BackButton(color: isDark ? Colors.white : Colors.black87),
+        leading: BackButton(color: textColor),
         title: Text(
           "Filter",
           style: GoogleFonts.montserrat(
-            color: isDark ? Colors.white : const Color(0xFF0D1B34),
+            color: textColor,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
@@ -42,25 +43,25 @@ class ClientFilterScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   
                   // Category Section
-                  _sectionHeader("Category", isDark),
+                  _sectionHeader(context, "Category"),
                   const SizedBox(height: 12),
-                  _buildCategorySelection(provider, primaryBlue, isDark),
+                  _buildCategorySelection(context, provider, primaryBlue, isDark),
                   
                   const SizedBox(height: 32),
                   
                   // Price Range Section
-                  _sectionHeader("Price Range", isDark),
+                  _sectionHeader(context, "Price Range"),
                   const SizedBox(height: 12),
                   _buildPriceRangeSlider(provider, primaryBlue, isDark),
                   const SizedBox(height: 8),
-                  _buildPriceLabels(provider.priceRange),
+                  _buildPriceLabels(context, provider.priceRange),
                   
                   const SizedBox(height: 32),
                   
                   // BHK / Configuration Section
-                  _sectionHeader("BHK Configuration", isDark),
+                  _sectionHeader(context, "BHK Configuration"),
                   const SizedBox(height: 12),
-                  _buildBHKSelection(provider, primaryBlue, isDark),
+                  _buildBHKSelection(context, provider, primaryBlue, isDark),
                   
                   const SizedBox(height: 40),
                 ],
@@ -69,24 +70,28 @@ class ClientFilterScreen extends StatelessWidget {
           ),
           
           // Bottom Buttons
-          _buildBottomButtons(provider, primaryBlue, isDark, context),
+          _buildBottomButtons(context, provider, primaryBlue, isDark),
         ],
       ),
     );
   }
 
-  Widget _sectionHeader(String title, bool isDark) {
+  Widget _sectionHeader(BuildContext context, String title) {
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
     return Text(
       title,
       style: GoogleFonts.montserrat(
         fontSize: 16,
         fontWeight: FontWeight.bold,
-        color: isDark ? Colors.white : const Color(0xFF0D1B34),
+        color: textColor,
       ),
     );
   }
 
-  Widget _buildCategorySelection(PropertyFilterProvider provider, Color activeColor, bool isDark) {
+  Widget _buildCategorySelection(BuildContext context, PropertyFilterProvider provider, Color activeColor, bool isDark) {
+    final cardColor = Theme.of(context).cardColor;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       physics: const BouncingScrollPhysics(),
@@ -100,13 +105,14 @@ class ClientFilterScreen extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
-                  color: isSelected ? activeColor : (isDark ? Colors.grey[900] : const Color(0xFFF5F7FA)),
+                  color: isSelected ? activeColor : cardColor,
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: isSelected ? activeColor : AppColors.getBorderColor(context)),
                 ),
                 child: Text(
                   cat,
                   style: GoogleFonts.montserrat(
-                    color: isSelected ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[700]),
+                    color: isSelected ? Colors.white : secondaryTextColor,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                     fontSize: 14,
                   ),
@@ -133,18 +139,22 @@ class ClientFilterScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPriceLabels(RangeValues range) {
+  Widget _buildPriceLabels(BuildContext context, RangeValues range) {
+    final primaryBlue = Theme.of(context).primaryColor;
     // Adjusting labels based on 100-5000 scale (Assuming units of 1,000 for realistic prices)
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text("₹${(range.start * 1000).toInt()}", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue[700])),
-        Text("₹${(range.end * 1000).toInt()}", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue[700])),
+        Text("₹${(range.start * 1000).toInt()}", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: primaryBlue)),
+        Text("₹${(range.end * 1000).toInt()}", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: primaryBlue)),
       ],
     );
   }
 
-  Widget _buildBHKSelection(PropertyFilterProvider provider, Color activeColor, bool isDark) {
+  Widget _buildBHKSelection(BuildContext context, PropertyFilterProvider provider, Color activeColor, bool isDark) {
+    final cardColor = Theme.of(context).cardColor;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Row(
       children: provider.bhkOptions.map((val) {
         final isSelected = provider.selectedBHK == val;
@@ -156,14 +166,15 @@ class ClientFilterScreen extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  color: isSelected ? activeColor : (isDark ? Colors.grey[900] : const Color(0xFFF5F7FA)),
+                  color: isSelected ? activeColor : cardColor,
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: isSelected ? activeColor : AppColors.getBorderColor(context)),
                 ),
                 child: Text(
                   val,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.montserrat(
-                    color: isSelected ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[700]),
+                    color: isSelected ? Colors.white : secondaryTextColor,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                     fontSize: 15,
                   ),
@@ -176,11 +187,14 @@ class ClientFilterScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomButtons(PropertyFilterProvider provider, Color activeColor, bool isDark, BuildContext context) {
+  Widget _buildBottomButtons(BuildContext context, PropertyFilterProvider provider, Color activeColor, bool isDark) {
+    final bottomBarColor = Theme.of(context).cardColor;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey[900] : Colors.white,
+        color: bottomBarColor,
+        border: Border(top: BorderSide(color: AppColors.getBorderColor(context))),
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
       ),
       child: Row(
@@ -190,7 +204,7 @@ class ClientFilterScreen extends StatelessWidget {
               onPressed: () => provider.resetFilters(),
               child: Text(
                 "Reset",
-                style: GoogleFonts.montserrat(color: Colors.blue[600], fontWeight: FontWeight.bold, fontSize: 16),
+                style: GoogleFonts.montserrat(color: activeColor, fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ),
           ),

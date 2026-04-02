@@ -41,9 +41,12 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryBlue = AppColors.getPrimaryBlue(context);
+    final primaryBlue = Theme.of(context).primaryColor;
     final provider = context.watch<AdvisorRegistrationProvider>();
     final currentUser = context.read<AuthProvider>().currentUser;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final cardColor = Theme.of(context).cardColor;
 
     // RULE: If logged-in user is 'Advisor' role and their designation is exactly 'advisor' (or null), block them.
     final isRoleAdvisor = currentUser?.role.toLowerCase() == 'advisor';
@@ -51,12 +54,12 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
     
     if (isRoleAdvisor && (userDesignation == 'advisor' || userDesignation.isEmpty)) {
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+            icon: Icon(Icons.arrow_back_ios, color: textColor),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -78,13 +81,13 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+          icon: Icon(Icons.arrow_back_ios, color: textColor),
           onPressed: _currentStep == 1
               ? _prevStep
               : () => Navigator.pop(context),
@@ -92,7 +95,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
         title: Text(
           'Advisor Registration',
           style: GoogleFonts.montserrat(
-            color: Colors.black,
+            color: textColor,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
@@ -106,8 +109,8 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
               controller: _pageController,
               physics: const NeverScrollableScrollPhysics(),
               children: [
-                _buildStepOne(provider),
-                _buildStepTwo(provider, primaryBlue),
+                _buildStepOne(provider, textColor, cardColor, isDark),
+                _buildStepTwo(provider, primaryBlue, textColor, cardColor, isDark),
               ],
             ),
           ),
@@ -170,7 +173,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
   // ==========================================
   // STEP 1 UI
   // ==========================================
-  Widget _buildStepOne(AdvisorRegistrationProvider provider) {
+  Widget _buildStepOne(AdvisorRegistrationProvider provider, Color? textColor, Color cardColor, bool isDark) {
     final currentUser = context.read<AuthProvider>().currentUser;
     // Generate Designation Options
     List<String> designationOptions = ['Advisor'];
@@ -205,7 +208,8 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
+              color: cardColor,
+              border: Border.all(color: AppColors.getBorderColor(context)),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -214,11 +218,13 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                   'Full Name',
                   'Enter your full name',
                   provider.nameCtrl,
+                  textColor: textColor,
                 ),
                 _buildTextField(
                   "Father's Name",
                   "Enter father's name",
                   provider.fatherNameCtrl,
+                  textColor: textColor,
                 ),
                 Row(
                   children: [
@@ -229,6 +235,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                         'YYYY-MM-DD',
                         provider.dobCtrl,
                         provider,
+                        textColor: textColor,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -238,6 +245,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                         provider.gender,
                         ['Male', 'Female', 'Other'],
                         (v) => setState(() => provider.gender = v!),
+                        textColor: textColor,
                       ),
                     ),
                   ],
@@ -248,12 +256,14 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                   provider.aadharCtrl,
                   icon: Icons.badge_outlined,
                   isNumber: true,
+                  textColor: textColor,
                 ),
                 _buildTextField(
                   'PAN Number',
                   'Permanent account number',
                   provider.panCtrl,
                   icon: Icons.credit_card_outlined,
+                  textColor: textColor,
                 ),
               ],
             ),
@@ -263,7 +273,8 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
+              color: cardColor,
+              border: Border.all(color: AppColors.getBorderColor(context)),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -274,18 +285,21 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                   provider.phoneCtrl,
                   icon: Icons.phone_outlined,
                   isNumber: true,
+                  textColor: textColor,
                 ),
                 _buildTextField(
                   'Email Address',
                   'email@gmail.com',
                   provider.emailCtrl,
                   icon: Icons.email_outlined,
+                  textColor: textColor,
                 ),
                 _buildTextField(
                   'Address',
                   'Full residential address',
                   provider.addressCtrl,
                   maxLines: 2,
+                  textColor: textColor,
                 ),
                 Row(
                   children: [
@@ -295,6 +309,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                         'Madhya Pradesh',
                         provider.stateCtrl,
                         icon: Icons.map,
+                        textColor: textColor,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -304,6 +319,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                         'Ujjain',
                         provider.cityCtrl,
                         icon: Icons.location_city_outlined,
+                        textColor: textColor,
                       ),
                     ),
                   ],
@@ -316,6 +332,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                         'e.g. 452010',
                         provider.pincodeCtrl,
                         isNumber: true,
+                        textColor: textColor,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -324,6 +341,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                         'Occupation',
                         'e.g. Agent',
                         provider.occupationCtrl,
+                        textColor: textColor,
                       ),
                     ),
                   ],
@@ -333,6 +351,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                   provider.designation,
                   designationOptions,
                   (v) => setState(() => provider.designation = v!),
+                  textColor: textColor,
                 ),
               ],
             ),
@@ -348,6 +367,9 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
   Widget _buildStepTwo(
     AdvisorRegistrationProvider provider,
     Color primaryBlue,
+    Color? textColor,
+    Color cardColor,
+    bool isDark,
   ) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -358,7 +380,8 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
+              color: cardColor,
+              border: Border.all(color: AppColors.getBorderColor(context)),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -367,18 +390,21 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                   'Nominee Name',
                   'Enter Name of nominee',
                   provider.nomineeNameCtrl,
+                  textColor: textColor,
                 ),
                 _buildTextField(
                   'Nominee Phone',
                   'Enter Phone number',
                   provider.nomineePhoneCtrl,
                   isNumber: true,
+                  textColor: textColor,
                 ),
                 _buildDropdown(
                   'Relationship',
                   provider.relationship,
                   ['Wife', 'Husband', 'Son', 'Daughter', 'Parent'],
                   (v) => setState(() => provider.relationship = v!),
+                  textColor: textColor,
                 ),
               ],
             ),
@@ -388,7 +414,8 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
+              color: cardColor,
+              border: Border.all(color: AppColors.getBorderColor(context)),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -397,6 +424,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                   'Bank Name',
                   'e.g. HDFC Bank',
                   provider.bankNameCtrl,
+                  textColor: textColor,
                 ),
                 _buildTextField(
                   'Account Number',
@@ -404,6 +432,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                   provider.accNumberCtrl,
                   icon: Icons.lock_outline,
                   isNumber: true,
+                  textColor: textColor,
                 ),
                 Row(
                   children: [
@@ -412,6 +441,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                         'IFSC Code',
                         'HDFC0001',
                         provider.ifscCtrl,
+                        textColor: textColor,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -420,6 +450,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                         'Branch',
                         'Hoshangabad',
                         provider.branchCtrl,
+                        textColor: textColor,
                       ),
                     ),
                   ],
@@ -432,7 +463,8 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
+              color: cardColor,
+              border: Border.all(color: AppColors.getBorderColor(context)),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -443,6 +475,8 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                   provider.aadharFront,
                   provider,
                   primaryBlue,
+                  textColor: textColor,
+                  isDark: isDark,
                 ),
                 _buildUploadBox(
                   'Aadhar Card (Back)',
@@ -450,6 +484,8 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                   provider.aadharBack,
                   provider,
                   primaryBlue,
+                  textColor: textColor,
+                  isDark: isDark,
                 ),
                 _buildUploadBox(
                   'PAN Card (Front)',
@@ -457,6 +493,8 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                   provider.panPhoto,
                   provider,
                   primaryBlue,
+                  textColor: textColor,
+                  isDark: isDark,
                 ),
                 // UPDATED: Added PAN Card Back
                 _buildUploadBox(
@@ -465,6 +503,8 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                   provider.panBackPhoto,
                   provider,
                   primaryBlue,
+                  textColor: textColor,
+                  isDark: isDark,
                 ),
                 _buildUploadBox(
                   'Profile Photo (Selfie)',
@@ -472,6 +512,8 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                   provider.profilePhoto,
                   provider,
                   primaryBlue,
+                  textColor: textColor,
+                  isDark: isDark,
                 ),
               ],
             ),
@@ -482,6 +524,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
             '',
             'Referral code (mandatory)',
             provider.leaderCodeCtrl,
+            textColor: textColor,
           ),
           const SizedBox(height: 40),
         ],
@@ -498,8 +541,9 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
     String label,
     String hint,
     TextEditingController controller,
-    AdvisorRegistrationProvider provider,
-  ) {
+    AdvisorRegistrationProvider provider, {
+    Color? textColor,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -507,7 +551,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
         children: [
           Text(
             label,
-            style: GoogleFonts.montserrat(fontSize: 12, color: Colors.black87),
+            style: GoogleFonts.montserrat(fontSize: 12, color: textColor?.withOpacity(0.8) ?? Colors.black87),
           ),
           const SizedBox(height: 8),
           GestureDetector(
@@ -529,7 +573,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
               // Prevents keyboard from popping up
               child: TextField(
                 controller: controller,
-                style: GoogleFonts.montserrat(fontSize: 14),
+                style: GoogleFonts.montserrat(fontSize: 14, color: textColor),
                 decoration: InputDecoration(
                   hintText: hint,
                   hintStyle: GoogleFonts.montserrat(
@@ -546,11 +590,11 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
+                    borderSide: BorderSide(color: AppColors.getBorderColor(context)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
+                    borderSide: BorderSide(color: AppColors.getBorderColor(context)),
                   ),
                 ),
               ),
@@ -562,6 +606,9 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
   }
 
   Widget _buildSectionHeader(String number, String title) {
+    final primaryBlue = Theme.of(context).primaryColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
@@ -572,14 +619,14 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.blue[900]!, width: 2),
+              border: Border.all(color: primaryBlue, width: 2),
             ),
             child: Text(
               number,
               style: GoogleFonts.montserrat(
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
-                color: Colors.blue[900],
+                color: primaryBlue,
               ),
             ),
           ),
@@ -589,6 +636,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
             style: GoogleFonts.montserrat(
               fontWeight: FontWeight.bold,
               fontSize: 14,
+              color: textColor,
             ),
           ),
         ],
@@ -603,6 +651,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
     IconData? icon,
     bool isNumber = false,
     int maxLines = 1,
+    Color? textColor,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -614,7 +663,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
               label,
               style: GoogleFonts.montserrat(
                 fontSize: 12,
-                color: Colors.black87,
+                color: textColor?.withOpacity(0.8) ?? Colors.black87,
               ),
             ),
             const SizedBox(height: 8),
@@ -623,7 +672,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
             controller: controller,
             maxLines: maxLines,
             keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-            style: GoogleFonts.montserrat(fontSize: 14),
+            style: GoogleFonts.montserrat(fontSize: 14, color: textColor),
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: GoogleFonts.montserrat(
@@ -637,11 +686,11 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.grey.shade300),
+                borderSide: BorderSide(color: AppColors.getBorderColor(context)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.grey.shade300),
+                borderSide: BorderSide(color: AppColors.getBorderColor(context)),
               ),
             ),
           ),
@@ -654,8 +703,9 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
     String label,
     String value,
     List<String> items,
-    ValueChanged<String?> onChanged,
-  ) {
+    ValueChanged<String?> onChanged, {
+    Color? textColor,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -663,28 +713,29 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
         children: [
           Text(
             label,
-            style: GoogleFonts.montserrat(fontSize: 12, color: Colors.black87),
+            style: GoogleFonts.montserrat(fontSize: 12, color: textColor?.withOpacity(0.8) ?? Colors.black87),
           ),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.shade300),
+              border: Border.all(color: AppColors.getBorderColor(context)),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: value,
                 isExpanded: true,
+                dropdownColor: Theme.of(context).cardColor,
                 icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
                 style: GoogleFonts.montserrat(
                   fontSize: 13,
-                  color: Colors.black87,
+                  color: textColor,
                 ),
                 items: items
                     .map(
                       (item) =>
-                          DropdownMenuItem(value: item, child: Text(item)),
+                           DropdownMenuItem(value: item, child: Text(item, style: TextStyle(color: textColor))),
                     )
                     .toList(),
                 onChanged: onChanged,
@@ -701,8 +752,10 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
     String type,
     File? file,
     AdvisorRegistrationProvider provider,
-    Color primaryBlue,
-  ) {
+    Color primaryBlue, {
+    Color? textColor,
+    bool isDark = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -710,7 +763,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
         children: [
           Text(
             title,
-            style: GoogleFonts.montserrat(fontSize: 12, color: Colors.black87),
+            style: GoogleFonts.montserrat(fontSize: 12, color: textColor?.withOpacity(0.8) ?? Colors.black87),
           ),
           const SizedBox(height: 8),
           GestureDetector(
@@ -721,7 +774,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 decoration: BoxDecoration(
                   color: file != null
-                      ? Colors.blue.shade50
+                      ? primaryBlue.withOpacity(0.1)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                 ),
