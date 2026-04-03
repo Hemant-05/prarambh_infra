@@ -327,11 +327,13 @@ abstract class ApiClient {
   Future<dynamic> createDeal(
     @Part(name: "client_name") String clientName,
     @Part(name: "client_number") String clientNumber,
+    @Part(name: "client_email") String? clientEmail,
     @Part(name: "advisor_code") String advisorCode,
     @Part(name: "stage") String stage,
     @Part(name: "deal_status") String dealStatus,
     @Part(name: "lead_id") String leadId,
     @Part(name: "property_id") String propertyId,
+    @Part(name: "unit_id") String unitId,
     @Part(name: "payment_amount") String? paymentAmount,
     @Part(name: "token_amount") String? tokenAmount,
     @Part(name: "token_payment_mode") String? tokenPaymentMode,
@@ -461,6 +463,9 @@ abstract class ApiClient {
   // ==========================================
   // 13. Dashboards & Analytics
   // ==========================================
+  @GET("/admin/sales-analytics")
+  Future<dynamic> getAdminSalesAnalytics();
+
   @GET("/admin/dashboard")
   Future<dynamic> getAdminDashboard();
 

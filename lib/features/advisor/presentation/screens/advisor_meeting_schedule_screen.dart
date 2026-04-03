@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/advisor_attendance_provider.dart';
 import 'advisor_camera_screen.dart';
+import '../../../../core/utils/access_helper.dart';
 
 class AdvisorMeetingScheduleScreen extends StatefulWidget {
   const AdvisorMeetingScheduleScreen({super.key});
@@ -292,14 +293,18 @@ class _AdvisorMeetingScheduleScreenState
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => AdvisorCameraScreen(
-                                    meeting: activeMeeting,
-                                  ),
-                                ),
-                              ),
+                              onPressed: () {
+                                if (AdvisorAccessHelper.check(context, feature: 'attendance')) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => AdvisorCameraScreen(
+                                        meeting: activeMeeting,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white.withOpacity(0.2),
                                 elevation: 0,

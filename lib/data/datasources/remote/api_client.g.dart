@@ -1541,11 +1541,13 @@ class _ApiClient implements ApiClient {
   Future<dynamic> createDeal(
     String clientName,
     String clientNumber,
+    String? clientEmail,
     String advisorCode,
     String stage,
     String dealStatus,
     String leadId,
     String propertyId,
+    String unitId,
     String? paymentAmount,
     String? tokenAmount,
     String? tokenPaymentMode,
@@ -1566,11 +1568,15 @@ class _ApiClient implements ApiClient {
     final _data = FormData();
     _data.fields.add(MapEntry('client_name', clientName));
     _data.fields.add(MapEntry('client_number', clientNumber));
+    if (clientEmail != null) {
+      _data.fields.add(MapEntry('client_email', clientEmail));
+    }
     _data.fields.add(MapEntry('advisor_code', advisorCode));
     _data.fields.add(MapEntry('stage', stage));
     _data.fields.add(MapEntry('deal_status', dealStatus));
     _data.fields.add(MapEntry('lead_id', leadId));
     _data.fields.add(MapEntry('property_id', propertyId));
+    _data.fields.add(MapEntry('unit_id', unitId));
     if (paymentAmount != null) {
       _data.fields.add(MapEntry('payment_amount', paymentAmount));
     }
@@ -2273,6 +2279,27 @@ class _ApiClient implements ApiClient {
           .compose(
             _dio.options,
             '/promotions/evaluate-company',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> getAdminSalesAnalytics() async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/admin/sales-analytics',
             queryParameters: queryParameters,
             data: _data,
           )

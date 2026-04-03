@@ -6,6 +6,7 @@ import 'package:prarambh_infra/features/auth/presentation/providers/auth_provide
 import 'package:provider/provider.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../advisor/presentation/screens/lead_details_screen.dart';
+import '../../../../core/utils/access_helper.dart';
 
 class SalesPipelineScreen extends StatefulWidget {
   const SalesPipelineScreen({super.key});
@@ -163,7 +164,11 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddLeadDialog,
+        onPressed: () {
+          if (AdvisorAccessHelper.check(context, feature: 'lead generation')) {
+            _showAddLeadDialog();
+          }
+        },
         backgroundColor: primaryBlue,
         elevation: 4,
         icon: const Icon(Icons.add, color: Colors.white),

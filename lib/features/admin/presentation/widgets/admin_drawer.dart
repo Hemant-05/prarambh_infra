@@ -52,10 +52,28 @@ class AdminDrawer extends StatelessWidget {
               children: [
                 _buildDrawerItem(
                   context: context,
+                  icon: Icons.analytics_outlined,
+                  title: 'Sales Analytics',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/admin_sales_analytics');
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
                   icon: Icons.description_outlined,
                   title: 'Document Management',
                   onTap: () {
                     Navigator.pushNamed(context, '/docs_management');
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.account_balance_wallet_outlined,
+                  title: 'Upcoming Installments',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/admin_upcoming_installments');
                   },
                 ),
                 _buildDrawerItem(
@@ -125,15 +143,6 @@ class AdminDrawer extends StatelessWidget {
                   onTap: () {
                     Navigator.pop(context); // close drawer
                     Navigator.pushNamed(context, '/admin_recruitment_dashboard');
-                  },
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.account_balance_wallet_outlined,
-                  title: 'Company Installments',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, '/admin_upcoming_installments');
                   },
                 ),
               ],

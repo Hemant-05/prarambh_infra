@@ -9,6 +9,7 @@ class DealModel {
   final String clientPanFront;
   final String clientPanBack;
   final int propertyId;
+  final int unitId;
   final String stage;
   final int leadId;
   final bool isResale;
@@ -28,6 +29,7 @@ class DealModel {
   DealModel({
     required this.id, required this.clientName, required this.clientNumber,
     required this.advisorCode,
+    required this.unitId,
     required this.clientEmail, required this.clientAdharFront, required this.clientAdharBack,
     required this.clientPanFront, required this.clientPanBack, required this.propertyId,
     required this.stage, required this.leadId,
@@ -62,6 +64,7 @@ class DealModel {
       clientPanFront: json['client_pan_front']?.toString() ?? '',
       clientPanBack: json['client_pan_back']?.toString() ?? '',
       propertyId: json['property_id'] != null ? int.tryParse(json['property_id'].toString()) ?? 0 : 0,
+      unitId: json['unit_id'] != null ? int.tryParse(json['unit_id'].toString()) ?? 0 : 0,
       stage: json['stage']?.toString() ?? '',
       leadId: json['lead_id'] != null ? int.tryParse(json['lead_id'].toString()) ?? 0 : 0,
       isResale: json['is_resale'] == 1 || json['is_resale'] == '1',
@@ -79,4 +82,4 @@ class DealModel {
       updatedAt: json['updated_at']?.toString() ?? '',
     );
   }
-}
+}

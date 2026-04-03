@@ -7,6 +7,7 @@ import 'package:prarambh_infra/features/admin/presentation/providers/admin_profi
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_project_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_recruitment_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_team_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/installment_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_attendance_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_contest_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_document_provider.dart';
@@ -64,6 +65,8 @@ import 'features/admin/presentation/providers/admin_blog_provider.dart';
 import 'features/admin/presentation/providers/admin_enquiry_provider.dart';
 import 'features/admin/presentation/screens/admin_blogs_screen.dart';
 import 'features/admin/presentation/screens/add_blog_screen.dart';
+import 'features/admin/presentation/providers/admin_analytics_provider.dart';
+import 'features/admin/presentation/screens/admin_sales_analytics_screen.dart';
 import 'features/admin/presentation/screens/admin_enquiries_screen.dart';
 
 void main() async {
@@ -124,6 +127,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => di.sl<EnquiryProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdminBlogProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdminEnquiryProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdminAnalyticsProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<InstallmentProvider>())
       ],
       child: MaterialApp(
         title: 'Prarambh Infra',
@@ -287,6 +292,7 @@ class MyApp extends StatelessWidget {
       '/admin_blogs': (context) => const AdminBlogsScreen(),
       '/add_blog': (context) => const AddBlogScreen(),
       '/admin_enquiries': (context) => const AdminEnquiriesScreen(),
+      '/admin_sales_analytics': (context) => const AdminSalesAnalyticsScreen(),
     };
   }
 }

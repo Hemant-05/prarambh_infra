@@ -44,12 +44,6 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
             fontSize: 18,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.share_outlined, color: textColor),
-            onPressed: () {}, // Share functionality
-          ),
-        ],
       ),
       body: provider.isLoading
           ? Center(child: CircularProgressIndicator(color: primaryBlue))
@@ -79,17 +73,6 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
                                   color: textColor,
                                 ),
                               ),
-                              TextButton(
-                                onPressed: () {},
-                                child: Text(
-                                  "View All",
-                                  style: GoogleFonts.montserrat(
-                                    color: primaryBlue,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
                             ],
                           ),
                         ),
@@ -99,7 +82,7 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
 
                         const SizedBox(height: 24),
 
-                        // Achievement KPI Summary (Static placeholders based on mockup or data if available)
+/*                        // Achievement KPI Summary (Static placeholders based on mockup or data if available)
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: Row(
@@ -111,7 +94,7 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
                           ),
                         ),
 
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 32),*/
 
                         // Filter Pills
                         _buildYearFilters(provider, primaryBlue, isDark),

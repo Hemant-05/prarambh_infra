@@ -9,6 +9,8 @@ import 'package:prarambh_infra/features/admin/data/repositories/admin_profile_re
 import 'package:prarambh_infra/features/admin/data/repositories/admin_project_repository.dart';
 import 'package:prarambh_infra/features/admin/data/repositories/admin_recruitment_repository.dart';
 import 'package:prarambh_infra/features/admin/data/repositories/admin_team_repository.dart';
+import 'package:prarambh_infra/features/admin/data/repositories/admin_analytics_repository.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_analytics_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_attendance_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_contest_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_deal_provider.dart';
@@ -74,6 +76,7 @@ Future<void> init() async {
 
   sl.registerFactory(() => AuthProvider(authRepository: sl()));
   sl.registerFactory(() => AdminProvider(adminRepository: sl()));
+  sl.registerFactory(() => AdminAnalyticsProvider(repository: sl()));
 
   sl.registerFactory(() => AdminAdvisorProvider(repository: sl()));
   sl.registerFactory(() => AdminDocumentProvider(repository: sl()));
@@ -81,6 +84,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AuthRepository(apiClient: sl()));
   sl.registerLazySingleton(() => AdvisorRegistrationProvider(repository: sl()));
   sl.registerLazySingleton(() => AdminRepository(apiClient: sl()));
+  sl.registerLazySingleton(() => AdminAnalyticsRepository(apiClient: sl()));
 
   sl.registerLazySingleton(() => AdminAdvisorRepository(apiClient: sl()));
   sl.registerLazySingleton(() => AdminDocumentRepository(apiClient: sl()));

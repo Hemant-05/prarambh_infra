@@ -9,18 +9,19 @@ class AdminDealRepository {
 
   Future<bool> createDeal({
     required String clientName, required String clientNumber,
+    String? clientEmail,
     required String advisorCode, required String stage,
     required String dealStatus, String? paymentAmount, 
     String? tokenAmount, String? tokenPaymentMode, String? tokenDate,
-    required String leadId, required String propertyId,
+    required String leadId, required String propertyId, required String unitId,
     File? clientAdharFront, File? clientAdharBack,
     File? clientPanFront, File? clientPanBack,
     List<String>? docTitles, List<File>? docFiles,
   }) async {
     try {
       final response = await apiClient.createDeal(
-          clientName, clientNumber, advisorCode, stage, dealStatus, 
-          leadId, propertyId, paymentAmount, tokenAmount, tokenPaymentMode, tokenDate,
+          clientName, clientNumber, clientEmail, advisorCode, stage, dealStatus, 
+          leadId, propertyId,unitId, paymentAmount, tokenAmount, tokenPaymentMode, tokenDate,
           clientAdharFront, clientAdharBack, clientPanFront, clientPanBack,
           "[]", "[]", // Empty JSON arrays for notes and installments initially
           docTitles, docFiles

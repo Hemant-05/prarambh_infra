@@ -58,14 +58,21 @@ class SalesConversion {
   final int suspecting;
   final int prospecting;
   final int siteVisit;
+  final int booking;
 
-  SalesConversion({required this.suspecting, required this.prospecting, required this.siteVisit});
+  SalesConversion({
+    required this.suspecting,
+    required this.prospecting,
+    required this.siteVisit,
+    required this.booking,
+  });
 
   factory SalesConversion.fromJson(Map<String, dynamic> json) {
     return SalesConversion(
       suspecting: int.tryParse(json['suspecting']?.toString() ?? '0') ?? 0,
       prospecting: int.tryParse(json['prospecting']?.toString() ?? '0') ?? 0,
       siteVisit: int.tryParse(json['site_visit']?.toString() ?? '0') ?? 0,
+      booking: int.tryParse(json['booking']?.toString() ?? '0') ?? 0,
     );
   }
 }

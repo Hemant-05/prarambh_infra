@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/back_button.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/advisor_contest_provider.dart';
+import '../../../../core/utils/access_helper.dart';
 
 class AdvisorContestsListScreen extends StatefulWidget {
   const AdvisorContestsListScreen({super.key});
@@ -114,7 +115,11 @@ class _AdvisorContestsListScreenState extends State<AdvisorContestsListScreen> {
                                 _buildIconText(Icons.calendar_today_outlined, contest.dateRange),
                                 const SizedBox(height: 12),
                                 ElevatedButton(
-                                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AdvisorContestDetailsScreen(contest: contest))),
+                                  onPressed: () {
+                                    if (AdvisorAccessHelper.check(context, feature: 'contests')) {
+                                      Navigator.push(context, MaterialPageRoute(builder: (_) => AdvisorContestDetailsScreen(contest: contest)));
+                                    }
+                                  },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: isLive ? primaryBlue : Colors.grey[200],
                                     foregroundColor: isLive ? Colors.white : Colors.grey[600],

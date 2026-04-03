@@ -29,7 +29,8 @@ class AdminDealProvider extends ChangeNotifier {
 
   Future<bool> initiateDeal({
     required String clientName, required String clientNumber,
-    required String advisorCode, required String leadId, required String propertyId,
+    String? clientEmail,
+    required String advisorCode, required String leadId, required String propertyId, required String unitId,
     String? tokenAmount, String? tokenPaymentMode, String? paymentAmount, String? tokenDate,
     File? aadhaarPhotoFront, File? aadhaarPhotoBack,
     File? panPhotoFront, File? panPhotoBack,
@@ -38,10 +39,12 @@ class AdminDealProvider extends ChangeNotifier {
     _isSaving = true; notifyListeners();
     try {
       final success = await repository.createDeal(
-          clientName: clientName, clientNumber: clientNumber, advisorCode: advisorCode,
+          clientName: clientName, clientNumber: clientNumber, 
+          clientEmail: clientEmail,
+          advisorCode: advisorCode,
           stage: 'booking', dealStatus: 'not verified', tokenAmount: tokenAmount,
           tokenPaymentMode: tokenPaymentMode, paymentAmount: paymentAmount, tokenDate: tokenDate,
-          leadId: leadId, propertyId: propertyId,
+          leadId: leadId, propertyId: propertyId, unitId: unitId,
           clientAdharFront: aadhaarPhotoFront, clientAdharBack: aadhaarPhotoBack,
           clientPanFront: panPhotoFront, clientPanBack: panPhotoBack,
           docTitles: docTitles, docFiles: docFiles

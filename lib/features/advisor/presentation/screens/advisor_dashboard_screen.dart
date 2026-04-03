@@ -15,6 +15,7 @@ import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_mee
 import 'package:prarambh_infra/features/advisor/presentation/screens/document_center_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/sales_pipeline_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_achievement_screen.dart';
+import '../../../../core/utils/access_helper.dart';
 
 class AdvisorDashboardScreen extends StatefulWidget {
   const AdvisorDashboardScreen({super.key});
@@ -24,7 +25,6 @@ class AdvisorDashboardScreen extends StatefulWidget {
 }
 
 class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
-  String _selectedSalesTab = 'Month';
   int _selectedIndex = 0;
 
   final List<String> _appBarTitles = [
@@ -506,63 +506,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
   }
 
   Widget _buildSalesConversionHeader(BuildContext context) {
-    final primaryBlue = Theme.of(context).primaryColor;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _buildSectionTitle(context, 'Sales Conversion'),
-        Container(
-          padding: const EdgeInsets.all(2),
-          decoration: BoxDecoration(
-            color: AppColors.getBorderColor(context),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            children: ['Month', 'Quarter', 'Year']
-                .map(
-                  (e) => GestureDetector(
-                    onTap: () => setState(() => _selectedSalesTab = e),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _selectedSalesTab == e
-                            ? (isDark ? primaryBlue : Colors.white)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: _selectedSalesTab == e
-                            ? [
-                                BoxShadow(
-                                  color: isDark
-                                      ? Colors.black.withOpacity(0.3)
-                                      : Colors.black.withOpacity(0.05),
-                                  blurRadius: 4,
-                                ),
-                              ]
-                            : [],
-                      ),
-                      child: Text(
-                        e,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: _selectedSalesTab == e
-                              ? (isDark ? Colors.white : primaryBlue)
-                              : Theme.of(context).textTheme.bodySmall?.color,
-                        ),
-                      ),
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-        ),
-      ],
-    );
+    return _buildSectionTitle(context, 'Sales Conversion');
   }
 
   Widget _buildSalesConversionCards(
@@ -571,33 +515,37 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
   ) {
     return Padding(
       padding: const EdgeInsets.only(top: 12),
-      child: Row(
+      child: GridView.count(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 1.8,
         children: [
-          Expanded(
-            child: _buildSalesCard(
-              context,
-              sales.suspecting.toString(),
-              'SUSPECTING',
-              const Color(0xFF2962FF),
-            ),
+          _buildSalesCard(
+            context,
+            sales.suspecting.toString(),
+            'SUSPECTING',
+            const Color(0xFF2962FF),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildSalesCard(
-              context,
-              sales.prospecting.toString(),
-              'PROSPECTING',
-              const Color(0xFF448AFF),
-            ),
+          _buildSalesCard(
+            context,
+            sales.prospecting.toString(),
+            'PROSPECTING',
+            const Color(0xFF448AFF),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildSalesCard(
-              context,
-              sales.siteVisit.toString(),
-              'SITE VISIT',
-              const Color(0xFFFF9100),
-            ),
+          _buildSalesCard(
+            context,
+            sales.siteVisit.toString(),
+            'SITE VISIT',
+            const Color(0xFFFF9100),
+          ),
+          _buildSalesCard(
+            context,
+            sales.booking.toString(),
+            'BOOKING',
+            const Color(0xFF4CAF50),
           ),
         ],
       ),
@@ -687,12 +635,14 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
               );
             }
             if (actions[index]['label'] == 'Attendance') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const AdvisorMeetingScheduleScreen(),
-                ),
-              );
+              if (AdvisorAccessHelper.check(context, feature: 'attendance')) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AdvisorMeetingScheduleScreen(),
+                  ),
+                );
+              }
             }
             if (actions[index]['label'] == 'Upcoming\nInstallment') {
               Navigator.pushNamed(context, '/upcoming_installments');
@@ -1158,12 +1108,14 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             );
           }),
           _drawerItem(context, Icons.emoji_events_outlined, 'Contests', () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const AdvisorContestsListScreen(),
-              ),
-            );
+            if (AdvisorAccessHelper.check(context, feature: 'contests')) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AdvisorContestsListScreen(),
+                ),
+              );
+            }
           }),
           _drawerItem(
             context,
@@ -1219,7 +1171,9 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             Navigator.pushNamed(context, '/advisor_leaderboard');
           }),
           _drawerItem(context, Icons.people_outline, 'My Recruitment', () {
-            Navigator.pushNamed(context, '/recruiter_dashboard');
+            if (AdvisorAccessHelper.check(context, feature: 'recruitment')) {
+              Navigator.pushNamed(context, '/recruiter_dashboard');
+            }
           }),
           _drawerItem(context, Icons.campaign_outlined, 'Promotions', () {}),
           _drawerItem(

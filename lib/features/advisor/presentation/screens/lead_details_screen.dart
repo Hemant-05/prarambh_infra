@@ -209,7 +209,8 @@ Please feel free to contact us for more information.""";
     final extraData = {
       'is_priority': newPriority ? 1 : 0,
       'communication_attempt': attemptCounter,
-      'property_id': selectedPropertyId,
+      'property_id': _selectedProject?.id.toString() ?? selectedPropertyId?.toString() ?? '0',
+      'unit_id': selectedPropertyId?.toString() ?? '0',
       'reminder': visitDate ?? '',
       'meeting_point': meetingPoint ?? '',
     };
@@ -339,7 +340,8 @@ Please feel free to contact us for more information.""";
 
     final extraData = {
       "communication_attempt": attemptCounter,
-      "property_id": selectedPropertyId,
+      "property_id" : _selectedProject?.id.toString() ?? selectedPropertyId?.toString() ?? '0',
+      "unit_id": selectedPropertyId?.toString() ?? '0',
       "reminder": visitDate ?? '',
       "meeting_point": meetingPoint ?? '',
     };
@@ -1584,15 +1586,19 @@ Please feel free to contact us for more information.""";
   }
 
   Widget _buildSiteVisitInfo(Color primaryBlue) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? Colors.grey[850] : Colors.white;
+    final borderColor = isDark ? Colors.grey[800]! : Colors.grey.shade200;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardColor,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: borderColor),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1600,9 +1606,13 @@ Please feel free to contact us for more information.""";
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     "Meetup Details",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold, 
+                      fontSize: 14,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
                   ),
                   if (!widget.isAdmin)
                     GestureDetector(
@@ -1641,9 +1651,10 @@ Please feel free to contact us for more information.""";
                   const SizedBox(width: 8),
                   Text(
                     visitDate ?? "Scheduled",
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white70 : Colors.black87,
                     ),
                   ),
                 ],
@@ -1656,9 +1667,10 @@ Please feel free to contact us for more information.""";
                   Expanded(
                     child: Text(
                       meetingPoint ?? "Meeting Point Unset",
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.white70 : Colors.black87,
                       ),
                     ),
                   ),
@@ -1673,9 +1685,9 @@ Please feel free to contact us for more information.""";
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade100),
+            border: Border.all(color: borderColor),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1688,6 +1700,7 @@ Please feel free to contact us for more information.""";
                     style: GoogleFonts.montserrat(
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
+                      color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
                   if (!widget.isAdmin)
@@ -1724,10 +1737,10 @@ Please feel free to contact us for more information.""";
                     height: 100,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: Colors.grey[50],
+                      color: isDark ? Colors.grey[800] : Colors.grey[50],
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: Colors.grey.shade200,
+                        color: borderColor,
                         style: BorderStyle.solid,
                       ),
                     ),
@@ -1743,7 +1756,7 @@ Please feel free to contact us for more information.""";
                         Text(
                           "Upload Photo with Client",
                           style: TextStyle(
-                            color: Colors.grey[500],
+                            color: isDark ? Colors.white38 : Colors.grey[500],
                             fontSize: 11,
                           ),
                         ),
@@ -1866,6 +1879,20 @@ Please feel free to contact us for more information.""";
             fontWeight: FontWeight.bold,
           ),
         ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+          decoration: InputDecoration(
+            labelText: "Client Email",
+            hintText: "Enter client's email address",
+            prefixIcon: const Icon(Icons.email_outlined),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
         const SizedBox(height: 8),
         const Text(
           "Collect documents and submit to the Admin for Token Verification & Deal Creation.",
@@ -1912,9 +1939,11 @@ Please feel free to contact us for more information.""";
                         bool success = await dealProvider.initiateDeal(
                           clientName: _currentLead.clientName,
                           clientNumber: _currentLead.clientNumber,
+                          clientEmail: _emailController.text.trim(),
                           advisorCode: _currentLead.advisorCode,
                           leadId: _currentLead.id,
-                          propertyId: selectedPropertyId?.toString() ?? '0',
+                          propertyId: _selectedProject?.id.toString() ?? '0',
+                          unitId: selectedPropertyId?.toString()?? '0',
                           tokenAmount: '0',
                           paymentAmount: '0',
                           tokenPaymentMode: '',
@@ -2125,7 +2154,8 @@ Please feel free to contact us for more information.""";
                   clientAdharBack: '',
                   clientPanFront: '',
                   clientPanBack: '',
-                  propertyId: selectedPropertyId ?? 0,
+                  propertyId: _selectedProject?.id ?? 0,
+                  unitId: selectedPropertyId ?? 0,
                   stage: 'booking',
                   leadId: int.parse(_currentLead.id),
                   isResale: false,
@@ -2495,9 +2525,11 @@ Please feel free to contact us for more information.""";
   Future<String?> _showDateTimePicker(BuildContext context) async {
     DateTime tempDate = DateTime.now();
     TimeOfDay tempTime = TimeOfDay.now();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
+      backgroundColor: isDark ? Colors.grey[900] : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -2505,27 +2537,43 @@ Please feel free to contact us for more information.""";
         builder: (context, setSheetState) => Container(
           height: 550,
           padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.grey[900] : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     "Select Date",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(ctx),
-                    icon: const Icon(Icons.close),
+                    icon: Icon(Icons.close, color: isDark ? Colors.white70 : Colors.black54),
                   ),
                 ],
               ),
               Expanded(
-                child: CalendarDatePicker(
-                  initialDate: tempDate,
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime.now().add(const Duration(days: 365)),
-                  onDateChanged: (d) => setSheetState(() => tempDate = d),
+                child: Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: ColorScheme.fromSeed(
+                      seedColor: Colors.blue,
+                      brightness: isDark ? Brightness.dark : Brightness.light,
+                    ),
+                  ),
+                  child: CalendarDatePicker(
+                    initialDate: tempDate,
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                    onDateChanged: (d) => setSheetState(() => tempDate = d),
+                  ),
                 ),
               ),
               InkWell(
@@ -2539,15 +2587,18 @@ Please feel free to contact us for more information.""";
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
+                    color: isDark ? Colors.grey[850] : Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         "Time:",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
                       ),
                       Text(
                         tempTime.format(context),
@@ -2593,11 +2644,12 @@ Please feel free to contact us for more information.""";
       "Call Later",
       "Network Issue",
     ];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? Colors.grey[900] : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -2618,25 +2670,29 @@ Please feel free to contact us for more information.""";
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.orange.shade50,
+                      color: isDark ? Colors.orange.withOpacity(0.1) : Colors.orange.shade50,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.call_missed, color: Colors.orange),
                   ),
                   const SizedBox(width: 12),
-                  const Text(
+                  Text(
                     "Call Not Connected",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 "Select Reason",
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey,
+                  color: isDark ? Colors.white60 : Colors.grey,
                 ),
               ),
               const SizedBox(height: 12),
@@ -2652,20 +2708,20 @@ Please feel free to contact us for more information.""";
                       () => selectedReason = val ? reason : null,
                     ),
                     selectedColor: Colors.blue,
-                    backgroundColor: Colors.white,
+                    backgroundColor: isDark ? Colors.grey[850] : Colors.white,
                     labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : Colors.black87,
+                      color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
                     ),
                   );
                 }).toList(),
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 "Follow-up Reminder (Optional)",
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey,
+                  color: isDark ? Colors.white60 : Colors.grey,
                 ),
               ),
               const SizedBox(height: 12),
@@ -2680,9 +2736,9 @@ Please feel free to contact us for more information.""";
                     vertical: 14,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
+                    color: isDark ? Colors.grey[850] : const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade300),
+                    border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
                   ),
                   child: Row(
                     children: [
@@ -2692,7 +2748,7 @@ Please feel free to contact us for more information.""";
                         localReminder ?? "Set Date & Time",
                         style: TextStyle(
                           color: localReminder != null
-                              ? Colors.black87
+                              ? (isDark ? Colors.white : Colors.black87)
                               : Colors.grey,
                           fontWeight: localReminder != null
                               ? FontWeight.bold
@@ -2743,11 +2799,12 @@ Please feel free to contact us for more information.""";
     TextEditingController meetingPointCtrl = TextEditingController(
       text: meetingPoint,
     );
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? Colors.grey[900] : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -2765,28 +2822,32 @@ Please feel free to contact us for more information.""";
             children: [
               Row(
                 children: [
-                  Container(
+                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.orange.shade50,
+                      color: isDark ? Colors.orange.withOpacity(0.1) : Colors.orange.shade50,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.location_on, color: Colors.orange),
                   ),
                   const SizedBox(width: 12),
-                  const Text(
+                  Text(
                     "Schedule Site Visit",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 18, 
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 "Select Property",
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey,
+                  color: isDark ? Colors.white60 : Colors.grey,
                 ),
               ),
               const SizedBox(height: 8),
@@ -2805,9 +2866,9 @@ Please feel free to contact us for more information.""";
                     vertical: 14,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isDark ? Colors.grey[850] : Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade300),
+                    border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
                   ),
                   child: Row(
                     children: [
@@ -2821,7 +2882,7 @@ Please feel free to contact us for more information.""";
                                 ? FontWeight.bold
                                 : FontWeight.normal,
                             color: localSelectedProp != null
-                                ? Colors.black87
+                                ? (isDark ? Colors.white70 : Colors.black87)
                                 : Colors.grey,
                           ),
                           maxLines: 1,
@@ -2834,12 +2895,12 @@ Please feel free to contact us for more information.""";
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 "Date & Time",
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey,
+                  color: isDark ? Colors.white60 : Colors.grey,
                 ),
               ),
               const SizedBox(height: 8),
@@ -2854,9 +2915,9 @@ Please feel free to contact us for more information.""";
                     vertical: 14,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isDark ? Colors.grey[850] : Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade300),
+                    border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
                   ),
                   child: Row(
                     children: [
@@ -2873,7 +2934,7 @@ Please feel free to contact us for more information.""";
                               ? FontWeight.bold
                               : FontWeight.normal,
                           color: localVisitDate != null
-                              ? Colors.black87
+                              ? (isDark ? Colors.white70 : Colors.black87)
                               : Colors.grey,
                         ),
                       ),
@@ -2886,9 +2947,14 @@ Please feel free to contact us for more information.""";
               const SizedBox(height: 16),
               TextField(
                 controller: meetingPointCtrl,
-                decoration: const InputDecoration(
+                style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                decoration: InputDecoration(
                   labelText: "Meeting Point (Optional)",
-                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: isDark ? Colors.white60 : Colors.grey),
+                  border: const OutlineInputBorder(),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
+                  ),
                 ),
               ),
 
@@ -2982,10 +3048,15 @@ Please feel free to contact us for more information.""";
       "Others",
     ];
     TextEditingController notesCtrl = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showModalBottomSheet(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? Colors.grey[900] : Colors.white,
       context: context,
       isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) => StatefulBuilder(
         builder: (context, setSheetState) => Padding(
           padding: EdgeInsets.only(
@@ -2997,28 +3068,50 @@ Please feel free to contact us for more information.""";
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 "Mark as Not Interested",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 18, 
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                initialValue: selectedReason,
-                items: reasons
-                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                    .toList(),
-                onChanged: (v) => setSheetState(() => selectedReason = v),
-                decoration: const InputDecoration(
-                  labelText: "Reason",
-                  border: OutlineInputBorder(),
+              Theme(
+                data: Theme.of(context).copyWith(
+                  canvasColor: isDark ? Colors.grey[850] : Colors.white,
+                ),
+                child: DropdownButtonFormField<String>(
+                  initialValue: selectedReason,
+                  dropdownColor: isDark ? Colors.grey[850] : Colors.white,
+                  style: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
+                  items: reasons
+                      .map((e) => DropdownMenuItem(
+                        value: e, 
+                        child: Text(e, style: TextStyle(color: isDark ? Colors.white : Colors.black87))))
+                      .toList(),
+                  onChanged: (v) => setSheetState(() => selectedReason = v),
+                  decoration: InputDecoration(
+                    labelText: "Reason",
+                    labelStyle: TextStyle(color: isDark ? Colors.white60 : Colors.grey),
+                    border: const OutlineInputBorder(),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: notesCtrl,
-                decoration: const InputDecoration(
+                style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                decoration: InputDecoration(
                   labelText: "Notes",
-                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: isDark ? Colors.white60 : Colors.grey),
+                  border: const OutlineInputBorder(),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -3052,11 +3145,12 @@ Please feel free to contact us for more information.""";
     String? localProp = selectedProperty;
     String? localReminder;
     TextEditingController localNoteCtrl = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? Colors.grey[900] : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -3074,18 +3168,22 @@ Please feel free to contact us for more information.""";
             children: [
               Row(
                 children: [
-                  Container(
+                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
+                      color: isDark ? Colors.blue.withOpacity(0.1) : Colors.blue.shade50,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.psychology, color: Colors.blue),
                   ),
                   const SizedBox(width: 12),
-                  const Text(
+                  Text(
                     "Mark as Interested",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 18, 
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
                   ),
                 ],
               ),
@@ -3105,9 +3203,9 @@ Please feel free to contact us for more information.""";
                     vertical: 14,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isDark ? Colors.grey[850] : Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade300),
+                    border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
                   ),
                   child: Row(
                     children: [
@@ -3121,7 +3219,7 @@ Please feel free to contact us for more information.""";
                                 ? FontWeight.bold
                                 : FontWeight.normal,
                             color: localProp != null
-                                ? Colors.black87
+                                ? (isDark ? Colors.white70 : Colors.black87)
                                 : Colors.grey,
                           ),
                           maxLines: 1,
@@ -3138,11 +3236,16 @@ Please feel free to contact us for more information.""";
               TextField(
                 controller: localNoteCtrl,
                 maxLines: 2,
-                decoration: const InputDecoration(
+                style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                decoration: InputDecoration(
                   hintText: "Add Broker Note...",
-                  fillColor: Color(0xFFF8FAFC),
+                  hintStyle: TextStyle(color: isDark ? Colors.white38 : Colors.grey),
+                  fillColor: isDark ? Colors.grey[850] : const Color(0xFFF8FAFC),
                   filled: true,
-                  border: OutlineInputBorder(borderSide: BorderSide.none),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide.none,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -3157,7 +3260,7 @@ Please feel free to contact us for more information.""";
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: isDark ? Colors.blue.withOpacity(0.15) : Colors.blue.shade50,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -3561,6 +3664,7 @@ class _EditLeadFormState extends State<_EditLeadForm> {
     bool isNumber = false,
     int maxLines = 1,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -3569,7 +3673,7 @@ class _EditLeadFormState extends State<_EditLeadForm> {
           style: GoogleFonts.montserrat(
             fontSize: 10,
             fontWeight: FontWeight.bold,
-            color: Colors.grey[600],
+            color: isDark ? Colors.white60 : Colors.grey[600],
           ),
         ),
         const SizedBox(height: 6),
@@ -3577,21 +3681,24 @@ class _EditLeadFormState extends State<_EditLeadForm> {
           controller: controller,
           maxLines: maxLines,
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-          style: GoogleFonts.montserrat(fontSize: 13),
+          style: GoogleFonts.montserrat(
+            fontSize: 13,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
           decoration: InputDecoration(
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
               vertical: 10,
             ),
             filled: true,
-            fillColor: Colors.grey.withOpacity(0.05),
+            fillColor: isDark ? Colors.grey[850] : Colors.grey.withOpacity(0.05),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderSide: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderSide: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
             ),
           ),
         ),
@@ -3605,6 +3712,7 @@ class _EditLeadFormState extends State<_EditLeadForm> {
     List<String> items,
     ValueChanged<String?> onChanged,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -3613,29 +3721,36 @@ class _EditLeadFormState extends State<_EditLeadForm> {
           style: GoogleFonts.montserrat(
             fontSize: 10,
             fontWeight: FontWeight.bold,
-            color: Colors.grey[600],
+            color: isDark ? Colors.white60 : Colors.grey[600],
           ),
         ),
         const SizedBox(height: 6),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            color: Colors.grey.withOpacity(0.05),
+            color: isDark ? Colors.grey[850] : Colors.grey.withOpacity(0.05),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300),
+            border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: value,
               isExpanded: true,
+              dropdownColor: isDark ? Colors.grey[850] : Colors.white,
               icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
               style: GoogleFonts.montserrat(
                 fontSize: 13,
-                color: Colors.black87,
+                color: isDark ? Colors.white : Colors.black87,
               ),
               items: items
                   .map(
-                    (item) => DropdownMenuItem(value: item, child: Text(item)),
+                    (item) => DropdownMenuItem(
+                      value: item, 
+                      child: Text(
+                        item,
+                        style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                      ),
+                    ),
                   )
                   .toList(),
               onChanged: onChanged,
@@ -3664,11 +3779,13 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
   String? _selectedCategory;
   String? _selectedFacing;
   RangeValues _priceRange = const RangeValues(0, 10000000);
+  RangeValues _areaRange = const RangeValues(0, 10000);
+  bool _isHighValueOnly = false;
   bool _filtersExpanded = false;
 
-  final List<String> _configs = ['2BHK', '3BHK', '4BHK', 'Villa', 'Plot'];
-  final List<String> _types = ['Apartment', 'Plot', 'Villa'];
-  final List<String> _categories = ['Buy', 'Rent'];
+  final List<String> _configs = ['1BHK','2BHK', '3BHK', '4BHK'];
+  final List<String> _types = ['Apartment', 'Plot', 'Villa', 'Flat'];
+  final List<String> _categories = ['Buy', 'Rent', 'Resell'];
   final List<String> _facings = ['East', 'West', 'North', 'South'];
 
   @override
@@ -3686,8 +3803,16 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
     if (_selectedCategory != null && u.saleCategory != _selectedCategory)
       return false;
     if (_selectedFacing != null && u.facing != _selectedFacing) return false;
-    if (u.calculatedPrice < _priceRange.start ||
-        u.calculatedPrice > _priceRange.end)
+
+    if (_isHighValueOnly) {
+      if (u.calculatedPrice < 10000000) return false;
+    } else {
+      if (u.calculatedPrice < _priceRange.start ||
+          u.calculatedPrice > _priceRange.end)
+        return false;
+    }
+
+    if (u.areaSqft < _areaRange.start || u.areaSqft > _areaRange.end)
       return false;
     return true;
   }
@@ -3695,16 +3820,21 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
   Widget _filterChip(String label, String? selected, VoidCallback onTap) {
     final isSelected = selected == label;
     final primaryBlue = AppColors.getPrimaryBlue(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? primaryBlue : Colors.grey.shade100,
+          color: isSelected 
+              ? primaryBlue 
+              : (isDark ? Colors.grey[850] : Colors.grey.shade100),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? primaryBlue : Colors.grey.shade300,
+            color: isSelected 
+                ? primaryBlue 
+                : (isDark ? Colors.grey[800]! : Colors.grey.shade300),
           ),
         ),
         child: Text(
@@ -3712,7 +3842,7 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : Colors.black87,
+            color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
           ),
         ),
       ),
@@ -3740,6 +3870,7 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
         Wrap(
           spacing: 6,
           runSpacing: 6,
+          alignment: WrapAlignment.start,
           children: options
               .map((o) => _filterChip(o, selected, () => onSelect(o)))
               .toList(),
@@ -3798,21 +3929,25 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
                     const SizedBox(height: 12),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
+                        color: isDark ? Colors.grey[850] : Colors.grey.shade100,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: TextField(
                         onChanged: (v) =>
                             setState(() => _searchQuery = v.toLowerCase()),
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                          fontSize: 13,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Search projects or units...',
                           hintStyle: TextStyle(
-                            color: Colors.grey.shade400,
+                            color: isDark ? Colors.white38 : Colors.grey.shade400,
                             fontSize: 13,
                           ),
                           prefixIcon: Icon(
                             Icons.search,
-                            color: Colors.grey.shade400,
+                            color: isDark ? Colors.white38 : Colors.grey.shade400,
                           ),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(
@@ -3902,7 +4037,71 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '\u20b9${(_priceRange.start / 100000).toStringAsFixed(0)}L - \u20b9${(_priceRange.end / 100000).toStringAsFixed(0)}L',
+                            _isHighValueOnly 
+                                ? '1Cr+' 
+                                : '\u20b9${(_priceRange.start / 100000).toStringAsFixed(0)}L - \u20b9${(_priceRange.end / 100000).toStringAsFixed(0)}L',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: primaryBlue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Opacity(
+                        opacity: _isHighValueOnly ? 0.5 : 1.0,
+                        child: IgnorePointer(
+                          ignoring: _isHighValueOnly,
+                          child: RangeSlider(
+                            values: _priceRange,
+                            min: 0,
+                            max: 10000000,
+                            divisions: 100,
+                            activeColor: primaryBlue,
+                            onChanged: (v) => setState(() => _priceRange = v),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: () => setState(() => _isHighValueOnly = !_isHighValueOnly),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: Checkbox(
+                                value: _isHighValueOnly,
+                                activeColor: primaryBlue,
+                                onChanged: (v) => setState(() => _isHighValueOnly = v ?? false),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Show 1Cr+ Properties Only',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white70 : Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Text(
+                            'Area (Sqft):',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${_areaRange.start.toStringAsFixed(0)} - ${_areaRange.end.toStringAsFixed(0)}',
                             style: TextStyle(
                               fontSize: 11,
                               color: primaryBlue,
@@ -3912,12 +4111,12 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
                         ],
                       ),
                       RangeSlider(
-                        values: _priceRange,
+                        values: _areaRange,
                         min: 0,
-                        max: 10000000,
+                        max: 10000,
                         divisions: 100,
                         activeColor: primaryBlue,
-                        onChanged: (v) => setState(() => _priceRange = v),
+                        onChanged: (v) => setState(() => _areaRange = v),
                       ),
                     ],
                     const SizedBox(height: 8),
@@ -4062,7 +4261,8 @@ class _ProjectCardState extends State<_ProjectCard> {
                     final q = widget.searchQuery;
                     return u.unitNumber.toLowerCase().contains(q) ||
                         u.towerName.toLowerCase().contains(q) ||
-                        u.configuration.toLowerCase().contains(q);
+                        u.configuration.toLowerCase().contains(q) ||
+                        u.location.toLowerCase().contains(q);
                   }
                   return true;
                 }).toList();
