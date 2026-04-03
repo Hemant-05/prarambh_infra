@@ -10,6 +10,11 @@ import 'client_filter_screen.dart';
 import '../../../admin/data/models/project_model.dart';
 import '../../../admin/data/models/unit_model.dart';
 import 'client_unit_details_screen.dart';
+import '../../data/models/blog_model.dart';
+import 'blog_list_screen.dart';
+import 'blog_detail_screen.dart';
+import 'career_enquiry_screen.dart';
+import 'contact_us_screen.dart';
 
 class ClientDashboardScreen extends StatefulWidget {
   const ClientDashboardScreen({super.key});
@@ -19,6 +24,8 @@ class ClientDashboardScreen extends StatefulWidget {
 }
 
 class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
     super.initState();
@@ -35,7 +42,9 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
     final primaryBlue = Theme.of(context).primaryColor;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      drawer: _buildDrawer(context, user?.name ?? 'Guest', user?.profilePhoto ?? '', isDark),
       body: provider.isLoading
           ? Center(child: CircularProgressIndicator(color: primaryBlue))
           : SafeArea(
@@ -47,7 +56,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Header Section
-                      _buildHeader(user?.name ?? 'Guest', user?.profilePhoto ?? '', isDark),
+                      _buildHeader(context, user?.name ?? 'Guest', user?.profilePhoto ?? '', isDark),
                       
                       // Search & Filter Section
                       _buildSearchBar(context, primaryBlue, isDark),
@@ -61,6 +70,12 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                       
                       // Featured / Recommended horizontal list
                       _buildFeaturedList(provider.projects, isDark),
+
+                      const SizedBox(height: 32),
+
+                      // Blogs / News Section
+                      _buildBlogsHeader(isDark),
+                      _buildBlogsList(provider.blogs, isDark),
                       
                       const SizedBox(height: 32),
                       
@@ -83,7 +98,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
     );
   }
 
-  Widget _buildHeader(String name, String profilePhoto, bool isDark) {
+  Widget _buildHeader(BuildContext context, String name, String profilePhoto, bool isDark) {
     final textColor = Theme.of(context).textTheme.bodyLarge?.color;
     final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
 
@@ -92,38 +107,217 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
-              Text(
-                "Let's Find your",
-                style: GoogleFonts.montserrat(
-                  fontSize: 16,
-                  color: secondaryTextColor,
-                  fontWeight: FontWeight.w500,
+              GestureDetector(
+                onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.menu_rounded, color: Theme.of(context).primaryColor),
                 ),
               ),
-              Text(
-                "Favorite Home",
-                style: GoogleFonts.montserrat(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
-                ),
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Hello, $name",
+                    style: GoogleFonts.montserrat(
+                      fontSize: 14,
+                      color: secondaryTextColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    "Welcome back",
+                    style: GoogleFonts.montserrat(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
           CircleAvatar(
-            radius: 28,
+            radius: 24,
             backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
             backgroundImage: profilePhoto.isNotEmpty ? NetworkImage(profilePhoto) : null,
             child: profilePhoto.isEmpty ? Icon(Icons.person, color: Theme.of(context).primaryColor) : null,
           ),
-          IconButton(onPressed: (){
-            context.read<AuthProvider>().logout();
-            Navigator.pushNamed(context, '/login');
-          }, icon: Icon(Icons.logout, color: isDark ? Colors.white54 : Colors.red, size: 24),)
         ],
+      ),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context, String name, String profilePhoto, bool isDark) {
+    final primaryBlue = Theme.of(context).primaryColor;
+
+    return Drawer(
+      backgroundColor: AppColors.getScaffoldColor(context),
+      child: Column(
+        children: [
+          UserAccountsDrawerHeader(
+            decoration: BoxDecoration(color: primaryBlue),
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: Colors.white24,
+              backgroundImage: profilePhoto.isNotEmpty ? NetworkImage(profilePhoto) : null,
+              child: profilePhoto.isEmpty ? const Icon(Icons.person, color: Colors.white, size: 40) : null,
+            ),
+            accountName: Text(name, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
+            accountEmail: Text("Client Account", style: GoogleFonts.montserrat(fontSize: 12)),
+          ),
+          _drawerItem(Icons.home_outlined, "Home", () => Navigator.pop(context)),
+          _drawerItem(Icons.newspaper_outlined, "Latest News", () {
+            Navigator.pop(context);
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const BlogListScreen()));
+          }),
+          _drawerItem(Icons.work_outline, "Join as Advisor", () {
+            Navigator.pop(context);
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const CareerEnquiryScreen()));
+          }),
+          _drawerItem(Icons.contact_support_outlined, "Contact Us", () {
+             Navigator.pop(context);
+             Navigator.push(context, MaterialPageRoute(builder: (_) => const ContactUsScreen()));
+          }),
+          const Spacer(),
+          const Divider(),
+          _drawerItem(
+            Icons.logout, 
+            "Logout", 
+            () {
+              context.read<AuthProvider>().logout();
+              Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+            },
+            color: Colors.red,
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _drawerItem(IconData icon, String title, VoidCallback onTap, {Color? color}) {
+    return ListTile(
+      leading: Icon(icon, color: color ?? Theme.of(context).primaryColor),
+      title: Text(
+        title,
+        style: GoogleFonts.montserrat(
+          fontWeight: FontWeight.w600,
+          color: color ?? AppColors.getTextColor(context),
+        ),
+      ),
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildBlogsHeader(bool isDark) {
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "Company News",
+            style: GoogleFonts.montserrat(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BlogListScreen())),
+            child: Text(
+              "See All",
+              style: GoogleFonts.montserrat(
+                fontSize: 14,
+                color: Theme.of(context).primaryColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBlogsList(List<BlogModel> blogs, bool isDark) {
+    if (blogs.isEmpty) return const SizedBox();
+
+    return SizedBox(
+      height: 200,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: blogs.length,
+        itemBuilder: (context, index) {
+          final blog = blogs[index];
+          return GestureDetector(
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BlogDetailScreen(blog: blog))),
+            child: Container(
+              width: 280,
+              margin: const EdgeInsets.only(right: 16),
+              decoration: BoxDecoration(
+                color: AppColors.getCardColor(context),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.getBorderColor(context)),
+              ),
+              child: Row(
+                children: [
+                   ClipRRect(
+                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(20)),
+                    child: Hero(
+                      tag: 'blog-image-${blog.id}',
+                      child: Image.network(
+                        blog.fullImageUrl,
+                        width: 100,
+                        height: 200,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            blog.publishDate,
+                            style: GoogleFonts.montserrat(fontSize: 10, color: Theme.of(context).hintColor),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            blog.title,
+                            style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const Spacer(),
+                          Text(
+                            "Read more",
+                            style: GoogleFonts.montserrat(
+                              fontSize: 12, 
+                              color: Theme.of(context).primaryColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

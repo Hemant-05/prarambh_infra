@@ -46,8 +46,9 @@ import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_t
 import 'package:prarambh_infra/features/recruitment/data/repositories/recruitment_repository.dart';
 import 'package:prarambh_infra/features/recruitment/presentation/providers/advisor_registration_provider.dart';
 import 'package:prarambh_infra/features/recruitment/presentation/providers/recruitment_provider.dart';
-import 'package:prarambh_infra/features/client/data/repositories/client_property_repository.dart';
+import 'package:prarambh_infra/features/client/data/repositories/client_repository.dart';
 import 'package:prarambh_infra/features/client/presentation/providers/client_dashboard_provider.dart';
+import 'package:prarambh_infra/features/client/presentation/providers/enquiry_provider.dart';
 import 'package:prarambh_infra/features/client/presentation/providers/property_filter_provider.dart';
 
 // --- Core & External ---
@@ -148,8 +149,9 @@ Future<void> init() async {
 
   // --- Client Side ---
   sl.registerFactory(() => ClientDashboardProvider(repository: sl()));
+  sl.registerFactory(() => EnquiryProvider(repository: sl()));
   sl.registerFactory(() => PropertyFilterProvider());
-  sl.registerLazySingleton(() => ClientPropertyRepository(apiClient: sl()));
+  sl.registerLazySingleton(() => ClientRepository(apiClient: sl()));
   // ---------------------------------------------------------------------------
   // 3. Core Network
   // ---------------------------------------------------------------------------

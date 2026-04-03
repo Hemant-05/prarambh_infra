@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../admin/data/models/project_model.dart';
+import 'contact_us_screen.dart';
 
 class ClientPropertyDetailsScreen extends StatefulWidget {
   final ProjectModel project;
@@ -434,7 +435,14 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
           Expanded(
             flex: 2,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ContactUsScreen(),
+                  ),
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryBlue,
                 foregroundColor: Colors.white,

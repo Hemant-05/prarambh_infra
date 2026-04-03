@@ -25,7 +25,6 @@ import 'package:prarambh_infra/core/navigation/nav_service.dart';
 import 'package:prarambh_infra/core/widgets/server_error_screen.dart';
 import 'package:prarambh_infra/core/theme/app_colors.dart';
 import 'injection_container.dart' as di;
-
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/auth/presentation/screens/register_screen.dart';
@@ -61,6 +60,7 @@ import 'features/recruitment/presentation/screens/recruiter_dashboard_screen.dar
 import 'features/recruitment/presentation/screens/advisor_registration_screen.dart';
 import 'features/client/presentation/providers/client_dashboard_provider.dart';
 import 'features/client/presentation/providers/property_filter_provider.dart';
+import 'features/client/presentation/providers/enquiry_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -118,6 +118,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => di.sl<PropertyFilterProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<InstallmentProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdvisorIncomeProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<EnquiryProvider>()),
       ],
       child: MaterialApp(
         title: 'Prarambh Infra',

@@ -2711,7 +2711,7 @@ class _ApiClient implements ApiClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/careers/add',
+            '/career-enquiries/add',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -2732,7 +2732,7 @@ class _ApiClient implements ApiClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/careers/update/${id}',
+            '/career-enquiries/update/${id}',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -2754,7 +2754,7 @@ class _ApiClient implements ApiClient {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/careers',
+            '/career-enquiries',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -2775,7 +2775,7 @@ class _ApiClient implements ApiClient {
       Options(method: 'DELETE', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/careers/delete/${id}',
+            '/career-enquiries/delete/${id}',
             queryParameters: queryParameters,
             data: _data,
           )

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../admin/data/models/unit_model.dart';
+import 'interested_lead_screen.dart';
 
 class ClientUnitDetailsScreen extends StatefulWidget {
   final UnitModel unit;
@@ -292,7 +293,17 @@ class _ClientUnitDetailsScreenState extends State<ClientUnitDetailsScreen> with 
             const SizedBox(width: 32),
             Expanded(
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => InterestedLeadScreen(
+                        unitId: widget.unit.id.toString(),
+                        unitName: "${widget.unit.towerName} - Unit ${widget.unit.unitNumber}",
+                      ),
+                    ),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryBlue,
                   padding: const EdgeInsets.symmetric(vertical: 18),

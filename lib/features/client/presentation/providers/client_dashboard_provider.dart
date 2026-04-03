@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../../admin/data/models/project_model.dart';
 import '../../../admin/data/models/unit_model.dart';
-import '../../data/repositories/client_property_repository.dart';
+import '../../data/models/blog_model.dart';
+import '../../data/repositories/client_repository.dart';
 
 class ClientDashboardProvider extends ChangeNotifier {
-  final ClientPropertyRepository repository;
+  final ClientRepository repository;
 
   ClientDashboardProvider({required this.repository});
 
   List<ProjectModel> _projects = [];
   List<UnitModel> _units = [];
+  List<BlogModel> _blogs = [];
   bool _isLoading = false;
   String? _error;
 
@@ -19,6 +21,7 @@ class ClientDashboardProvider extends ChangeNotifier {
 
   List<ProjectModel> get projects => _projects;
   List<UnitModel> get units => _units;
+  List<BlogModel> get blogs => _blogs;
   bool get isLoading => _isLoading;
   String? get error => _error;
   List<String> get recentSearches => _recentSearches;
@@ -65,10 +68,12 @@ class ClientDashboardProvider extends ChangeNotifier {
     try {
       final projectsFuture = repository.getAllProjects();
       final unitsFuture = repository.getAllUnits();
+      final blogsFuture = repository.getBlogs();
 
-      final results = await Future.wait([projectsFuture, unitsFuture]);
+      final results = await Future.wait([projectsFuture, unitsFuture, blogsFuture]);
       _projects = results[0] as List<ProjectModel>;
       _units = results[1] as List<UnitModel>;
+      _blogs = results[2] as List<BlogModel>;
       
       // Default recent views if empty for demo
       if (_recentViews.isEmpty && _projects.isNotEmpty) {
@@ -77,6 +82,7 @@ class ClientDashboardProvider extends ChangeNotifier {
 
     } catch (e) {
       _error = e.toString();
+      debugPrint('Client Dashboard Fetch Error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();

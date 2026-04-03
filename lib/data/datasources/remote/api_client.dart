@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
+import '../../../features/client/data/models/enquiry_model.dart';
 
 part 'api_client.g.dart';
 
@@ -27,7 +28,10 @@ abstract class ApiClient {
   Future<dynamic> getSingleUser(@Path("id") String id);
 
   @POST("/user/update/{id}")
-  Future<dynamic> updateUserProfile(@Path("id") String id, @Body() dynamic body);
+  Future<dynamic> updateUserProfile(
+    @Path("id") String id,
+    @Body() dynamic body,
+  );
 
   @DELETE("/user/delete/{id}")
   Future<dynamic> deleteUser(@Path("id") String id);
@@ -38,33 +42,33 @@ abstract class ApiClient {
   @MultiPart()
   @POST("/advisor/register")
   Future<dynamic> registerAdvisor(
-      @Part(name: "full_name") String fullName,
-      @Part(name: "email") String email,
-      @Part(name: "phone") String phone,
-      @Part(name: "designation") String designation,
-      @Part(name: "father_name") String fatherName,
-      @Part(name: "date_of_birth") String dob,
-      @Part(name: "gender") String gender,
-      @Part(name: "nomineename") String nomineeName,
-      @Part(name: "nomineephone") String nomineePhone,
-      @Part(name: "relationship") String relationship,
-      @Part(name: "occupation") String occupation,
-      @Part(name: "aadhaar_number") String aadhaar,
-      @Part(name: "pan_number") String pan,
-      @Part(name: "bank_name") String bankName,
-      @Part(name: "account_number") String accNumber,
-      @Part(name: "ifsc_code") String ifsc,
-      @Part(name: "address") String address,
-      @Part(name: "city") String city,
-      @Part(name: "state") String state,
-      @Part(name: "pincode") String pincode,
-      @Part(name: "leader_code") String leaderCode,
-      @Part(name: "addresscard_front_photo") File aadharFront,
-      @Part(name: "addresscard_back_photo") File aadharBack,
-      @Part(name: "pancard_photo") File panPhoto,
-      @Part(name: "pancard_back_photo") File panBackPhoto,
-      @Part(name: "profile_photo") File profilePhoto,
-      );
+    @Part(name: "full_name") String fullName,
+    @Part(name: "email") String email,
+    @Part(name: "phone") String phone,
+    @Part(name: "designation") String designation,
+    @Part(name: "father_name") String fatherName,
+    @Part(name: "date_of_birth") String dob,
+    @Part(name: "gender") String gender,
+    @Part(name: "nomineename") String nomineeName,
+    @Part(name: "nomineephone") String nomineePhone,
+    @Part(name: "relationship") String relationship,
+    @Part(name: "occupation") String occupation,
+    @Part(name: "aadhaar_number") String aadhaar,
+    @Part(name: "pan_number") String pan,
+    @Part(name: "bank_name") String bankName,
+    @Part(name: "account_number") String accNumber,
+    @Part(name: "ifsc_code") String ifsc,
+    @Part(name: "address") String address,
+    @Part(name: "city") String city,
+    @Part(name: "state") String state,
+    @Part(name: "pincode") String pincode,
+    @Part(name: "leader_code") String leaderCode,
+    @Part(name: "addresscard_front_photo") File aadharFront,
+    @Part(name: "addresscard_back_photo") File aadharBack,
+    @Part(name: "pancard_photo") File panPhoto,
+    @Part(name: "pancard_back_photo") File panBackPhoto,
+    @Part(name: "profile_photo") File profilePhoto,
+  );
 
   @POST("/advisor/approve/{id}")
   Future<dynamic> approveAdvisor(@Path("id") String id);
@@ -82,7 +86,10 @@ abstract class ApiClient {
   Future<dynamic> updateAdvisor(@Path("id") String id, @Body() dynamic body);
 
   @POST("/advisor/status/{id}")
-  Future<dynamic> changeAdvisorStatus(@Path("id") String id, @Body() dynamic body);
+  Future<dynamic> changeAdvisorStatus(
+    @Path("id") String id,
+    @Body() dynamic body,
+  );
 
   @DELETE("/advisor/delete/{id}")
   Future<dynamic> deleteAdvisor(@Path("id") String id);
@@ -105,26 +112,26 @@ abstract class ApiClient {
   @MultiPart()
   @POST("/projects/add")
   Future<dynamic> addProject(
-      @Part(name: "project_name") String projectName,
-      @Part(name: "developer_name") String developerName,
-      @Part(name: "description") String description,
-      @Part(name: "rera_number") String reraNumber,
-      @Part(name: "project_type") String projectType,
-      @Part(name: "construction_status") String constructionStatus,
-      @Part(name: "full_address") String fullAddress,
-      @Part(name: "location") String location,
-      @Part(name: "city") String city,
-      @Part(name: "market_value") String marketValue,
-      @Part(name: "total_plots") String totalPlots,
-      @Part(name: "build_area") String buildArea,
-      @Part(name: "rate_per_sqft") String ratePerSqft,
-      @Part(name: "budget_range") String budgetRange,
-      @Part(name: "amenities") String amenities,
-      @Part(name: "specialties") String specialties,
-      @Part(name: "video_file") File? videoFile,
-      @Part(name: "brochure_file") File? brochureFile,
-      @Part(name: "project_images[]") List<File> projectImages,
-      );
+    @Part(name: "project_name") String projectName,
+    @Part(name: "developer_name") String developerName,
+    @Part(name: "description") String description,
+    @Part(name: "rera_number") String reraNumber,
+    @Part(name: "project_type") String projectType,
+    @Part(name: "construction_status") String constructionStatus,
+    @Part(name: "full_address") String fullAddress,
+    @Part(name: "location") String location,
+    @Part(name: "city") String city,
+    @Part(name: "market_value") String marketValue,
+    @Part(name: "total_plots") String totalPlots,
+    @Part(name: "build_area") String buildArea,
+    @Part(name: "rate_per_sqft") String ratePerSqft,
+    @Part(name: "budget_range") String budgetRange,
+    @Part(name: "amenities") String amenities,
+    @Part(name: "specialties") String specialties,
+    @Part(name: "video_file") File? videoFile,
+    @Part(name: "brochure_file") File? brochureFile,
+    @Part(name: "project_images[]") List<File> projectImages,
+  );
 
   @GET("/projects")
   Future<dynamic> getAllProjects();
@@ -135,28 +142,28 @@ abstract class ApiClient {
   @MultiPart()
   @POST("/projects/update/{id}")
   Future<dynamic> updateProject(
-      @Path("id") String id,
-      @Part(name: "project_name") String? projectName,
-      @Part(name: "developer_name") String? developerName,
-      @Part(name: "description") String? description,
-      @Part(name: "project_type") String? projectType,
-      @Part(name: "construction_status") String? constructionStatus,
-      @Part(name: "full_address") String? fullAddress,
-      @Part(name: "location") String? location,
-      @Part(name: "city") String? city,
-      @Part(name: "market_value") String? marketValue,
-      @Part(name: "total_plots") String? totalPlots,
-      @Part(name: "build_area") String? buildArea,
-      @Part(name: "rate_per_sqft") String? ratePerSqft,
-      @Part(name: "specialties") String? specialties,
-      @Part(name: "amenities") String? amenities,
-      @Part(name: "budget_range") String? budgetRange,
-      @Part(name: "rera_number") String? reraNumber,
-      @Part(name: "status") String? status,
-      @Part(name: "video_file") File? videoFile,
-      @Part(name: "brochure_file") File? brochureFile,
-      @Part(name: "project_images[]") List<File>? projectImages,
-      );
+    @Path("id") String id,
+    @Part(name: "project_name") String? projectName,
+    @Part(name: "developer_name") String? developerName,
+    @Part(name: "description") String? description,
+    @Part(name: "project_type") String? projectType,
+    @Part(name: "construction_status") String? constructionStatus,
+    @Part(name: "full_address") String? fullAddress,
+    @Part(name: "location") String? location,
+    @Part(name: "city") String? city,
+    @Part(name: "market_value") String? marketValue,
+    @Part(name: "total_plots") String? totalPlots,
+    @Part(name: "build_area") String? buildArea,
+    @Part(name: "rate_per_sqft") String? ratePerSqft,
+    @Part(name: "specialties") String? specialties,
+    @Part(name: "amenities") String? amenities,
+    @Part(name: "budget_range") String? budgetRange,
+    @Part(name: "rera_number") String? reraNumber,
+    @Part(name: "status") String? status,
+    @Part(name: "video_file") File? videoFile,
+    @Part(name: "brochure_file") File? brochureFile,
+    @Part(name: "project_images[]") List<File>? projectImages,
+  );
 
   @DELETE("/projects/delete/{id}")
   Future<dynamic> deleteProject(@Path("id") String id);
@@ -167,23 +174,23 @@ abstract class ApiClient {
   @MultiPart()
   @POST("/units/add")
   Future<dynamic> addUnit(
-      @Part(name: "project_id") String projectId,
-      @Part(name: "tower_name") String towerName,
-      @Part(name: "floor_number") String floorNumber,
-      @Part(name: "unit_number") String unitNumber,
-      @Part(name: "configuration") String configuration,
-      @Part(name: "property_type") String propertyType,
-      @Part(name: "sale_category") String saleCategory,
-      @Part(name: "facing") String facing,
-      @Part(name: "Location") String location,
-      @Part(name: "plot_number") String plotNumber,
-      @Part(name: "plot_dimensions") String plotDimensions,
-      @Part(name: "area_sqft") String areaSqft,
-      @Part(name: "rate_per_sqft") String ratePerSqft,
-      @Part(name: "size") String size,
-      @Part(name: "availability_status") String availabilityStatus,
-      @Part(name: "unit_images[]") List<File>? unitImages,
-      );
+    @Part(name: "project_id") String projectId,
+    @Part(name: "tower_name") String towerName,
+    @Part(name: "floor_number") String floorNumber,
+    @Part(name: "unit_number") String unitNumber,
+    @Part(name: "configuration") String configuration,
+    @Part(name: "property_type") String propertyType,
+    @Part(name: "sale_category") String saleCategory,
+    @Part(name: "facing") String facing,
+    @Part(name: "Location") String location,
+    @Part(name: "plot_number") String plotNumber,
+    @Part(name: "plot_dimensions") String plotDimensions,
+    @Part(name: "area_sqft") String areaSqft,
+    @Part(name: "rate_per_sqft") String ratePerSqft,
+    @Part(name: "size") String size,
+    @Part(name: "availability_status") String availabilityStatus,
+    @Part(name: "unit_images[]") List<File>? unitImages,
+  );
 
   @POST("/units/add-multiple")
   Future<dynamic> addMultipleUnits(@Body() dynamic body);
@@ -191,9 +198,9 @@ abstract class ApiClient {
   @MultiPart()
   @POST("/units/bulk-upload")
   Future<dynamic> bulkUploadUnits(
-      @Part(name: "project_id") String projectId,
-      @Part(name: "file") File csvFile,
-      );
+    @Part(name: "project_id") String projectId,
+    @Part(name: "file") File csvFile,
+  );
 
   @GET("/units")
   Future<dynamic> getUnits(@Query("project_id") String? projectId);
@@ -207,24 +214,24 @@ abstract class ApiClient {
   @MultiPart()
   @POST("/units/update/{id}")
   Future<dynamic> updateUnit(
-      @Path("id") String id,
-      @Part(name: "project_id") String? projectId,
-      @Part(name: "tower_name") String? towerName,
-      @Part(name: "floor_number") String? floorNumber,
-      @Part(name: "unit_number") String? unitNumber,
-      @Part(name: "configuration") String? configuration,
-      @Part(name: "property_type") String? propertyType,
-      @Part(name: "sale_category") String? saleCategory,
-      @Part(name: "facing") String? facing,
-      @Part(name: "Location") String? location,
-      @Part(name: "plot_number") String? plotNumber,
-      @Part(name: "plot_dimensions") String? plotDimensions,
-      @Part(name: "area_sqft") String? areaSqft,
-      @Part(name: "rate_per_sqft") String? ratePerSqft,
-      @Part(name: "size") String? size,
-      @Part(name: "availability_status") String? availabilityStatus,
-      @Part(name: "unit_images[]") List<File>? unitImages,
-      );
+    @Path("id") String id,
+    @Part(name: "project_id") String? projectId,
+    @Part(name: "tower_name") String? towerName,
+    @Part(name: "floor_number") String? floorNumber,
+    @Part(name: "unit_number") String? unitNumber,
+    @Part(name: "configuration") String? configuration,
+    @Part(name: "property_type") String? propertyType,
+    @Part(name: "sale_category") String? saleCategory,
+    @Part(name: "facing") String? facing,
+    @Part(name: "Location") String? location,
+    @Part(name: "plot_number") String? plotNumber,
+    @Part(name: "plot_dimensions") String? plotDimensions,
+    @Part(name: "area_sqft") String? areaSqft,
+    @Part(name: "rate_per_sqft") String? ratePerSqft,
+    @Part(name: "size") String? size,
+    @Part(name: "availability_status") String? availabilityStatus,
+    @Part(name: "unit_images[]") List<File>? unitImages,
+  );
 
   @DELETE("/units/delete/{id}")
   Future<dynamic> deleteUnit(@Path("id") String id);
@@ -235,17 +242,17 @@ abstract class ApiClient {
   @MultiPart()
   @POST("/documents/add")
   Future<dynamic> addDocument(
-      @Part(name: "name") String name,
-      @Part(name: "category") String category,
-      @Part(name: "user_id") String? userId,
-      @Part(name: "document_file") File documentFile,
-      );
+    @Part(name: "name") String name,
+    @Part(name: "category") String category,
+    @Part(name: "user_id") String? userId,
+    @Part(name: "document_file") File documentFile,
+  );
 
   @GET("/documents")
   Future<dynamic> getDocuments(
-      @Query("user_id") String? userId,
-      @Query("category") String? category,
-      );
+    @Query("user_id") String? userId,
+    @Query("category") String? category,
+  );
 
   @GET("/documents/{id}")
   Future<dynamic> getSingleDocument(@Path("id") String id);
@@ -253,11 +260,11 @@ abstract class ApiClient {
   @MultiPart()
   @POST("/documents/update/{id}")
   Future<dynamic> updateDocument(
-      @Path("id") String id,
-      @Part(name: "name") String? name,
-      @Part(name: "category") String? category,
-      @Part(name: "document_file") File? documentFile,
-      );
+    @Path("id") String id,
+    @Part(name: "name") String? name,
+    @Part(name: "category") String? category,
+    @Part(name: "document_file") File? documentFile,
+  );
 
   @DELETE("/documents/delete/{id}")
   Future<dynamic> deleteDocument(@Path("id") String id);
@@ -269,14 +276,11 @@ abstract class ApiClient {
   Future<dynamic> addLead(@Body() dynamic body);
 
   @POST("/leads/interested")
-  Future<dynamic> createInterestedLead(@Body() dynamic body);
+  Future<dynamic> createInterestedLead(@Body() InterestedLeadRequest body);
 
   @MultiPart()
   @POST("/leads/update/{id}")
-  Future<dynamic> updateLead(
-      @Path("id") String id,
-      @Body() dynamic body,
-      );
+  Future<dynamic> updateLead(@Path("id") String id, @Body() dynamic body);
 
   @GET("/advisor/assign-list")
   Future<dynamic> getAdvisorsForAssignment();
@@ -286,16 +290,16 @@ abstract class ApiClient {
 
   @POST("/leads/assign/{id}")
   Future<dynamic> assignLeadToAdvisor(
-      @Path("id") String leadId,
-      @Field("advisor_code") String advisorCode,
-      );
+    @Path("id") String leadId,
+    @Field("advisor_code") String advisorCode,
+  );
 
   @GET("/leads")
   Future<dynamic> getLeads(
-      @Query("advisor_code") String? advisorCode,
-      @Query("stage") String? stage,
-      @Query("source") String? source,
-      );
+    @Query("advisor_code") String? advisorCode,
+    @Query("stage") String? stage,
+    @Query("source") String? source,
+  );
 
   @GET("/leads/unassigned")
   Future<dynamic> getUnassignedLeads();
@@ -321,26 +325,26 @@ abstract class ApiClient {
   @MultiPart()
   @POST("/deals/add")
   Future<dynamic> createDeal(
-      @Part(name: "client_name") String clientName,
-      @Part(name: "client_number") String clientNumber,
-      @Part(name: "advisor_code") String advisorCode,
-      @Part(name: "stage") String stage,
-      @Part(name: "deal_status") String dealStatus,
-      @Part(name: "lead_id") String leadId,
-      @Part(name: "property_id") String propertyId,
-      @Part(name: "payment_amount") String? paymentAmount,
-      @Part(name: "token_amount") String? tokenAmount,
-      @Part(name: "token_payment_mode") String? tokenPaymentMode,
-      @Part(name: "token_date") String? tokenDate,
-      @Part(name: "client_adhar_front") File? clientAdharFront,
-      @Part(name: "client_adhar_back") File? clientAdharBack,
-      @Part(name: "client_pan_front") File? clientPanFront,
-      @Part(name: "client_pan_back") File? clientPanBack,
-      @Part(name: "notes") String? notes,
-      @Part(name: "installments") String? installments,
-      @Part(name: "doc_titles[]") List<String>? docTitles,
-      @Part(name: "doc_files[]") List<File>? docFiles,
-      );
+    @Part(name: "client_name") String clientName,
+    @Part(name: "client_number") String clientNumber,
+    @Part(name: "advisor_code") String advisorCode,
+    @Part(name: "stage") String stage,
+    @Part(name: "deal_status") String dealStatus,
+    @Part(name: "lead_id") String leadId,
+    @Part(name: "property_id") String propertyId,
+    @Part(name: "payment_amount") String? paymentAmount,
+    @Part(name: "token_amount") String? tokenAmount,
+    @Part(name: "token_payment_mode") String? tokenPaymentMode,
+    @Part(name: "token_date") String? tokenDate,
+    @Part(name: "client_adhar_front") File? clientAdharFront,
+    @Part(name: "client_adhar_back") File? clientAdharBack,
+    @Part(name: "client_pan_front") File? clientPanFront,
+    @Part(name: "client_pan_back") File? clientPanBack,
+    @Part(name: "notes") String? notes,
+    @Part(name: "installments") String? installments,
+    @Part(name: "doc_titles[]") List<String>? docTitles,
+    @Part(name: "doc_files[]") List<File>? docFiles,
+  );
 
   @POST("/deals/update/{id}")
   Future<dynamic> updateDeal(@Path("id") String dealId, @Body() dynamic data);
@@ -384,18 +388,18 @@ abstract class ApiClient {
   @MultiPart()
   @POST("/attendance/check-in")
   Future<dynamic> checkInAttendance(
-      @Part(name: "meeting_id") String meetingId,
-      @Part(name: "advisor_id") String advisorId,
-      @Part(name: "check_in_photo") File photo,
-      );
+    @Part(name: "meeting_id") String meetingId,
+    @Part(name: "advisor_id") String advisorId,
+    @Part(name: "check_in_photo") File photo,
+  );
 
   @MultiPart()
   @POST("/attendance/check-out")
   Future<dynamic> checkOutAttendance(
-      @Part(name: "meeting_id") String meetingId,
-      @Part(name: "advisor_id") String advisorId,
-      @Part(name: "check_out_photo") File photo,
-      );
+    @Part(name: "meeting_id") String meetingId,
+    @Part(name: "advisor_id") String advisorId,
+    @Part(name: "check_out_photo") File photo,
+  );
 
   // ==========================================
   // 11. Contests
@@ -403,21 +407,21 @@ abstract class ApiClient {
   @MultiPart()
   @POST("/contests/add")
   Future<dynamic> addContest(
-      @Part(name: "title") String title,
-      @Part(name: "start_date") String startDate,
-      @Part(name: "end_date") String endDate,
-      @Part(name: "reward_name") String rewardName,
-      @Part(name: "rules") String rules,
-      @Part(name: "reward_image") File image,
-      );
+    @Part(name: "title") String title,
+    @Part(name: "start_date") String startDate,
+    @Part(name: "end_date") String endDate,
+    @Part(name: "reward_name") String rewardName,
+    @Part(name: "rules") String rules,
+    @Part(name: "reward_image") File image,
+  );
 
   @MultiPart()
   @POST("/contests/update/{id}")
   Future<dynamic> updateContest(
-      @Path("id") String id,
-      @Part(name: "title") String? title,
-      @Part(name: "reward_image") File? image,
-      );
+    @Path("id") String id,
+    @Part(name: "title") String? title,
+    @Part(name: "reward_image") File? image,
+  );
 
   @POST("/contests/join")
   Future<dynamic> joinContest(@Body() dynamic body);
@@ -436,12 +440,14 @@ abstract class ApiClient {
   // ==========================================
   @GET("/leaderboard")
   Future<dynamic> getLeaderboard(
-      @Query("month") int? month,
-      @Query("year") int? year,
-      );
+    @Query("month") int? month,
+    @Query("year") int? year,
+  );
 
   @GET("/achievements/advisor/{advisorCode}")
-  Future<dynamic> getAdvisorAchievements(@Path("advisorCode") String advisorCode);
+  Future<dynamic> getAdvisorAchievements(
+    @Path("advisorCode") String advisorCode,
+  );
 
   @POST("/evaluate-level/{id}")
   Future<dynamic> evaluateLevel(@Path("id") String id);
@@ -459,7 +465,9 @@ abstract class ApiClient {
   Future<dynamic> getAdminDashboard();
 
   @GET("/advisor/app-dashboard")
-  Future<dynamic> getAdvisorDashboard(@Query("advisor_code") String advisorCode);
+  Future<dynamic> getAdvisorDashboard(
+    @Query("advisor_code") String advisorCode,
+  );
 
   @GET("/inventory/dashboard")
   Future<dynamic> getInventoryDashboard(@Query("project_id") String? projectId);
@@ -468,7 +476,9 @@ abstract class ApiClient {
   Future<dynamic> getRecruitmentDashboard(@Query("leader_id") String? leaderId);
 
   @GET("/performance/dashboard")
-  Future<dynamic> getPerformanceDashboard(@Query("advisor_code") String advisorCode);
+  Future<dynamic> getPerformanceDashboard(
+    @Query("advisor_code") String advisorCode,
+  );
 
   // ==========================================
   // 14. Team Hierarchy & Activity
@@ -481,10 +491,10 @@ abstract class ApiClient {
 
   @GET("/team/activity")
   Future<dynamic> getTeamActivity(
-      @Query("advisor_code") String advisorCode,
-      @Query("month") int? month,
-      @Query("year") int? year,
-      );
+    @Query("advisor_code") String advisorCode,
+    @Query("month") int? month,
+    @Query("year") int? year,
+  );
 
   // ==========================================
   // 15. Blogs
@@ -492,19 +502,19 @@ abstract class ApiClient {
   @MultiPart()
   @POST("/blogs/add")
   Future<dynamic> addBlog(
-      @Part(name: "title") String title,
-      @Part(name: "content") String? content,
-      @Part(name: "image") File? image,
-      );
+    @Part(name: "title") String title,
+    @Part(name: "content") String? content,
+    @Part(name: "image") File? image,
+  );
 
   @MultiPart()
   @POST("/blogs/update/{id}")
   Future<dynamic> updateBlog(
-      @Path("id") String id,
-      @Part(name: "title") String? title,
-      @Part(name: "content") String? content,
-      @Part(name: "image") File? image,
-      );
+    @Path("id") String id,
+    @Part(name: "title") String? title,
+    @Part(name: "content") String? content,
+    @Part(name: "image") File? image,
+  );
 
   @GET("/blogs")
   Future<dynamic> getBlogs(@Query("status") String? status);
@@ -519,10 +529,13 @@ abstract class ApiClient {
   // 16. Enquiries (Contact & Careers)
   // ==========================================
   @POST("/contacts/add")
-  Future<dynamic> addContactEnquiry(@Body() dynamic body);
+  Future<dynamic> addContactEnquiry(@Body() ContactRequest body);
 
   @POST("/contacts/update/{id}")
-  Future<dynamic> updateContactEnquiry(@Path("id") String id, @Body() dynamic body);
+  Future<dynamic> updateContactEnquiry(
+    @Path("id") String id,
+    @Body() dynamic body,
+  );
 
   @GET("/contacts")
   Future<dynamic> getContactEnquiries();
@@ -530,16 +543,19 @@ abstract class ApiClient {
   @DELETE("/contacts/delete/{id}")
   Future<dynamic> deleteContactEnquiry(@Path("id") String id);
 
-  @POST("/careers/add")
+  @POST("/career-enquiries/add")
   Future<dynamic> addCareerEnquiry(@Body() dynamic body);
 
-  @POST("/careers/update/{id}")
-  Future<dynamic> updateCareerEnquiry(@Path("id") String id, @Body() dynamic body);
+  @POST("/career-enquiries/update/{id}")
+  Future<dynamic> updateCareerEnquiry(
+    @Path("id") String id,
+    @Body() dynamic body,
+  );
 
-  @GET("/careers")
+  @GET("/career-enquiries")
   Future<dynamic> getCareerEnquiries(@Query("status") String? status);
 
-  @DELETE("/careers/delete/{id}")
+  @DELETE("/career-enquiries/delete/{id}")
   Future<dynamic> deleteCareerEnquiry(@Path("id") String id);
 
   // ==========================================
@@ -549,7 +565,10 @@ abstract class ApiClient {
   Future<dynamic> addUserProperty(@Body() dynamic body);
 
   @POST("/user-property/verify/{id}")
-  Future<dynamic> verifyUserProperty(@Path("id") String id, @Body() dynamic body);
+  Future<dynamic> verifyUserProperty(
+    @Path("id") String id,
+    @Body() dynamic body,
+  );
 
   @GET("/user-property/my/{id}")
   Future<dynamic> getMyProperties(@Path("id") String id);
@@ -564,5 +583,7 @@ abstract class ApiClient {
   Future<dynamic> getIncomeAnalytics();
 
   @GET("/installments/upcoming")
-  Future<dynamic> getUpcomingInstallments(@Query("advisor_code") String? advisorCode);
+  Future<dynamic> getUpcomingInstallments(
+    @Query("advisor_code") String? advisorCode,
+  );
 }
