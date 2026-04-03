@@ -7,14 +7,16 @@ import '../../../../core/theme/app_colors.dart';
 import '../providers/advisor_attendance_provider.dart';
 import 'advisor_camera_screen.dart';
 
-class AdvisorScheduleScreen extends StatefulWidget {
-  const AdvisorScheduleScreen({super.key});
+class AdvisorMeetingScheduleScreen extends StatefulWidget {
+  const AdvisorMeetingScheduleScreen({super.key});
 
   @override
-  State<AdvisorScheduleScreen> createState() => _AdvisorScheduleScreenState();
+  State<AdvisorMeetingScheduleScreen> createState() =>
+      _AdvisorMeetingScheduleScreenState();
 }
 
-class _AdvisorScheduleScreenState extends State<AdvisorScheduleScreen> {
+class _AdvisorMeetingScheduleScreenState
+    extends State<AdvisorMeetingScheduleScreen> {
   DateTime _selectedDate = DateTime.now();
   late ScrollController _scrollController;
   final List<DateTime> _daysList = [];
@@ -57,14 +59,19 @@ class _AdvisorScheduleScreenState extends State<AdvisorScheduleScreen> {
   Widget build(BuildContext context) {
     final primaryBlue = AppColors.getPrimaryBlue(context);
     final provider = context.watch<AdvisorAttendanceProvider>();
+    final scaffoldBg = AppColors.getScaffoldColor(context);
+    final cardColor = AppColors.getCardColor(context);
+    final textColor = AppColors.getTextColor(context);
+    final secondaryTextColor = AppColors.getSecondaryTextColor(context);
+    final borderColor = AppColors.getBorderColor(context);
+
+    // RESTORED MISSING VARIABLES
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    // Get meetings for the explicitly selected calendar date
     final selectedDateMeetings = provider.getMeetingsForDate(_selectedDate);
-    // The big blue card always shows the next meeting for TODAY
     final activeMeeting = provider.activeMeeting;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -72,7 +79,7 @@ class _AdvisorScheduleScreenState extends State<AdvisorScheduleScreen> {
         title: Text(
           'Meetings',
           style: GoogleFonts.montserrat(
-            color: Colors.black87,
+            color: textColor,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
@@ -171,7 +178,7 @@ class _AdvisorScheduleScreenState extends State<AdvisorScheduleScreen> {
                                       fontSize: 15,
                                       color: isSelected
                                           ? Colors.white
-                                          : Colors.black87,
+                                          : textColor,
                                     ),
                                   ),
                                 ),
@@ -332,6 +339,7 @@ class _AdvisorScheduleScreenState extends State<AdvisorScheduleScreen> {
                         style: GoogleFonts.montserrat(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
+                          color: textColor,
                         ),
                       ),
                     ],
@@ -343,9 +351,9 @@ class _AdvisorScheduleScreenState extends State<AdvisorScheduleScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(30),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: cardColor,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
+                        border: Border.all(color: borderColor),
                       ),
                       child: Column(
                         children: [
@@ -358,7 +366,7 @@ class _AdvisorScheduleScreenState extends State<AdvisorScheduleScreen> {
                           Text(
                             "No meetings scheduled",
                             style: GoogleFonts.montserrat(
-                              color: Colors.grey.shade600,
+                              color: secondaryTextColor,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -367,7 +375,7 @@ class _AdvisorScheduleScreenState extends State<AdvisorScheduleScreen> {
                     )
                   else
                     ...selectedDateMeetings.map(
-                      (m) => _buildMeetingCard(m, primaryBlue),
+                      (m) => _buildMeetingCard(m, primaryBlue, cardColor, borderColor, textColor, secondaryTextColor),
                     ),
 
                   const SizedBox(height: 32),
@@ -383,32 +391,32 @@ class _AdvisorScheduleScreenState extends State<AdvisorScheduleScreen> {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: cardColor,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.grey.shade200),
+                      border: Border.all(color: borderColor),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _statItem('86%', '', Colors.black87),
+                        _statItem('86%', '', textColor, secondaryTextColor),
                         Container(
                           width: 1,
                           height: 30,
-                          color: Colors.grey.shade300,
+                          color: borderColor,
                         ),
-                        _statItem('15', 'TOTAL', Colors.black87),
+                        _statItem('15', 'TOTAL', textColor, secondaryTextColor),
                         Container(
                           width: 1,
                           height: 30,
-                          color: Colors.grey.shade300,
+                          color: borderColor,
                         ),
-                        _statItem('13', 'PRESENT', primaryBlue),
+                        _statItem('13', 'PRESENT', primaryBlue, secondaryTextColor),
                         Container(
                           width: 1,
                           height: 30,
-                          color: Colors.grey.shade300,
+                          color: borderColor,
                         ),
-                        _statItem('02', 'ABSENT', Colors.deepOrange),
+                        _statItem('02', 'ABSENT', Colors.deepOrange, secondaryTextColor),
                       ],
                     ),
                   ),
@@ -418,14 +426,14 @@ class _AdvisorScheduleScreenState extends State<AdvisorScheduleScreen> {
     );
   }
 
-  Widget _buildMeetingCard(dynamic meeting, Color primaryBlue) {
+  Widget _buildMeetingCard(dynamic meeting, Color primaryBlue, Color cardColor, Color borderColor, Color textColor, Color secondaryTextColor) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: borderColor),
       ),
       child: Column(
         children: [
@@ -435,7 +443,7 @@ class _AdvisorScheduleScreenState extends State<AdvisorScheduleScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
+                  color: primaryBlue.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.location_on, color: primaryBlue, size: 20),
@@ -454,6 +462,7 @@ class _AdvisorScheduleScreenState extends State<AdvisorScheduleScreen> {
                             style: GoogleFonts.montserrat(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
+                              color: textColor,
                             ),
                           ),
                         ),
@@ -463,7 +472,7 @@ class _AdvisorScheduleScreenState extends State<AdvisorScheduleScreen> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.green.shade50,
+                            color: Colors.green.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -482,7 +491,7 @@ class _AdvisorScheduleScreenState extends State<AdvisorScheduleScreen> {
                     Text(
                       '⏱ ${meeting.startTime} - ${meeting.endTime}',
                       style: GoogleFonts.montserrat(
-                        color: Colors.grey[600],
+                        color: secondaryTextColor,
                         fontSize: 11,
                       ),
                     ),
@@ -490,7 +499,7 @@ class _AdvisorScheduleScreenState extends State<AdvisorScheduleScreen> {
                     Text(
                       meeting.location,
                       style: GoogleFonts.montserrat(
-                        color: Colors.grey[500],
+                        color: secondaryTextColor.withOpacity(0.7),
                         fontSize: 11,
                       ),
                     ),
@@ -506,7 +515,7 @@ class _AdvisorScheduleScreenState extends State<AdvisorScheduleScreen> {
                 child: ElevatedButton(
                   onPressed: () {},
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade50,
+                    backgroundColor: primaryBlue.withOpacity(0.1),
                     foregroundColor: primaryBlue,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
@@ -529,7 +538,7 @@ class _AdvisorScheduleScreenState extends State<AdvisorScheduleScreen> {
     );
   }
 
-  Widget _statItem(String val, String label, Color color) {
+  Widget _statItem(String val, String label, Color color, Color secondaryTextColor) {
     return Column(
       children: [
         if (label.isNotEmpty)
@@ -537,7 +546,7 @@ class _AdvisorScheduleScreenState extends State<AdvisorScheduleScreen> {
             label,
             style: GoogleFonts.montserrat(
               fontSize: 9,
-              color: Colors.grey,
+              color: secondaryTextColor,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,
             ),

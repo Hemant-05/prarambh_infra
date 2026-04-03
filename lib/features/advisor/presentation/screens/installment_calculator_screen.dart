@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class InstallmentCalculatorScreen extends StatefulWidget {
   const InstallmentCalculatorScreen({super.key});
@@ -13,7 +14,6 @@ class InstallmentCalculatorScreen extends StatefulWidget {
 
 class _InstallmentCalculatorScreenState extends State<InstallmentCalculatorScreen> {
   final TextEditingController _amountController = TextEditingController();
-  final Color _primaryBlue = const Color(0xFF0056A4);
   
   Map<String, dynamic>? _selectedPlan;
   List<double> _installments = [];
@@ -64,10 +64,17 @@ class _InstallmentCalculatorScreenState extends State<InstallmentCalculatorScree
 
   @override
   Widget build(BuildContext context) {
+    final primaryBlue = AppColors.getPrimaryBlue(context);
+    final scaffoldBg = AppColors.getScaffoldColor(context);
+    final cardColor = AppColors.getCardColor(context);
+    final textColor = AppColors.getTextColor(context);
+    final secondaryTextColor = AppColors.getSecondaryTextColor(context);
+    final borderColor = AppColors.getBorderColor(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
-        backgroundColor: _primaryBlue,
+        backgroundColor: primaryBlue,
         elevation: 0,
         title: Text(
           'Installment Calculator',
@@ -82,21 +89,36 @@ class _InstallmentCalculatorScreenState extends State<InstallmentCalculatorScree
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _buildInputHeader(),
+            _buildInputHeader(primaryBlue),
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle('Select Installment Plan'),
+                  _buildSectionTitle('Select Installment Plan', textColor),
                   const SizedBox(height: 12),
-                  _buildPlanSelector(),
+                  _buildPlanSelector(
+                    primaryBlue,
+                    cardColor,
+                    borderColor,
+                    secondaryTextColor,
+                  ),
                   const SizedBox(height: 30),
-                  _buildSectionTitle('Payment Breakdown'),
+                  _buildSectionTitle('Payment Breakdown', textColor),
                   const SizedBox(height: 12),
                   _installments.isEmpty
-                      ? _buildEmptyState()
-                      : _buildResultList(),
+                      ? _buildEmptyState(
+                          cardColor,
+                          borderColor,
+                          secondaryTextColor,
+                        )
+                      : _buildResultList(
+                          primaryBlue,
+                          cardColor,
+                          borderColor,
+                          textColor,
+                          secondaryTextColor,
+                        ),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -107,11 +129,11 @@ class _InstallmentCalculatorScreenState extends State<InstallmentCalculatorScree
     );
   }
 
-  Widget _buildInputHeader() {
+  Widget _buildInputHeader(Color primaryBlue) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
       decoration: BoxDecoration(
-        color: _primaryBlue,
+        color: primaryBlue,
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(30),
           bottomRight: Radius.circular(30),
@@ -161,7 +183,7 @@ class _InstallmentCalculatorScreenState extends State<InstallmentCalculatorScree
     );
   }
 
-  Widget _buildPlanSelector() {
+  Widget _buildPlanSelector(Color primaryBlue, Color cardColor, Color borderColor, Color secondaryTextColor) {
     return Wrap(
       spacing: 12,
       runSpacing: 12,
@@ -175,15 +197,15 @@ class _InstallmentCalculatorScreenState extends State<InstallmentCalculatorScree
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isSelected ? _primaryBlue : Colors.white,
+              color: isSelected ? primaryBlue : cardColor,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSelected ? _primaryBlue : Colors.grey.shade300,
+                color: isSelected ? primaryBlue : borderColor,
               ),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: _primaryBlue.withOpacity(0.3),
+                        color: primaryBlue.withOpacity(0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),
@@ -195,7 +217,7 @@ class _InstallmentCalculatorScreenState extends State<InstallmentCalculatorScree
               style: GoogleFonts.montserrat(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.white : Colors.grey.shade700,
+                color: isSelected ? Colors.white : secondaryTextColor,
               ),
             ),
           ),
@@ -204,7 +226,7 @@ class _InstallmentCalculatorScreenState extends State<InstallmentCalculatorScree
     );
   }
 
-  Widget _buildResultList() {
+  Widget _buildResultList(Color primaryBlue, Color cardColor, Color borderColor, Color textColor, Color secondaryTextColor) {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -217,12 +239,12 @@ class _InstallmentCalculatorScreenState extends State<InstallmentCalculatorScree
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardColor,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: borderColor),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.02),
+                color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.02),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -234,14 +256,14 @@ class _InstallmentCalculatorScreenState extends State<InstallmentCalculatorScree
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: _primaryBlue.withOpacity(0.1),
+                  color: primaryBlue.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Text(
                     '${index + 1}',
                     style: GoogleFonts.montserrat(
-                      color: _primaryBlue,
+                      color: primaryBlue,
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                     ),
@@ -258,14 +280,14 @@ class _InstallmentCalculatorScreenState extends State<InstallmentCalculatorScree
                       style: GoogleFonts.montserrat(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: textColor,
                       ),
                     ),
                     Text(
                       'Payment share: $percentage%',
                       style: GoogleFonts.montserrat(
                         fontSize: 11,
-                        color: Colors.grey.shade600,
+                        color: secondaryTextColor,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -277,7 +299,7 @@ class _InstallmentCalculatorScreenState extends State<InstallmentCalculatorScree
                 style: GoogleFonts.montserrat(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF2E7D32),
+                  color: const Color(0xFF4CAF50), // Standard material green for price
                 ),
               ),
             ],
@@ -287,23 +309,23 @@ class _InstallmentCalculatorScreenState extends State<InstallmentCalculatorScree
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(Color cardColor, Color borderColor, Color secondaryTextColor) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 40),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200, style: BorderStyle.solid),
+        border: Border.all(color: borderColor, style: BorderStyle.solid),
       ),
       child: Column(
         children: [
-          Icon(Icons.calculate_outlined, size: 60, color: Colors.grey.shade300),
+          Icon(Icons.calculate_outlined, size: 60, color: secondaryTextColor.withOpacity(0.3)),
           const SizedBox(height: 16),
           Text(
             'Enter total amount to see breakdown',
             style: GoogleFonts.montserrat(
-              color: Colors.grey.shade500,
+              color: secondaryTextColor,
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
@@ -313,13 +335,13 @@ class _InstallmentCalculatorScreenState extends State<InstallmentCalculatorScree
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, Color textColor) {
     return Text(
       title,
       style: GoogleFonts.montserrat(
         fontSize: 16,
         fontWeight: FontWeight.bold,
-        color: Colors.black87,
+        color: textColor,
       ),
     );
   }
