@@ -12,6 +12,8 @@ import 'package:prarambh_infra/features/admin/data/repositories/admin_team_repos
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_attendance_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_contest_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_deal_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/installment_provider.dart';
+import 'package:prarambh_infra/features/admin/data/repositories/installment_repository.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_lead_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_leaderboard_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_profile_provider.dart';
@@ -38,6 +40,8 @@ import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_l
 import 'package:prarambh_infra/features/advisor/data/repositories/advisor_leaderboard_repository.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_profile_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_project_provider.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_income_provider.dart';
+import 'package:prarambh_infra/features/advisor/data/repositories/advisor_income_repository.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_team_provider.dart';
 import 'package:prarambh_infra/features/recruitment/data/repositories/recruitment_repository.dart';
 import 'package:prarambh_infra/features/recruitment/presentation/providers/advisor_registration_provider.dart';
@@ -135,6 +139,12 @@ Future<void> init() async {
 
   sl.registerFactory(() => AdvisorAchievementProvider(repository: sl()));
   sl.registerLazySingleton(() => AdvisorAchievementRepository(apiClient: sl()));
+
+  sl.registerFactory(() => AdvisorIncomeProvider(repository: sl()));
+  sl.registerLazySingleton(() => AdvisorIncomeRepository(apiClient: sl()));
+
+  sl.registerFactory(() => InstallmentProvider(repository: sl()));
+  sl.registerLazySingleton(() => UpcomingInstallmentRepository(apiClient: sl()));
 
   // --- Client Side ---
   sl.registerFactory(() => ClientDashboardProvider(repository: sl()));

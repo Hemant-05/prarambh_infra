@@ -434,6 +434,9 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             if (actions[index]['label'] == 'Calculator') { Navigator.pushNamed(context, '/installment_calculator'); }
             if (actions[index]['label'] == 'Document\nView') { Navigator.push(context, MaterialPageRoute(builder: (_) => const DocumentCenterScreen())); }
             if (actions[index]['label'] == 'Attendance') { Navigator.push(context, MaterialPageRoute(builder: (_) => const AdvisorScheduleScreen())); }
+            if (actions[index]['label'] == 'Upcoming\nInstallment') { Navigator.pushNamed(context, '/upcoming_installments'); }
+            if (actions[index]['label'] == 'My Income') { Navigator.pushNamed(context, '/my_income_analytics'); }
+            if (actions[index]['label'] == 'Business Plan') { Navigator.pushNamed(context, '/business_plan'); }
           },
           borderRadius: BorderRadius.circular(12),
           child: Container(
@@ -670,8 +673,12 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           _drawerItem(context, Icons.emoji_events_outlined, 'Contests', () {
             Navigator.push(context, MaterialPageRoute(builder: (context) => const AdvisorContestsListScreen()));
           }),
-          _drawerItem(context, Icons.account_balance_wallet_outlined, 'My Income', () {}),
-          _drawerItem(context, Icons.event_available_outlined, 'Upcoming Installment', () {}),
+          _drawerItem(context, Icons.account_balance_wallet_outlined, 'My Income', () {
+            Navigator.pushNamed(context, '/my_income_analytics');
+          }),
+          _drawerItem(context, Icons.event_available_outlined, 'Upcoming Installment', () {
+            Navigator.pushNamed(context, '/upcoming_installments');
+          }),
           _drawerItem(context, Icons.military_tech_outlined, 'Achievements', () {
             Navigator.push(context, MaterialPageRoute(builder: (context) => const AdvisorAchievementScreen()));
           }),

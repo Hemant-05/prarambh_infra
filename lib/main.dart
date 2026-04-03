@@ -9,7 +9,17 @@ import 'package:prarambh_infra/features/admin/presentation/providers/admin_recru
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_team_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_attendance_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_contest_provider.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/installment_provider.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_document_provider.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_profile_provider.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_project_provider.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_team_provider.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_income_provider.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_income_screen.dart';
+import 'package:prarambh_infra/features/client/presentation/screens/client_dashboard_screen.dart';
 import 'package:prarambh_infra/features/recruitment/presentation/providers/advisor_registration_provider.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/upcoming_installments_screen.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/admin_upcoming_installments_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:prarambh_infra/core/navigation/nav_service.dart';
 import 'package:prarambh_infra/core/widgets/server_error_screen.dart';
@@ -99,9 +109,15 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => di.sl<AdvisorLeaderboardProvider>(),
         ),
+        ChangeNotifierProvider(create: (_) => di.sl<AdvisorProjectProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdvisorTeamProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdvisorProfileProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdvisorDocumentProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<RecruitmentProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<ClientDashboardProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<PropertyFilterProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<InstallmentProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdvisorIncomeProvider>()),
       ],
       child: MaterialApp(
         title: 'Prarambh Infra',
@@ -257,6 +273,10 @@ class MyApp extends StatelessWidget {
       '/installment_calculator': (context) =>
           const InstallmentCalculatorScreen(),
       '/advisor_leaderboard': (context) => const AdvisorLeaderboardScreen(),
+      '/upcoming_installments': (context) => const UpcomingInstallmentsScreen(),
+      '/admin_upcoming_installments': (context) => const AdminUpcomingInstallmentsScreen(),
+      '/my_income_analytics': (context) => const MyIncomeAnalyticsScreen(),
+      '/client_dashboard': (context) => const ClientDashboardScreen(),
       '/server_error': (context) => const ServerErrorScreen(),
     };
   }

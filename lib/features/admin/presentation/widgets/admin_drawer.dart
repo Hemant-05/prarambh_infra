@@ -109,6 +109,15 @@ class AdminDrawer extends StatelessWidget {
                     Navigator.pushNamed(context, '/admin_recruitment_dashboard');
                   },
                 ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.account_balance_wallet_outlined,
+                  title: 'Company Installments',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/admin_upcoming_installments');
+                  },
+                ),
               ],
             ),
           ),

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/constant/cons_strings.dart';
+import 'package:prarambh_infra/core/helper/helper_function.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_advisor_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_deal_provider.dart';
@@ -396,8 +397,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                                     Column(
                                       crossAxisAlignment: CrossAxisAlignment.end,
                                       children: [
-                                        Text('₹${closure['payment_amount']}', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.greenAccent : Colors.green.shade700)),
-                                        Text('Received', style: GoogleFonts.montserrat(fontSize: 10, color: statusColor, fontWeight: FontWeight.bold)),
+                                        Text('₹${formatPrice(double.tryParse(closure['payment_amount'])!)}', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.greenAccent : Colors.green.shade700)),
                                       ],
                                     ),
                                   ],
