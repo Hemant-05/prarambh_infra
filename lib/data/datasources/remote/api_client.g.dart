@@ -1270,11 +1270,12 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> createInterestedLead(dynamic body) async {
+  Future<dynamic> createInterestedLead(InterestedLeadRequest body) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    final _data = body;
+    final _data = <String, dynamic>{};
+    _data.addAll(body.toJson());
     final _options = _setStreamType<dynamic>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
@@ -2471,7 +2472,7 @@ class _ApiClient implements ApiClient {
     final _data = FormData();
     _data.fields.add(MapEntry('title', title));
     if (content != null) {
-      _data.fields.add(MapEntry('content', content));
+      _data.fields.add(MapEntry('description', content));
     }
     if (image != null) {
       _data.files.add(
@@ -2520,7 +2521,7 @@ class _ApiClient implements ApiClient {
       _data.fields.add(MapEntry('title', title));
     }
     if (content != null) {
-      _data.fields.add(MapEntry('content', content));
+      _data.fields.add(MapEntry('description', content));
     }
     if (image != null) {
       _data.files.add(
@@ -2618,11 +2619,12 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> addContactEnquiry(dynamic body) async {
+  Future<dynamic> addContactEnquiry(ContactRequest body) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    final _data = body;
+    final _data = <String, dynamic>{};
+    _data.addAll(body.toJson());
     final _options = _setStreamType<dynamic>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(

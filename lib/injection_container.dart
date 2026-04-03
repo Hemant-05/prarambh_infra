@@ -63,6 +63,10 @@ import 'package:prarambh_infra/features/admin/data/repositories/admin_advisor_re
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_advisor_provider.dart';
 import 'package:prarambh_infra/features/admin/data/repositories/admin_document_repository.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_document_provider.dart';
+import 'package:prarambh_infra/features/admin/data/repositories/admin_blog_repository.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_blog_provider.dart';
+import 'package:prarambh_infra/features/admin/data/repositories/admin_enquiry_repository.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_enquiry_provider.dart';
 
 final sl = GetIt.instance;
 
@@ -146,6 +150,12 @@ Future<void> init() async {
 
   sl.registerFactory(() => InstallmentProvider(repository: sl()));
   sl.registerLazySingleton(() => UpcomingInstallmentRepository(apiClient: sl()));
+
+  // Admin Blog & Enquiry
+  sl.registerFactory(() => AdminBlogProvider(sl()));
+  sl.registerLazySingleton(() => AdminBlogRepository(sl()));
+  sl.registerFactory(() => AdminEnquiryProvider(sl()));
+  sl.registerLazySingleton(() => AdminEnquiryRepository(sl()));
 
   // --- Client Side ---
   sl.registerFactory(() => ClientDashboardProvider(repository: sl()));

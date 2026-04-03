@@ -469,6 +469,8 @@ Please feel free to contact us for more information.""";
     if (currentStage == "site visit") statusColor = Colors.orange;
     if (currentStage == "booking" || currentStage == "pending_verification")
       statusColor = Colors.green;
+    if (currentStage == "completed")
+      statusColor = Colors.green.shade700;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -498,7 +500,9 @@ Please feel free to contact us for more information.""";
             child: Text(
               currentStage == 'closed'
                   ? 'DEAD LEAD'
-                  : currentStage.toUpperCase(),
+                  : currentStage == 'completed'
+                      ? 'COMPLETED'
+                      : currentStage.toUpperCase(),
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
@@ -544,6 +548,8 @@ Please feel free to contact us for more information.""";
                 if (currentStage == "booking" ||
                     currentStage == "pending_verification")
                   _buildBookingFlow(primaryBlue, cardColor),
+                if (currentStage == "completed")
+                  _buildCompletedView(isDark),
               ],
             ),
           ),
@@ -1443,6 +1449,7 @@ Please feel free to contact us for more information.""";
           style: GoogleFonts.montserrat(
             fontSize: 14,
             fontWeight: FontWeight.bold,
+            color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
           ),
         ),
         const SizedBox(height: 16),
@@ -1475,6 +1482,49 @@ Please feel free to contact us for more information.""";
           () => _showSiteVisitSheet(),
         ),
       ],
+    );
+  }
+
+  Widget _buildCompletedView(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.green.withOpacity(0.1) : Colors.green.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.green.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: Colors.green,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.check, color: Colors.white, size: 32),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            "Lead Successfully Completed",
+            textAlign: TextAlign.center,
+            style: GoogleFonts.montserrat(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.green.shade300 : Colors.green.shade800,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            "This lead has successfully transitioned through all stages and is now marked as completed.",
+            textAlign: TextAlign.center,
+            style: GoogleFonts.montserrat(
+              fontSize: 14,
+              color: isDark ? Colors.white70 : Colors.black54,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -2190,13 +2240,16 @@ Please feel free to contact us for more information.""";
     String subtitle,
     VoidCallback onTap,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Card(
       elevation: 0,
-      color: Colors.white,
+      color: isDark ? Colors.grey[850] : Colors.white,
       margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(
+          color: isDark ? Colors.grey[800]! : Colors.grey.shade200,
+        ),
       ),
       child: ListTile(
         onTap: onTap,
@@ -2210,13 +2263,23 @@ Please feel free to contact us for more information.""";
         ),
         title: Text(
           title,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
         ),
         subtitle: Text(
           subtitle,
-          style: const TextStyle(fontSize: 12, color: Colors.grey),
+          style: TextStyle(
+            fontSize: 12,
+            color: isDark ? Colors.white60 : Colors.grey,
+          ),
         ),
-        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+        trailing: Icon(
+          Icons.chevron_right,
+          color: isDark ? Colors.white38 : Colors.grey,
+        ),
       ),
     );
   }

@@ -9,7 +9,6 @@ import 'package:prarambh_infra/features/admin/presentation/providers/admin_recru
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_team_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_attendance_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_contest_provider.dart';
-import 'package:prarambh_infra/features/admin/presentation/providers/installment_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_document_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_profile_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_project_provider.dart';
@@ -61,6 +60,11 @@ import 'features/recruitment/presentation/screens/advisor_registration_screen.da
 import 'features/client/presentation/providers/client_dashboard_provider.dart';
 import 'features/client/presentation/providers/property_filter_provider.dart';
 import 'features/client/presentation/providers/enquiry_provider.dart';
+import 'features/admin/presentation/providers/admin_blog_provider.dart';
+import 'features/admin/presentation/providers/admin_enquiry_provider.dart';
+import 'features/admin/presentation/screens/admin_blogs_screen.dart';
+import 'features/admin/presentation/screens/add_blog_screen.dart';
+import 'features/admin/presentation/screens/admin_enquiries_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -116,9 +120,10 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => di.sl<RecruitmentProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<ClientDashboardProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<PropertyFilterProvider>()),
-        ChangeNotifierProvider(create: (_) => di.sl<InstallmentProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdvisorIncomeProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<EnquiryProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdminBlogProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<AdminEnquiryProvider>()),
       ],
       child: MaterialApp(
         title: 'Prarambh Infra',
@@ -279,6 +284,9 @@ class MyApp extends StatelessWidget {
       '/my_income_analytics': (context) => const MyIncomeAnalyticsScreen(),
       '/client_dashboard': (context) => const ClientDashboardScreen(),
       '/server_error': (context) => const ServerErrorScreen(),
+      '/admin_blogs': (context) => const AdminBlogsScreen(),
+      '/add_blog': (context) => const AddBlogScreen(),
+      '/admin_enquiries': (context) => const AdminEnquiriesScreen(),
     };
   }
 }

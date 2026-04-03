@@ -102,6 +102,24 @@ class AdminDrawer extends StatelessWidget {
                 ),
                 _buildDrawerItem(
                   context: context,
+                  icon: Icons.newspaper_outlined,
+                  title: 'Blog Management',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/admin_blogs');
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.contact_support_outlined,
+                  title: 'User Enquiries',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/admin_enquiries');
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
                   icon: Icons.campaign_outlined,
                   title: 'Recruitment by Broker',
                   onTap: () {

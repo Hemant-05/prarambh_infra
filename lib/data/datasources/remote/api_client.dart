@@ -503,7 +503,7 @@ abstract class ApiClient {
   @POST("/blogs/add")
   Future<dynamic> addBlog(
     @Part(name: "title") String title,
-    @Part(name: "content") String? content,
+    @Part(name: "description") String? content,
     @Part(name: "image") File? image,
   );
 
@@ -512,7 +512,7 @@ abstract class ApiClient {
   Future<dynamic> updateBlog(
     @Path("id") String id,
     @Part(name: "title") String? title,
-    @Part(name: "content") String? content,
+    @Part(name: "description") String? content,
     @Part(name: "image") File? image,
   );
 
