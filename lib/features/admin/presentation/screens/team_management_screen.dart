@@ -639,7 +639,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
     );
 
     // Wrap the root node with its GlobalKey so we can read its render position
-    if (isRoot) return KeyedSubtree(key: _rootNodeKey, child: card);
+    if (node.id == 'root') return KeyedSubtree(key: _rootNodeKey, child: card);
     return card;
   }
 

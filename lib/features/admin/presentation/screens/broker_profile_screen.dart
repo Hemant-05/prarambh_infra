@@ -319,67 +319,70 @@ class _BrokerProfileScreenState extends State<BrokerProfileScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    p.myTeam.isEmpty
-                        ? _emptyState('No team members yet')
-                        : SizedBox(
-                            height: 92,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: p.myTeam.length,
-                              itemBuilder: (_, i) {
-                                final member = p.myTeam[i];
-                                return Padding(
-                                  padding: const EdgeInsets.only(right: 16),
-                                  child: Column(
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 28,
-                                        backgroundColor: primaryBlue
-                                            .withOpacity(0.1),
-                                        backgroundImage:
-                                            (member.profilePhoto != null &&
-                                                member.profilePhoto!.isNotEmpty)
-                                            ? NetworkImage(
-                                                    '$_baseUrl${member.profilePhoto}',
-                                                  )
-                                                  as ImageProvider
-                                            : null,
-                                        child:
-                                            (member.profilePhoto == null ||
-                                                member.profilePhoto!.isEmpty)
-                                            ? Text(
-                                                member.initials,
-                                                style: GoogleFonts.montserrat(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: primaryBlue,
-                                                  fontSize: 14,
-                                                ),
-                                              )
-                                            : null,
-                                      ),
-                                      const SizedBox(height: 6),
-                                      SizedBox(
-                                        width: 60,
-                                        child: Text(
-                                          member.fullName
-                                              .trim()
-                                              .split(' ')
-                                              .first,
-                                          style: GoogleFonts.montserrat(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          textAlign: TextAlign.center,
+                    Builder(
+                      builder: (context) {
+                        final filteredTeam = p.myTeam.where((m) => 
+                          m.advisorCode.toLowerCase() != 'admin001' && 
+                          m.designation.toLowerCase() != 'admin'
+                        ).toList();
+
+                        if (filteredTeam.isEmpty) {
+                          return _emptyState('No team members yet');
+                        }
+
+                        return SizedBox(
+                          height: 92,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: filteredTeam.length,
+                            itemBuilder: (_, i) {
+                              final member = filteredTeam[i];
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 16),
+                                child: Column(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 28,
+                                      backgroundColor: primaryBlue.withOpacity(0.1),
+                                      backgroundImage: (member.profilePhoto != null &&
+                                              member.profilePhoto!.isNotEmpty)
+                                          ? NetworkImage('$_baseUrl${member.profilePhoto}')
+                                              as ImageProvider
+                                          : null,
+                                      child: (member.profilePhoto == null ||
+                                              member.profilePhoto!.isEmpty)
+                                          ? Text(
+                                              member.initials,
+                                              style: GoogleFonts.montserrat(
+                                                fontWeight: FontWeight.bold,
+                                                color: primaryBlue,
+                                                fontSize: 14,
+                                              ),
+                                            )
+                                          : null,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    SizedBox(
+                                      width: 60,
+                                      child: Text(
+                                        member.fullName.trim().split(' ').first,
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
                                         ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
                                       ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                           ),
+                        );
+                      }
+                    ),
                   ]),
                   const SizedBox(height: 16),
 

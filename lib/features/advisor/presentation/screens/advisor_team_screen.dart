@@ -122,11 +122,11 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
     });
   }
 
-  List<AdvisorTeamNode> _flattenTree(AdvisorTeamNode node) {
+  List<AdvisorTeamNode> _flattenTree(AdvisorTeamNode node, {bool isRoot = true}) {
     final List<AdvisorTeamNode> list = [];
-    list.add(node); // Includes root
+    if (!isRoot) list.add(node); // Skip root (which is the current user)
     for (final child in node.children) {
-      list.addAll(_flattenTree(child));
+      list.addAll(_flattenTree(child, isRoot: false));
     }
     return list;
   }

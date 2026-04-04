@@ -53,10 +53,16 @@ class AdminLeaderboardProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      _advisors = await repository.getLeaderboard(
+      final rawAdvisors = await repository.getLeaderboard(
         month: _selectedMonth,
         year: _selectedYear,
       );
+
+      _advisors = rawAdvisors
+          .where((a) =>
+              a.advisorCode.toLowerCase() != 'admin001' &&
+              a.designation.toLowerCase() != 'admin')
+          .toList();
       
       // Sort based on tab if needed, but usually the API rank is sufficient.
       // If we want to re-sort locally:

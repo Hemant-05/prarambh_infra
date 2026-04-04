@@ -51,8 +51,11 @@ class _AssignLeadScreenState extends State<AssignLeadScreen> {
       widget.lead.stage.toUpperCase()
     ];
 
-    // Filter advisors based on search query
-    List<AdvisorAssignModel> filteredAdvisors = provider.availableAdvisors;
+    // Filter advisors based on search query AND exclude Admin
+    List<AdvisorAssignModel> filteredAdvisors = provider.availableAdvisors
+        .where((a) => a.advisorCode.toLowerCase() != 'admin001')
+        .toList();
+
     if (_searchQuery.isNotEmpty) {
       filteredAdvisors = filteredAdvisors.where((advisor) {
         return advisor.name.toLowerCase().contains(_searchQuery) ||

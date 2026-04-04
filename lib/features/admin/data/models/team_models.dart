@@ -31,7 +31,10 @@ class AdvisorNode {
       code: json['code'] ?? json['Advisor_code'] ?? '',
       avatarUrl: avatarUrl,
       createdAt: json['created_at']?.toString() ?? '',
-      children: (childrenList as List<dynamic>?)?.map((e) => AdvisorNode.fromJson(e)).toList() ?? [],
+      children: (childrenList as List<dynamic>?)
+              ?.map((e) => AdvisorNode.fromJson(e))
+              .toList() ??
+          [],
     );
   }
 }

@@ -12,14 +12,29 @@ class RecruitmentDashboardModel {
   });
 
   factory RecruitmentDashboardModel.fromJson(Map<String, dynamic> json) {
+    int parseStat(dynamic val) {
+      if (val == null) return 0;
+      if (val is int) return val;
+      if (val is double) return val.toInt();
+      return int.tryParse(val.toString()) ?? 0;
+    }
+
+    int total = parseStat(json['metrics']?['total_recruits']);
+    int active = parseStat(json['metrics']?['active_recruits']);
+    
+    // Subtract 1 from total and active to exclude Admin
     return RecruitmentDashboardModel(
-      totalRecruits: json['metrics']?['total_recruits'] ?? 0,
-      activeRecruits: json['metrics']?['active_recruits'] ?? 0,
-      pendingApprovals: json['metrics']?['pending_approvals'] ?? 0,
-      inactiveOrSuspended: json['metrics']?['inactive_or_suspended'] ?? 0,
+      totalRecruits: total > 0 ? total - 1 : 0,
+      activeRecruits: active > 0 ? active - 1 : 0,
+      pendingApprovals: parseStat(json['metrics']?['pending_approvals']),
+      inactiveOrSuspended: parseStat(json['metrics']?['inactive_or_suspended']),
       recentApplications: (json['recent_applications'] as List<dynamic>?)
-          ?.map((e) => RecruitedPersonModel.fromJson(e))
-          .toList() ?? [],
+              ?.map((e) => RecruitedPersonModel.fromJson(e))
+              .where((m) =>
+                  m.advisorCode.toLowerCase() != 'admin001' &&
+                  m.designation.toLowerCase() != 'admin')
+              .toList() ??
+          [],
     );
   }
 }

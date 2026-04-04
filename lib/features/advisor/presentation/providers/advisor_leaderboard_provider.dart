@@ -27,10 +27,14 @@ class AdvisorLeaderboardProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final data = await repository.getLeaderboard();
+      final rawData = await repository.getLeaderboard();
+      final filteredData = rawData
+          .where((a) => a.advisorCode.toLowerCase() != 'admin001')
+          .toList();
+
       // Sort by total sales descending
-      data.sort((a, b) => b.totalSales.compareTo(a.totalSales));
-      _advisors = data;
+      filteredData.sort((a, b) => b.totalSales.compareTo(a.totalSales));
+      _advisors = filteredData;
     } catch (e) {
       debugPrint('Fetch Advisor Leaderboard Error: $e');
       _advisors = [];

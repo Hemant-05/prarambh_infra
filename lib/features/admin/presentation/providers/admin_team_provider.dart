@@ -21,6 +21,7 @@ class AdminTeamProvider extends ChangeNotifier with ErrorHandlerMixin {
     setError(null);
     try {
       _allAdvisors = await repository.getAllAdvisors();
+
       final data = await repository.getTeamHierarchy();
       if (data is List) {
         // Map the array into a structured Root Node containing the entire network
@@ -31,11 +32,12 @@ class AdminTeamProvider extends ChangeNotifier with ErrorHandlerMixin {
           code: 'Prarambh Infra',
           avatarUrl: '',
           createdAt: '',
-          children: data.map((e) => AdvisorNode.fromJson(e)).toList(),
+          children: data
+              .map((e) => AdvisorNode.fromJson(e))
+              .toList(),
         );
       } else if (data is Map<String, dynamic>) {
         _teamTree = AdvisorNode.fromJson(data);
-        print(_teamTree.toString());
       }
     } catch (e) {
       debugPrint('Fetch Team Error: $e');
