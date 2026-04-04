@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:prarambh_infra/core/utils/validators.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/enquiry_provider.dart';
 
@@ -164,7 +166,7 @@ class _InterestedLeadScreenState extends State<InterestedLeadScreen> {
                     controller: _nameController,
                     hint: 'Enter your full name',
                     icon: Icons.person_outline,
-                    validator: (v) => v!.isEmpty ? 'Please enter your name' : null,
+                    validator: (v) => Validators.validateRequired(v, 'Name'),
                   ),
                   
                   const SizedBox(height: 20),
@@ -175,7 +177,11 @@ class _InterestedLeadScreenState extends State<InterestedLeadScreen> {
                     hint: 'Enter your phone number',
                     icon: Icons.phone_outlined,
                     keyboardType: TextInputType.phone,
-                    validator: (v) => v!.isEmpty ? 'Please enter your phone number' : null,
+                    validator: Validators.validatePhone,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(10),
+                    ],
                   ),
                   
                   const SizedBox(height: 20),
@@ -244,12 +250,14 @@ class _InterestedLeadScreenState extends State<InterestedLeadScreen> {
     TextInputType? keyboardType,
     int maxLines = 1,
     String? Function(String?)? validator,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
       validator: validator,
+      inputFormatters: inputFormatters,
       style: GoogleFonts.montserrat(fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,

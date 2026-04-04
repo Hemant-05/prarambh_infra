@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:prarambh_infra/core/utils/validators.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/enquiry_provider.dart';
 
@@ -142,7 +144,7 @@ class _CareerEnquiryScreenState extends State<CareerEnquiryScreen> {
                     controller: _nameController,
                     hint: 'Enter your name',
                     icon: Icons.person_outline,
-                    validator: (v) => v!.isEmpty ? 'Please enter your name' : null,
+                    validator: (v) => Validators.validateRequired(v, 'Full Name'),
                   ),
                   
                   const SizedBox(height: 20),
@@ -153,11 +155,7 @@ class _CareerEnquiryScreenState extends State<CareerEnquiryScreen> {
                     hint: 'Enter your email',
                     icon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
-                    validator: (v) {
-                       if (v!.isEmpty) return 'Please enter your email';
-                       if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) return 'Enter a valid email';
-                       return null;
-                    },
+                    validator: Validators.validateEmail,
                   ),
                   
                   const SizedBox(height: 20),
@@ -168,7 +166,11 @@ class _CareerEnquiryScreenState extends State<CareerEnquiryScreen> {
                     hint: 'Enter your phone number',
                     icon: Icons.phone_outlined,
                     keyboardType: TextInputType.phone,
-                    validator: (v) => v!.isEmpty ? 'Please enter your phone number' : null,
+                    validator: Validators.validatePhone,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(10),
+                    ],
                   ),
                   
                   const SizedBox(height: 20),
@@ -248,12 +250,14 @@ class _CareerEnquiryScreenState extends State<CareerEnquiryScreen> {
     TextInputType? keyboardType,
     int maxLines = 1,
     String? Function(String?)? validator,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
       validator: validator,
+      inputFormatters: inputFormatters,
       style: GoogleFonts.montserrat(fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,

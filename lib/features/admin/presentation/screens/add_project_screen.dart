@@ -7,6 +7,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_project_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../../../core/theme/app_colors.dart';
+import 'package:prarambh_infra/core/utils/validators.dart';
+import 'package:flutter/services.dart';
 import '../../data/models/project_model.dart'; // NEW: Import the model
 
 class AddProjectScreen extends StatefulWidget {
@@ -20,6 +22,7 @@ class AddProjectScreen extends StatefulWidget {
 }
 
 class _AddProjectScreenState extends State<AddProjectScreen> {
+  final _formKey = GlobalKey<FormState>();
   int _currentStep = 0;
 
   // State Variables
@@ -246,8 +249,12 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                           ? null
                           : () async {
                               if (_currentStep == 0) {
-                                setState(() => _currentStep = 1);
+                                if (_formKey.currentState!.validate()) {
+                                  setState(() => _currentStep = 1);
+                                }
                               } else {
+                                if (!_formKey.currentState!.validate()) return;
+                                
                                 if (_nameCtrl.text.isEmpty ||
                                     _devCtrl.text.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -373,11 +380,14 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: _currentStep == 0
-            ? _buildStep1(primaryBlue, cardColor)
-            : _buildStep2(primaryBlue, cardColor, isEditing),
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: _currentStep == 0
+              ? _buildStep1(primaryBlue, cardColor)
+              : _buildStep2(primaryBlue, cardColor, isEditing),
+        ),
       ),
     );
   }
@@ -389,11 +399,14 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
     return Column(
       children: [
         _buildCard(cardColor, primaryBlue, 'Basic Details', Icons.business, [
-          _buildTextField('Project Name', _nameCtrl),
+          _buildTextField('Project Name', _nameCtrl, 
+              validator: (v) => Validators.validateRequired(v, 'Project Name')),
           const SizedBox(height: 16),
-          _buildTextField('Developer Name', _devCtrl),
+          _buildTextField('Developer Name', _devCtrl,
+              validator: (v) => Validators.validateRequired(v, 'Developer Name')),
           const SizedBox(height: 16),
-          _buildTextField('Description', _descCtrl, maxLines: 3),
+          _buildTextField('Description', _descCtrl, maxLines: 3,
+              validator: (v) => Validators.validateRequired(v, 'Description')),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -461,9 +474,11 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
         ]),
         const SizedBox(height: 24),
         _buildCard(cardColor, primaryBlue, 'Location', Icons.location_on, [
-          _buildTextField('Full Address', _addressCtrl, maxLines: 2),
+          _buildTextField('Full Address', _addressCtrl, maxLines: 2,
+              validator: (v) => Validators.validateRequired(v, 'Address')),
           const SizedBox(height: 16),
-          _buildTextField('City', _cityCtrl),
+          _buildTextField('City', _cityCtrl,
+              validator: (v) => Validators.validateRequired(v, 'City')),
           const SizedBox(height: 16),
           _buildTextField('Google Maps Link', _mapLinkCtrl),
         ]),
@@ -488,6 +503,8 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                     'Total Units/Plots',
                     _totalPlotsCtrl,
                     isNumber: true,
+                    validator: (v) => Validators.validateInteger(v, 'Total Units/Plots'),
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -504,6 +521,8 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                     'Market Value',
                     _marketValueCtrl,
                     isNumber: true,
+                    validator: (v) => Validators.validateInteger(v, 'Market Value'),
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -512,6 +531,8 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                     'Rate per Sqft',
                     _rateCtrl,
                     isNumber: true,
+                    validator: (v) => Validators.validateInteger(v, 'Rate per Sqft'),
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   ),
                 ),
               ],
@@ -708,6 +729,8 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
     TextEditingController controller, {
     bool isNumber = false,
     int maxLines = 1,
+    String? Function(String?)? validator,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
 
@@ -723,9 +746,11 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        TextField(
+        TextFormField(
           controller: controller,
           maxLines: maxLines,
+          validator: validator,
+          inputFormatters: inputFormatters,
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
           style: GoogleFonts.montserrat(fontSize: 13, color: Theme.of(context).textTheme.bodyLarge?.color),
           decoration: InputDecoration(
@@ -747,6 +772,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: Theme.of(context).primaryColor),
             ),
+            errorStyle: GoogleFonts.montserrat(fontSize: 10, height: 0.8),
           ),
         ),
       ],

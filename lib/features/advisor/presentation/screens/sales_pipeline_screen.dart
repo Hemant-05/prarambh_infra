@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prarambh_infra/core/utils/validators.dart';
+import 'package:flutter/services.dart';
 import 'package:prarambh_infra/features/admin/data/models/lead_models.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_lead_provider.dart';
 import 'package:prarambh_infra/features/auth/presentation/providers/auth_provider.dart';
@@ -34,6 +36,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
   void _showAddLeadDialog() {
     final nameCtrl = TextEditingController();
     final phoneCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
     bool isSubmitting = false;
 
     showDialog(
@@ -46,26 +49,35 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
               'Add New Lead',
               style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Client Name',
-                    border: OutlineInputBorder(),
+            content: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: nameCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Client Name',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (v) => Validators.validateRequired(v, 'Client Name'),
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: phoneCtrl,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone Number',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: phoneCtrl,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Phone Number',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: Validators.validatePhone,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(10),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             actions: [
               if (!isSubmitting)
@@ -80,8 +92,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                 onPressed: isSubmitting
                     ? null
                     : () async {
-                        if (nameCtrl.text.isEmpty || phoneCtrl.text.isEmpty)
-                          return;
+                        if (!formKey.currentState!.validate()) return;
 
                         setDialogState(() => isSubmitting = true);
                         final advisorCode =

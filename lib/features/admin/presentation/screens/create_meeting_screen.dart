@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/back_button.dart';
 import '../providers/admin_attendance_provider.dart';
+import 'package:prarambh_infra/core/utils/validators.dart';
 
 class CreateMeetingScreen extends StatefulWidget {
   const CreateMeetingScreen({super.key});
@@ -174,7 +175,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                       controller: _titleCtrl,
                       hint: 'e.g., Weekly Site Inspection',
                       icon: Icons.edit_outlined,
-                      validator: (v) => v == null || v.isEmpty ? 'Title is required' : null,
+                      validator: (v) => Validators.validateRequired(v, 'Meeting Name'),
                     ),
                     const SizedBox(height: 16),
                     // Date

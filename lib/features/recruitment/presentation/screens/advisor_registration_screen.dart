@@ -8,6 +8,8 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/advisor_registration_provider.dart';
 import '../../../../../core/utils/ui_helper.dart';
+import '../../../../../core/utils/validators.dart';
+import 'package:flutter/services.dart';
 
 class AdvisorRegistrationScreen extends StatefulWidget {
   const AdvisorRegistrationScreen({super.key});
@@ -19,16 +21,20 @@ class AdvisorRegistrationScreen extends StatefulWidget {
 
 class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
   final PageController _pageController = PageController();
+  final _formKey1 = GlobalKey<FormState>();
+  final _formKey2 = GlobalKey<FormState>();
   int _currentStep = 0;
 
   void _nextStep() {
-    final provider = context.read<AdvisorRegistrationProvider>();
-    if (provider.validateStep1(context)) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-      setState(() => _currentStep = 1);
+    if (_formKey1.currentState!.validate()) {
+      final provider = context.read<AdvisorRegistrationProvider>();
+      if (provider.validateStep1(context)) {
+        _pageController.nextPage(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+        setState(() => _currentStep = 1);
+      }
     }
   }
 
@@ -180,17 +186,19 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                       ? null
                       : (_currentStep == 0
                           ? _nextStep
-                          : () async {
-                              final success = await provider.submitRegistration(
-                                context,
-                              );
-                              if (!context.mounted) return;
-                              if (success) {
-                                UIHelper.showSuccess(
+                      : () async {
+                              if (_formKey2.currentState!.validate()) {
+                                final success = await provider.submitRegistration(
                                   context,
-                                  'Registration Successful! Wait for Admin approval.',
                                 );
-                                Navigator.pop(context);
+                                if (!context.mounted) return;
+                                if (success) {
+                                  UIHelper.showSuccess(
+                                    context,
+                                    'Registration Successful! Wait for Admin approval.',
+                                  );
+                                  Navigator.pop(context);
+                                }
                               }
                             }),
                   style: ElevatedButton.styleFrom(
@@ -247,164 +255,184 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
       provider.designation = designationOptions.first;
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionHeader('1', 'Personal Details'),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: cardColor,
-              border: Border.all(color: AppColors.getBorderColor(context)),
-              borderRadius: BorderRadius.circular(12),
+    return Form(
+      key: _formKey1,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionHeader('1', 'Personal Details'),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: cardColor,
+                border: Border.all(color: AppColors.getBorderColor(context)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  _buildTextField(
+                    'Full Name',
+                    'As per Aadhar/PAN',
+                    provider.nameCtrl,
+                    icon: Icons.person_outline,
+                    textColor: textColor,
+                    validator: (v) => Validators.validateRequired(v, 'Full Name'),
+                  ),
+                  _buildTextField(
+                    'Father\'s Name',
+                    'As per Aadhar/PAN',
+                    provider.fatherNameCtrl,
+                    textColor: textColor,
+                    validator: (v) => Validators.validateRequired(v, 'Father\'s Name'),
+                  ),
+                  _buildDatePicker(
+                    'Date of Birth',
+                    'YYYY-MM-DD',
+                    provider.dobCtrl,
+                    provider,
+                    textColor: textColor,
+                  ),
+                  _buildDropdown(
+                    'Gender',
+                    provider.gender,
+                    ['Male', 'Female', 'Other'],
+                    (v) => setState(() => provider.gender = v!),
+                    textColor: textColor,
+                  ),
+                  _buildTextField(
+                    'Aadhar Number',
+                    '12- digit UIDAI Number',
+                    provider.aadharCtrl,
+                    icon: Icons.badge_outlined,
+                    isNumber: true,
+                    textColor: textColor,
+                    validator: Validators.validateAadhar,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(12),
+                    ],
+                  ),
+                  _buildTextField(
+                    'PAN Number',
+                    'Permanent account number',
+                    provider.panCtrl,
+                    icon: Icons.credit_card_outlined,
+                    textColor: textColor,
+                    validator: Validators.validatePan,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(10),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            child: Column(
-              children: [
-                _buildTextField(
-                  'Full Name',
-                  'Enter your full name',
-                  provider.nameCtrl,
-                  textColor: textColor,
-                ),
-                _buildTextField(
-                  "Father's Name",
-                  "Enter father's name",
-                  provider.fatherNameCtrl,
-                  textColor: textColor,
-                ),
-                Row(
-                  children: [
-                    // UPDATED: Date Picker Widget
-                    Expanded(
-                      child: _buildDatePicker(
-                        'Date of birth',
-                        'YYYY-MM-DD',
-                        provider.dobCtrl,
-                        provider,
-                        textColor: textColor,
+            const SizedBox(height: 24),
+            _buildSectionHeader('2', 'Contact Information'),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: cardColor,
+                border: Border.all(color: AppColors.getBorderColor(context)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  _buildTextField(
+                    'Phone Number',
+                    '90998752146',
+                    provider.phoneCtrl,
+                    icon: Icons.phone_outlined,
+                    isNumber: true,
+                    textColor: textColor,
+                    validator: Validators.validatePhone,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(10),
+                    ],
+                  ),
+                  _buildTextField(
+                    'Email Address',
+                    'email@gmail.com',
+                    provider.emailCtrl,
+                    icon: Icons.email_outlined,
+                    textColor: textColor,
+                    validator: Validators.validateEmail,
+                  ),
+                  _buildTextField(
+                    'Address',
+                    'Full residential address',
+                    provider.addressCtrl,
+                    maxLines: 2,
+                    textColor: textColor,
+                    validator: (v) => Validators.validateRequired(v, 'Address'),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTextField(
+                          'State',
+                          'Madhya Pradesh',
+                          provider.stateCtrl,
+                          icon: Icons.map,
+                          textColor: textColor,
+                          validator: (v) => Validators.validateRequired(v, 'State'),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildDropdown(
-                        'Gender',
-                        provider.gender,
-                        ['Male', 'Female', 'Other'],
-                        (v) => setState(() => provider.gender = v!),
-                        textColor: textColor,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildTextField(
+                          'City',
+                          'Ujjain',
+                          provider.cityCtrl,
+                          icon: Icons.location_city_outlined,
+                          textColor: textColor,
+                          validator: (v) => Validators.validateRequired(v, 'City'),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                _buildTextField(
-                  'Aadhar Number',
-                  '12- digit UIDAI Number',
-                  provider.aadharCtrl,
-                  icon: Icons.badge_outlined,
-                  isNumber: true,
-                  textColor: textColor,
-                ),
-                _buildTextField(
-                  'PAN Number',
-                  'Permanent account number',
-                  provider.panCtrl,
-                  icon: Icons.credit_card_outlined,
-                  textColor: textColor,
-                ),
-              ],
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTextField(
+                          'Pincode',
+                          'e.g. 452010',
+                          provider.pincodeCtrl,
+                          isNumber: true,
+                          textColor: textColor,
+                          validator: Validators.validatePincode,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(6),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildTextField(
+                          'Occupation',
+                          'e.g. Agent',
+                          provider.occupationCtrl,
+                          textColor: textColor,
+                          validator: (v) => Validators.validateRequired(v, 'Occupation'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  _buildDropdown(
+                    'Designation',
+                    provider.designation,
+                    designationOptions,
+                    (v) => setState(() => provider.designation = v!),
+                    textColor: textColor,
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-          _buildSectionHeader('2', 'Contact Information'),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: cardColor,
-              border: Border.all(color: AppColors.getBorderColor(context)),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                _buildTextField(
-                  'Phone Number',
-                  '90998752146',
-                  provider.phoneCtrl,
-                  icon: Icons.phone_outlined,
-                  isNumber: true,
-                  textColor: textColor,
-                ),
-                _buildTextField(
-                  'Email Address',
-                  'email@gmail.com',
-                  provider.emailCtrl,
-                  icon: Icons.email_outlined,
-                  textColor: textColor,
-                ),
-                _buildTextField(
-                  'Address',
-                  'Full residential address',
-                  provider.addressCtrl,
-                  maxLines: 2,
-                  textColor: textColor,
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextField(
-                        'State',
-                        'Madhya Pradesh',
-                        provider.stateCtrl,
-                        icon: Icons.map,
-                        textColor: textColor,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildTextField(
-                        'City',
-                        'Ujjain',
-                        provider.cityCtrl,
-                        icon: Icons.location_city_outlined,
-                        textColor: textColor,
-                      ),
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextField(
-                        'Pincode',
-                        'e.g. 452010',
-                        provider.pincodeCtrl,
-                        isNumber: true,
-                        textColor: textColor,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildTextField(
-                        'Occupation',
-                        'e.g. Agent',
-                        provider.occupationCtrl,
-                        textColor: textColor,
-                      ),
-                    ),
-                  ],
-                ),
-                _buildDropdown(
-                  'Designation',
-                  provider.designation,
-                  designationOptions,
-                  (v) => setState(() => provider.designation = v!),
-                  textColor: textColor,
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -419,163 +447,176 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
     Color cardColor,
     bool isDark,
   ) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionHeader('3', 'Nominee Details'),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: cardColor,
-              border: Border.all(color: AppColors.getBorderColor(context)),
-              borderRadius: BorderRadius.circular(12),
+    return Form(
+      key: _formKey2,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionHeader('3', 'Nominee Details'),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: cardColor,
+                border: Border.all(color: AppColors.getBorderColor(context)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  _buildTextField(
+                    'Nominee Name',
+                    'Enter Name of nominee',
+                    provider.nomineeNameCtrl,
+                    textColor: textColor,
+                    validator: (v) => Validators.validateRequired(v, 'Nominee Name'),
+                  ),
+                  _buildTextField(
+                    'Nominee Phone',
+                    'Enter Phone number',
+                    provider.nomineePhoneCtrl,
+                    isNumber: true,
+                    textColor: textColor,
+                    validator: Validators.validatePhone,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(10),
+                    ],
+                  ),
+                  _buildDropdown(
+                    'Relationship',
+                    provider.relationship,
+                    ['Wife', 'Husband', 'Son', 'Daughter', 'Parent', 'Sibling', 'Cousin', 'Friends'],
+                    (v) => setState(() => provider.relationship = v!),
+                    textColor: textColor,
+                  ),
+                ],
+              ),
             ),
-            child: Column(
-              children: [
-                _buildTextField(
-                  'Nominee Name',
-                  'Enter Name of nominee',
-                  provider.nomineeNameCtrl,
-                  textColor: textColor,
-                ),
-                _buildTextField(
-                  'Nominee Phone',
-                  'Enter Phone number',
-                  provider.nomineePhoneCtrl,
-                  isNumber: true,
-                  textColor: textColor,
-                ),
-                _buildDropdown(
-                  'Relationship',
-                  provider.relationship,
-                  ['Wife', 'Husband', 'Son', 'Daughter', 'Parent'],
-                  (v) => setState(() => provider.relationship = v!),
-                  textColor: textColor,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          _buildSectionHeader('4', 'Bank Details'),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: cardColor,
-              border: Border.all(color: AppColors.getBorderColor(context)),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                _buildTextField(
-                  'Bank Name',
-                  'e.g. HDFC Bank',
-                  provider.bankNameCtrl,
-                  textColor: textColor,
-                ),
-                _buildTextField(
-                  'Account Number',
-                  '**** **** **** 1234',
-                  provider.accNumberCtrl,
-                  icon: Icons.lock_outline,
-                  isNumber: true,
-                  textColor: textColor,
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextField(
-                        'IFSC Code',
-                        'HDFC0001',
-                        provider.ifscCtrl,
-                        textColor: textColor,
+            const SizedBox(height: 24),
+            _buildSectionHeader('4', 'Bank Details'),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: cardColor,
+                border: Border.all(color: AppColors.getBorderColor(context)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  _buildTextField(
+                    'Bank Name',
+                    'e.g. HDFC Bank',
+                    provider.bankNameCtrl,
+                    textColor: textColor,
+                    validator: (v) => Validators.validateRequired(v, 'Bank Name'),
+                  ),
+                  _buildTextField(
+                    'Account Number',
+                    '**** **** **** 1234',
+                    provider.accNumberCtrl,
+                    icon: Icons.lock_outline,
+                    isNumber: true,
+                    textColor: textColor,
+                    validator: (v) => Validators.validateInteger(v, 'Account Number'),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTextField(
+                          'IFSC Code',
+                          'HDFC0001',
+                          provider.ifscCtrl,
+                          textColor: textColor,
+                          validator: (v) => Validators.validateRequired(v, 'IFSC Code'),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildTextField(
-                        'Branch',
-                        'Hoshangabad',
-                        provider.branchCtrl,
-                        textColor: textColor,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildTextField(
+                          'Branch',
+                          'Hoshangabad',
+                          provider.branchCtrl,
+                          textColor: textColor,
+                          validator: (v) => Validators.validateRequired(v, 'Branch'),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-          _buildSectionHeader('5', 'KYC Documents'),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: cardColor,
-              border: Border.all(color: AppColors.getBorderColor(context)),
-              borderRadius: BorderRadius.circular(12),
+            const SizedBox(height: 24),
+            _buildSectionHeader('5', 'KYC Documents'),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: cardColor,
+                border: Border.all(color: AppColors.getBorderColor(context)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  _buildUploadBox(
+                    'Aadhar Card (Front)',
+                    'aadhar_front',
+                    provider.aadharFront,
+                    provider,
+                    primaryBlue,
+                    textColor: textColor,
+                    isDark: isDark,
+                  ),
+                  _buildUploadBox(
+                    'Aadhar Card (Back)',
+                    'aadhar_back',
+                    provider.aadharBack,
+                    provider,
+                    primaryBlue,
+                    textColor: textColor,
+                    isDark: isDark,
+                  ),
+                  _buildUploadBox(
+                    'PAN Card (Front)',
+                    'pan',
+                    provider.panPhoto,
+                    provider,
+                    primaryBlue,
+                    textColor: textColor,
+                    isDark: isDark,
+                  ),
+                  _buildUploadBox(
+                    'PAN Card (Back)',
+                    'pan_back',
+                    provider.panBackPhoto,
+                    provider,
+                    primaryBlue,
+                    textColor: textColor,
+                    isDark: isDark,
+                  ),
+                  _buildUploadBox(
+                    'Profile Photo (Selfie)',
+                    'profile',
+                    provider.profilePhoto,
+                    provider,
+                    primaryBlue,
+                    textColor: textColor,
+                    isDark: isDark,
+                  ),
+                ],
+              ),
             ),
-            child: Column(
-              children: [
-                _buildUploadBox(
-                  'Aadhar Card (Front)',
-                  'aadhar_front',
-                  provider.aadharFront,
-                  provider,
-                  primaryBlue,
-                  textColor: textColor,
-                  isDark: isDark,
-                ),
-                _buildUploadBox(
-                  'Aadhar Card (Back)',
-                  'aadhar_back',
-                  provider.aadharBack,
-                  provider,
-                  primaryBlue,
-                  textColor: textColor,
-                  isDark: isDark,
-                ),
-                _buildUploadBox(
-                  'PAN Card (Front)',
-                  'pan',
-                  provider.panPhoto,
-                  provider,
-                  primaryBlue,
-                  textColor: textColor,
-                  isDark: isDark,
-                ),
-                // UPDATED: Added PAN Card Back
-                _buildUploadBox(
-                  'PAN Card (Back)',
-                  'pan_back',
-                  provider.panBackPhoto,
-                  provider,
-                  primaryBlue,
-                  textColor: textColor,
-                  isDark: isDark,
-                ),
-                _buildUploadBox(
-                  'Profile Photo (Selfie)',
-                  'profile',
-                  provider.profilePhoto,
-                  provider,
-                  primaryBlue,
-                  textColor: textColor,
-                  isDark: isDark,
-                ),
-              ],
+            const SizedBox(height: 24),
+            _buildSectionHeader('6', 'Leader Code (mandatory)'),
+            _buildTextField(
+              '',
+              'Referral code (mandatory)',
+              provider.leaderCodeCtrl,
+              textColor: textColor,
+              validator: (v) => Validators.validateRequired(v, 'Leader Code'),
             ),
-          ),
-          const SizedBox(height: 24),
-          _buildSectionHeader('6', 'Leader Code (mandatory)'),
-          _buildTextField(
-            '',
-            'Referral code (mandatory)',
-            provider.leaderCodeCtrl,
-            textColor: textColor,
-          ),
-          const SizedBox(height: 40),
-        ],
+            const SizedBox(height: 40),
+          ],
+        ),
       ),
     );
   }
@@ -700,6 +741,8 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
     bool isNumber = false,
     int maxLines = 1,
     Color? textColor,
+    String? Function(String?)? validator,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -716,9 +759,11 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
             ),
             const SizedBox(height: 8),
           ],
-          TextField(
+          TextFormField(
             controller: controller,
             maxLines: maxLines,
+            validator: validator,
+            inputFormatters: inputFormatters,
             keyboardType: isNumber ? TextInputType.number : TextInputType.text,
             style: GoogleFonts.montserrat(fontSize: 14, color: textColor),
             decoration: InputDecoration(
@@ -740,6 +785,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(color: AppColors.getBorderColor(context)),
               ),
+              errorStyle: GoogleFonts.montserrat(fontSize: 10, height: 0.8),
             ),
           ),
         ],

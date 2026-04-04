@@ -7,6 +7,7 @@ import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/admin_document_provider.dart';
+import 'package:prarambh_infra/core/utils/validators.dart';
 
 class AddDocumentScreen extends StatefulWidget {
   const AddDocumentScreen({super.key});
@@ -16,6 +17,7 @@ class AddDocumentScreen extends StatefulWidget {
 }
 
 class _AddDocumentScreenState extends State<AddDocumentScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   String _selectedCategory = 'Project Brochures';
   File? _selectedFile;
@@ -28,6 +30,12 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
     'Contest Circulars',
     'General Guidelines'
   ];
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickDocument() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -57,8 +65,9 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
           padding: const EdgeInsets.all(20),
           child: ElevatedButton(
             onPressed: provider.isSaving ? null : () async {
-              if (_nameCtrl.text.isEmpty || _selectedFile == null) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please provide a name and select a file.')));
+              if (!_formKey.currentState!.validate()) return;
+              if (_selectedFile == null) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a file.')));
                 return;
               }
 
@@ -80,61 +89,67 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Container(
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(16)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Document Name', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[600])),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _nameCtrl,
-                decoration: InputDecoration(
-                  hintText: 'e.g. Phase 2 Brochure',
-                  filled: true, fillColor: Colors.grey[50],
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              Text('Category', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[600])),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(8)),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _selectedCategory,
-                    isExpanded: true,
-                    items: _categories.map((cat) => DropdownMenuItem(value: cat, child: Text(cat))).toList(),
-                    onChanged: (val) => setState(() => _selectedCategory = val!),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(16)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Document Name', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[600])),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _nameCtrl,
+                  validator: (v) => Validators.validateRequired(v, 'Document Name'),
+                  decoration: InputDecoration(
+                    hintText: 'e.g. Phase 2 Brochure',
+                    filled: true, fillColor: Colors.grey[50],
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade200)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade200)),
+                    errorStyle: GoogleFonts.montserrat(fontSize: 10, height: 0.8),
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
-              Text('File Upload', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[600])),
-              const SizedBox(height: 8),
-              GestureDetector(
-                onTap: _pickDocument,
-                child: DottedBorder(
-                  child: Container(
-                    width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 30),
-                    decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8)),
-                    child: Column(
-                      children: [
-                        Icon(_selectedFile != null ? Icons.check_circle : Icons.upload_file, color: primaryBlue, size: 40),
-                        const SizedBox(height: 12),
-                        Text(_selectedFile != null ? _selectedFile!.path.split('/').last : 'Tap to select PDF or Image', style: GoogleFonts.montserrat(color: primaryBlue, fontWeight: FontWeight.bold)),
-                      ],
+                Text('Category', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[600])),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(8)),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedCategory,
+                      isExpanded: true,
+                      items: _categories.map((cat) => DropdownMenuItem(value: cat, child: Text(cat))).toList(),
+                      onChanged: (val) => setState(() => _selectedCategory = val!),
                     ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+
+                Text('File Upload', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[600])),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: _pickDocument,
+                  child: DottedBorder(
+                    child: Container(
+                      width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 30),
+                      decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8)),
+                      child: Column(
+                        children: [
+                          Icon(_selectedFile != null ? Icons.check_circle : Icons.upload_file, color: primaryBlue, size: 40),
+                          const SizedBox(height: 12),
+                          Text(_selectedFile != null ? _selectedFile!.path.split('/').last : 'Tap to select PDF or Image', style: GoogleFonts.montserrat(color: primaryBlue, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

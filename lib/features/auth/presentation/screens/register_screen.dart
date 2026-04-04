@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/constant/cons_strings.dart';
 import 'package:prarambh_infra/core/theme/app_colors.dart';
+import 'package:prarambh_infra/core/utils/validators.dart';
 import 'package:prarambh_infra/features/auth/presentation/providers/auth_provider.dart';
+import 'package:flutter/services.dart';
 import 'package:prarambh_infra/features/client/presentation/screens/client_dashboard_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/auth_background.dart';
@@ -112,7 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               hint: 'Enter your full name',
                               icon: Icons.person_outline,
                               controller: _fullNameController,
-                              validator: (v) => v!.isEmpty ? 'Enter full name' : null,
+                              validator: (v) => Validators.validateRequired(v, 'Full Name'),
                             ),
                             const SizedBox(height: 16),
                             _buildTextFieldLabel('Email Address', textColor),
@@ -123,7 +125,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               icon: Icons.email_outlined,
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
-                              validator: (v) => !v!.contains('@') ? 'Enter valid email' : null,
+                              validator: Validators.validateEmail,
                             ),
                             const SizedBox(height: 16),
                             _buildTextFieldLabel('Phone Number', textColor),
@@ -134,7 +136,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               icon: Icons.phone_outlined,
                               controller: _phoneController,
                               keyboardType: TextInputType.phone,
-                              validator: (v) => v!.length < 10 ? 'Enter valid phone' : null,
+                              validator: Validators.validatePhone,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(10),
+                              ],
                             ),
                             const SizedBox(height: 16),
                             _buildTextFieldLabel('Password', textColor),
@@ -145,7 +151,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               icon: Icons.lock_outline,
                               controller: _passwordController,
                               obscureText: true,
-                              validator: (v) => v!.length < 6 ? 'Password too short' : null,
+                              validator: (v) => Validators.validateRequired(v, 'Password'),
                             ),
                             const SizedBox(height: 24),
                             ElevatedButton(
@@ -224,6 +230,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     final mutedText = AppColors.getSecondaryTextColor(context);
     
@@ -232,6 +239,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
+      inputFormatters: inputFormatters,
       style: GoogleFonts.montserrat(fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,

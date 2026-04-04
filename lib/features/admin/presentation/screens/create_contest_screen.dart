@@ -9,6 +9,8 @@ import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/admin_contest_provider.dart';
+import 'package:prarambh_infra/core/utils/validators.dart';
+import 'package:flutter/services.dart';
 
 class CreateContestScreen extends StatefulWidget {
   const CreateContestScreen({super.key});
@@ -18,6 +20,7 @@ class CreateContestScreen extends StatefulWidget {
 }
 
 class _CreateContestScreenState extends State<CreateContestScreen> {
+  final _formKey = GlobalKey<FormState>();
   // Form Controllers
   final _titleCtrl = TextEditingController();
   final _rewardNameCtrl = TextEditingController();
@@ -96,16 +99,12 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
 
   Future<void> _submitContest() async {
     // 1. Validation
-    if (_titleCtrl.text.trim().isEmpty) {
-      return _showSnack('Contest title is required.');
-    }
+    if (!_formKey.currentState!.validate()) return;
+
     if (_startDate == null || _endDate == null) {
       return _showSnack('Start and End dates are required.');
     }
     if (_rewardImage == null) return _showSnack('Reward image is required.');
-    if (_rewardNameCtrl.text.trim().isEmpty) {
-      return _showSnack('Reward name is required.');
-    }
 
     // 2. Call Provider
     final provider = context.read<AdminContestProvider>();
@@ -201,8 +200,10 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
         physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
@@ -216,6 +217,7 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
                 _buildTextField(
                   'e.g., Q3 Sales Sprint',
                   controller: _titleCtrl,
+                  validator: (v) => Validators.validateRequired(v, 'Contest Title'),
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -314,6 +316,7 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
                           _buildTextField(
                             'e.g. Weekend Trip to Goa',
                             controller: _rewardNameCtrl,
+                            validator: (v) => Validators.validateRequired(v, 'Reward Name'),
                           ),
                         ],
                       ),
@@ -447,7 +450,8 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
                 ),
               ),
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -518,11 +522,13 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
     TextEditingController? controller,
     bool readOnly = false,
     VoidCallback? onTap,
+    String? Function(String?)? validator,
   }) {
-    return TextField(
+    return TextFormField(
       controller: controller,
       readOnly: readOnly,
       onTap: onTap,
+      validator: validator,
       style: GoogleFonts.montserrat(fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,

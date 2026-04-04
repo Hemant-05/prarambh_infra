@@ -6,6 +6,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/admin_project_provider.dart';
+import 'package:prarambh_infra/core/utils/validators.dart';
+import 'package:flutter/services.dart';
 
 class AddUnitScreen extends StatefulWidget {
   final int projectId;
@@ -18,6 +20,7 @@ class AddUnitScreen extends StatefulWidget {
 class _AddUnitScreenState extends State<AddUnitScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final _formKey = GlobalKey<FormState>();
 
   // Form Controllers for Single Unit
   final _towerCtrl = TextEditingController();
@@ -158,8 +161,10 @@ class _AddUnitScreenState extends State<AddUnitScreen>
   // 1. SINGLE UNIT FORM
   // ======================================================================
   Widget _buildSingleUnitForm(Color primaryBlue, Color cardColor) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+    return Form(
+      key: _formKey,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
@@ -171,13 +176,20 @@ class _AddUnitScreenState extends State<AddUnitScreen>
           children: [
             Row(
               children: [
-                Expanded(child: _buildTextField('Tower Name', _towerCtrl)),
+                Expanded(child: _buildTextField('Tower Name', _towerCtrl,
+                    validator: (v) => Validators.validateRequired(v, 'Tower Name'))),
                 const SizedBox(width: 16),
-                Expanded(child: _buildTextField('Floor Number', _floorCtrl)),
+                Expanded(child: _buildTextField('Floor Number', _floorCtrl,
+                    isNumber: true,
+                    validator: (v) => Validators.validateInteger(v, 'Floor Number'),
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly])),
               ],
             ),
             const SizedBox(height: 16),
-            _buildTextField('Unit Number (e.g. A-101)', _unitCtrl),
+            _buildTextField('Unit Number/Plot Number', _unitCtrl,
+                isNumber: true,
+                validator: (v) => Validators.validateInteger(v, 'Unit Number'),
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly]),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -215,7 +227,10 @@ class _AddUnitScreenState extends State<AddUnitScreen>
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: _buildTextField('Plot Number', _plotNumCtrl)),
+                Expanded(child: _buildTextField('Plot Number', _plotNumCtrl,
+                    isNumber: true,
+                    validator: (v) => Validators.validateInteger(v, 'Plot Number'),
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly])),
                 const SizedBox(width: 16),
                 Expanded(child: _buildTextField('Plot Dimensions', _plotDimCtrl)),
               ],
@@ -223,9 +238,15 @@ class _AddUnitScreenState extends State<AddUnitScreen>
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: _buildTextField('Area (SqFt)', _areaCtrl, isNumber: true)),
+                Expanded(child: _buildTextField('Area (SqFt)', _areaCtrl, 
+                    isNumber: true,
+                    validator: (v) => Validators.validateInteger(v, 'Area'),
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly])),
                 const SizedBox(width: 16),
-                Expanded(child: _buildTextField('Rate / SqFt', _rateCtrl, isNumber: true)),
+                Expanded(child: _buildTextField('Rate / SqFt', _rateCtrl, 
+                    isNumber: true,
+                    validator: (v) => Validators.validateInteger(v, 'Rate'),
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly])),
               ],
             ),
             const SizedBox(height: 16),
@@ -299,6 +320,8 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                     onPressed: provider.isSaving
                         ? null
                         : () async {
+                      if (!_formKey.currentState!.validate()) return;
+
                       final data = {
                         "project_id": widget.projectId,
                         "tower_name": _towerCtrl.text,
@@ -340,7 +363,8 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                 );
               },
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -475,7 +499,11 @@ class _AddUnitScreenState extends State<AddUnitScreen>
   }
 
   // --- UI Helpers ---
-  Widget _buildTextField(String label, TextEditingController controller, {bool isNumber = false}) {
+  Widget _buildTextField(String label, TextEditingController controller, {
+    bool isNumber = false,
+    String? Function(String?)? validator,
+    List<TextInputFormatter>? inputFormatters,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -484,8 +512,10 @@ class _AddUnitScreenState extends State<AddUnitScreen>
           style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey[600]),
         ),
         const SizedBox(height: 8),
-        TextField(
+        TextFormField(
           controller: controller,
+          validator: validator,
+          inputFormatters: inputFormatters,
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
           style: GoogleFonts.montserrat(fontSize: 13),
           decoration: InputDecoration(
@@ -494,6 +524,7 @@ class _AddUnitScreenState extends State<AddUnitScreen>
             fillColor: Colors.white,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+            errorStyle: GoogleFonts.montserrat(fontSize: 10, height: 0.8),
           ),
         ),
       ],

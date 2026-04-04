@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class InstallmentCalculatorScreen extends StatefulWidget {
@@ -161,6 +162,7 @@ class _InstallmentCalculatorScreenState extends State<InstallmentCalculatorScree
             ),
             cursorColor: Colors.white,
             onChanged: (_) => _calculateInstallments(),
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.currency_rupee, color: Colors.white, size: 28),
               hintText: 'Enter Amount',

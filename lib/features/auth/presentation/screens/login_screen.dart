@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/constant/cons_strings.dart';
+import 'package:prarambh_infra/core/utils/validators.dart';
 import 'package:provider/provider.dart';
 
 import 'package:prarambh_infra/core/theme/app_colors.dart';
@@ -16,41 +17,28 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _advisorCodeController =
-      TextEditingController(); // NEW: Advisor Code Controller
+  final _advisorCodeController = TextEditingController();
 
-  String _loginType = 'User'; // NEW: Radio button state ('User' or 'Advisor')
+  String _loginType = 'User';
   bool _isPasswordVisible = false;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _advisorCodeController.dispose(); // Dispose the new controller
+    _advisorCodeController.dispose();
     super.dispose();
   }
 
   void _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
     final advisorCode = _advisorCodeController.text.trim();
-
-    if (password.isEmpty) {
-      UIHelper.showError(context, 'Please enter your password');
-      return;
-    }
-
-    if (_loginType == 'Advisor' && advisorCode.isEmpty) {
-      UIHelper.showError(context, 'Advisor Code is required');
-      return;
-    }
-
-    if (_loginType == 'User' && email.isEmpty) {
-      UIHelper.showError(context, 'Please enter your email');
-      return;
-    }
 
     final authProvider = context.read<AuthProvider>();
     bool success;
@@ -100,6 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 40),
                     Image.asset(logo, height: 120),
                     const SizedBox(height: 40),
+                    const SizedBox(height: 40),
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
@@ -114,9 +103,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -163,6 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               controller: _advisorCodeController,
                               hint: 'Enter advisor code',
                               icon: Icons.badge_outlined,
+                              validator: (value) => Validators.validateRequired(value, 'Advisor Code'),
                             ),
                             const SizedBox(height: 20),
                           ],
@@ -175,6 +167,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               controller: _emailController,
                               hint: 'Enter your email',
                               icon: Icons.email_outlined,
+                              keyboardType: TextInputType.emailAddress,
+                              validator: Validators.validateEmail,
                             ),
                             const SizedBox(height: 20),
                           ],
@@ -188,6 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             icon: Icons.lock_outline,
                             isPassword: !_isPasswordVisible,
                             onTogglePassword: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+                            validator: (value) => Validators.validateRequired(value, 'Password'),
                           ),
                           const SizedBox(height: 12),
                           Align(
@@ -260,6 +255,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                     ),
+                  ),
                     const SizedBox(height: 40),
                   ],
                 ),
@@ -285,12 +281,16 @@ class _LoginScreenState extends State<LoginScreen> {
     bool isPassword = false,
     required TextEditingController controller,
     VoidCallback? onTogglePassword,
+    String? Function(String?)? validator,
+    TextInputType keyboardType = TextInputType.text,
   }) {
     final mutedText = AppColors.getSecondaryTextColor(context);
     
     return TextFormField(
       obscureText: isPassword,
       controller: controller,
+      validator: validator,
+      keyboardType: keyboardType,
       style: GoogleFonts.montserrat(fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,
