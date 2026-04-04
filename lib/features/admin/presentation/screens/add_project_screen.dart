@@ -449,7 +449,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                   Switch(
                     value: _reraApproved,
                     activeTrackColor: primaryBlue.withOpacity(0.5),
-                    activeColor: primaryBlue,
+                    activeThumbColor: primaryBlue,
                     onChanged: (v) => setState(() => _reraApproved = v),
                   ),
                 ],

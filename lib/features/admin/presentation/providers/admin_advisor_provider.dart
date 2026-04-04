@@ -1,52 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:prarambh_infra/core/providers/error_handler_mixin.dart';
 import 'package:prarambh_infra/features/admin/data/repositories/admin_advisor_repository.dart';
 import '../../data/models/advisor_application_model.dart';
+import 'package:prarambh_infra/core/utils/ui_helper.dart';
 
-class AdminAdvisorProvider extends ChangeNotifier {
+class AdminAdvisorProvider extends ChangeNotifier with ErrorHandlerMixin {
   final AdminAdvisorRepository repository;
 
   AdminAdvisorProvider({required this.repository});
 
   List<AdvisorApplicationModel> _advisors = [];
-  bool _isLoading = false;
   bool _isSaving = false;
-  String? _errorMessage;
 
   List<AdvisorApplicationModel> get advisors => _advisors;
-  bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
-  String? get errorMessage => _errorMessage;
+  set isSaving(bool value) {
+    _isSaving = value;
+    notifyListeners();
+  }
 
   // FIX: Added the ability to pass status dynamically (e.g. 'pending', 'active')
   Future<void> fetchAdvisors({String? status}) async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
+    setLoading(true);
+    setError(null);
 
     try {
       _advisors = await repository.getAllAdvisors(status: status);
     } catch (e) {
-      _errorMessage = e.toString();
+      debugPrint('Fetch Advisors Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
       _advisors = [];
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      setLoading(false);
     }
   }
 
   Future<bool> approveAdvisor(String advisorId) async {
-    _isSaving = true;
-    notifyListeners();
+    isSaving = true;
     try {
       final success = await repository.approveAdvisor(advisorId);
       if (success) await fetchAdvisors(status: 'pending');
       return success;
     } catch (e) {
       debugPrint('Approve Advisor Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
       return false;
     } finally {
-      _isSaving = false;
-      notifyListeners();
+      isSaving = false;
     }
   }
 
@@ -54,18 +54,17 @@ class AdminAdvisorProvider extends ChangeNotifier {
     String advisorId,
     Map<String, dynamic> data,
   ) async {
-    _isSaving = true;
-    notifyListeners();
+    isSaving = true;
     try {
       final success = await repository.updateAdvisor(advisorId, data);
       if (success) await fetchAdvisors();
       return success;
     } catch (e) {
       debugPrint('Update Advisor Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
       return false;
     } finally {
-      _isSaving = false;
-      notifyListeners();
+      isSaving = false;
     }
   }
 
@@ -74,8 +73,7 @@ class AdminAdvisorProvider extends ChangeNotifier {
     String status, {
     String? reason,
   }) async {
-    _isSaving = true;
-    notifyListeners();
+    isSaving = true;
     try {
       final success = await repository.changeAdvisorStatus(
         advisorId,
@@ -86,39 +84,38 @@ class AdminAdvisorProvider extends ChangeNotifier {
       return success;
     } catch (e) {
       debugPrint('Change Status Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
       return false;
     } finally {
-      _isSaving = false;
-      notifyListeners();
+      isSaving = false;
     }
   }
 
   Future<bool> deleteAdvisor(String advisorId) async {
-    _isSaving = true;
-    notifyListeners();
+    isSaving = true;
     try {
       final success = await repository.deleteAdvisor(advisorId);
       if (success) _advisors.removeWhere((a) => a.id == advisorId);
       return success;
     } catch (e) {
       debugPrint('Delete Advisor Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
       return false;
     } finally {
-      _isSaving = false;
-      notifyListeners();
+      isSaving = false;
     }
   }
   Future<AdvisorApplicationModel?> getSingleAdvisor(String id) async {
-    _isLoading = true;
-    notifyListeners();
+    setLoading(true);
     try {
       return await repository.getSingleAdvisor(id);
     } catch (e) {
       debugPrint('Get Single Advisor Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
       return null;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      setLoading(false);
     }
   }
+
 }

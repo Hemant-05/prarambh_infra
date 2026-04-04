@@ -16,6 +16,7 @@ import 'package:prarambh_infra/features/advisor/presentation/screens/document_ce
 import 'package:prarambh_infra/features/advisor/presentation/screens/sales_pipeline_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_achievement_screen.dart';
 import '../../../../core/utils/access_helper.dart';
+import '../../../../core/utils/ui_helper.dart';
 
 class AdvisorDashboardScreen extends StatefulWidget {
   const AdvisorDashboardScreen({super.key});
@@ -53,6 +54,13 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthProvider>();
+    if (authState.currentUser == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final primaryBlue = Theme.of(context).primaryColor;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -180,8 +188,30 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     final advisor = context.read<AuthProvider>().currentUser;
     final primaryBlue = Theme.of(context).primaryColor;
 
-    if (provider.isLoading || provider.data == null) {
+    if (provider.isLoading) {
       return Center(child: CircularProgressIndicator(color: primaryBlue));
+    }
+
+    if (provider.hasError) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: UIHelper.buildInlineError(
+            context: context,
+            message: provider.errorMessage!,
+            onRetry: () => provider.fetchDashboardData(advisor?.advisorCode ?? ''),
+          ),
+        ),
+      );
+    }
+
+    if (provider.data == null) {
+      return Center(
+        child: Text(
+          'No data available',
+          style: GoogleFonts.montserrat(color: Colors.grey),
+        ),
+      );
     }
 
     final data = provider.data!;
@@ -1192,13 +1222,19 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            onTap: () {
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/login',
-                (route) => false,
-              );
-              context.read<AuthProvider>().logout();
+            onTap: () async {
+              // 1. Close drawer
+              Navigator.pop(context);
+              // 2. Clear Auth State (Sets currentUser=null and wipes storage)
+              await context.read<AuthProvider>().logout();
+              // 3. Navigate away using Nav Key to ensure context is valid
+              if (context.mounted) {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/login',
+                  (route) => false,
+                );
+              }
             },
           ),
         ],

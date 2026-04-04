@@ -7,6 +7,10 @@ import 'package:prarambh_infra/features/admin/presentation/screens/team_manageme
 import 'admin_deals_screen.dart';
 
 import 'package:provider/provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/utils/ui_helper.dart';
+import '../providers/admin_advisor_provider.dart';
+import '../providers/admin_enquiry_provider.dart';
 import '../widgets/admin_drawer.dart';
 import '../widgets/admin_home_view.dart';
 
@@ -18,13 +22,42 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-  int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _setupErrorListeners();
       context.read<AdminProvider>().fetchDashboardData();
+    });
+  }
+
+  void _setupErrorListeners() {
+    // Listen to AdminProvider
+    context.read<AdminProvider>().addListener(() {
+      final error = context.read<AdminProvider>().errorMessage;
+      if (error != null && mounted) {
+        UIHelper.showError(context, UIHelper.summarizeError(error));
+        context.read<AdminProvider>().clearError();
+      }
+    });
+
+    // Listen to AdminEnquiryProvider
+    context.read<AdminEnquiryProvider>().addListener(() {
+      final error = context.read<AdminEnquiryProvider>().error;
+      if (error != null && mounted) {
+        UIHelper.showError(context, UIHelper.summarizeError(error));
+        context.read<AdminEnquiryProvider>().clearError();
+      }
+    });
+
+    // Listen to AdminAdvisorProvider
+    context.read<AdminAdvisorProvider>().addListener(() {
+      final error = context.read<AdminAdvisorProvider>().errorMessage;
+      if (error != null && mounted) {
+        UIHelper.showError(context, UIHelper.summarizeError(error));
+        context.read<AdminAdvisorProvider>().clearError();
+      }
     });
   }
 
@@ -48,9 +81,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (context.watch<AuthProvider>().currentUser == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final primaryBlue = Theme.of(context).primaryColor;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final adminProvider = context.watch<AdminProvider>();
+    final currentIndex = adminProvider.dashboardIndex;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       drawer: const AdminDrawer(),
@@ -61,7 +102,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
-          _pageTitles[_currentIndex],
+          _pageTitles[currentIndex],
           style: GoogleFonts.montserrat(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -76,12 +117,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ],
       ),
 
-      body: _views[_currentIndex],
+      body: _views[currentIndex],
 
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
+        currentIndex: currentIndex,
         onTap: (index) {
-          setState(() => _currentIndex = index);
+          adminProvider.setDashboardIndex(index);
         },
         type: BottomNavigationBarType.fixed,
         backgroundColor: isDark ? Theme.of(context).cardColor : primaryBlue,

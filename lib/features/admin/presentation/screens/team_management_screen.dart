@@ -557,14 +557,19 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
                 backgroundColor: isMatch
                     ? Colors.orange.withOpacity(0.1)
                     : blue.withOpacity(0.1),
-                child: Text(
-                  initials,
-                  style: GoogleFonts.montserrat(
-                    fontWeight: FontWeight.bold,
-                    color: isMatch ? Colors.orange : blue,
-                    fontSize: 13,
-                  ),
-                ),
+                backgroundImage: node.avatarUrl.isNotEmpty
+                    ? NetworkImage(node.avatarUrl)
+                    : null,
+                child: node.avatarUrl.isEmpty
+                    ? Text(
+                        initials,
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                          color: isMatch ? Colors.orange : blue,
+                          fontSize: 13,
+                        ),
+                      )
+                    : null,
               ),
             ),
             const SizedBox(height: 7),
@@ -667,14 +672,19 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
             CircleAvatar(
               radius: 22,
               backgroundColor: blue.withOpacity(0.1),
-              child: Text(
-                initials,
-                style: GoogleFonts.montserrat(
-                  fontWeight: FontWeight.bold,
-                  color: blue,
-                  fontSize: 14,
-                ),
-              ),
+              backgroundImage: node.avatarUrl.isNotEmpty
+                  ? NetworkImage(node.avatarUrl)
+                  : null,
+              child: node.avatarUrl.isEmpty
+                  ? Text(
+                      initials,
+                      style: GoogleFonts.montserrat(
+                        fontWeight: FontWeight.bold,
+                        color: blue,
+                        fontSize: 14,
+                      ),
+                    )
+                  : null,
             ),
             const SizedBox(width: 16),
             Expanded(

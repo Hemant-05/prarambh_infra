@@ -7,6 +7,7 @@ class AdminDashboardModel {
   final int siteVisitingLeads;
   final int bookingLeads;
   final int referralLeads;
+  final String? projectName;
   final List<dynamic> priorityLeads;
   final List<dynamic> pendingVerifications;
   final List<dynamic> recentClosures;
@@ -20,6 +21,7 @@ class AdminDashboardModel {
     required this.siteVisitingLeads,
     required this.bookingLeads,
     required this.referralLeads,
+    this.projectName,
     required this.priorityLeads,
     required this.pendingVerifications,
     required this.recentClosures,
@@ -38,6 +40,7 @@ class AdminDashboardModel {
       siteVisitingLeads: int.tryParse(so['site_visiting']?.toString() ?? '0') ?? 0,
       bookingLeads: int.tryParse(so['booking']?.toString() ?? '0') ?? 0,
       referralLeads: int.tryParse(so['referral']?.toString() ?? '0') ?? 0,
+      projectName: up['project_name']?.toString(),
       priorityLeads: json['priority_leads'] is List ? json['priority_leads'] : [],
       pendingVerifications: json['pending_verifications'] is List ? json['pending_verifications'] : [],
       recentClosures: json['recent_deal_closures'] is List ? json['recent_deal_closures'] : [],

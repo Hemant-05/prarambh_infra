@@ -73,7 +73,10 @@ class AdminDrawer extends StatelessWidget {
                   title: 'Upcoming Installments',
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.pushNamed(context, '/admin_upcoming_installments');
+                    Navigator.pushNamed(
+                      context,
+                      '/admin_upcoming_installments',
+                    );
                   },
                 ),
                 _buildDrawerItem(
@@ -139,10 +142,13 @@ class AdminDrawer extends StatelessWidget {
                 _buildDrawerItem(
                   context: context,
                   icon: Icons.campaign_outlined,
-                  title: 'Recruitment by Broker',
+                  title: 'Recruitment Dashboard',
                   onTap: () {
                     Navigator.pop(context); // close drawer
-                    Navigator.pushNamed(context, '/admin_recruitment_dashboard');
+                    Navigator.pushNamed(
+                      context,
+                      '/admin_recruitment_dashboard',
+                    );
                   },
                 ),
               ],
@@ -161,9 +167,18 @@ class AdminDrawer extends StatelessWidget {
                 height: 1.2,
               ),
             ),
-            onTap: () {
-              context.read<AuthProvider>().logout();
-              Navigator.pushReplacementNamed(context, '/login');
+            onTap: () async {
+              // 1. Close drawer
+              Navigator.pop(context);
+              // 2. Clear state
+              await context.read<AuthProvider>().logout();
+              // 3. Navigate away
+              if (context.mounted) {
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  '/login',
+                  (route) => false,
+                );
+              }
             },
           ),
           const SizedBox(height: 30),
@@ -200,4 +215,3 @@ class AdminDrawer extends StatelessWidget {
     );
   }
 }
-

@@ -109,8 +109,8 @@ class InstallmentProvider extends ChangeNotifier {
                   ),
                   pw.TableRow(
                     children: [
-                      pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text('${installment.projectName ?? "Property Installment"}')),
-                      pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text('${installment.unitNumber ?? "N/A"}')),
+                      pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text(installment.projectName ?? "Property Installment")),
+                      pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text(installment.unitNumber ?? "N/A")),
                       pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text(amountFormatter.format(double.tryParse(installment.installmentAmount) ?? 0))),
                     ],
                   ),

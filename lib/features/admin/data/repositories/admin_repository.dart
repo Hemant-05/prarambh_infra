@@ -6,9 +6,9 @@ class AdminRepository {
 
   AdminRepository({required this.apiClient});
 
-  Future<AdminDashboardModel> getDashboardData() async {
+  Future<AdminDashboardModel> getDashboardData({String? projectId}) async {
     try {
-      final response = await apiClient.getAdminDashboard();
+      final response = await apiClient.getAdminDashboard(projectId);
       if (response['status'] == true || response['status'] == 'success') {
         return AdminDashboardModel.fromJson(response['data']);
       }

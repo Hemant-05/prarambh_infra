@@ -500,7 +500,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<int>(
-                      value: provider.selectedMonth,
+                      initialValue: provider.selectedMonth,
                       decoration: const InputDecoration(labelText: "Month", border: OutlineInputBorder()),
                       items: List.generate(12, (i) => DropdownMenuItem(value: i + 1, child: Text(_getMonthName(i + 1)))),
                       onChanged: (val) {
@@ -512,7 +512,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: DropdownButtonFormField<int>(
-                      value: provider.selectedYear,
+                      initialValue: provider.selectedYear,
                       decoration: const InputDecoration(labelText: "Year", border: OutlineInputBorder()),
                       items: List.generate(3, (i) => DropdownMenuItem(value: 2024 + i, child: Text((2024 + i).toString()))),
                       onChanged: (val) {

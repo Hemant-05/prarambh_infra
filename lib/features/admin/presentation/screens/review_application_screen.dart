@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_advisor_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/verification_success_screen.dart';
+import 'package:prarambh_infra/core/utils/ui_helper.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/models/advisor_application_model.dart';
@@ -46,8 +47,10 @@ class ReviewApplicationScreen extends StatelessWidget {
               final success = await context.read<AdminAdvisorProvider>().changeAdvisorStatus(advisor.id, 'Rejected', reason: controller.text);
 
               if (success) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Application Rejected')));
+                UIHelper.showSuccess(context, 'Application Rejected');
                 Navigator.pop(context);
+              } else {
+                UIHelper.showError(context, 'Rejection Failed');
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade100, foregroundColor: Colors.red, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
@@ -324,7 +327,7 @@ class ReviewApplicationScreen extends StatelessWidget {
                         if (success) {
                           Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => VerificationSuccessScreen(advisor: advisor)));
                         } else {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Approval Failed')));
+                          UIHelper.showError(context, 'Approval Failed');
                         }
                       },
                       icon: provider.isSaving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Icon(Icons.check_circle_outline, color: Colors.white),

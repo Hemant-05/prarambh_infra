@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import 'package:prarambh_infra/core/theme/app_colors.dart';
 import 'package:prarambh_infra/features/auth/presentation/providers/auth_provider.dart';
+import '../../../../core/utils/ui_helper.dart';
 import '../../../../core/widgets/auth_background.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -37,23 +38,17 @@ class _LoginScreenState extends State<LoginScreen> {
     final advisorCode = _advisorCodeController.text.trim();
 
     if (password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your password')),
-      );
+      UIHelper.showError(context, 'Please enter your password');
       return;
     }
 
     if (_loginType == 'Advisor' && advisorCode.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Advisor Code is required')),
-      );
+      UIHelper.showError(context, 'Advisor Code is required');
       return;
     }
 
     if (_loginType == 'User' && email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your email')),
-      );
+      UIHelper.showError(context, 'Please enter your email');
       return;
     }
 
@@ -68,9 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     if (success && mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Welcome back')));
+      UIHelper.showSuccess(context, 'Welcome back');
       final userRole = authProvider.currentUser?.role;
       print('------------------- $userRole');
 
@@ -82,9 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.pushReplacementNamed(context, '/client_dashboard');
       }
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authProvider.errorMessage ?? 'Login failed')),
-      );
+      UIHelper.showError(context, authProvider.errorMessage ?? 'Login failed');
     }
   }
 
@@ -170,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             _buildTextField(
                               context: context,
                               controller: _advisorCodeController,
-                              hint: 'e.g. ADV-9082',
+                              hint: 'Enter advisor code',
                               icon: Icons.badge_outlined,
                             ),
                             const SizedBox(height: 20),
@@ -182,7 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             _buildTextField(
                               context: context,
                               controller: _emailController,
-                              hint: 'hemantsahu123@gmail.com',
+                              hint: 'Enter your email',
                               icon: Icons.email_outlined,
                             ),
                             const SizedBox(height: 20),
@@ -193,7 +184,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           _buildTextField(
                             context: context,
                             controller: _passwordController,
-                            hint: 'hemant0312',
+                            hint: 'Enter password',
                             icon: Icons.lock_outline,
                             isPassword: !_isPasswordVisible,
                             onTogglePassword: () => setState(() => _isPasswordVisible = !_isPasswordVisible),

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/advisor_registration_provider.dart';
+import '../../../../../core/utils/ui_helper.dart';
 
 class AdvisorRegistrationScreen extends StatefulWidget {
   const AdvisorRegistrationScreen({super.key});
@@ -47,6 +48,16 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = Theme.of(context).textTheme.bodyLarge?.color;
     final cardColor = Theme.of(context).cardColor;
+
+    if (provider.errorMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        UIHelper.showError(
+          context,
+          UIHelper.summarizeError(provider.errorMessage!),
+        );
+        provider.clearError();
+      });
+    }
 
     // RULE: If logged-in user is 'Advisor' role and their designation is exactly 'advisor' (or null), block them.
     final isRoleAdvisor = currentUser?.role.toLowerCase() == 'advisor';
@@ -118,52 +129,89 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: ElevatedButton(
-            onPressed: provider.isLoading
-                ? null
-                : (_currentStep == 0
-                      ? _nextStep
-                      : () async {
-                          final success = await provider.submitRegistration(
-                            context,
-                          );
-                          if (!context.mounted) return;
-                          if (success) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Registration Successful! Wait for Admin approval.',
-                                ),
-                              ),
-                            );
-                            Navigator.pop(context);
-                          }
-                        }),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryBlue,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: provider.isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (provider.isLoading)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: primaryBlue.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: primaryBlue.withOpacity(0.1)),
                     ),
-                  )
-                : Text(
-                    _currentStep == 0 ? 'Next' : 'Submit Application',
+                    child: Column(
+                      children: [
+                        const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(strokeWidth: 3),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Uploading Documents...',
+                          style: GoogleFonts.montserrat(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: primaryBlue,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'This process will take 2-3 minutes. Please be patient as large documents are being securely uploaded.',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 11,
+                            color: Colors.grey[600],
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: provider.isLoading
+                      ? null
+                      : (_currentStep == 0
+                          ? _nextStep
+                          : () async {
+                              final success = await provider.submitRegistration(
+                                context,
+                              );
+                              if (!context.mounted) return;
+                              if (success) {
+                                UIHelper.showSuccess(
+                                  context,
+                                  'Registration Successful! Wait for Admin approval.',
+                                );
+                                Navigator.pop(context);
+                              }
+                            }),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryBlue,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    _currentStep == 0 ? 'Continue to Documents' : 'Submit Application',
                     style: GoogleFonts.montserrat(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

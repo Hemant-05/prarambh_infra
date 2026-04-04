@@ -1,22 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:prarambh_infra/core/providers/error_handler_mixin.dart';
 import '../../data/repositories/admin_attendance_repository.dart';
 import '../../data/models/meeting_model.dart';
+import 'package:prarambh_infra/core/utils/ui_helper.dart';
 
-class AdminAttendanceProvider extends ChangeNotifier {
+class AdminAttendanceProvider extends ChangeNotifier with ErrorHandlerMixin {
   final AdminAttendanceRepository repository;
   AdminAttendanceProvider({required this.repository});
 
   List<MeetingModel> _meetings = [];
   MeetingModel? _selectedMeeting;
-  bool _isLoading = false;
   bool _isSaving = false;
-  String? _error;
 
   List<MeetingModel> get meetings => _meetings;
   MeetingModel? get selectedMeeting => _selectedMeeting;
-  bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
-  String? get error => _error;
+  set isSaving(bool value) {
+    _isSaving = value;
+    notifyListeners();
+  }
+
+  // Frontend calculation methods for stats
+  int get totalMeetingsCount => _meetings.length;
+  int get upcomingMeetingsCount =>
+      _meetings.where((m) => m.status.toLowerCase() == 'upcoming').length;
+  int get completedMeetingsCount =>
+      _meetings.where((m) => m.status.toLowerCase() == 'completed').length;
 
   // Keep legacy getter for AttendanceReportScreen compatibility
   dynamic get currentMeeting => _selectedMeeting;
@@ -25,21 +34,22 @@ class AdminAttendanceProvider extends ChangeNotifier {
   dynamic get dailyReport => _dailyReport;
 
   Future<void> fetchDailyAttendance(String date) async {
-    _isLoading = true; notifyListeners();
+    setLoading(true);
+    setError(null);
     try {
       _dailyReport = await repository.getDailyAttendance(date);
     } catch (e) {
       debugPrint('Fetch Daily Attendance Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
       _dailyReport = null;
     } finally {
-      _isLoading = false; notifyListeners();
+      setLoading(false);
     }
   }
 
   Future<void> fetchAllMeetings() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+    setLoading(true);
+    setError(null);
     try {
       final raw = await repository.getAllMeetings();
       if (raw is List) {
@@ -51,17 +61,16 @@ class AdminAttendanceProvider extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Fetch All Meetings Error: $e');
-      _error = e.toString();
+      setError(UIHelper.summarizeError(e.toString()));
       _meetings = [];
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      setLoading(false);
     }
   }
 
   Future<void> fetchMeeting(String meetingId) async {
-    _isLoading = true;
-    notifyListeners();
+    setLoading(true);
+    setError(null);
     try {
       final raw = await repository.getSingleMeeting(meetingId);
       if (raw is Map<String, dynamic>) {
@@ -69,37 +78,39 @@ class AdminAttendanceProvider extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Fetch Meeting Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      setLoading(false);
     }
   }
 
   Future<bool> addMeeting(Map<String, dynamic> data) async {
-    _isSaving = true;
-    notifyListeners();
+    isSaving = true;
     try {
       final success = await repository.addMeeting(data);
       if (success) await fetchAllMeetings();
       return success;
     } catch (e) {
       debugPrint('Add Meeting Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
       return false;
     } finally {
-      _isSaving = false;
-      notifyListeners();
+      isSaving = false;
     }
   }
 
   Future<bool> deleteMeeting(String id) async {
+    isSaving = true;
     try {
       final success = await repository.deleteMeeting(id);
       if (success) _meetings.removeWhere((m) => m.id == id);
-      notifyListeners();
       return success;
     } catch (e) {
       debugPrint('Delete Meeting Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
       return false;
+    } finally {
+      isSaving = false;
     }
   }
 }

@@ -96,13 +96,16 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
 
   Future<void> _submitContest() async {
     // 1. Validation
-    if (_titleCtrl.text.trim().isEmpty)
+    if (_titleCtrl.text.trim().isEmpty) {
       return _showSnack('Contest title is required.');
-    if (_startDate == null || _endDate == null)
+    }
+    if (_startDate == null || _endDate == null) {
       return _showSnack('Start and End dates are required.');
+    }
     if (_rewardImage == null) return _showSnack('Reward image is required.');
-    if (_rewardNameCtrl.text.trim().isEmpty)
+    if (_rewardNameCtrl.text.trim().isEmpty) {
       return _showSnack('Reward name is required.');
+    }
 
     // 2. Call Provider
     final provider = context.read<AdminContestProvider>();

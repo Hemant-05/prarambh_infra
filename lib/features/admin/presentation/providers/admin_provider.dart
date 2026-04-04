@@ -1,32 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:prarambh_infra/features/admin/data/repositories/admin_repository.dart';
+import 'package:prarambh_infra/core/providers/error_handler_mixin.dart';
 import '../../data/models/admin_dashboard_model.dart';
 
-class AdminProvider extends ChangeNotifier {
+class AdminProvider extends ChangeNotifier with ErrorHandlerMixin {
   final AdminRepository adminRepository;
 
   AdminProvider({required this.adminRepository});
 
   AdminDashboardModel? _dashboardData;
-  bool _isLoading = false;
-  String? _errorMessage;
+  int _dashboardIndex = 0;
+  String? _selectedProjectId;
 
   AdminDashboardModel? get dashboardData => _dashboardData;
-  bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
+  String? get selectedProjectId => _selectedProjectId;
+  int get dashboardIndex => _dashboardIndex;
 
-  Future<void> fetchDashboardData() async {
-    _isLoading = true;
-    _errorMessage = null;
+  void setDashboardIndex(int index) {
+    _dashboardIndex = index;
+    notifyListeners();
+  }
+
+  void setProjectId(String? id, {bool fetch = true}) {
+    _selectedProjectId = id;
+    if (fetch) fetchDashboardData(projectId: id);
+  }
+
+  Future<void> fetchDashboardData({String? projectId}) async {
+    setLoading(true);
+    setError(null);
+    if (projectId != null) _selectedProjectId = projectId;
     notifyListeners();
 
     try {
-      _dashboardData = await adminRepository.getDashboardData();
+      _dashboardData = await adminRepository.getDashboardData(projectId: _selectedProjectId);
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      setError(e.toString());
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      setLoading(false);
     }
   }
+
+  // clearError is provided by ErrorHandlerMixin
 }

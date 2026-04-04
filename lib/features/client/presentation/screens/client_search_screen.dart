@@ -134,7 +134,7 @@ class _ClientSearchScreenState extends State<ClientSearchScreen> {
           onTap: () {
             _searchController.text = query;
           },
-        )).toList(),
+        )),
       ],
     );
   }

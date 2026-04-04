@@ -15,22 +15,12 @@ class AdminEnquiriesScreen extends StatefulWidget {
 
 class _AdminEnquiriesScreenState extends State<AdminEnquiriesScreen>
     with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AdminEnquiryProvider>().fetchContactEnquiries();
-      context.read<AdminEnquiryProvider>().fetchCareerEnquiries();
     });
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   @override
@@ -49,23 +39,12 @@ class _AdminEnquiriesScreenState extends State<AdminEnquiriesScreen>
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'User Enquiries',
+          'Contact Enquiries',
           style: GoogleFonts.montserrat(
             color: isDark ? Colors.white : Colors.black87,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
-        ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: primaryBlue,
-          labelColor: primaryBlue,
-          unselectedLabelColor: Colors.grey,
-          labelStyle: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13),
-          tabs: const [
-            Tab(text: 'General Contact'),
-            Tab(text: 'Career/Advisor'),
-          ],
         ),
       ),
       body: Consumer<AdminEnquiryProvider>(
@@ -74,13 +53,7 @@ class _AdminEnquiriesScreenState extends State<AdminEnquiriesScreen>
             return const Center(child: CircularProgressIndicator());
           }
 
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _buildContactList(provider.contactEnquiries, isDark, primaryBlue),
-              _buildCareerList(provider.careerEnquiries, isDark, primaryBlue),
-            ],
-          );
+          return _buildContactList(provider.contactEnquiries, isDark, primaryBlue);
         },
       ),
     );
@@ -108,34 +81,6 @@ class _AdminEnquiriesScreenState extends State<AdminEnquiriesScreen>
           isDark: isDark,
           primaryBlue: primaryBlue,
           onDelete: () => context.read<AdminEnquiryProvider>().deleteContactEnquiry(enquiry.id.toString()),
-        );
-      },
-    );
-  }
-
-  Widget _buildCareerList(List<AdminCareerEnquiryModel> enquiries, bool isDark, Color primaryBlue) {
-    if (enquiries.isEmpty) {
-      return _buildEmptyState('No career enquiries found.');
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      physics: const BouncingScrollPhysics(),
-      itemCount: enquiries.length,
-      itemBuilder: (context, index) {
-        final enquiry = enquiries[index];
-        return _buildEnquiryCard(
-          context: context,
-          name: enquiry.name,
-          phone: enquiry.phone,
-          email: enquiry.email,
-          intent: enquiry.city,
-          message: enquiry.description,
-          date: enquiry.createdAt,
-          isDark: isDark,
-          primaryBlue: primaryBlue,
-          isCareer: true,
-          onDelete: () => context.read<AdminEnquiryProvider>().deleteCareerEnquiry(enquiry.id.toString()),
         );
       },
     );

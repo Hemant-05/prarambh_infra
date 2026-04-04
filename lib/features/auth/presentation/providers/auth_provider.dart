@@ -1,54 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:prarambh_infra/core/utils/ui_helper.dart';
 import '../../data/models/user_model.dart';
 import '../../data/repositories/auth_repository.dart';
 
+import 'package:prarambh_infra/core/providers/error_handler_mixin.dart';
+
 enum ForgotPasswordStep { email, otp, reset }
 
-class AuthProvider extends ChangeNotifier {
+class AuthProvider extends ChangeNotifier with ErrorHandlerMixin {
   final AuthRepository authRepository;
 
   AuthProvider({required this.authRepository});
 
   UserModel? _currentUser;
-  bool _isLoading = false;
-  String? _errorMessage;
 
   UserModel? get currentUser => _currentUser;
-  bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
 
   Future<bool> login(String email, String password) async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
+    setLoading(true);
+    setError(null);
     try {
       _currentUser = await authRepository.loginUser(email, password);
-      _isLoading = false;
-      notifyListeners();
+      setLoading(false);
       return true; // Login success
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
-      _isLoading = false;
-      notifyListeners();
+      final errorMsg = e.toString();
+      if (errorMsg.contains('401') || errorMsg.contains('unauthorized')) {
+        setError('Incorrect ID or password. Please try again.');
+      } else {
+        setError(UIHelper.summarizeError(errorMsg));
+      }
+      setLoading(false);
       return false; // Login failed
     }
   }
 
   Future<bool> loginAdvisor(
       String password, String advisorCode) async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
+    setLoading(true);
+    setError(null);
 
     try {
       _currentUser = await authRepository.loginAdvisor(password, advisorCode);
-      _isLoading = false;
-      notifyListeners();
+      setLoading(false);
       return true;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
-      _isLoading = false;
-      notifyListeners();
+      final errorMsg = e.toString();
+      if (errorMsg.contains('401') || errorMsg.contains('unauthorized')) {
+        setError('Incorrect ID or password. Please try again.');
+      } else {
+        setError(UIHelper.summarizeError(errorMsg));
+      }
+      setLoading(false);
       return false;
     }
   }
@@ -94,8 +97,8 @@ class AuthProvider extends ChangeNotifier {
     required String phone,
     required String password,
   }) async {
-    _isLoading = true;
-    _errorMessage = null;
+    setLoading(true);
+    setError(null);
     notifyListeners();
 
     try {
@@ -110,21 +113,15 @@ class AuthProvider extends ChangeNotifier {
       // 2. Perform auto-login to set _currentUser and save credentials
       _currentUser = await authRepository.loginUser(email, password);
 
-      _isLoading = false;
-      notifyListeners();
+      setLoading(false);
       return true; // Success
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
-      _isLoading = false;
-      notifyListeners();
+      setError(UIHelper.summarizeError(e.toString()));
+      setLoading(false);
       return false; // Failed
     }
   }
 
-  void _setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
-  }
 
   ForgotPasswordStep _forgotPasswordStep = ForgotPasswordStep.email;
   String _resetEmail = ''; // Store the email temporarily during the flow
@@ -135,51 +132,51 @@ class AuthProvider extends ChangeNotifier {
   void clearForgotPasswordState() {
     _forgotPasswordStep = ForgotPasswordStep.email;
     _resetEmail = '';
-    _errorMessage = null;
+    setError(null);
     notifyListeners();
   }
 
   Future<bool> requestOtp(String email) async {
-    _setLoading(true);
+    setLoading(true);
     try {
       await authRepository.requestPasswordReset(email);
       _resetEmail = email;
       _forgotPasswordStep = ForgotPasswordStep.otp; // Move to next step
-      _errorMessage = null;
-      _setLoading(false);
+      setError(null);
+      setLoading(false);
       return true;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
-      _setLoading(false);
+      setError(UIHelper.summarizeError(e.toString()));
+      setLoading(false);
       return false;
     }
   }
 
   Future<bool> verifyOtp(String otp) async {
-    _setLoading(true);
+    setLoading(true);
     try {
       await authRepository.verifyOtp(_resetEmail, otp);
       _forgotPasswordStep = ForgotPasswordStep.reset; // Move to final step
-      _errorMessage = null;
-      _setLoading(false);
+      setError(null);
+      setLoading(false);
       return true;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
-      _setLoading(false);
+      setError(UIHelper.summarizeError(e.toString()));
+      setLoading(false);
       return false;
     }
   }
 
   Future<bool> setNewPassword(String newPassword,String otp) async {
-    _setLoading(true);
+    setLoading(true);
     try {
       await authRepository.resetPassword(_resetEmail, newPassword, otp);
-      _errorMessage = null;
-      _setLoading(false);
+      setError(null);
+      setLoading(false);
       return true; // Success, ready to navigate back to login
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
-      _setLoading(false);
+      setError(UIHelper.summarizeError(e.toString()));
+      setLoading(false);
       return false;
     }
   }

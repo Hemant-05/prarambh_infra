@@ -1,63 +1,72 @@
 import 'package:flutter/material.dart';
+import 'package:prarambh_infra/core/providers/error_handler_mixin.dart';
 import '../../data/models/lead_models.dart';
 import '../../data/repositories/admin_lead_repository.dart';
+import 'package:prarambh_infra/core/utils/ui_helper.dart';
 
-class AdminLeadProvider extends ChangeNotifier {
+class AdminLeadProvider extends ChangeNotifier with ErrorHandlerMixin {
   final AdminLeadRepository repository;
   AdminLeadProvider({required this.repository});
 
   List<LeadModel> _leads = [];
   List<LeadModel> _unassignedLeads = [];
   List<AdvisorAssignModel> _availableAdvisors = [];
-  bool _isLoading = false;
   bool _isSaving = false;
 
   List<LeadModel> get leads => _leads;
   List<LeadModel> get unassignedLeads => _unassignedLeads;
   List<AdvisorAssignModel> get availableAdvisors => _availableAdvisors;
-  bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
+  set isSaving(bool value) {
+    _isSaving = value;
+    notifyListeners();
+  }
 
   Future<void> fetchLeads({String? advisorCode, String? stage}) async {
-    _isLoading = true; notifyListeners();
+    setLoading(true);
+    setError(null);
     try {
       _leads = await repository.getLeads(advisorCode: advisorCode, stage: stage);
     } catch (e) {
       debugPrint('Fetch Leads Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
       _leads = [];
     } finally {
-      _isLoading = false; notifyListeners();
+      setLoading(false);
     }
   }
 
   Future<void> fetchUnassignedLeads() async {
-    _isLoading = true; notifyListeners();
+    setLoading(true);
+    setError(null);
     try {
       _unassignedLeads = await repository.getUnassignedLeads();
     } catch (e) {
       debugPrint('Fetch Unassigned Leads Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
       _unassignedLeads = [];
     } finally {
-      _isLoading = false; notifyListeners();
+      setLoading(false);
     }
   }
 
   Future<bool> addLead(Map<String, dynamic> data) async {
-    _isSaving = true; notifyListeners();
+    isSaving = true;
     try {
       final success = await repository.addLead(data);
       if (success) await fetchLeads();
       return success;
     } catch (e) {
       debugPrint('Add Lead Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
       return false;
     } finally {
-      _isSaving = false; notifyListeners();
+      isSaving = false;
     }
   }
 
   Future<bool> updateLeadStage(String leadId, String newStage, {Map<String, dynamic>? extraData}) async {
-    _isSaving = true; notifyListeners();
+    isSaving = true;
     try {
       Map<String, dynamic> data = {"stage": newStage};
       if (extraData != null) data.addAll(extraData);
@@ -69,37 +78,40 @@ class AdminLeadProvider extends ChangeNotifier {
       return success;
     } catch (e) {
       debugPrint('Update Lead Stage Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
       return false;
     } finally {
-      _isSaving = false; notifyListeners();
+      isSaving = false;
     }
   }
 
   Future<bool> addLeadNote(String leadId, String title, String time) async {
-    _isSaving = true; notifyListeners();
+    isSaving = true;
     try {
       return await repository.addLeadNote(leadId, title, time);
     } catch (e) {
       debugPrint('Add Note Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
       return false;
     } finally {
-      _isSaving = false; notifyListeners();
+      isSaving = false;
     }
   }
 
   Future<void> fetchAdvisorsForAssignment() async {
-    _isLoading = true; notifyListeners();
+    setLoading(true);
     try {
       _availableAdvisors = await repository.getAvailableAdvisors();
     } catch (e) {
       debugPrint(e.toString());
+      setError(UIHelper.summarizeError(e.toString()));
     } finally {
-      _isLoading = false; notifyListeners();
+      setLoading(false);
     }
   }
 
   Future<bool> assignLeadToAdvisor(String leadId, String advisorCode) async {
-    _isSaving = true; notifyListeners();
+    isSaving = true;
     try {
       final success = await repository.assignLeadToAdvisor(leadId, advisorCode);
       if (success) {
@@ -109,21 +121,23 @@ class AdminLeadProvider extends ChangeNotifier {
       return success;
     } catch (e) {
       debugPrint('Assign Lead Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
       return false;
     } finally {
-      _isSaving = false; notifyListeners();
+      isSaving = false;
     }
   }
 
   Future<LeadModel?> getSingleLead(String id) async {
-    _isLoading = true; notifyListeners();
+    setLoading(true);
     try {
       return await repository.getSingleLead(id);
     } catch (e) {
       debugPrint('Get Single Lead Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
       return null;
     } finally {
-      _isLoading = false; notifyListeners();
+      setLoading(false);
     }
   }
 }

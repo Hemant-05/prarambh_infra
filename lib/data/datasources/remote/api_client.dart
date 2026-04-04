@@ -467,7 +467,9 @@ abstract class ApiClient {
   Future<dynamic> getAdminSalesAnalytics();
 
   @GET("/admin/dashboard")
-  Future<dynamic> getAdminDashboard();
+  Future<dynamic> getAdminDashboard(
+    @Query("project_id") String? projectId,
+  );
 
   @GET("/advisor/app-dashboard")
   Future<dynamic> getAdvisorDashboard(

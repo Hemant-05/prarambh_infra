@@ -149,8 +149,14 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
             indicatorWeight: 3,
             labelColor: primaryBlue,
             unselectedLabelColor: isDark ? Colors.white38 : Colors.grey[600],
-            labelStyle: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13),
-            unselectedLabelStyle: GoogleFonts.montserrat(fontWeight: FontWeight.w500, fontSize: 13),
+            labelStyle: GoogleFonts.montserrat(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+            unselectedLabelStyle: GoogleFonts.montserrat(
+              fontWeight: FontWeight.w500,
+              fontSize: 13,
+            ),
             tabs: const [
               Tab(text: 'Suspecting'),
               Tab(text: 'Prospecting'),
@@ -160,7 +166,9 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
               Tab(text: 'Completed'),
             ],
           ),
-          shape: Border(bottom: BorderSide(color: AppColors.getBorderColor(context))),
+          shape: Border(
+            bottom: BorderSide(color: AppColors.getBorderColor(context)),
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -211,7 +219,11 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                 ),
                 _buildStageList(
                   provider.leads
-                      .where((l) => l.stage.toLowerCase() == 'booking' || l.stage.toLowerCase() == 'pending_verification')
+                      .where(
+                        (l) =>
+                            l.stage.toLowerCase() == 'booking' ||
+                            l.stage.toLowerCase() == 'pending_verification',
+                      )
                       .toList(),
                   cardColor,
                   primaryBlue,
@@ -246,33 +258,50 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
   ) {
     final hintColor = Theme.of(context).hintColor;
 
-    if (leads.isEmpty)
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.assignment_late_outlined, size: 48, color: hintColor.withOpacity(0.5)),
-            const SizedBox(height: 16),
-            Text(
-              "No leads in this stage.",
-              style: GoogleFonts.montserrat(color: hintColor, fontWeight: FontWeight.w500),
-            ),
-          ],
-        ),
-      );
     return RefreshIndicator(
       onRefresh: () {
-        final advisorCode = context.read<AuthProvider>().currentUser?.advisorCode ?? '';
-        return context.read<AdvisorLeadProvider>().fetchLeads(advisorCode: advisorCode);
+        final advisorCode =
+            context.read<AuthProvider>().currentUser?.advisorCode ?? '';
+        return context.read<AdvisorLeadProvider>().fetchLeads(
+          advisorCode: advisorCode,
+        );
       },
-      child: ListView.builder(
-        padding: const EdgeInsets.all(20),
-        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-        itemCount: leads.length,
-        itemBuilder: (context, index) {
-          return _buildPipelineCard(leads[index], cardColor, primaryBlue, isDark);
-        },
-      ),
+      child: leads.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.assignment_late_outlined,
+                    size: 48,
+                    color: hintColor.withOpacity(0.5),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "No leads in this stage.",
+                    style: GoogleFonts.montserrat(
+                      color: hintColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(20),
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              itemCount: leads.length,
+              itemBuilder: (context, index) {
+                return _buildPipelineCard(
+                  leads[index],
+                  cardColor,
+                  primaryBlue,
+                  isDark,
+                );
+              },
+            ),
     );
   }
 
@@ -283,7 +312,9 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
     bool isDark,
   ) {
     // Stage-specific styling
-    final isBooking = lead.stage.toLowerCase() == 'booking' || lead.stage.toLowerCase() == 'pending_verification';
+    final isBooking =
+        lead.stage.toLowerCase() == 'booking' ||
+        lead.stage.toLowerCase() == 'pending_verification';
     final isClosed = lead.stage.toLowerCase() == 'closed';
     final isCompleted = lead.stage.toLowerCase() == 'completed';
     final textColor = Theme.of(context).textTheme.bodyLarge?.color;
@@ -292,23 +323,23 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
     // Choose accent and background based on stage
     Color accentColor = isCompleted
         ? (isDark ? Colors.greenAccent : Colors.green[700]!)
-        : (isBooking 
-            ? (isDark ? Colors.orangeAccent : Colors.orange[800]!) 
-            : (isClosed ? Colors.redAccent : primaryBlue));
-        
-    Color backgroundColor = isCompleted
-        ? (isDark 
-            ? Colors.green.withOpacity(0.1) 
-            : Colors.green.withOpacity(0.05))
         : (isBooking
-            ? (isDark
-                  ? Colors.orange.withOpacity(0.1)
-                  : Colors.orange.withOpacity(0.05))
-            : (isClosed
-                  ? (isDark
-                        ? Colors.red.withOpacity(0.1)
-                        : Colors.red.withOpacity(0.05))
-                  : cardColor));
+              ? (isDark ? Colors.orangeAccent : Colors.orange[800]!)
+              : (isClosed ? Colors.redAccent : primaryBlue));
+
+    Color backgroundColor = isCompleted
+        ? (isDark
+              ? Colors.green.withOpacity(0.1)
+              : Colors.green.withOpacity(0.05))
+        : (isBooking
+              ? (isDark
+                    ? Colors.orange.withOpacity(0.1)
+                    : Colors.orange.withOpacity(0.05))
+              : (isClosed
+                    ? (isDark
+                          ? Colors.red.withOpacity(0.1)
+                          : Colors.red.withOpacity(0.05))
+                    : cardColor));
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -322,7 +353,9 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
         ),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.03),
+            color: isDark
+                ? Colors.black.withOpacity(0.2)
+                : Colors.black.withOpacity(0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -371,22 +404,35 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                         if (lead.isPriority) ...[
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.amber.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                              border: Border.all(
+                                color: Colors.amber.withOpacity(0.3),
+                              ),
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.star, color: isDark ? Colors.amberAccent : Colors.amber[700], size: 10),
+                                Icon(
+                                  Icons.star,
+                                  color: isDark
+                                      ? Colors.amberAccent
+                                      : Colors.amber[700],
+                                  size: 10,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   "PRIORITY",
                                   style: GoogleFonts.montserrat(
-                                    fontSize: 9, 
-                                    fontWeight: FontWeight.bold, 
-                                    color: isDark ? Colors.amberAccent : Colors.amber[700],
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark
+                                        ? Colors.amberAccent
+                                        : Colors.amber[700],
                                   ),
                                 ),
                               ],
@@ -436,7 +482,10 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
 
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Divider(height: 1, color: AppColors.getBorderColor(context)),
+                  child: Divider(
+                    height: 1,
+                    color: AppColors.getBorderColor(context),
+                  ),
                 ),
 
                 Row(

@@ -109,7 +109,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             const SizedBox(height: 8),
                             _buildTextField(
                               context: context,
-                              hint: 'hemant sahu',
+                              hint: 'Enter your full name',
                               icon: Icons.person_outline,
                               controller: _fullNameController,
                               validator: (v) => v!.isEmpty ? 'Enter full name' : null,
@@ -119,7 +119,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             const SizedBox(height: 8),
                             _buildTextField(
                               context: context,
-                              hint: 'hemantsahu123@gmail.com',
+                              hint: 'Enter your email',
                               icon: Icons.email_outlined,
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
@@ -130,7 +130,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             const SizedBox(height: 8),
                             _buildTextField(
                               context: context,
-                              hint: '90998752146',
+                              hint: 'Enter your phone number',
                               icon: Icons.phone_outlined,
                               controller: _phoneController,
                               keyboardType: TextInputType.phone,
@@ -141,7 +141,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             const SizedBox(height: 8),
                             _buildTextField(
                               context: context,
-                              hint: '***********',
+                              hint: 'Enter your password',
                               icon: Icons.lock_outline,
                               controller: _passwordController,
                               obscureText: true,

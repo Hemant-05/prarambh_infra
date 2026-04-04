@@ -1,14 +1,28 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:prarambh_infra/core/providers/error_handler_mixin.dart';
 import 'package:prarambh_infra/features/recruitment/data/repositories/recruitment_repository.dart';
+import 'package:prarambh_infra/core/utils/ui_helper.dart';
 
-class AdvisorRegistrationProvider extends ChangeNotifier {
+class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin {
   final RecruitmentRepository repository;
   AdvisorRegistrationProvider({required this.repository});
 
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
+  // errorMessage, isLoading, clearError, setError, setLoading are provided by ErrorHandlerMixin
+
+  void preFillFromEnquiry({
+    required String name,
+    required String email,
+    required String phone,
+    required String city,
+  }) {
+    nameCtrl.text = name;
+    emailCtrl.text = email;
+    phoneCtrl.text = phone;
+    cityCtrl.text = city;
+    notifyListeners();
+  }
 
   // --- Step 1 Controllers ---
   final nameCtrl = TextEditingController();
@@ -62,7 +76,7 @@ class AdvisorRegistrationProvider extends ChangeNotifier {
   bool validateStep1(BuildContext context) {
     // Also added dobCtrl verification since it's required by the backend
     if (nameCtrl.text.isEmpty || phoneCtrl.text.isEmpty || aadharCtrl.text.isEmpty || panCtrl.text.isEmpty || dobCtrl.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all required Personal & Contact details.')));
+      setError('Please fill all required Personal & Contact details.');
       return false;
     }
     return true;
@@ -71,11 +85,13 @@ class AdvisorRegistrationProvider extends ChangeNotifier {
   Future<bool> submitRegistration(BuildContext context) async {
     // Added panBackPhoto to validation
     if (leaderCodeCtrl.text.isEmpty || aadharFront == null || aadharBack == null || panPhoto == null || panBackPhoto == null || profilePhoto == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please upload all required documents and provide Leader Code.')));
+      setError('Please upload all required documents and provide Leader Code.');
       return false;
     }
 
-    _isLoading = true; notifyListeners();
+    setLoading(true);
+    setError(null);
+
     try {
       final success = await repository.registerAdvisorDetailed(
           fullName: nameCtrl.text, email: emailCtrl.text, phone: phoneCtrl.text, designation: designation,
@@ -85,7 +101,7 @@ class AdvisorRegistrationProvider extends ChangeNotifier {
           bankName: bankNameCtrl.text, accNumber: accNumberCtrl.text, ifsc: ifscCtrl.text,
           address: addressCtrl.text, city: cityCtrl.text, state: stateCtrl.text, pincode: pincodeCtrl.text, leaderCode: leaderCodeCtrl.text,
           aadharFront: aadharFront!, aadharBack: aadharBack!, panPhoto: panPhoto!,
-          panBackPhoto: panBackPhoto!, // NEW FIELD passed to repo
+          panBackPhoto: panBackPhoto!, 
           profilePhoto: profilePhoto!
       );
 
@@ -97,11 +113,12 @@ class AdvisorRegistrationProvider extends ChangeNotifier {
         aadharFront = null; aadharBack = null; panPhoto = null; panBackPhoto = null; profilePhoto = null;
       }
 
-      _isLoading = false; notifyListeners();
+      setLoading(false);
       return success;
     } catch (e) {
-      _isLoading = false; notifyListeners();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))));
+      debugPrint('Registration Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
+      setLoading(false);
       return false;
     }
   }

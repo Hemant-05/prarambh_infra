@@ -4,6 +4,7 @@ import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/assign_documents_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:prarambh_infra/core/utils/ui_helper.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/admin_team_provider.dart';
 
@@ -41,6 +42,19 @@ class _BrokerProfileScreenState extends State<BrokerProfileScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = AppColors.getCardColor(context);
     final provider = context.watch<AdminTeamProvider>();
+
+    if (provider.hasError && provider.selectedProfile == null) {
+      return Scaffold(
+        backgroundColor: primaryBlue,
+        body: Center(
+          child: UIHelper.buildInlineError(
+            context: context,
+            message: provider.errorMessage!,
+            onRetry: () => provider.fetchProfile(widget.advisorId),
+          ),
+        ),
+      );
+    }
 
     if (provider.isLoading || provider.selectedProfile == null) {
       return Scaffold(

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/back_button.dart';
+import '../../../../core/utils/ui_helper.dart';
 import '../../data/models/meeting_model.dart';
 import '../providers/admin_attendance_provider.dart';
 import 'create_meeting_screen.dart';
@@ -121,8 +122,15 @@ class _MeetingManagementScreenState extends State<MeetingManagementScreen>
           Expanded(
             child: provider.isLoading
                 ? Center(child: CircularProgressIndicator(color: primaryBlue))
-                : provider.error != null && provider.meetings.isEmpty
-                    ? _buildErrorState(provider, primaryBlue)
+                : provider.hasError && provider.meetings.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: UIHelper.buildInlineError(
+                          context: context,
+                          message: provider.errorMessage!,
+                          onRetry: () => provider.fetchAllMeetings(),
+                        ),
+                      )
                     : TabBarView(
                         controller: _tabController,
                         children: [
@@ -138,18 +146,20 @@ class _MeetingManagementScreenState extends State<MeetingManagementScreen>
   }
 
   Widget _buildStatsRow(List<MeetingModel> meetings, Color blue, bool isDark) {
-    final total = meetings.length;
-    final upcoming = meetings.where((m) => m.status.toLowerCase() == 'upcoming').length;
-    final completed = meetings.where((m) => m.status.toLowerCase() == 'completed').length;
+    final provider = context.read<AdminAttendanceProvider>();
+    final total = provider.totalMeetingsCount;
+    final upcoming = provider.upcomingMeetingsCount;
+    final completed = provider.completedMeetingsCount;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _statChip('Total', '$total', Colors.blueGrey, isDark),
-          const SizedBox(width: 10),
+          _statChip('Total', '$total', Colors.blue, isDark),
+          const SizedBox(width: 8),
           _statChip('Upcoming', '$upcoming', Colors.orange, isDark),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           _statChip('Completed', '$completed', Colors.green, isDark),
         ],
       ),
@@ -327,23 +337,6 @@ class _MeetingManagementScreenState extends State<MeetingManagementScreen>
         Icon(icon, size: 12, color: color),
         const SizedBox(width: 4),
         Text(label, style: GoogleFonts.montserrat(fontSize: 11, fontWeight: FontWeight.bold, color: color)),
-      ]),
-    );
-  }
-
-  Widget _buildErrorState(AdminAttendanceProvider provider, Color blue) {
-    return Center(
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Icon(Icons.wifi_off_outlined, size: 64, color: Colors.grey[300]),
-        const SizedBox(height: 16),
-        Text('Failed to load meetings', style: GoogleFonts.montserrat(color: Colors.grey[500], fontSize: 15, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 12),
-        ElevatedButton.icon(
-          onPressed: provider.fetchAllMeetings,
-          style: ElevatedButton.styleFrom(backgroundColor: blue, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-          icon: const Icon(Icons.refresh, size: 16, color: Colors.white),
-          label: Text('Retry', style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold)),
-        ),
       ]),
     );
   }

@@ -59,7 +59,10 @@ class _MyIncomeAnalyticsScreenState extends State<MyIncomeAnalyticsScreen> {
               : RefreshIndicator(
                   onRefresh: () async {
                     final authProvider = context.read<AuthProvider>();
-                    await incomeProvider.fetchAdvisorIncome(authProvider.currentUser!.advisorCode!);
+                    final advisorCode = authProvider.currentUser?.advisorCode ?? '';
+                    if (advisorCode.isNotEmpty) {
+                      await incomeProvider.fetchAdvisorIncome(advisorCode);
+                    }
                   },
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),

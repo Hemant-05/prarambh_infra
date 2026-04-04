@@ -6,7 +6,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/admin_profile_provider.dart';
 import 'edit_admin_profile_screen.dart';
-import 'admin_change_password_screen.dart';
 
 class AdminProfileScreen extends StatefulWidget {
   const AdminProfileScreen({super.key});
@@ -195,18 +194,6 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                             MaterialPageRoute(builder: (c) => const EditAdminProfileScreen()),
                           ),
                         ),
-                        _buildDivider(isDark),
-                        _buildActionTile(
-                          icon: Icons.lock_reset_rounded,
-                          title: 'Change Password',
-                          subtitle: 'Secure your administrative access',
-                          color: Colors.indigo,
-                          isDark: isDark,
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (c) => const AdminChangePasswordScreen()),
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -280,14 +267,6 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     );
   }
 
-  Widget _buildDivider(bool isDark) {
-    return Divider(
-      height: 1,
-      indent: 70,
-      endIndent: 20,
-      color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade100,
-    );
-  }
 
   Widget _buildActionTile({
     required IconData icon,

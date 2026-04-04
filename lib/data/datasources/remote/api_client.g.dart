@@ -2311,9 +2311,10 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> getAdminDashboard() async {
+  Future<dynamic> getAdminDashboard(String? projectId) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'project_id': projectId};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<dynamic>(
