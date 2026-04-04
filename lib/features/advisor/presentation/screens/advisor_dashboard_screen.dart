@@ -14,6 +14,7 @@ import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_pro
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_meeting_schedule_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/document_center_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/sales_pipeline_screen.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_promotion_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_achievement_screen.dart';
 import '../../../../core/utils/access_helper.dart';
 import '../../../../core/utils/ui_helper.dart';
@@ -1205,7 +1206,12 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
               Navigator.pushNamed(context, '/recruiter_dashboard');
             }
           }),
-          _drawerItem(context, Icons.campaign_outlined, 'Promotions', () {}),
+          _drawerItem(context, Icons.campaign_outlined, 'Promotions', () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AdvisorPromotionScreen()),
+            );
+          }),
           _drawerItem(
             context,
             Icons.groups_outlined,

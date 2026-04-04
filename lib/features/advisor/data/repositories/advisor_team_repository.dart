@@ -1,5 +1,7 @@
 import '../../../../data/datasources/remote/api_client.dart';
 import '../models/advisor_team_model.dart';
+import '../models/advisor_performance_model.dart';
+import '../models/team_activity_model.dart';
 
 class AdvisorTeamRepository {
   final ApiClient apiClient;
@@ -21,6 +23,30 @@ class AdvisorTeamRepository {
         }
       }
       throw Exception(response['message'] ?? 'Failed to load team tree');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<AdvisorPerformanceModel> getAdvisorPerformance(String advisorId) async {
+    try {
+      final response = await apiClient.getAdvisorTeam(advisorId);
+      if (response['status'] == true || response['status'] == 'success') {
+        return AdvisorPerformanceModel.fromJson(response['data']);
+      }
+      throw Exception(response['message'] ?? 'Failed to load advisor performance');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<TeamActivityModel> getTeamActivity(String advisorCode, {int? month, int? year}) async {
+    try {
+      final response = await apiClient.getTeamActivity(advisorCode, month, year);
+      if (response['status'] == true || response['status'] == 'success') {
+        return TeamActivityModel.fromJson(response['data']);
+      }
+      throw Exception(response['message'] ?? 'Failed to load team activity');
     } catch (e) {
       rethrow;
     }

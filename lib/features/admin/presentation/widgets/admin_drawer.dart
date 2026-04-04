@@ -81,6 +81,35 @@ class AdminDrawer extends StatelessWidget {
                 ),
                 _buildDrawerItem(
                   context: context,
+                  icon: Icons.campaign_outlined,
+                  title: 'Recruitment Dashboard',
+                  onTap: () {
+                    Navigator.pop(context); // close drawer
+                    Navigator.pushNamed(
+                      context,
+                      '/admin_recruitment_dashboard',
+                    );
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.co_present_outlined,
+                  title: 'Meeting & Attendance',
+                  onTap: () {
+                    Navigator.pop(context); // close drawer
+                    Navigator.pushNamed(context, '/meeting_management');
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.people_outline,
+                  title: 'Advisor Application',
+                  onTap: () {
+                    Navigator.pushNamed(context, '/advisor_applications');
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
                   icon: Icons.emoji_events_outlined,
                   title: 'Contests',
                   onTap: () {
@@ -97,28 +126,11 @@ class AdminDrawer extends StatelessWidget {
                 ),
                 _buildDrawerItem(
                   context: context,
-                  icon: Icons.co_present_outlined,
-                  title: 'Meeting & Attendance',
-                  onTap: () {
-                    Navigator.pop(context); // close drawer
-                    Navigator.pushNamed(context, '/meeting_management');
-                  },
-                ),
-                _buildDrawerItem(
-                  context: context,
                   icon: Icons.campaign_outlined,
                   title: 'Leads',
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(context, '/lead_management');
-                  },
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.people_outline,
-                  title: 'Advisor Application',
-                  onTap: () {
-                    Navigator.pushNamed(context, '/advisor_applications');
                   },
                 ),
                 _buildDrawerItem(
@@ -137,18 +149,6 @@ class AdminDrawer extends StatelessWidget {
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(context, '/admin_enquiries');
-                  },
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.campaign_outlined,
-                  title: 'Recruitment Dashboard',
-                  onTap: () {
-                    Navigator.pop(context); // close drawer
-                    Navigator.pushNamed(
-                      context,
-                      '/admin_recruitment_dashboard',
-                    );
                   },
                 ),
               ],
