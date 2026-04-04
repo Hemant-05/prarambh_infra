@@ -601,6 +601,18 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
                   fontWeight: FontWeight.bold,
                 ),
               ),
+            if (node.createdAt.isNotEmpty && !isRoot)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  node.createdAt,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 8,
+                    color: Colors.grey[500],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
             if (node.children.isNotEmpty) ...[
               const SizedBox(height: 6),
               Container(
@@ -731,6 +743,23 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
                       ),
                     ],
                   ),
+                  if (node.createdAt.isNotEmpty && node.id != 'root') ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(Icons.calendar_today_outlined, size: 10, color: Colors.grey[500]),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Joined: ${node.createdAt}',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 10,
+                            color: Colors.grey[500],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),

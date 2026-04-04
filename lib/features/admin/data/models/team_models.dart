@@ -4,21 +4,33 @@ class AdvisorNode {
   final String role;
   final String code;
   final String avatarUrl;
+  final String createdAt;
   final List<AdvisorNode> children;
 
   AdvisorNode({
     required this.id, required this.name, required this.role,
-    required this.code, required this.avatarUrl, this.children = const [],
+    required this.code, required this.avatarUrl, required this.createdAt,
+    this.children = const [],
   });
 
   factory AdvisorNode.fromJson(Map<String, dynamic> json) {
     var childrenList = json['children'] ?? json['team_members'];
+    String rawAvatar = json['avatar_url'] ?? json['profile_photo'] ?? '';
+    const String imageBaseUrl = "https://workiees.com/";
+
+    String avatarUrl = rawAvatar.isEmpty
+        ? ''
+        : (rawAvatar.startsWith('http')
+            ? rawAvatar
+            : imageBaseUrl + (rawAvatar.startsWith('/') ? rawAvatar.substring(1) : rawAvatar));
+
     return AdvisorNode(
       id: json['id']?.toString() ?? '',
       name: json['name'] ?? json['full_name'] ?? '',
       role: json['role'] ?? json['designation'] ?? '',
       code: json['code'] ?? json['Advisor_code'] ?? '',
-      avatarUrl: json['avatar_url'] ?? json['profile_photo'] ?? '',
+      avatarUrl: avatarUrl,
+      createdAt: json['created_at']?.toString() ?? '',
       children: (childrenList as List<dynamic>?)?.map((e) => AdvisorNode.fromJson(e)).toList() ?? [],
     );
   }

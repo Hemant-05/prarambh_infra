@@ -30,10 +30,12 @@ class AdminTeamProvider extends ChangeNotifier with ErrorHandlerMixin {
           role: 'Headquarters',
           code: 'Prarambh Infra',
           avatarUrl: '',
+          createdAt: '',
           children: data.map((e) => AdvisorNode.fromJson(e)).toList(),
         );
       } else if (data is Map<String, dynamic>) {
         _teamTree = AdvisorNode.fromJson(data);
+        print(_teamTree.toString());
       }
     } catch (e) {
       debugPrint('Fetch Team Error: $e');

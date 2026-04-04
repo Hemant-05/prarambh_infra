@@ -24,7 +24,7 @@ class _MeetingManagementScreenState extends State<MeetingManagementScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AdminAttendanceProvider>().fetchAllMeetings();
     });
@@ -53,7 +53,6 @@ class _MeetingManagementScreenState extends State<MeetingManagementScreen>
     final provider = context.watch<AdminAttendanceProvider>();
 
     final upcoming = _filter(provider.meetings, 'upcoming');
-    final ongoing = _filter(provider.meetings, 'ongoing');
     final completed = _filter(provider.meetings, 'completed');
 
     return Scaffold(
@@ -117,7 +116,40 @@ class _MeetingManagementScreenState extends State<MeetingManagementScreen>
           if (!provider.isLoading && provider.meetings.isNotEmpty)
             _buildStatsRow(provider.meetings, primaryBlue, isDark),
 
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
+
+          // Tab Bar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              height: 45,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey[900] : Colors.grey[200],
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                indicator: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  color: primaryBlue,
+                ),
+                labelStyle: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13),
+                unselectedLabelColor: Colors.grey.withOpacity(0.7),
+                labelColor: Colors.white,
+                tabs: const [
+                  Tab(child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text('Upcoming'),
+                  ),),
+                  Tab(child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text('Completed'),
+                  ),),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
 
           Expanded(
             child: provider.isLoading
@@ -133,9 +165,9 @@ class _MeetingManagementScreenState extends State<MeetingManagementScreen>
                       )
                     : TabBarView(
                         controller: _tabController,
+                        physics: const BouncingScrollPhysics(),
                         children: [
                           _buildMeetingList(upcoming, primaryBlue, isDark, provider),
-                          _buildMeetingList(ongoing, primaryBlue, isDark, provider),
                           _buildMeetingList(completed, primaryBlue, isDark, provider),
                         ],
                       ),

@@ -28,14 +28,37 @@ class MeetingModel {
 
   factory MeetingModel.fromJson(Map<String, dynamic> json) {
     final List<dynamic> records = json['attendance'] ?? [];
+    final String dateStr = json['date'] ?? json['meeting_date'] ?? '';
+    
+    String calculatedStatus = json['status']?.toString().toLowerCase() ?? 'upcoming';
+
+    if (dateStr.isNotEmpty) {
+      try {
+        final meetingDate = DateTime.parse(dateStr);
+        final now = DateTime.now();
+        // Compare dates only (ignore time)
+        final today = DateTime(now.year, now.month, now.day);
+        final mDate = DateTime(meetingDate.year, meetingDate.month, meetingDate.day);
+
+        if (mDate.isBefore(today)) {
+          calculatedStatus = 'completed';
+        } else {
+          // If today or in the future
+          calculatedStatus = 'upcoming';
+        }
+      } catch (e) {
+        // Fallback to server status if parsing fails
+      }
+    }
+
     return MeetingModel(
       id: json['id']?.toString() ?? '',
       title: json['title'] ?? json['meeting_title'] ?? 'Untitled Meeting',
       agenda: json['agenda'] ?? json['description'] ?? '',
-      date: json['date'] ?? json['meeting_date'] ?? '',
+      date: dateStr,
       time: json['time'] ?? json['meeting_time'] ?? '',
       location: json['location'] ?? '',
-      status: json['status'] ?? 'upcoming',
+      status: calculatedStatus,
       createdAt: json['created_at'] ?? '',
       attendanceRecords: records.map((e) => AttendanceRecord.fromJson(e)).toList(),
     );
