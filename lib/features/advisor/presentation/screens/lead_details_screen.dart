@@ -55,11 +55,11 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
   String? meetingPoint;
 
   // Booking State Variables
-  bool _isPendingVerification = false;
-  bool _isDealVerified = false;
+  final bool _isPendingVerification = false;
+  final bool _isDealVerified = false;
   String? _generatedTokenId;
   final TextEditingController _tokenAmountCtrl = TextEditingController();
-  String _paymentMode = 'Online';
+  final String _paymentMode = 'Online';
 
   final TextEditingController noteController = TextEditingController();
   final List<Map<String, String>> _noteHistory = [];
@@ -79,9 +79,9 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
     );
     if (image != null) {
       setState(() {
-        if (type == 'AF')
+        if (type == 'AF') {
           _adharFront = File(image.path);
-        else if (type == 'AB')
+        } else if (type == 'AB')
           _adharBack = File(image.path);
         else if (type == 'PF')
           _panFront = File(image.path);
@@ -209,7 +209,10 @@ Please feel free to contact us for more information.""";
     final extraData = {
       'is_priority': newPriority ? 1 : 0,
       'communication_attempt': attemptCounter,
-      'property_id': _selectedProject?.id.toString() ?? selectedPropertyId?.toString() ?? '0',
+      'property_id':
+          _selectedProject?.id.toString() ??
+          selectedPropertyId?.toString() ??
+          '0',
       'unit_id': selectedPropertyId?.toString() ?? '0',
       'reminder': visitDate ?? '',
       'meeting_point': meetingPoint ?? '',
@@ -340,7 +343,10 @@ Please feel free to contact us for more information.""";
 
     final extraData = {
       "communication_attempt": attemptCounter,
-      "property_id" : _selectedProject?.id.toString() ?? selectedPropertyId?.toString() ?? '0',
+      "property_id":
+          _selectedProject?.id.toString() ??
+          selectedPropertyId?.toString() ??
+          '0',
       "unit_id": selectedPropertyId?.toString() ?? '0',
       "reminder": visitDate ?? '',
       "meeting_point": meetingPoint ?? '',
@@ -469,10 +475,12 @@ Please feel free to contact us for more information.""";
     Color statusColor = primaryBlue;
     if (currentStage == "closed") statusColor = Colors.grey;
     if (currentStage == "site visit") statusColor = Colors.orange;
-    if (currentStage == "booking" || currentStage == "pending_verification")
+    if (currentStage == "booking" || currentStage == "pending_verification") {
       statusColor = Colors.green;
-    if (currentStage == "completed")
+    }
+    if (currentStage == "completed") {
       statusColor = Colors.green.shade700;
+    }
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -503,8 +511,8 @@ Please feel free to contact us for more information.""";
               currentStage == 'closed'
                   ? 'DEAD LEAD'
                   : currentStage == 'completed'
-                      ? 'COMPLETED'
-                      : currentStage.toUpperCase(),
+                  ? 'COMPLETED'
+                  : currentStage.toUpperCase(),
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
@@ -550,8 +558,7 @@ Please feel free to contact us for more information.""";
                 if (currentStage == "booking" ||
                     currentStage == "pending_verification")
                   _buildBookingFlow(primaryBlue, cardColor),
-                if (currentStage == "completed")
-                  _buildCompletedView(isDark),
+                if (currentStage == "completed") _buildCompletedView(isDark),
               ],
             ),
           ),
@@ -1451,7 +1458,9 @@ Please feel free to contact us for more information.""";
           style: GoogleFonts.montserrat(
             fontSize: 14,
             fontWeight: FontWeight.bold,
-            color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white
+                : Colors.black87,
           ),
         ),
         const SizedBox(height: 16),
@@ -1609,7 +1618,7 @@ Please feel free to contact us for more information.""";
                   Text(
                     "Meetup Details",
                     style: TextStyle(
-                      fontWeight: FontWeight.bold, 
+                      fontWeight: FontWeight.bold,
                       fontSize: 14,
                       color: isDark ? Colors.white : Colors.black87,
                     ),
@@ -1857,8 +1866,11 @@ Please feel free to contact us for more information.""";
           SizedBox(
             width: double.infinity,
             height: 50,
-            child: Text("Go to Deal Section...\nDo the token process",textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),),
+            child: Text(
+              "Go to Deal Section...\nDo the token process",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
           ),
         ],
       ),
@@ -1866,8 +1878,9 @@ Please feel free to contact us for more information.""";
   }
 
   Widget _buildAdvisorDocumentUploadFlow(Color primaryBlue) {
-    if (currentStage == 'pending_verification' || _isPendingVerification)
+    if (currentStage == 'pending_verification' || _isPendingVerification) {
       return _buildPendingVerificationView();
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1887,9 +1900,7 @@ Please feel free to contact us for more information.""";
             labelText: "Client Email",
             hintText: "Enter client's email address",
             prefixIcon: const Icon(Icons.email_outlined),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
         const SizedBox(height: 20),
@@ -1943,7 +1954,7 @@ Please feel free to contact us for more information.""";
                           advisorCode: _currentLead.advisorCode,
                           leadId: _currentLead.id,
                           propertyId: _selectedProject?.id.toString() ?? '0',
-                          unitId: selectedPropertyId?.toString()?? '0',
+                          unitId: selectedPropertyId?.toString() ?? '0',
                           tokenAmount: '0',
                           paymentAmount: '0',
                           tokenPaymentMode: '',
@@ -2556,7 +2567,10 @@ Please feel free to contact us for more information.""";
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(ctx),
-                    icon: Icon(Icons.close, color: isDark ? Colors.white70 : Colors.black54),
+                    icon: Icon(
+                      Icons.close,
+                      color: isDark ? Colors.white70 : Colors.black54,
+                    ),
                   ),
                 ],
               ),
@@ -2670,7 +2684,9 @@ Please feel free to contact us for more information.""";
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.orange.withOpacity(0.1) : Colors.orange.shade50,
+                      color: isDark
+                          ? Colors.orange.withOpacity(0.1)
+                          : Colors.orange.shade50,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.call_missed, color: Colors.orange),
@@ -2710,7 +2726,9 @@ Please feel free to contact us for more information.""";
                     selectedColor: Colors.blue,
                     backgroundColor: isDark ? Colors.grey[850] : Colors.white,
                     labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                      color: isSelected
+                          ? Colors.white
+                          : (isDark ? Colors.white70 : Colors.black87),
                     ),
                   );
                 }).toList(),
@@ -2738,7 +2756,9 @@ Please feel free to contact us for more information.""";
                   decoration: BoxDecoration(
                     color: isDark ? Colors.grey[850] : const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
+                    border: Border.all(
+                      color: isDark ? Colors.grey[800]! : Colors.grey.shade300,
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -2822,10 +2842,12 @@ Please feel free to contact us for more information.""";
             children: [
               Row(
                 children: [
-                   Container(
+                  Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.orange.withOpacity(0.1) : Colors.orange.shade50,
+                      color: isDark
+                          ? Colors.orange.withOpacity(0.1)
+                          : Colors.orange.shade50,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.location_on, color: Colors.orange),
@@ -2834,7 +2856,7 @@ Please feel free to contact us for more information.""";
                   Text(
                     "Schedule Site Visit",
                     style: TextStyle(
-                      fontSize: 18, 
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : Colors.black87,
                     ),
@@ -2868,7 +2890,9 @@ Please feel free to contact us for more information.""";
                   decoration: BoxDecoration(
                     color: isDark ? Colors.grey[850] : Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
+                    border: Border.all(
+                      color: isDark ? Colors.grey[800]! : Colors.grey.shade300,
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -2917,7 +2941,9 @@ Please feel free to contact us for more information.""";
                   decoration: BoxDecoration(
                     color: isDark ? Colors.grey[850] : Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
+                    border: Border.all(
+                      color: isDark ? Colors.grey[800]! : Colors.grey.shade300,
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -2950,10 +2976,14 @@ Please feel free to contact us for more information.""";
                 style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                 decoration: InputDecoration(
                   labelText: "Meeting Point (Optional)",
-                  labelStyle: TextStyle(color: isDark ? Colors.white60 : Colors.grey),
+                  labelStyle: TextStyle(
+                    color: isDark ? Colors.white60 : Colors.grey,
+                  ),
                   border: const OutlineInputBorder(),
                   enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey[800]! : Colors.grey.shade300,
+                    ),
                   ),
                 ),
               ),
@@ -3071,7 +3101,7 @@ Please feel free to contact us for more information.""";
               Text(
                 "Mark as Not Interested",
                 style: TextStyle(
-                  fontSize: 18, 
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: isDark ? Colors.white : Colors.black87,
                 ),
@@ -3084,19 +3114,35 @@ Please feel free to contact us for more information.""";
                 child: DropdownButtonFormField<String>(
                   initialValue: selectedReason,
                   dropdownColor: isDark ? Colors.grey[850] : Colors.white,
-                  style: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
                   items: reasons
-                      .map((e) => DropdownMenuItem(
-                        value: e, 
-                        child: Text(e, style: TextStyle(color: isDark ? Colors.white : Colors.black87))))
+                      .map(
+                        (e) => DropdownMenuItem(
+                          value: e,
+                          child: Text(
+                            e,
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                        ),
+                      )
                       .toList(),
                   onChanged: (v) => setSheetState(() => selectedReason = v),
                   decoration: InputDecoration(
                     labelText: "Reason",
-                    labelStyle: TextStyle(color: isDark ? Colors.white60 : Colors.grey),
+                    labelStyle: TextStyle(
+                      color: isDark ? Colors.white60 : Colors.grey,
+                    ),
                     border: const OutlineInputBorder(),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
+                      borderSide: BorderSide(
+                        color: isDark
+                            ? Colors.grey[800]!
+                            : Colors.grey.shade300,
+                      ),
                     ),
                   ),
                 ),
@@ -3107,10 +3153,14 @@ Please feel free to contact us for more information.""";
                 style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                 decoration: InputDecoration(
                   labelText: "Notes",
-                  labelStyle: TextStyle(color: isDark ? Colors.white60 : Colors.grey),
+                  labelStyle: TextStyle(
+                    color: isDark ? Colors.white60 : Colors.grey,
+                  ),
                   border: const OutlineInputBorder(),
                   enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey[800]! : Colors.grey.shade300,
+                    ),
                   ),
                 ),
               ),
@@ -3168,10 +3218,12 @@ Please feel free to contact us for more information.""";
             children: [
               Row(
                 children: [
-                   Container(
+                  Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.blue.withOpacity(0.1) : Colors.blue.shade50,
+                      color: isDark
+                          ? Colors.blue.withOpacity(0.1)
+                          : Colors.blue.shade50,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.psychology, color: Colors.blue),
@@ -3180,7 +3232,7 @@ Please feel free to contact us for more information.""";
                   Text(
                     "Mark as Interested",
                     style: TextStyle(
-                      fontSize: 18, 
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : Colors.black87,
                     ),
@@ -3205,7 +3257,9 @@ Please feel free to contact us for more information.""";
                   decoration: BoxDecoration(
                     color: isDark ? Colors.grey[850] : Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
+                    border: Border.all(
+                      color: isDark ? Colors.grey[800]! : Colors.grey.shade300,
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -3239,8 +3293,12 @@ Please feel free to contact us for more information.""";
                 style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                 decoration: InputDecoration(
                   hintText: "Add Broker Note...",
-                  hintStyle: TextStyle(color: isDark ? Colors.white38 : Colors.grey),
-                  fillColor: isDark ? Colors.grey[850] : const Color(0xFFF8FAFC),
+                  hintStyle: TextStyle(
+                    color: isDark ? Colors.white38 : Colors.grey,
+                  ),
+                  fillColor: isDark
+                      ? Colors.grey[850]
+                      : const Color(0xFFF8FAFC),
                   filled: true,
                   border: OutlineInputBorder(
                     borderSide: BorderSide.none,
@@ -3260,7 +3318,9 @@ Please feel free to contact us for more information.""";
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.blue.withOpacity(0.15) : Colors.blue.shade50,
+                    color: isDark
+                        ? Colors.blue.withOpacity(0.15)
+                        : Colors.blue.shade50,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -3691,14 +3751,20 @@ class _EditLeadFormState extends State<_EditLeadForm> {
               vertical: 10,
             ),
             filled: true,
-            fillColor: isDark ? Colors.grey[850] : Colors.grey.withOpacity(0.05),
+            fillColor: isDark
+                ? Colors.grey[850]
+                : Colors.grey.withOpacity(0.05),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
+              borderSide: BorderSide(
+                color: isDark ? Colors.grey[800]! : Colors.grey.shade300,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
+              borderSide: BorderSide(
+                color: isDark ? Colors.grey[800]! : Colors.grey.shade300,
+              ),
             ),
           ),
         ),
@@ -3730,7 +3796,9 @@ class _EditLeadFormState extends State<_EditLeadForm> {
           decoration: BoxDecoration(
             color: isDark ? Colors.grey[850] : Colors.grey.withOpacity(0.05),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey.shade300),
+            border: Border.all(
+              color: isDark ? Colors.grey[800]! : Colors.grey.shade300,
+            ),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
@@ -3745,10 +3813,12 @@ class _EditLeadFormState extends State<_EditLeadForm> {
               items: items
                   .map(
                     (item) => DropdownMenuItem(
-                      value: item, 
+                      value: item,
                       child: Text(
                         item,
-                        style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
                       ),
                     ),
                   )
@@ -3783,7 +3853,7 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
   bool _isHighValueOnly = false;
   bool _filtersExpanded = false;
 
-  final List<String> _configs = ['1BHK','2BHK', '3BHK', '4BHK'];
+  final List<String> _configs = ['1BHK', '2BHK', '3BHK', '4BHK'];
   final List<String> _types = ['Apartment', 'Plot', 'Villa', 'Flat'];
   final List<String> _categories = ['Buy', 'Rent', 'Resell'];
   final List<String> _facings = ['East', 'West', 'North', 'South'];
@@ -3797,23 +3867,27 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
   }
 
   bool _unitMatchesFilters(UnitModel u) {
-    if (_selectedConfig != null && u.configuration != _selectedConfig)
+    if (_selectedConfig != null && u.configuration != _selectedConfig) {
       return false;
+    }
     if (_selectedType != null && u.propertyType != _selectedType) return false;
-    if (_selectedCategory != null && u.saleCategory != _selectedCategory)
+    if (_selectedCategory != null && u.saleCategory != _selectedCategory) {
       return false;
+    }
     if (_selectedFacing != null && u.facing != _selectedFacing) return false;
 
     if (_isHighValueOnly) {
       if (u.calculatedPrice < 10000000) return false;
     } else {
       if (u.calculatedPrice < _priceRange.start ||
-          u.calculatedPrice > _priceRange.end)
+          u.calculatedPrice > _priceRange.end) {
         return false;
+      }
     }
 
-    if (u.areaSqft < _areaRange.start || u.areaSqft > _areaRange.end)
+    if (u.areaSqft < _areaRange.start || u.areaSqft > _areaRange.end) {
       return false;
+    }
     return true;
   }
 
@@ -3827,13 +3901,13 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected 
-              ? primaryBlue 
+          color: isSelected
+              ? primaryBlue
               : (isDark ? Colors.grey[850] : Colors.grey.shade100),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected 
-                ? primaryBlue 
+            color: isSelected
+                ? primaryBlue
                 : (isDark ? Colors.grey[800]! : Colors.grey.shade300),
           ),
         ),
@@ -3842,7 +3916,9 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+            color: isSelected
+                ? Colors.white
+                : (isDark ? Colors.white70 : Colors.black87),
           ),
         ),
       ),
@@ -3942,12 +4018,16 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
                         decoration: InputDecoration(
                           hintText: 'Search projects or units...',
                           hintStyle: TextStyle(
-                            color: isDark ? Colors.white38 : Colors.grey.shade400,
+                            color: isDark
+                                ? Colors.white38
+                                : Colors.grey.shade400,
                             fontSize: 13,
                           ),
                           prefixIcon: Icon(
                             Icons.search,
-                            color: isDark ? Colors.white38 : Colors.grey.shade400,
+                            color: isDark
+                                ? Colors.white38
+                                : Colors.grey.shade400,
                           ),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(
@@ -4037,8 +4117,8 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            _isHighValueOnly 
-                                ? '1Cr+' 
+                            _isHighValueOnly
+                                ? '1Cr+'
                                 : '\u20b9${(_priceRange.start / 100000).toStringAsFixed(0)}L - \u20b9${(_priceRange.end / 100000).toStringAsFixed(0)}L',
                             style: TextStyle(
                               fontSize: 11,
@@ -4064,7 +4144,9 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
                       ),
                       const SizedBox(height: 8),
                       InkWell(
-                        onTap: () => setState(() => _isHighValueOnly = !_isHighValueOnly),
+                        onTap: () => setState(
+                          () => _isHighValueOnly = !_isHighValueOnly,
+                        ),
                         child: Row(
                           children: [
                             SizedBox(
@@ -4073,7 +4155,9 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
                               child: Checkbox(
                                 value: _isHighValueOnly,
                                 activeColor: primaryBlue,
-                                onChanged: (v) => setState(() => _isHighValueOnly = v ?? false),
+                                onChanged: (v) => setState(
+                                  () => _isHighValueOnly = v ?? false,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -4215,10 +4299,11 @@ class _ProjectCardState extends State<_ProjectCard> {
         child: ExpansionTile(
           onExpansionChanged: (val) async {
             setState(() => _expanded = val);
-            if (val)
+            if (val) {
               await context.read<AdminProjectProvider>().fetchInventory(
                 project.id.toString(),
               );
+            }
           },
           leading: Container(
             width: 44,
@@ -4247,13 +4332,14 @@ class _ProjectCardState extends State<_ProjectCard> {
           children: [
             Consumer<AdminProjectProvider>(
               builder: (context, provider, _) {
-                if (provider.isLoading)
+                if (provider.isLoading) {
                   return const Padding(
                     padding: EdgeInsets.all(16),
                     child: Center(
                       child: CircularProgressIndicator(strokeWidth: 2),
                     ),
                   );
+                }
                 final units = provider.inventory.where((u) {
                   if (u.projectId != project.id) return false;
                   if (!widget.unitFilter(u)) return false;

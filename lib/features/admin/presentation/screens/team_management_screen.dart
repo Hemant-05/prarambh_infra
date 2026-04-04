@@ -75,7 +75,8 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
     super.dispose();
   }
 
-  void _generateGraphElements(AdvisorNode rootNode) {
+  void _generateGraphElements(AdvisorNode? rootNode) {
+    if (rootNode == null) return;
     graph.nodes.clear();
     graph.edges.clear();
 
@@ -312,11 +313,24 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
           // --- Rest of the Content ---
           Expanded(
             child:
-                provider.isLoading ||
-                    provider.teamTree == null ||
-                    !_graphInitialized
+                provider.isLoading
                 ? Center(child: CircularProgressIndicator(color: primaryBlue))
-                : TabBarView(
+                : provider.teamTree == null 
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.people_outline, size: 48, color: Theme.of(context).hintColor),
+                          const SizedBox(height: 16),
+                          Text('No team data available.', style: GoogleFonts.montserrat(color: Theme.of(context).hintColor)),
+                          TextButton(
+                            onPressed: () => provider.fetchTeam(),
+                            child: const Text('Retry'),
+                          )
+                        ],
+                      ),
+                    )
+                  : TabBarView(
                     controller: _tabController,
                     physics: const NeverScrollableScrollPhysics(),
                     children: [

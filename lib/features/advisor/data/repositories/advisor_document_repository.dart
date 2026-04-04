@@ -13,15 +13,21 @@ class AdvisorDocumentRepository {
       // 1. Fetch Advisor's Personal Documents
       final personalResponse = await apiClient.getDocuments(advisorId, null);
       if (personalResponse['status'] == true || personalResponse['status'] == 'success') {
-        final List pData = personalResponse['data'] ?? [];
-        allDocs.addAll(pData.map((json) => DocumentModel.fromJson(json)));
+        final data = personalResponse['data'];
+        if (data is List) {
+          allDocs.addAll(data.map((json) => DocumentModel.fromJson(json)));
+        }
       }
 
-      // 2. Fetch General Company Documents (Passing null for user_id)
       final generalResponse = await apiClient.getDocuments(null, null);
       if (generalResponse['status'] == true || generalResponse['status'] == 'success') {
-        final List gData = generalResponse['data'] ?? [];
-        allDocs.addAll(gData.map((json) => DocumentModel.fromJson(json)));
+        final data = generalResponse['data'];
+        if (data is List) {
+          final generalDocs = data.map((json) => DocumentModel.fromJson(json)).toList();
+          allDocs.addAll(generalDocs.where((doc) => 
+              doc.userId == null || doc.userId == '' || doc.userId == '0'
+          ));
+        }
       }
 
       return allDocs;

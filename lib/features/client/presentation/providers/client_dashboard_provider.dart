@@ -16,7 +16,11 @@ class ClientDashboardProvider extends ChangeNotifier {
   String? _error;
 
   // Search & History
-  List<String> _recentSearches = ['Serenity Heights', 'Willow Haven', 'Azure Skyline'];
+  final List<String> _recentSearches = [
+    'Serenity Heights',
+    'Willow Haven',
+    'Azure Skyline',
+  ];
   List<ProjectModel> _recentViews = [];
 
   List<ProjectModel> get projects => _projects;
@@ -29,7 +33,12 @@ class ClientDashboardProvider extends ChangeNotifier {
 
   // Dashboard selections
   String _selectedCategory = 'Recommended';
-  final List<String> _categories = ['Recommended', 'Top Rates', 'Best Offers', 'Most Relevant'];
+  final List<String> _categories = [
+    'Recommended',
+    'Top Rates',
+    'Best Offers',
+    'Most Relevant',
+  ];
 
   String get selectedCategory => _selectedCategory;
   List<String> get categories => _categories;
@@ -70,16 +79,19 @@ class ClientDashboardProvider extends ChangeNotifier {
       final unitsFuture = repository.getAllUnits();
       final blogsFuture = repository.getBlogs();
 
-      final results = await Future.wait([projectsFuture, unitsFuture, blogsFuture]);
+      final results = await Future.wait([
+        projectsFuture,
+        unitsFuture,
+        blogsFuture,
+      ]);
       _projects = results[0] as List<ProjectModel>;
       _units = results[1] as List<UnitModel>;
       _blogs = results[2] as List<BlogModel>;
-      
+
       // Default recent views if empty for demo
       if (_recentViews.isEmpty && _projects.isNotEmpty) {
         _recentViews = _projects.take(4).toList();
       }
-
     } catch (e) {
       _error = e.toString();
       debugPrint('Client Dashboard Fetch Error: $e');

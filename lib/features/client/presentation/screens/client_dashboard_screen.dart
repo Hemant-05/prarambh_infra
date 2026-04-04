@@ -44,7 +44,12 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      drawer: _buildDrawer(context, user?.name ?? 'Guest', user?.profilePhoto ?? '', isDark),
+      drawer: _buildDrawer(
+        context,
+        user?.name ?? 'Guest',
+        user?.profilePhoto ?? '',
+        isDark,
+      ),
       body: provider.isLoading
           ? Center(child: CircularProgressIndicator(color: primaryBlue))
           : SafeArea(
@@ -56,18 +61,23 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Header Section
-                      _buildHeader(context, user?.name ?? 'Guest', user?.profilePhoto ?? '', isDark),
-                      
+                      _buildHeader(
+                        context,
+                        user?.name ?? 'Guest',
+                        user?.profilePhoto ?? '',
+                        isDark,
+                      ),
+
                       // Search & Filter Section
                       _buildSearchBar(context, primaryBlue, isDark),
-                      
+
                       const SizedBox(height: 24),
-                      
+
                       // Category Tabs
                       _buildCategoryTabs(provider, primaryBlue, isDark),
-                      
+
                       const SizedBox(height: 24),
-                      
+
                       // Featured / Recommended horizontal list
                       _buildFeaturedList(provider.projects, isDark),
 
@@ -76,19 +86,19 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                       // Blogs / News Section
                       _buildBlogsHeader(isDark),
                       _buildBlogsList(provider.blogs, isDark),
-                      
+
                       const SizedBox(height: 32),
-                      
+
                       // Available Units Section
                       _buildUnitsHeader(isDark),
                       _buildUnitsList(provider.units, isDark),
-                      
+
                       const SizedBox(height: 32),
-                      
+
                       // Near You Section
                       _buildNearYouHeader(isDark),
                       _buildNearYouList(provider.projects, isDark),
-                      
+
                       const SizedBox(height: 40),
                     ],
                   ),
@@ -98,7 +108,12 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, String name, String profilePhoto, bool isDark) {
+  Widget _buildHeader(
+    BuildContext context,
+    String name,
+    String profilePhoto,
+    bool isDark,
+  ) {
     final textColor = Theme.of(context).textTheme.bodyLarge?.color;
     final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
 
@@ -117,7 +132,10 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                     color: Theme.of(context).primaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.menu_rounded, color: Theme.of(context).primaryColor),
+                  child: Icon(
+                    Icons.menu_rounded,
+                    color: Theme.of(context).primaryColor,
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
@@ -147,15 +165,24 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
           CircleAvatar(
             radius: 24,
             backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-            backgroundImage: profilePhoto.isNotEmpty ? NetworkImage(profilePhoto) : null,
-            child: profilePhoto.isEmpty ? Icon(Icons.person, color: Theme.of(context).primaryColor) : null,
+            backgroundImage: profilePhoto.isNotEmpty
+                ? NetworkImage(profilePhoto)
+                : null,
+            child: profilePhoto.isEmpty
+                ? Icon(Icons.person, color: Theme.of(context).primaryColor)
+                : null,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDrawer(BuildContext context, String name, String profilePhoto, bool isDark) {
+  Widget _buildDrawer(
+    BuildContext context,
+    String name,
+    String profilePhoto,
+    bool isDark,
+  ) {
     final primaryBlue = Theme.of(context).primaryColor;
 
     return Drawer(
@@ -166,43 +193,70 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
             decoration: BoxDecoration(color: primaryBlue),
             currentAccountPicture: CircleAvatar(
               backgroundColor: Colors.white24,
-              backgroundImage: profilePhoto.isNotEmpty ? NetworkImage(profilePhoto) : null,
-              child: profilePhoto.isEmpty ? const Icon(Icons.person, color: Colors.white, size: 40) : null,
+              backgroundImage: profilePhoto.isNotEmpty
+                  ? NetworkImage(profilePhoto)
+                  : null,
+              child: profilePhoto.isEmpty
+                  ? const Icon(Icons.person, color: Colors.white, size: 40)
+                  : null,
             ),
-            accountName: Text(name, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
-            accountEmail: Text("Client Account", style: GoogleFonts.montserrat(fontSize: 12)),
+            accountName: Text(
+              name,
+              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+            ),
+            accountEmail: Text(
+              "Client Account",
+              style: GoogleFonts.montserrat(fontSize: 12),
+            ),
           ),
-          _drawerItem(Icons.home_outlined, "Home", () => Navigator.pop(context)),
+          _drawerItem(
+            Icons.home_outlined,
+            "Home",
+            () => Navigator.pop(context),
+          ),
           _drawerItem(Icons.newspaper_outlined, "Latest News", () {
             Navigator.pop(context);
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const BlogListScreen()));
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const BlogListScreen()),
+            );
           }),
           _drawerItem(Icons.work_outline, "Join as Advisor", () {
             Navigator.pop(context);
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const CareerEnquiryScreen()));
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CareerEnquiryScreen()),
+            );
           }),
           _drawerItem(Icons.contact_support_outlined, "Contact Us", () {
-             Navigator.pop(context);
-             Navigator.push(context, MaterialPageRoute(builder: (_) => const ContactUsScreen()));
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ContactUsScreen()),
+            );
           }),
           const Spacer(),
           const Divider(),
-          _drawerItem(
-            Icons.logout, 
-            "Logout", 
-            () {
-              context.read<AuthProvider>().logout();
-              Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-            },
-            color: Colors.red,
-          ),
+          _drawerItem(Icons.logout, "Logout", () {
+            context.read<AuthProvider>().logout();
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/login',
+              (route) => false,
+            );
+          }, color: Colors.red),
           const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  Widget _drawerItem(IconData icon, String title, VoidCallback onTap, {Color? color}) {
+  Widget _drawerItem(
+    IconData icon,
+    String title,
+    VoidCallback onTap, {
+    Color? color,
+  }) {
     return ListTile(
       leading: Icon(icon, color: color ?? Theme.of(context).primaryColor),
       title: Text(
@@ -232,7 +286,10 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
             ),
           ),
           TextButton(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BlogListScreen())),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const BlogListScreen()),
+            ),
             child: Text(
               "See All",
               style: GoogleFonts.montserrat(
@@ -260,7 +317,10 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
         itemBuilder: (context, index) {
           final blog = blogs[index];
           return GestureDetector(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BlogDetailScreen(blog: blog))),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => BlogDetailScreen(blog: blog)),
+            ),
             child: Container(
               width: 280,
               margin: const EdgeInsets.only(right: 16),
@@ -271,8 +331,10 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
               ),
               child: Row(
                 children: [
-                   ClipRRect(
-                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(20)),
+                  ClipRRect(
+                    borderRadius: const BorderRadius.horizontal(
+                      left: Radius.circular(20),
+                    ),
                     child: Hero(
                       tag: 'blog-image-${blog.id}',
                       child: Image.network(
@@ -291,12 +353,18 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                         children: [
                           Text(
                             blog.publishDate,
-                            style: GoogleFonts.montserrat(fontSize: 10, color: Theme.of(context).hintColor),
+                            style: GoogleFonts.montserrat(
+                              fontSize: 10,
+                              color: Theme.of(context).hintColor,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             blog.title,
-                            style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold),
+                            style: GoogleFonts.montserrat(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -304,7 +372,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                           Text(
                             "Read more",
                             style: GoogleFonts.montserrat(
-                              fontSize: 12, 
+                              fontSize: 12,
                               color: Theme.of(context).primaryColor,
                               fontWeight: FontWeight.bold,
                             ),
@@ -332,20 +400,34 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
         children: [
           Expanded(
             child: GestureDetector(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClientSearchScreen())),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ClientSearchScreen()),
+              ),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   color: cardColor,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.getBorderColor(context)),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
                   ],
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.search, color: isDark ? hintColor : primaryBlue.withOpacity(0.6), size: 22),
+                    Icon(
+                      Icons.search,
+                      color: isDark ? hintColor : primaryBlue.withOpacity(0.6),
+                      size: 22,
+                    ),
                     const SizedBox(width: 12),
                     Text(
                       "Search by Address, City, or ZIP",
@@ -362,17 +444,28 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
           ),
           const SizedBox(width: 16),
           GestureDetector(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClientFilterScreen())),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ClientFilterScreen()),
+            ),
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: primaryBlue,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
-                  BoxShadow(color: primaryBlue.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))
+                  BoxShadow(
+                    color: primaryBlue.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
-              child: const Icon(Icons.tune_rounded, color: Colors.white, size: 22),
+              child: const Icon(
+                Icons.tune_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
             ),
           ),
         ],
@@ -380,7 +473,11 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
     );
   }
 
-  Widget _buildCategoryTabs(ClientDashboardProvider provider, Color activeColor, bool isDark) {
+  Widget _buildCategoryTabs(
+    ClientDashboardProvider provider,
+    Color activeColor,
+    bool isDark,
+  ) {
     final cardColor = Theme.of(context).cardColor;
     final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
 
@@ -396,11 +493,18 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
             child: GestureDetector(
               onTap: () => provider.selectCategory(cat),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected ? activeColor.withOpacity(0.1) : cardColor,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: isSelected ? activeColor : AppColors.getBorderColor(context)),
+                  border: Border.all(
+                    color: isSelected
+                        ? activeColor
+                        : AppColors.getBorderColor(context),
+                  ),
                 ),
                 child: Text(
                   cat,
@@ -438,7 +542,12 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
           return GestureDetector(
             onTap: () {
               context.read<ClientDashboardProvider>().addToRecentViews(item);
-              Navigator.push(context, MaterialPageRoute(builder: (_) => ClientPropertyDetailsScreen(project: item)));
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ClientPropertyDetailsScreen(project: item),
+                ),
+              );
             },
             child: Container(
               width: 240,
@@ -448,7 +557,11 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: AppColors.getBorderColor(context)),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5))
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
+                  ),
                 ],
               ),
               child: Column(
@@ -462,17 +575,29 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
                             image: DecorationImage(
-                              image: NetworkImage(item.images.isNotEmpty ? item.images[0] : 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=400'),
+                              image: NetworkImage(
+                                item.images.isNotEmpty
+                                    ? item.images[0]
+                                    : 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=400',
+                              ),
                               fit: BoxFit.cover,
                             ),
                           ),
                         ),
                         Positioned(
-                          top: 18, right: 18,
+                          top: 18,
+                          right: 18,
                           child: Container(
                             padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(color: cardColor.withOpacity(0.8), shape: BoxShape.circle),
-                            child: Icon(Icons.bookmark, color: Theme.of(context).primaryColor, size: 16),
+                            decoration: BoxDecoration(
+                              color: cardColor.withOpacity(0.8),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.bookmark,
+                              color: Theme.of(context).primaryColor,
+                              size: 16,
+                            ),
                           ),
                         ),
                       ],
@@ -507,7 +632,11 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            Icon(Icons.location_on, color: secondaryTextColor?.withOpacity(0.5), size: 14),
+                            Icon(
+                              Icons.location_on,
+                              color: secondaryTextColor?.withOpacity(0.5),
+                              size: 14,
+                            ),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
@@ -583,7 +712,12 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
           return GestureDetector(
             onTap: () {
               context.read<ClientDashboardProvider>().addToRecentViews(item);
-              Navigator.push(context, MaterialPageRoute(builder: (_) => ClientPropertyDetailsScreen(project: item)));
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ClientPropertyDetailsScreen(project: item),
+                ),
+              );
             },
             child: Container(
               margin: const EdgeInsets.only(bottom: 16),
@@ -593,17 +727,26 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: AppColors.getBorderColor(context)),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
               child: Row(
                 children: [
                   Container(
-                    width: 80, height: 80,
+                    width: 80,
+                    height: 80,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       image: DecorationImage(
-                        image: NetworkImage(item.images.isNotEmpty ? item.images[0] : 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=400'),
+                        image: NetworkImage(
+                          item.images.isNotEmpty
+                              ? item.images[0]
+                              : 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=400',
+                        ),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -615,44 +758,124 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.star, color: Colors.amber[600], size: 14),
+                            Icon(
+                              Icons.star,
+                              color: Colors.amber[600],
+                              size: 14,
+                            ),
                             const SizedBox(width: 4),
-                            Text("4.9", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: textColor)),
+                            Text(
+                              "4.9",
+                              style: GoogleFonts.montserrat(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: textColor,
+                              ),
+                            ),
                             const Spacer(),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(color: Theme.of(context).primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
-                              child: Text(item.projectType.toUpperCase(), style: GoogleFonts.montserrat(fontSize: 8, color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).primaryColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                item.projectType.toUpperCase(),
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 8,
+                                  color: Theme.of(context).primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 4),
                         Text(
                           item.projectName,
-                          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 15, color: textColor),
-                          maxLines: 1, overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.montserrat(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            color: textColor,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 2),
                         Row(
                           children: [
-                            Icon(Icons.location_on, color: secondaryTextColor?.withOpacity(0.5), size: 12),
+                            Icon(
+                              Icons.location_on,
+                              color: secondaryTextColor?.withOpacity(0.5),
+                              size: 12,
+                            ),
                             const SizedBox(width: 2),
-                            Expanded(child: Text(item.city, style: GoogleFonts.montserrat(fontSize: 10, color: secondaryTextColor), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                            Expanded(
+                              child: Text(
+                                item.city,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 10,
+                                  color: secondaryTextColor,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 6),
                         Row(
                           children: [
-                            Icon(Icons.aspect_ratio, size: 12, color: secondaryTextColor?.withOpacity(0.5)),
+                            Icon(
+                              Icons.aspect_ratio,
+                              size: 12,
+                              color: secondaryTextColor?.withOpacity(0.5),
+                            ),
                             const SizedBox(width: 4),
-                            Text("${item.buildArea}", style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: textColor)),
+                            Text(
+                              item.buildArea,
+                              style: GoogleFonts.montserrat(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: textColor,
+                              ),
+                            ),
                             const SizedBox(width: 12),
-                            Icon(Icons.bed, size: 12, color: secondaryTextColor?.withOpacity(0.5)),
+                            Icon(
+                              Icons.bed,
+                              size: 12,
+                              color: secondaryTextColor?.withOpacity(0.5),
+                            ),
                             const SizedBox(width: 4),
-                            Text("3.0", style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: textColor)),
+                            Text(
+                              "3.0",
+                              style: GoogleFonts.montserrat(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: textColor,
+                              ),
+                            ),
                             const Spacer(),
-                            Text("₹${item.ratePerSqft}", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
-                            Text("/sqft", style: GoogleFonts.montserrat(fontSize: 10, color: secondaryTextColor)),
+                            Text(
+                              "₹${item.ratePerSqft}",
+                              style: GoogleFonts.montserrat(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).primaryColor,
+                              ),
+                            ),
+                            Text(
+                              "/sqft",
+                              style: GoogleFonts.montserrat(
+                                fontSize: 10,
+                                color: secondaryTextColor,
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -666,6 +889,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
       ),
     );
   }
+
   Widget _buildUnitsHeader(bool isDark) {
     final textColor = Theme.of(context).textTheme.bodyLarge?.color;
     final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
@@ -714,7 +938,12 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
           final item = units[index];
           return GestureDetector(
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => ClientUnitDetailsScreen(unit: item)));
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ClientUnitDetailsScreen(unit: item),
+                ),
+              );
             },
             child: Container(
               width: 180,
@@ -724,7 +953,11 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: AppColors.getBorderColor(context)),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
               child: Column(
@@ -736,7 +969,11 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
                         image: DecorationImage(
-                          image: NetworkImage(item.unitImages.isNotEmpty ? item.unitImages[0] : 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=300'),
+                          image: NetworkImage(
+                            item.unitImages.isNotEmpty
+                                ? item.unitImages[0]
+                                : 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=300',
+                          ),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -749,17 +986,30 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                       children: [
                         Text(
                           "${item.towerName} - ${item.unitNumber}",
-                          style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold, color: textColor),
-                          maxLines: 1, overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         Text(
                           item.configuration,
-                          style: GoogleFonts.montserrat(fontSize: 11, color: secondaryTextColor, fontWeight: FontWeight.bold),
+                          style: GoogleFonts.montserrat(
+                            fontSize: 11,
+                            color: secondaryTextColor,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           "₹${(item.calculatedPrice / 100000).toStringAsFixed(1)} Lakh",
-                          style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
+                          style: GoogleFonts.montserrat(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).primaryColor,
+                          ),
                         ),
                       ],
                     ),

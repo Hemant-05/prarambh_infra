@@ -9,11 +9,13 @@ class AdminDocumentRepository {
 
   Future<List<DocumentModel>> getDocuments({String? userId, String? category}) async {
     try {
-      // Fixed: Removed the third parameter as it doesn't match API Client
       final response = await apiClient.getDocuments(userId, category);
-      if (response['status']) {
-        final List data = response['data'] ?? [];
-        return data.map((json) => DocumentModel.fromJson(json)).toList();
+      if (response['status'] == true || response['status'] == 'success') {
+        final data = response['data'];
+        if (data is List) {
+          return data.map((json) => DocumentModel.fromJson(json)).toList();
+        }
+        return [];
       }
       throw Exception(response['message'] ?? 'Failed to load documents');
     } catch (e) { rethrow; }

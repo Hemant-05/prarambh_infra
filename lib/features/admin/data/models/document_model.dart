@@ -4,11 +4,13 @@ class DocumentModel {
   final String category;
   final String type; // 'PDF' or 'IMAGE'
   final String url;
+  final String? userId;
   final String lastUpdated;
 
   DocumentModel({
     required this.id, required this.name, required this.category,
     required this.type, required this.url, required this.lastUpdated,
+    this.userId,
   });
 
   factory DocumentModel.fromJson(Map<String, dynamic> json) {
@@ -33,6 +35,7 @@ class DocumentModel {
       type: fileType,
       url: fullUrl,
       lastUpdated: date,
+      userId: json['user_id']?.toString(),
     );
   }
 }
