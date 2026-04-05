@@ -121,7 +121,7 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
                 _buildStatText(
                   '${provider.totalUnitsCount}',
                   'TOTAL UNITS',
-                  Colors.white24,
+                  Colors.black,
                 ),
                 _buildStatText(
                   '${provider.availableUnitsCount}',

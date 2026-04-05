@@ -4,6 +4,7 @@ import 'package:prarambh_infra/features/admin/presentation/screens/add_project_s
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart'; // NEW
 import 'package:chewie/chewie.dart'; // NEW
+import 'package:intl/intl.dart'; // NEW
 import '../../../../../core/theme/app_colors.dart';
 import '../../data/models/project_model.dart';
 import 'project_inventory_screen.dart';
@@ -242,34 +243,44 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () => _launchUrl(project.locationMapUrl),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on,
+                        size: 14,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          '${project.city} • ${project.fullAddress.isNotEmpty ? project.fullAddress : project.locationMapUrl}',
+                          style: GoogleFonts.montserrat(
+                            color: primaryBlue,
+                            fontSize: 12,
+                            decoration: TextDecoration.underline,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Project Status & Type Row
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        const Icon(
-                          Icons.location_on,
-                          size: 14,
-                          color: Colors.grey,
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            project.fullAddress.isNotEmpty
-                                ? project.fullAddress
-                                : project.locationMapUrl,
-                            style: GoogleFonts.montserrat(
-                              color: primaryBlue,
-                              fontSize: 12,
-                              decoration: TextDecoration.underline,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
+                        _buildStatusBadge(Icons.category, project.projectType, Colors.orange),
+                        const SizedBox(width: 8),
+                        _buildStatusBadge(Icons.construction, project.constructionStatus, Colors.blue),
+                        const SizedBox(width: 8),
+                        _buildStatusBadge(Icons.check_circle, project.status, Colors.green),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
                   // Developer Row
                   Row(
@@ -330,7 +341,7 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Stats Row
+                  // Stats Row 1: Size & Rate
                   Row(
                     children: [
                       Expanded(
@@ -355,7 +366,83 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 12),
+                  // Stats Row 2: Financials
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatBox(
+                          'Market Value',
+                          '₹${NumberFormat.compact().format(project.marketValue)}',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildStatBox(
+                          'Budget Range',
+                          project.budgetRange,
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 30),
+
+                  // Description
+                  if (project.description.isNotEmpty) ...[
+                    Text(
+                      'Project Description',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      project.description,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 13,
+                        color: Colors.grey[700],
+                        height: 1.6,
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                  ],
+
+                  // Amenities
+                  if (project.amenities.isNotEmpty) ...[
+                    Text(
+                      'Amenities',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: project.amenities.map((a) => _buildChip(a, Colors.teal)).toList(),
+                    ),
+                    const SizedBox(height: 30),
+                  ],
+
+                  // Specialties
+                  if (project.specialties.isNotEmpty) ...[
+                    Text(
+                      'Features & Specialties',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: project.specialties.map((s) => _buildChip(s, Colors.deepPurple)).toList(),
+                    ),
+                    const SizedBox(height: 30),
+                  ],
 
                   // Quick Actions
                   Text(
@@ -459,6 +546,20 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 40),
+
+                  // Metadata Footer
+                  Center(
+                    child: Text(
+                      'Listed on: ${DateFormat('dd MMM yyyy').format(project.createdAt)}',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 11,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
@@ -541,6 +642,51 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
           style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey[700]),
         ),
       ],
+    );
+  }
+
+  Widget _buildStatusBadge(IconData icon, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label.toUpperCase(),
+            style: GoogleFonts.montserrat(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChip(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.15)),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.montserrat(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
     );
   }
 }
