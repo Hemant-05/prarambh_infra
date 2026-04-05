@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../advisor/presentation/screens/lead_details_screen.dart';
 import '../../../../core/utils/access_helper.dart';
+import '../../../../core/utils/lead_filter_helper.dart'; // NEW
 
 class SalesPipelineScreen extends StatefulWidget {
   const SalesPipelineScreen({super.key});
@@ -20,6 +21,10 @@ class SalesPipelineScreen extends StatefulWidget {
 class _SalesPipelineScreenState extends State<SalesPipelineScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
+  String _selectedCategory = 'All';
+  String _selectedPotential = 'All';
+  String _selectedMonth = 'All';
 
   @override
   void initState() {
@@ -31,6 +36,13 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
       final advisorCode = authProvider.currentUser?.advisorCode ?? '';
       context.read<AdvisorLeadProvider>().fetchLeads(advisorCode: advisorCode);
     });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _showAddLeadDialog() {
@@ -201,63 +213,225 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
       ),
       body: provider.isLoading
           ? Center(child: CircularProgressIndicator(color: primaryBlue))
-          : TabBarView(
-              controller: _tabController,
+          : Column(
               children: [
-                _buildStageList(
-                  provider.leads
-                      .where((l) => l.stage.toLowerCase() == 'suspecting')
-                      .toList(),
-                  cardColor,
-                  primaryBlue,
-                  isDark,
-                ),
-                _buildStageList(
-                  provider.leads
-                      .where((l) => l.stage.toLowerCase() == 'prospecting')
-                      .toList(),
-                  cardColor,
-                  primaryBlue,
-                  isDark,
-                ),
-                _buildStageList(
-                  provider.leads
-                      .where((l) => l.stage.toLowerCase() == 'site visit')
-                      .toList(),
-                  cardColor,
-                  primaryBlue,
-                  isDark,
-                ),
-                _buildStageList(
-                  provider.leads
-                      .where(
-                        (l) =>
-                            l.stage.toLowerCase() == 'booking' ||
-                            l.stage.toLowerCase() == 'pending_verification',
-                      )
-                      .toList(),
-                  cardColor,
-                  primaryBlue,
-                  isDark,
-                ),
-                _buildStageList(
-                  provider.leads
-                      .where((l) => l.stage.toLowerCase() == 'closed')
-                      .toList(),
-                  cardColor,
-                  primaryBlue,
-                  isDark,
-                ),
-                _buildStageList(
-                  provider.leads
-                      .where((l) => l.stage.toLowerCase() == 'completed')
-                      .toList(),
-                  cardColor,
-                  primaryBlue,
-                  isDark,
+                _buildDiscoveryBar(isDark, primaryBlue),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildStageList(
+                        LeadFilterHelper.filterLeads(
+                          leads: provider.leads,
+                          query: _searchController.text,
+                          category: _selectedCategory,
+                          potential: _selectedPotential,
+                          month: _selectedMonth,
+                        )
+                            .where((l) => l.stage.toLowerCase() == 'suspecting')
+                            .toList(),
+                        cardColor,
+                        primaryBlue,
+                        isDark,
+                      ),
+                      _buildStageList(
+                        LeadFilterHelper.filterLeads(
+                          leads: provider.leads,
+                          query: _searchController.text,
+                          category: _selectedCategory,
+                          potential: _selectedPotential,
+                          month: _selectedMonth,
+                        )
+                            .where((l) => l.stage.toLowerCase() == 'prospecting')
+                            .toList(),
+                        cardColor,
+                        primaryBlue,
+                        isDark,
+                      ),
+                      _buildStageList(
+                        LeadFilterHelper.filterLeads(
+                          leads: provider.leads,
+                          query: _searchController.text,
+                          category: _selectedCategory,
+                          potential: _selectedPotential,
+                          month: _selectedMonth,
+                        )
+                            .where((l) => l.stage.toLowerCase() == 'site visit')
+                            .toList(),
+                        cardColor,
+                        primaryBlue,
+                        isDark,
+                      ),
+                      _buildStageList(
+                        LeadFilterHelper.filterLeads(
+                          leads: provider.leads,
+                          query: _searchController.text,
+                          category: _selectedCategory,
+                          potential: _selectedPotential,
+                          month: _selectedMonth,
+                        )
+                            .where(
+                              (l) =>
+                                  l.stage.toLowerCase() == 'booking' ||
+                                  l.stage.toLowerCase() == 'pending_verification',
+                            )
+                            .toList(),
+                        cardColor,
+                        primaryBlue,
+                        isDark,
+                      ),
+                      _buildStageList(
+                        LeadFilterHelper.filterLeads(
+                          leads: provider.leads,
+                          query: _searchController.text,
+                          category: _selectedCategory,
+                          potential: _selectedPotential,
+                          month: _selectedMonth,
+                        ).where((l) => l.stage.toLowerCase() == 'closed').toList(),
+                        cardColor,
+                        primaryBlue,
+                        isDark,
+                      ),
+                      _buildStageList(
+                        LeadFilterHelper.filterLeads(
+                          leads: provider.leads,
+                          query: _searchController.text,
+                          category: _selectedCategory,
+                          potential: _selectedPotential,
+                          month: _selectedMonth,
+                        ).where((l) => l.stage.toLowerCase() == 'completed').toList(),
+                        cardColor,
+                        primaryBlue,
+                        isDark,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
+    );
+  }
+
+  Widget _buildDiscoveryBar(bool isDark, Color primaryBlue) {
+    return Container(
+      width: double.infinity,
+      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.1))),
+      ),
+      child: Column(
+        children: [
+          // Search Field
+          Container(
+            height: 40,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.grey[900] : Colors.grey[100],
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (_) => setState(() {}),
+              style: GoogleFonts.montserrat(fontSize: 12),
+              decoration: InputDecoration(
+                hintText: 'Search Name or Address...',
+                hintStyle: GoogleFonts.montserrat(fontSize: 11, color: Colors.grey),
+                prefixIcon: const Icon(Icons.search, size: 18, color: Colors.grey),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 16),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {});
+                        },
+                      )
+                    : null,
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildFilterDropdown(
+                  'Category',
+                  ['All', 'A', 'B', 'C'],
+                  _selectedCategory,
+                  (v) => setState(() => _selectedCategory = v!),
+                  isDark,
+                  primaryBlue,
+                ),
+                const SizedBox(width: 8),
+                _buildFilterDropdown(
+                  'Potential',
+                  ['All', 'Hot', 'Warm', 'Cold'],
+                  _selectedPotential,
+                  (v) => setState(() => _selectedPotential = v!),
+                  isDark,
+                  primaryBlue,
+                ),
+                const SizedBox(width: 8),
+                _buildFilterDropdown(
+                  'Month',
+                  LeadFilterHelper.months,
+                  _selectedMonth,
+                  (v) => setState(() => _selectedMonth = v!),
+                  isDark,
+                  primaryBlue,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterDropdown(
+    String label,
+    List<String> items,
+    String selectedValue,
+    ValueChanged<String?> onChanged,
+    bool isDark,
+    Color primaryBlue,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      height: 34,
+      decoration: BoxDecoration(
+        color: selectedValue != 'All'
+            ? primaryBlue.withOpacity(0.1)
+            : (isDark ? Colors.grey[900] : Colors.grey[100]),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: selectedValue != 'All' ? primaryBlue.withOpacity(0.3) : Colors.transparent,
+        ),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: selectedValue,
+          onChanged: onChanged,
+          items: items.map((e) {
+            return DropdownMenuItem<String>(
+              value: e,
+              child: Text(
+                e == 'All' ? label : e,
+                style: GoogleFonts.montserrat(
+                  fontSize: 10,
+                  fontWeight: selectedValue == e ? FontWeight.bold : FontWeight.w500,
+                  color: selectedValue == e ? primaryBlue : (isDark ? Colors.white70 : Colors.black87),
+                ),
+              ),
+            );
+          }).toList(),
+          icon: const Icon(Icons.keyboard_arrow_down, size: 12),
+          dropdownColor: isDark ? Colors.grey[900] : Colors.white,
+        ),
+      ),
     );
   }
 

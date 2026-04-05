@@ -8,9 +8,26 @@ import '../providers/admin_provider.dart';
 import '../providers/admin_lead_provider.dart';
 import '../../../advisor/presentation/screens/lead_details_screen.dart';
 import '../../../../core/utils/excel_helper.dart';
+import '../../../../core/utils/lead_filter_helper.dart';
 
-class PriorityLeadsScreen extends StatelessWidget {
+class PriorityLeadsScreen extends StatefulWidget {
   const PriorityLeadsScreen({super.key});
+
+  @override
+  State<PriorityLeadsScreen> createState() => _PriorityLeadsScreenState();
+}
+
+class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _selectedCategory = 'All';
+  String _selectedPotential = 'All';
+  String _selectedMonth = 'All';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,9 +39,16 @@ class PriorityLeadsScreen extends StatelessWidget {
 
     final adminState = context.watch<AdminProvider>();
     final leadProvider = context.watch<AdminLeadProvider>();
-    final leads = adminState.dashboardData?.priorityLeads ?? [];
+    final allLeads = adminState.dashboardData?.priorityLeads ?? [];
+    
+    final filteredLeads = LeadFilterHelper.filterLeadMaps(
+      leads: allLeads,
+      query: _searchController.text,
+      category: _selectedCategory,
+      potential: _selectedPotential,
+      month: _selectedMonth,
+    );
 
-    // Listen for transient errors from LeadProvider (e.g. on click)
     if (leadProvider.hasError) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         UIHelper.showError(context, leadProvider.errorMessage!);
@@ -46,7 +70,7 @@ class PriorityLeadsScreen extends StatelessWidget {
           ),
         ),
       );
-    } else if (leads.isEmpty) {
+    } else if (allLeads.isEmpty) {
       body = Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -61,22 +85,45 @@ class PriorityLeadsScreen extends StatelessWidget {
         ),
       );
     } else {
-      body = ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        physics: const BouncingScrollPhysics(),
-        itemCount: leads.length,
-        itemBuilder: (context, index) {
-          final lead = Map<String, dynamic>.from(leads[index]);
-          return _buildPriorityLeadListItem(
-            context,
-            lead,
-            cardColor,
-            primaryBlue,
-            textColor,
-            secondaryTextColor,
-            isDark,
-          );
-        },
+      body = Column(
+        children: [
+          // Filter section
+          _buildDiscoveryBar(isDark, primaryBlue),
+          
+          Expanded(
+            child: filteredLeads.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.search_off, size: 48, color: Colors.grey.withOpacity(0.5)),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No leads match your criteria',
+                          style: GoogleFonts.montserrat(color: Colors.grey, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: filteredLeads.length,
+                    itemBuilder: (context, index) {
+                      final lead = Map<String, dynamic>.from(filteredLeads[index]);
+                      return _buildPriorityLeadListItem(
+                        context,
+                        lead,
+                        cardColor,
+                        primaryBlue,
+                        textColor,
+                        secondaryTextColor,
+                        isDark,
+                      );
+                    },
+                  ),
+          ),
+        ],
       );
     }
 
@@ -95,7 +142,7 @@ class PriorityLeadsScreen extends StatelessWidget {
           ),
         ),
         actions: [
-          if (leads.isNotEmpty)
+          if (allLeads.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: IconButton(
@@ -106,7 +153,7 @@ class PriorityLeadsScreen extends StatelessWidget {
                     builder: (context) => const Center(child: CircularProgressIndicator()),
                   );
                   
-                  final success = await ExcelHelper.exportLeadsToExcel(leads);
+                  final success = await ExcelHelper.exportLeadsToExcel(filteredLeads);
                   
                   if (context.mounted) {
                     Navigator.pop(context); // Close loading dialog
@@ -118,12 +165,132 @@ class PriorityLeadsScreen extends StatelessWidget {
                   }
                 },
                 icon: Icon(Icons.description_outlined, color: primaryBlue),
-                tooltip: 'Export All Data to Excel',
+                tooltip: 'Export Current View as Excel',
               ),
             ),
         ],
       ),
       body: body,
+    );
+  }
+
+  Widget _buildDiscoveryBar(bool isDark, Color primaryBlue) {
+    return Container(
+      width: double.infinity,
+      color: isDark ? const Color(0xFF121212) : Colors.white,
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        children: [
+          // Search Field
+          Container(
+            height: 45,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.grey[900] : Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (_) => setState(() {}),
+              style: GoogleFonts.montserrat(fontSize: 13),
+              decoration: InputDecoration(
+                hintText: 'Search Name, Stage, or Address...',
+                hintStyle: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey),
+                prefixIcon: const Icon(Icons.search, size: 20, color: Colors.grey),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {});
+                        },
+                      )
+                    : null,
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          
+          // Quality Filter Row
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildFilterDropdown(
+                  'Category',
+                  ['All', 'A', 'B', 'C'],
+                  _selectedCategory,
+                  (v) => setState(() => _selectedCategory = v!),
+                  isDark,
+                  primaryBlue,
+                ),
+                const SizedBox(width: 8),
+                _buildFilterDropdown(
+                  'Potential',
+                  ['All', 'Hot', 'Warm', 'Cold'],
+                  _selectedPotential,
+                  (v) => setState(() => _selectedPotential = v!),
+                  isDark,
+                  primaryBlue,
+                ),
+                const SizedBox(width: 8),
+                _buildFilterDropdown(
+                  'Month',
+                  LeadFilterHelper.months,
+                  _selectedMonth,
+                  (v) => setState(() => _selectedMonth = v!),
+                  isDark,
+                  primaryBlue,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterDropdown(
+    String label,
+    List<String> items,
+    String selectedValue,
+    ValueChanged<String?> onChanged,
+    bool isDark,
+    Color primaryBlue,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: selectedValue != 'All'
+            ? primaryBlue.withOpacity(0.1)
+            : (isDark ? Colors.grey[900] : Colors.grey[100]),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: selectedValue != 'All' ? primaryBlue.withOpacity(0.3) : Colors.transparent,
+        ),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: selectedValue,
+          onChanged: onChanged,
+          items: items.map((e) {
+            return DropdownMenuItem<String>(
+              value: e,
+              child: Text(
+                e == 'All' ? label : e,
+                style: GoogleFonts.montserrat(
+                  fontSize: 11,
+                  fontWeight: selectedValue == e ? FontWeight.bold : FontWeight.w500,
+                  color: selectedValue == e ? primaryBlue : (isDark ? Colors.white70 : Colors.black87),
+                ),
+              ),
+            );
+          }).toList(),
+          icon: const Icon(Icons.keyboard_arrow_down, size: 14),
+          dropdownColor: isDark ? Colors.grey[900] : Colors.white,
+        ),
+      ),
     );
   }
 
@@ -136,6 +303,9 @@ class PriorityLeadsScreen extends StatelessWidget {
     Color? secondaryTextColor,
     bool isDark,
   ) {
+    final category = (lead['lead_category'] ?? '').toString();
+    final potential = (lead['lead_potential'] ?? '').toString();
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -199,13 +369,25 @@ class PriorityLeadsScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Text(
-                      (lead['created_at'] ?? '').toString().split(' ')[0],
-                      style: GoogleFonts.montserrat(
-                        fontSize: 11,
-                        color: secondaryTextColor,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    Row(
+                      children: [
+                        if (category.isNotEmpty) ...[
+                          _buildMiniBadge('CAT $category', Colors.purple, isDark),
+                          const SizedBox(width: 4),
+                        ],
+                        if (potential.isNotEmpty) ...[
+                          _buildMiniBadge(potential.toUpperCase(), Colors.orange, isDark),
+                          const SizedBox(width: 8),
+                        ],
+                        Text(
+                          (lead['created_at'] ?? '').toString().split(' ')[0],
+                          style: GoogleFonts.montserrat(
+                            fontSize: 10,
+                            color: secondaryTextColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -258,6 +440,25 @@ class PriorityLeadsScreen extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniBadge(String label, Color color, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.montserrat(
+          fontSize: 8,
+          fontWeight: FontWeight.bold,
+          color: color,
         ),
       ),
     );

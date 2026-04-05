@@ -8,6 +8,7 @@ import '../../data/models/lead_models.dart';
 
 // Import Lead Details from its Advisor location
 import '../../../advisor/presentation/screens/lead_details_screen.dart';
+import '../../../../core/utils/lead_filter_helper.dart'; // NEW
 
 class LeadManagementScreen extends StatefulWidget {
   const LeadManagementScreen({super.key});
@@ -19,6 +20,10 @@ class LeadManagementScreen extends StatefulWidget {
 class _LeadManagementScreenState extends State<LeadManagementScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
+  String _selectedCategory = 'All';
+  String _selectedPotential = 'All';
+  String _selectedMonth = 'All';
 
   @override
   void initState() {
@@ -31,6 +36,13 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
           .read<AdminLeadProvider>()
           .fetchLeads(); // Fetches ALL pipeline leads
     });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -55,149 +67,318 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Master Lead Pipeline',
+          'Leads Management',
           style: GoogleFonts.montserrat(
             color: isDark ? Colors.white : Colors.black87,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
         ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(40),
-          child: TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            indicatorColor: primaryBlue,
-            labelColor: primaryBlue,
-            unselectedLabelColor: Colors.grey[600],
-            labelStyle: GoogleFonts.montserrat(
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-            ),
-            tabs: const [
-              Tab(text: 'New Leads'),
-              Tab(text: 'Suspecting'),
-              Tab(text: 'Prospecting'),
-              Tab(text: 'Site Visit'),
-              Tab(text: 'Booking'),
-              Tab(text: 'Closed'),
-              Tab(text: 'Completed'),
-            ],
-          ),
-        ),
       ),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabController,
+          : Column(
               children: [
-                // TAB 0: UNASSIGNED LEADS
-                provider.unassignedLeads.isEmpty
-                    ? Center(
-                        child: Text(
-                          "No new unassigned leads.",
-                          style: GoogleFonts.montserrat(color: Colors.grey),
+                _buildDiscoveryBar(isDark, primaryBlue),
+                TabBar(
+                  controller: _tabController,
+                  isScrollable: true,
+                  indicatorColor: primaryBlue,
+                  labelColor: primaryBlue,
+                  unselectedLabelColor: Colors.grey[600],
+                  labelStyle: GoogleFonts.montserrat(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                  tabs: const [
+                    Tab(text: 'New Leads'),
+                    Tab(text: 'Suspecting'),
+                    Tab(text: 'Prospecting'),
+                    Tab(text: 'Site Visit'),
+                    Tab(text: 'Booking'),
+                    Tab(text: 'Closed'),
+                    Tab(text: 'Completed'),
+                  ],
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      // TAB 0: UNASSIGNED LEADS
+                      _buildUnassignedSection(
+                        LeadFilterHelper.filterLeads(
+                          leads: provider.unassignedLeads,
+                          query: _searchController.text,
+                          category: _selectedCategory,
+                          potential: _selectedPotential,
+                          month: _selectedMonth,
                         ),
-                      )
-                    : ListView(
-                        padding: const EdgeInsets.all(20),
-                        physics: const BouncingScrollPhysics(),
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'UNASSIGNED LEADS',
-                                style: GoogleFonts.montserrat(
-                                  color: Colors.grey[600],
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                  letterSpacing: 1,
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue[50],
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  '${provider.unassignedLeads.length} New',
-                                  style: GoogleFonts.montserrat(
-                                    color: primaryBlue,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 10,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          ...provider.unassignedLeads.map(
-                            (lead) => _buildUnassignedLeadCard(
-                              lead,
-                              cardColor,
-                              primaryBlue,
-                              isDark,
-                            ),
-                          ),
-                        ],
+                        cardColor,
+                        primaryBlue,
+                        isDark,
                       ),
 
-                // THE FIX: Locally filter the leads for each tab instantly!
-                _buildStageList(
-                  provider.leads
-                      .where((l) => l.stage.toLowerCase() == 'suspecting')
-                      .toList(),
-                  cardColor,
-                  primaryBlue,
-                  isDark,
-                ),
-                _buildStageList(
-                  provider.leads
-                      .where((l) => l.stage.toLowerCase() == 'prospecting')
-                      .toList(),
-                  cardColor,
-                  primaryBlue,
-                  isDark,
-                ),
-                _buildStageList(
-                  provider.leads
-                      .where((l) => l.stage.toLowerCase() == 'site visit')
-                      .toList(),
-                  cardColor,
-                  primaryBlue,
-                  isDark,
-                ),
-                _buildStageList(
-                  provider.leads
-                      .where((l) => l.stage.toLowerCase() == 'booking')
-                      .toList(),
-                  cardColor,
-                  primaryBlue,
-                  isDark,
-                ),
-                _buildStageList(
-                  provider.leads
-                      .where((l) => l.stage.toLowerCase() == 'closed')
-                      .toList(),
-                  cardColor,
-                  primaryBlue,
-                  isDark,
-                ),
-                _buildStageList(
-                  provider.leads
-                      .where((l) => l.stage.toLowerCase() == 'completed')
-                      .toList(),
-                  cardColor,
-                  primaryBlue,
-                  isDark,
+                      // STAGES
+                      _buildStageList(
+                        LeadFilterHelper.filterLeads(
+                          leads: provider.leads,
+                          query: _searchController.text,
+                          category: _selectedCategory,
+                          potential: _selectedPotential,
+                          month: _selectedMonth,
+                        ).where((l) => l.stage.toLowerCase() == 'suspecting').toList(),
+                        cardColor,
+                        primaryBlue,
+                        isDark,
+                      ),
+                      _buildStageList(
+                        LeadFilterHelper.filterLeads(
+                          leads: provider.leads,
+                          query: _searchController.text,
+                          category: _selectedCategory,
+                          potential: _selectedPotential,
+                          month: _selectedMonth,
+                        ).where((l) => l.stage.toLowerCase() == 'prospecting').toList(),
+                        cardColor,
+                        primaryBlue,
+                        isDark,
+                      ),
+                      _buildStageList(
+                        LeadFilterHelper.filterLeads(
+                          leads: provider.leads,
+                          query: _searchController.text,
+                          category: _selectedCategory,
+                          potential: _selectedPotential,
+                          month: _selectedMonth,
+                        ).where((l) => l.stage.toLowerCase() == 'site visit').toList(),
+                        cardColor,
+                        primaryBlue,
+                        isDark,
+                      ),
+                      _buildStageList(
+                        LeadFilterHelper.filterLeads(
+                          leads: provider.leads,
+                          query: _searchController.text,
+                          category: _selectedCategory,
+                          potential: _selectedPotential,
+                          month: _selectedMonth,
+                        ).where((l) => l.stage.toLowerCase() == 'booking').toList(),
+                        cardColor,
+                        primaryBlue,
+                        isDark,
+                      ),
+                      _buildStageList(
+                        LeadFilterHelper.filterLeads(
+                          leads: provider.leads,
+                          query: _searchController.text,
+                          category: _selectedCategory,
+                          potential: _selectedPotential,
+                          month: _selectedMonth,
+                        ).where((l) => l.stage.toLowerCase() == 'closed').toList(),
+                        cardColor,
+                        primaryBlue,
+                        isDark,
+                      ),
+                      _buildStageList(
+                        LeadFilterHelper.filterLeads(
+                          leads: provider.leads,
+                          query: _searchController.text,
+                          category: _selectedCategory,
+                          potential: _selectedPotential,
+                          month: _selectedMonth,
+                        ).where((l) => l.stage.toLowerCase() == 'completed').toList(),
+                        cardColor,
+                        primaryBlue,
+                        isDark,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
+    );
+  }
+
+  Widget _buildDiscoveryBar(bool isDark, Color primaryBlue) {
+    return Container(
+      width: double.infinity,
+      color: isDark ? const Color(0xFF121212) : Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        children: [
+          // Search Field
+          Container(
+            height: 40,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.grey[900] : Colors.grey[100],
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (_) => setState(() {}),
+              style: GoogleFonts.montserrat(fontSize: 12),
+              decoration: InputDecoration(
+                hintText: 'Search Name, Stage, or Address...',
+                hintStyle: GoogleFonts.montserrat(fontSize: 11, color: Colors.grey),
+                prefixIcon: const Icon(Icons.search, size: 18, color: Colors.grey),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 16),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {});
+                        },
+                      )
+                    : null,
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildFilterDropdown(
+                  'Category',
+                  ['All', 'A', 'B', 'C'],
+                  _selectedCategory,
+                  (v) => setState(() => _selectedCategory = v!),
+                  isDark,
+                  primaryBlue,
+                ),
+                const SizedBox(width: 8),
+                _buildFilterDropdown(
+                  'Potential',
+                  ['All', 'Hot', 'Warm', 'Cold'],
+                  _selectedPotential,
+                  (v) => setState(() => _selectedPotential = v!),
+                  isDark,
+                  primaryBlue,
+                ),
+                const SizedBox(width: 8),
+                _buildFilterDropdown(
+                  'Month',
+                  LeadFilterHelper.months,
+                  _selectedMonth,
+                  (v) => setState(() => _selectedMonth = v!),
+                  isDark,
+                  primaryBlue,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterDropdown(
+    String label,
+    List<String> items,
+    String selectedValue,
+    ValueChanged<String?> onChanged,
+    bool isDark,
+    Color primaryBlue,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      height: 34,
+      decoration: BoxDecoration(
+        color: selectedValue != 'All'
+            ? primaryBlue.withOpacity(0.1)
+            : (isDark ? Colors.grey[900] : Colors.grey[100]),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: selectedValue != 'All' ? primaryBlue.withOpacity(0.3) : Colors.transparent,
+        ),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: selectedValue,
+          onChanged: onChanged,
+          items: items.map((e) {
+            return DropdownMenuItem<String>(
+              value: e,
+              child: Text(
+                e == 'All' ? label : e,
+                style: GoogleFonts.montserrat(
+                  fontSize: 10,
+                  fontWeight: selectedValue == e ? FontWeight.bold : FontWeight.w500,
+                  color: selectedValue == e ? primaryBlue : (isDark ? Colors.white70 : Colors.black87),
+                ),
+              ),
+            );
+          }).toList(),
+          icon: const Icon(Icons.keyboard_arrow_down, size: 12),
+          dropdownColor: isDark ? Colors.grey[900] : Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUnassignedSection(
+    List<LeadModel> leads,
+    Color cardColor,
+    Color primaryBlue,
+    bool isDark,
+  ) {
+    if (leads.isEmpty) {
+      return Center(
+        child: Text(
+          "No new leads match your filters.",
+          style: GoogleFonts.montserrat(color: Colors.grey),
+        ),
+      );
+    }
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      physics: const BouncingScrollPhysics(),
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'UNASSIGNED LEADS',
+              style: GoogleFonts.montserrat(
+                color: Colors.grey[600],
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                letterSpacing: 1,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 4,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                '${leads.length} Result',
+                style: GoogleFonts.montserrat(
+                  color: primaryBlue,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        ...leads.map(
+          (lead) => _buildUnassignedLeadCard(
+            lead,
+            cardColor,
+            primaryBlue,
+            isDark,
+          ),
+        ),
+      ],
     );
   }
 
@@ -210,7 +391,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
     if (leads.isEmpty) {
       return Center(
         child: Text(
-          "No leads in this stage.",
+          "No leads in this stage match your filters.",
           style: GoogleFonts.montserrat(color: Colors.grey),
         ),
       );
@@ -268,10 +449,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
             offset: const Offset(0, 10),
           ),
         ],
-        border: Border.all(
-          color: sourceColor.withOpacity(0.1),
-          width: 1,
-        ),
+        border: Border.all(color: sourceColor.withOpacity(0.1), width: 1),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
@@ -289,7 +467,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                   Row(
+                  Row(
                     children: [
                       Icon(sourceIcon, size: 14, color: sourceColor),
                       const SizedBox(width: 6),
@@ -315,7 +493,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                 ],
               ),
             ),
-            
+
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -333,7 +511,11 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                           ),
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Icon(Icons.person_pin_rounded, color: Colors.white, size: 30),
+                        child: const Icon(
+                          Icons.person_pin_rounded,
+                          color: Colors.white,
+                          size: 30,
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -414,9 +596,9 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
     final accentColor = isCompleted ? Colors.green : primaryBlue;
     final textColor = isDark ? Colors.white : Colors.black87;
     final backgroundColor = isCompleted
-        ? (isDark 
-            ? Colors.green.withOpacity(0.05) 
-            : Colors.green.withOpacity(0.02))
+        ? (isDark
+              ? Colors.green.withOpacity(0.05)
+              : Colors.green.withOpacity(0.02))
         : cardColor;
 
     return Container(
@@ -426,7 +608,9 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
         color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isCompleted ? Colors.green.withOpacity(0.3) : Colors.grey.withOpacity(0.2),
+          color: isCompleted
+              ? Colors.green.withOpacity(0.3)
+              : Colors.grey.withOpacity(0.2),
         ),
         boxShadow: [
           BoxShadow(
@@ -443,10 +627,12 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
             children: [
               CircleAvatar(
                 radius: 22,
-                backgroundColor: isCompleted ? Colors.green[50] : Colors.blue[50],
+                backgroundColor: isCompleted
+                    ? Colors.green[50]
+                    : Colors.blue[50],
                 child: Icon(
-                  isCompleted ? Icons.verified_rounded : Icons.person_outline, 
-                  color: isCompleted ? Colors.green : primaryBlue
+                  isCompleted ? Icons.verified_rounded : Icons.person_outline,
+                  color: isCompleted ? Colors.green : primaryBlue,
                 ),
               ),
               const SizedBox(width: 16),
@@ -473,11 +659,15 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: isCompleted ? Colors.green[50] : Colors.blue[50],
+                            color: isCompleted
+                                ? Colors.green[50]
+                                : Colors.blue[50],
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            isCompleted ? 'COMPLETED' : 'SOURCE: ${lead.source.toUpperCase()}',
+                            isCompleted
+                                ? 'COMPLETED'
+                                : 'SOURCE: ${lead.source.toUpperCase()}',
                             style: GoogleFonts.montserrat(
                               fontSize: 8,
                               fontWeight: FontWeight.bold,
