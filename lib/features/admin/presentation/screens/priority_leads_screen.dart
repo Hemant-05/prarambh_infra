@@ -7,6 +7,7 @@ import '../../../../core/widgets/back_button.dart';
 import '../providers/admin_provider.dart';
 import '../providers/admin_lead_provider.dart';
 import '../../../advisor/presentation/screens/lead_details_screen.dart';
+import '../../../../core/utils/excel_helper.dart';
 
 class PriorityLeadsScreen extends StatelessWidget {
   const PriorityLeadsScreen({super.key});
@@ -93,6 +94,34 @@ class PriorityLeadsScreen extends StatelessWidget {
             fontSize: 18,
           ),
         ),
+        actions: [
+          if (leads.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: IconButton(
+                onPressed: () async {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => const Center(child: CircularProgressIndicator()),
+                  );
+                  
+                  final success = await ExcelHelper.exportLeadsToExcel(leads);
+                  
+                  if (context.mounted) {
+                    Navigator.pop(context); // Close loading dialog
+                    if (success) {
+                      UIHelper.showSuccess(context, 'Data exported successfully');
+                    } else {
+                      UIHelper.showError(context, 'Failed to export data');
+                    }
+                  }
+                },
+                icon: Icon(Icons.description_outlined, color: primaryBlue),
+                tooltip: 'Export All Data to Excel',
+              ),
+            ),
+        ],
       ),
       body: body,
     );
