@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/helper/helper_function.dart';
+import 'package:url_launcher/url_launcher.dart'; // NEW
+import 'package:intl/intl.dart'; // NEW
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../admin/data/models/project_model.dart';
@@ -144,97 +146,186 @@ class _AdvisorProjectDetailsScreenState
 
   // --- OVERVIEW TAB ---
   Widget _buildOverviewTab(Color cardColor, Color primaryBlue, bool isDark) {
+    final project = widget.project;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       physics: const BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Project Market Value',
-            style: GoogleFonts.montserrat(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            '₹${formatPrice(widget.project.marketValue)}',
-            style: GoogleFonts.montserrat(
-              fontSize: 13,
-              color: Colors.grey[600],
-              height: 1.6,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'Description',
-            style: GoogleFonts.montserrat(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            widget.project.description.isNotEmpty
-                ? widget.project.description
-                : 'No description provided.',
-            style: GoogleFonts.montserrat(
-              fontSize: 13,
-              color: Colors.grey[600],
-              height: 1.6,
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Details Grid
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 2.5,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
+          // Developer & City Header
+          Row(
             children: [
-              _buildDetailItem(
-                Icons.business_center_outlined,
-                'Type',
-                widget.project.projectType,
-                cardColor,
-                primaryBlue,
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: primaryBlue.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.business, color: primaryBlue, size: 20),
               ),
-              _buildDetailItem(
-                Icons.construction_outlined,
-                'Status',
-                widget.project.constructionStatus,
-                cardColor,
-                primaryBlue,
-              ),
-              _buildDetailItem(
-                Icons.verified_user_outlined,
-                'RERA',
-                widget.project.reraNumber,
-                cardColor,
-                primaryBlue,
-              ),
-              _buildDetailItem(
-                Icons.aspect_ratio_outlined,
-                'Area',
-                widget.project.buildArea,
-                cardColor,
-                primaryBlue,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      project.developerName.toUpperCase(),
+                      style: GoogleFonts.montserrat(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    Text(
+                      '${project.city} • ${project.projectName}',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
           const SizedBox(height: 24),
 
-          // Amenities
-          if (widget.project.amenities.isNotEmpty) ...[
+          // Project Status Badges
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildStatusBadge(Icons.category, project.projectType, Colors.orange),
+                const SizedBox(width: 8),
+                _buildStatusBadge(Icons.construction, project.constructionStatus, Colors.blue),
+                const SizedBox(width: 8),
+                _buildStatusBadge(Icons.check_circle, project.status, Colors.green),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Pricing & Financial Stats
+          Text(
+            'Financial Overview',
+            style: GoogleFonts.montserrat(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatBox(
+                  'Market Value',
+                  '₹${NumberFormat.compact().format(project.marketValue)}',
+                  primaryBlue,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatBox(
+                  'Budget Range',
+                  project.budgetRange,
+                  primaryBlue,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatBox(
+                  'Start Rate',
+                  '₹${project.ratePerSqft}/sq.ft',
+                  primaryBlue,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatBox(
+                  'Total Units',
+                  project.totalPlots.toString(),
+                  primaryBlue,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatBox(
+                  'Build Area',
+                  '${project.buildArea} sq.ft',
+                  primaryBlue,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 30),
+
+          // Project Description
+          if (project.description.isNotEmpty) ...[
             Text(
-              'Amenities',
+              'Description',
+              style: GoogleFonts.montserrat(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              project.description,
+              style: GoogleFonts.montserrat(
+                fontSize: 13,
+                color: Colors.grey[600],
+                height: 1.6,
+              ),
+            ),
+            const SizedBox(height: 30),
+          ],
+
+          // Quick Actions Row
+          Text(
+            'Resources',
+            style: GoogleFonts.montserrat(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  Icons.map,
+                  'View Map',
+                  Colors.green,
+                  () => _launchUrl(project.locationMapUrl),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionButton(
+                  Icons.description,
+                  'Brochure',
+                  Colors.orange,
+                  () => _launchUrl(project.brochureFile),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 30),
+
+          // Features Section (Amenities & Specialties)
+          if (project.amenities.isNotEmpty) ...[
+            Text(
+              'Project Amenities',
               style: GoogleFonts.montserrat(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -243,84 +334,165 @@ class _AdvisorProjectDetailsScreenState
             ),
             const SizedBox(height: 12),
             Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: widget.project.amenities.map((amenity) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: primaryBlue.withOpacity(0.2)),
-                  ),
-                  child: Text(
-                    amenity,
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: primaryBlue,
-                    ),
-                  ),
-                );
-              }).toList(),
+              spacing: 8,
+              runSpacing: 8,
+              children: project.amenities.map((a) => _buildChip(a, Colors.teal)).toList(),
             ),
             const SizedBox(height: 30),
           ],
+
+          if (project.specialties.isNotEmpty) ...[
+            Text(
+              'Features & Specialties',
+              style: GoogleFonts.montserrat(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: project.specialties.map((s) => _buildChip(s, Colors.deepPurple)).toList(),
+            ),
+            const SizedBox(height: 30),
+          ],
+
+          // Metadata Footer
+          Center(
+            child: Text(
+              'Listed on: ${DateFormat('dd MMM yyyy').format(project.createdAt)}',
+              style: GoogleFonts.montserrat(
+                fontSize: 11,
+                color: Colors.grey,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  Widget _buildDetailItem(
-    IconData icon,
-    String label,
-    String value,
-    Color cardColor,
-    Color primaryBlue,
-  ) {
+  // --- NEW: Helper Methods for Unified UI ---
+
+  Widget _buildStatBox(String title, String value, Color primaryBlue) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
-        color: cardColor,
+        color: Colors.grey.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.withOpacity(0.1)),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Icon(icon, color: primaryBlue, size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  label,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 10,
-                    color: Colors.grey[500],
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value.isNotEmpty ? value : 'N/A',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+          Text(
+            title,
+            style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: GoogleFonts.montserrat(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: primaryBlue,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(IconData icon, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label.toUpperCase(),
+            style: GoogleFonts.montserrat(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildActionButton(IconData icon, String label, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.montserrat(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChip(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.15)),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.montserrat(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _launchUrl(String urlString) async {
+    if (urlString.isEmpty) return;
+    String fullUrl = urlString.startsWith('http')
+        ? urlString
+        : 'https://workiees.com/${urlString.startsWith('/') ? urlString.substring(1) : urlString}';
+    final Uri url = Uri.parse(fullUrl);
+    try {
+      await launchUrl(url);
+    } catch (e) {
+      debugPrint('Launch Error: $e');
+    }
   }
 
   // --- INVENTORY TAB ---
