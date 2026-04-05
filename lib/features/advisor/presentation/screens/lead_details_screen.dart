@@ -8,6 +8,7 @@ import 'dart:math';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
+import 'package:prarambh_infra/core/utils/file_download_helper.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../admin/data/models/lead_models.dart';
@@ -1712,15 +1713,36 @@ Please feel free to contact us for more information.""";
                       color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
-                  if (!widget.isAdmin)
-                    IconButton(
-                      onPressed: _pickAndUploadSiteVisitPhoto,
-                      icon: Icon(
-                        Icons.add_a_photo,
-                        color: primaryBlue,
-                        size: 20,
-                      ),
-                    ),
+                  Row(
+                    children: [
+                      if (_currentLead.siteVisitPhoto.isNotEmpty)
+                        IconButton(
+                          onPressed: () {
+                            FileDownloadHelper().downloadFile(
+                              context: context,
+                              url: _currentLead.siteVisitPhoto,
+                              fileName: "SiteVisit_${_currentLead.clientName.replaceAll(' ', '_')}.jpg",
+                            );
+                          },
+                          icon: Icon(
+                            Icons.download_rounded,
+                            color: primaryBlue,
+                            size: 20,
+                          ),
+                          tooltip: 'Download Photo',
+                        ),
+                      if (!widget.isAdmin)
+                        IconButton(
+                          onPressed: _pickAndUploadSiteVisitPhoto,
+                          icon: Icon(
+                            Icons.add_a_photo,
+                            color: primaryBlue,
+                            size: 20,
+                          ),
+                          tooltip: 'Upload/Change Photo',
+                        ),
+                    ],
+                  ),
                 ],
               ),
               const SizedBox(height: 12),

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:prarambh_infra/core/utils/file_download_helper.dart';
 import 'package:prarambh_infra/features/admin/data/models/document_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:prarambh_infra/core/widgets/back_button.dart';
@@ -475,6 +476,17 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
                 onPressed: () => _viewDocument(doc),
                 icon: Icon(Icons.visibility, color: primaryBlue),
                 tooltip: 'View Document',
+              ),
+              IconButton(
+                onPressed: () {
+                  FileDownloadHelper().downloadFile(
+                    context: context,
+                    url: doc.url,
+                    fileName: "${doc.name.replaceAll(' ', '_')}.${doc.type.toLowerCase()}",
+                  );
+                },
+                icon: Icon(Icons.download_rounded, color: primaryBlue),
+                tooltip: 'Download Document',
               ),
             ],
           ),

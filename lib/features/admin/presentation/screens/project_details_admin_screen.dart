@@ -6,6 +6,8 @@ import 'package:video_player/video_player.dart'; // NEW
 import 'package:chewie/chewie.dart'; // NEW
 import 'package:intl/intl.dart'; // NEW
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/file_download_helper.dart';
+import '../../../../core/utils/ui_helper.dart';
 import '../../data/models/project_model.dart';
 import 'project_inventory_screen.dart';
 
@@ -468,7 +470,22 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                         'Brochure',
                         'Download',
                         primaryBlue,
-                        () => _launchUrl(project.brochureFile),
+                        () {
+                          String path = project.brochureFile;
+                          if (path.isEmpty) {
+                            UIHelper.showError(context, "Brochure not available");
+                            return;
+                          }
+                          String fullUrl = path.startsWith('http')
+                              ? path
+                              : 'https://workiees.com/${path.startsWith('/') ? path.substring(1) : path}';
+                          
+                          FileDownloadHelper().downloadFile(
+                            context: context,
+                            url: fullUrl,
+                            fileName: "${project.projectName.replaceAll(' ', '_')}_Brochure.pdf",
+                          );
+                        },
                       ),
                       // Removed Video Action as requested
                       _buildQuickAction(

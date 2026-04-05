@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prarambh_infra/core/utils/file_download_helper.dart';
+import 'package:prarambh_infra/core/utils/ui_helper.dart';
 import '../../../admin/data/models/project_model.dart';
 import 'contact_us_screen.dart';
 
@@ -65,7 +67,7 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
                         child: TabBarView(
                           controller: _tabController,
                           children: [
-                            _buildDescriptionTab(item, isDark),
+                            _buildDescriptionTab(item, primaryBlue, isDark),
                             _buildGalleryTab(item, isDark),
                             _buildReviewTab(isDark),
                           ],
@@ -202,7 +204,7 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
     );
   }
 
-  Widget _buildDescriptionTab(ProjectModel item, bool isDark) {
+  Widget _buildDescriptionTab(ProjectModel item, Color primaryBlue, bool isDark) {
     final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
 
     return Padding(
@@ -233,6 +235,71 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
           const SizedBox(height: 16),
           _buildFacilitiesGrid(isDark),
           
+          const SizedBox(height: 24),
+
+          _sectionHeader("Project Brochure", isDark),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: primaryBlue.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: primaryBlue.withOpacity(0.1)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.description_outlined, color: primaryBlue, size: 32),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Digital Brochure",
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        "PDF • Detailed project details",
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          color: secondaryTextColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    String path = item.brochureFile;
+                    if (path.isEmpty) {
+                      UIHelper.showError(context, "Brochure not available");
+                      return;
+                    }
+                    String fullUrl = path.startsWith('http')
+                        ? path
+                        : 'https://workiees.com/${path.startsWith('/') ? path.substring(1) : path}';
+                    
+                    FileDownloadHelper().downloadFile(
+                      context: context,
+                      url: fullUrl,
+                      fileName: "${item.projectName.replaceAll(' ', '_')}_Brochure.pdf",
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryBlue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                  child: const Text("Download"),
+                ),
+              ],
+            ),
+          ),
+
           const SizedBox(height: 24),
           
           _sectionHeader("Address", isDark),

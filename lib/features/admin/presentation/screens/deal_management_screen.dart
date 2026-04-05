@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:prarambh_infra/core/utils/file_download_helper.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../data/models/deal_model.dart';
 import '../../data/models/unit_model.dart';
@@ -388,7 +389,53 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            
+
+            // Property Documents Section
+            if (widget.deal.propertyDocs.isNotEmpty) ...[
+              Text(
+                "Property Documents",
+                style: GoogleFonts.montserrat(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1.2,
+                  ),
+                  itemCount: widget.deal.propertyDocs.length,
+                  itemBuilder: (context, index) {
+                    return _buildDocumentViewerTile(
+                      "Property Doc ${index + 1}", 
+                      widget.deal.propertyDocs[index]
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+
             // Property Details Section
             Text(
               "Property Details",
@@ -1005,17 +1052,48 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
         child: Column(
           children: [
             Expanded(
-              child: hasImage
-                  ? ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
-                      child: Image.network(
-                        fullUrl,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (ctx, err, stack) => Icon(Icons.broken_image, color: Colors.grey[400]),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  hasImage
+                      ? ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                          child: Image.network(
+                            fullUrl,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (ctx, err, stack) => Icon(Icons.broken_image, color: Colors.grey[400]),
+                          ),
+                        )
+                      : Icon(Icons.insert_drive_file, color: Colors.grey[300], size: 40),
+                  if (hasImage)
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: GestureDetector(
+                        onTap: () {
+                          FileDownloadHelper().downloadFile(
+                            context: context,
+                            url: fullUrl,
+                            fileName: "${title.replaceAll(' ', '_')}_DOC.jpg",
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.black26,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.download_rounded,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                        ),
                       ),
-                    )
-                  : Icon(Icons.insert_drive_file, color: Colors.grey[300], size: 40),
+                    ),
+                ],
+              ),
             ),
             Container(
               width: double.infinity,
@@ -1058,9 +1136,24 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
             Positioned(
               top: 40,
               right: 20,
-              child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 30),
-                onPressed: () => Navigator.pop(context),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.download_rounded, color: Colors.white, size: 30),
+                    onPressed: () {
+                      FileDownloadHelper().downloadFile(
+                        context: context,
+                        url: url,
+                        fileName: "${title.replaceAll(' ', '_')}.jpg",
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
               ),
             ),
             Positioned(
