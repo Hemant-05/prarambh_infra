@@ -37,6 +37,16 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
   int _currentLayoutType = 0;
   bool _graphInitialized = false;
   bool _showTreeFab = true; // FAB only visible on Tree View tab
+  String _sortBy = 'Newest'; // Newest joining first by default
+  String? _selectedDesignation; // Current level filter
+  final List<String> _designationLevels = [
+    'Advisor',
+    'Supervisor',
+    'Manager',
+    'Senior Manager',
+    'Chief Manager',
+    'Director'
+  ];
 
   @override
   void initState() {
@@ -62,7 +72,16 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _resetGraph();
       context.read<AdminTeamProvider>().fetchTeam();
+    });
+  }
+
+  void _resetGraph() {
+    setState(() {
+      _graphInitialized = false;
+      graph.nodes.clear();
+      graph.edges.clear();
     });
   }
 
@@ -173,17 +192,36 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
       });
     }
 
-    // --- NEW: Filter list for the List View Tab ---
+    // --- NEW: Filter & Sort list for the List View Tab ---
     List<AdvisorNode> flatList = [];
     if (provider.teamTree != null) {
       flatList = _flattenTree(provider.teamTree!);
+      
+      // 1. Search Filter
       if (_searchQuery.isNotEmpty) {
         flatList = flatList.where((n) {
           return n.name.toLowerCase().contains(_searchQuery) ||
-              n.code.toLowerCase().contains(_searchQuery) ||
-              n.role.toLowerCase().contains(_searchQuery);
+                 n.code.toLowerCase().contains(_searchQuery) ||
+                 n.role.toLowerCase().contains(_searchQuery);
         }).toList();
       }
+
+      // 2. Designation Filter
+      if (_selectedDesignation != null) {
+        flatList = flatList.where((n) {
+          return n.role.toLowerCase().contains(_selectedDesignation!.toLowerCase());
+        }).toList();
+      }
+
+      // 3. Sort by Joining Date
+      flatList.sort((a, b) {
+        DateTime? dateA = DateTime.tryParse(a.createdAt);
+        DateTime? dateB = DateTime.tryParse(b.createdAt);
+        if (dateA == null || dateB == null) return 0;
+        return _sortBy == 'Newest' 
+          ? dateB.compareTo(dateA) // Descending
+          : dateA.compareTo(dateB); // Ascending
+      });
     }
 
     return Scaffold(
@@ -310,10 +348,104 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
             ),
           ),
 
-          // --- Rest of the Content ---
+          // --- NEW: Dynamic Filter Controls (Only for List View) ---
+          if (_tabController.index == 1)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Column(
+                children: [
+                  // Filter Chips
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        FilterChip(
+                          selected: _selectedDesignation == null,
+                          label: const Text('All Levels'),
+                          onSelected: (_) => setState(() => _selectedDesignation = null),
+                          selectedColor: primaryBlue.withOpacity(0.15),
+                          checkmarkColor: primaryBlue,
+                          labelStyle: GoogleFonts.montserrat(
+                            fontSize: 11,
+                            fontWeight: _selectedDesignation == null ? FontWeight.bold : FontWeight.w500,
+                            color: _selectedDesignation == null ? primaryBlue : Colors.grey,
+                          ),
+                          backgroundColor: Colors.transparent,
+                          shape: StadiumBorder(side: BorderSide(color: _selectedDesignation == null ? primaryBlue : Colors.grey.withOpacity(0.3))),
+                        ),
+                        const SizedBox(width: 8),
+                        ..._designationLevels.map((level) {
+                          final isSelected = _selectedDesignation == level;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: FilterChip(
+                              selected: isSelected,
+                              label: Text(level),
+                              onSelected: (_) => setState(() => _selectedDesignation = isSelected ? null : level),
+                              selectedColor: primaryBlue.withOpacity(0.15),
+                              checkmarkColor: primaryBlue,
+                              labelStyle: GoogleFonts.montserrat(
+                                fontSize: 11,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                color: isSelected ? primaryBlue : Colors.grey,
+                              ),
+                              backgroundColor: Colors.transparent,
+                              shape: StadiumBorder(side: BorderSide(color: isSelected ? primaryBlue : Colors.grey.withOpacity(0.3))),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                  // Sort Indicator
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${flatList.length} members found',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 11,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              _sortBy = (_sortBy == 'Newest' ? 'Oldest' : 'Newest');
+                            });
+                          },
+                          icon: Icon(
+                            _sortBy == 'Newest' ? Icons.arrow_downward : Icons.arrow_upward,
+                            size: 14,
+                            color: primaryBlue,
+                          ),
+                          label: Text(
+                            'Joined: $_sortBy First',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: primaryBlue,
+                            ),
+                          ),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Expanded(
             child:
-                provider.isLoading
+                provider.isLoading || (provider.teamTree != null && !_graphInitialized && _tabController.index == 0)
                 ? Center(child: CircularProgressIndicator(color: primaryBlue))
                 : provider.teamTree == null 
                   ? Center(
@@ -764,7 +896,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
                         Icon(Icons.calendar_today_outlined, size: 10, color: Colors.grey[500]),
                         const SizedBox(width: 4),
                         Text(
-                          'Joined: ${node.createdAt}',
+                          '${node.createdAt}',
                           style: GoogleFonts.montserrat(
                             fontSize: 10,
                             color: Colors.grey[500],
