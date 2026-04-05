@@ -207,7 +207,7 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('${widget.unit.towerName} - ${widget.unit.unitNumber}', style: GoogleFonts.montserrat(fontSize: 22, fontWeight: FontWeight.bold)),
+                                Text('${widget.unit.towerName} - ${widget.unit.unitNumber.isNotEmpty? widget.unit.unitNumber : widget.unit.plotNumber.isNotEmpty ? widget.unit.plotNumber : 'N/A'}', style: GoogleFonts.montserrat(fontSize: 22, fontWeight: FontWeight.bold)),
                                 Text(widget.unit.propertyType, style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey[600])),
                               ],
                             ),
@@ -247,7 +247,7 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
                       _buildSpecBox(Icons.square_foot, 'Super Area', '${widget.unit.areaSqft} sqft', cardColor),
                       _buildSpecBox(Icons.bed, 'Configuration', widget.unit.configuration, cardColor),
                       _buildSpecBox(Icons.explore, 'Facing', widget.unit.facing, cardColor),
-                      _buildSpecBox(Icons.map, 'Plot No.', widget.unit.plotNumber.isNotEmpty ? widget.unit.plotNumber : 'N/A', cardColor),
+                      _buildSpecBox(Icons.map, 'Plot No.', widget.unit.unitNumber.isNotEmpty? widget.unit.unitNumber : widget.unit.plotNumber.isNotEmpty ? widget.unit.plotNumber : 'N/A', cardColor),
                       _buildSpecBox(Icons.layers, 'Floor', widget.unit.floorNumber, cardColor),
                       _buildSpecBox(Icons.location_on, 'Location', widget.unit.location.isNotEmpty ? widget.unit.location : 'N/A', cardColor),
                     ],

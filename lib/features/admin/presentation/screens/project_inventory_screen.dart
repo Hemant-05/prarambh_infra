@@ -259,7 +259,7 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              unit.unitNumber,
+              '${unit.towerName}-${unit.unitNumber.isNotEmpty? unit.unitNumber : unit.plotNumber.isNotEmpty ? unit.plotNumber : 'N/A'}',
               style: GoogleFonts.montserrat(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,

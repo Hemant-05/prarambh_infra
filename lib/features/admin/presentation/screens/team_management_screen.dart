@@ -896,7 +896,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
                         Icon(Icons.calendar_today_outlined, size: 10, color: Colors.grey[500]),
                         const SizedBox(width: 4),
                         Text(
-                          '${node.createdAt}',
+                          'Joined ${node.createdAt}',
                           style: GoogleFonts.montserrat(
                             fontSize: 10,
                             color: Colors.grey[500],

@@ -30,7 +30,7 @@ class AdvisorNode {
       role: json['role'] ?? json['designation'] ?? '',
       code: json['code'] ?? json['Advisor_code'] ?? '',
       avatarUrl: avatarUrl,
-      createdAt: json['created_at']?.toString() ?? '',
+      createdAt: json['created_at']?.toString().split(' ')[0] ?? '',
       children: (childrenList as List<dynamic>?)
               ?.map((e) => AdvisorNode.fromJson(e))
               .toList() ??
