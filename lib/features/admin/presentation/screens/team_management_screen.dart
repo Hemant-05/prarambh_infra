@@ -5,7 +5,7 @@ import 'package:graphview/GraphView.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/admin_team_provider.dart';
 import '../../data/models/team_models.dart';
-import 'broker_profile_screen.dart';
+import 'advisor_profile_screen.dart';
 
 class TeamManagementScreen extends StatefulWidget {
   const TeamManagementScreen({super.key});
@@ -45,7 +45,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
     'Manager',
     'Senior Manager',
     'Chief Manager',
-    'Director'
+    'Director',
   ];
 
   @override
@@ -196,20 +196,22 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
     List<AdvisorNode> flatList = [];
     if (provider.teamTree != null) {
       flatList = _flattenTree(provider.teamTree!);
-      
+
       // 1. Search Filter
       if (_searchQuery.isNotEmpty) {
         flatList = flatList.where((n) {
           return n.name.toLowerCase().contains(_searchQuery) ||
-                 n.code.toLowerCase().contains(_searchQuery) ||
-                 n.role.toLowerCase().contains(_searchQuery);
+              n.code.toLowerCase().contains(_searchQuery) ||
+              n.role.toLowerCase().contains(_searchQuery);
         }).toList();
       }
 
       // 2. Designation Filter
       if (_selectedDesignation != null) {
         flatList = flatList.where((n) {
-          return n.role.toLowerCase().contains(_selectedDesignation!.toLowerCase());
+          return n.role.toLowerCase().contains(
+            _selectedDesignation!.toLowerCase(),
+          );
         }).toList();
       }
 
@@ -218,9 +220,9 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
         DateTime? dateA = DateTime.tryParse(a.createdAt);
         DateTime? dateB = DateTime.tryParse(b.createdAt);
         if (dateA == null || dateB == null) return 0;
-        return _sortBy == 'Newest' 
-          ? dateB.compareTo(dateA) // Descending
-          : dateA.compareTo(dateB); // Ascending
+        return _sortBy == 'Newest'
+            ? dateB.compareTo(dateA) // Descending
+            : dateA.compareTo(dateB); // Ascending
       });
     }
 
@@ -363,16 +365,27 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
                         FilterChip(
                           selected: _selectedDesignation == null,
                           label: const Text('All Levels'),
-                          onSelected: (_) => setState(() => _selectedDesignation = null),
+                          onSelected: (_) =>
+                              setState(() => _selectedDesignation = null),
                           selectedColor: primaryBlue.withOpacity(0.15),
                           checkmarkColor: primaryBlue,
                           labelStyle: GoogleFonts.montserrat(
                             fontSize: 11,
-                            fontWeight: _selectedDesignation == null ? FontWeight.bold : FontWeight.w500,
-                            color: _selectedDesignation == null ? primaryBlue : Colors.grey,
+                            fontWeight: _selectedDesignation == null
+                                ? FontWeight.bold
+                                : FontWeight.w500,
+                            color: _selectedDesignation == null
+                                ? primaryBlue
+                                : Colors.grey,
                           ),
                           backgroundColor: Colors.transparent,
-                          shape: StadiumBorder(side: BorderSide(color: _selectedDesignation == null ? primaryBlue : Colors.grey.withOpacity(0.3))),
+                          shape: StadiumBorder(
+                            side: BorderSide(
+                              color: _selectedDesignation == null
+                                  ? primaryBlue
+                                  : Colors.grey.withOpacity(0.3),
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 8),
                         ..._designationLevels.map((level) {
@@ -382,16 +395,28 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
                             child: FilterChip(
                               selected: isSelected,
                               label: Text(level),
-                              onSelected: (_) => setState(() => _selectedDesignation = isSelected ? null : level),
+                              onSelected: (_) => setState(
+                                () => _selectedDesignation = isSelected
+                                    ? null
+                                    : level,
+                              ),
                               selectedColor: primaryBlue.withOpacity(0.15),
                               checkmarkColor: primaryBlue,
                               labelStyle: GoogleFonts.montserrat(
                                 fontSize: 11,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
                                 color: isSelected ? primaryBlue : Colors.grey,
                               ),
                               backgroundColor: Colors.transparent,
-                              shape: StadiumBorder(side: BorderSide(color: isSelected ? primaryBlue : Colors.grey.withOpacity(0.3))),
+                              shape: StadiumBorder(
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? primaryBlue
+                                      : Colors.grey.withOpacity(0.3),
+                                ),
+                              ),
                             ),
                           );
                         }),
@@ -415,11 +440,15 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
                         TextButton.icon(
                           onPressed: () {
                             setState(() {
-                              _sortBy = (_sortBy == 'Newest' ? 'Oldest' : 'Newest');
+                              _sortBy = (_sortBy == 'Newest'
+                                  ? 'Oldest'
+                                  : 'Newest');
                             });
                           },
                           icon: Icon(
-                            _sortBy == 'Newest' ? Icons.arrow_downward : Icons.arrow_upward,
+                            _sortBy == 'Newest'
+                                ? Icons.arrow_downward
+                                : Icons.arrow_upward,
                             size: 14,
                             color: primaryBlue,
                           ),
@@ -445,24 +474,36 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
             ),
           Expanded(
             child:
-                provider.isLoading || (provider.teamTree != null && !_graphInitialized && _tabController.index == 0)
+                provider.isLoading ||
+                    (provider.teamTree != null &&
+                        !_graphInitialized &&
+                        _tabController.index == 0)
                 ? Center(child: CircularProgressIndicator(color: primaryBlue))
-                : provider.teamTree == null 
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.people_outline, size: 48, color: Theme.of(context).hintColor),
-                          const SizedBox(height: 16),
-                          Text('No team data available.', style: GoogleFonts.montserrat(color: Theme.of(context).hintColor)),
-                          TextButton(
-                            onPressed: () => provider.fetchTeam(),
-                            child: const Text('Retry'),
-                          )
-                        ],
-                      ),
-                    )
-                  : TabBarView(
+                : provider.teamTree == null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.people_outline,
+                          size: 48,
+                          color: Theme.of(context).hintColor,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No team data available.',
+                          style: GoogleFonts.montserrat(
+                            color: Theme.of(context).hintColor,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => provider.fetchTeam(),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  )
+                : TabBarView(
                     controller: _tabController,
                     physics: const NeverScrollableScrollPhysics(),
                     children: [
@@ -653,7 +694,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
           : () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => BrokerProfileScreen(advisorId: node.id),
+                builder: (_) => AdvisorProfileScreen(advisorId: node.id),
               ),
             ),
       child: AnimatedContainer(
@@ -807,7 +848,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
           : () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => BrokerProfileScreen(advisorId: node.id),
+                builder: (_) => AdvisorProfileScreen(advisorId: node.id),
               ),
             ),
       child: Container(
@@ -893,7 +934,11 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        Icon(Icons.calendar_today_outlined, size: 10, color: Colors.grey[500]),
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 10,
+                          color: Colors.grey[500],
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           'Joined ${node.createdAt}',

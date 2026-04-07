@@ -5,7 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/back_button.dart';
 import '../../../../core/utils/ui_helper.dart';
 import '../providers/admin_recruitment_provider.dart';
-import 'broker_profile_screen.dart';
+import 'advisor_profile_screen.dart';
 
 class AdminRecruitmentDashboardScreen extends StatefulWidget {
   const AdminRecruitmentDashboardScreen({super.key});
@@ -157,9 +157,8 @@ class _AdminRecruitmentDashboardScreenState
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => BrokerProfileScreen(
-                            advisorId: applicant.id,
-                          ),
+                          builder: (context) =>
+                              AdvisorProfileScreen(advisorId: applicant.id),
                         ),
                       );
                     },
@@ -361,7 +360,9 @@ class _AdminRecruitmentDashboardScreenState
         border: Border.all(color: AppColors.getBorderColor(context)),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withOpacity(0.2) : Colors.blue.withOpacity(0.05),
+            color: isDark
+                ? Colors.black.withOpacity(0.2)
+                : Colors.blue.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

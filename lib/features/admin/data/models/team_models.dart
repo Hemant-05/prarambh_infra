@@ -142,8 +142,13 @@ class BrokerProfileModel {
   final String pincode;
   final String slab;
   final String status;
+  final String advisorType;
   final String? leaderId;
+  final String? leaderCode;
+  final String? leaderName;
+  final String? leaderDesignation;
   final String createdAt;
+  final String updatedAt;
 
   // My Team
   final List<TeamMemberModel> myTeam;
@@ -185,7 +190,9 @@ class BrokerProfileModel {
     required this.aadhaarNumber, required this.panNumber, required this.bankName,
     required this.accountNumber, required this.ifscCode, required this.address,
     required this.city, required this.state, required this.pincode,
-    required this.slab, required this.status, this.leaderId, required this.createdAt,
+    required this.slab, required this.status, required this.advisorType,
+    this.leaderId, this.leaderCode, this.leaderName, this.leaderDesignation,
+    required this.createdAt, required this.updatedAt,
     required this.myTeam, required this.salesPipeline,
     required this.personalSales, required this.teamSales,
     required this.attendanceTracker, required this.teamAttendanceTotal,
@@ -236,8 +243,13 @@ class BrokerProfileModel {
       pincode: ad['pincode'] ?? '',
       slab: ad['slab']?.toString() ?? '0',
       status: ad['status'] ?? 'Pending',
+      advisorType: ad['advisor_type'] ?? '',
       leaderId: ad['leader_id']?.toString(),
+      leaderCode: ad['leader_code'],
+      leaderName: ad['leader_name'],
+      leaderDesignation: ad['leader_designation'],
       createdAt: ad['created_at'] ?? '',
+      updatedAt: ad['updated_at'] ?? '',
       myTeam: myTeamRaw.map((e) => TeamMemberModel.fromJson(e)).toList(),
       salesPipeline: pipelineRaw.map((k, v) => MapEntry(k, v is int ? v : (v as num).toInt())),
       personalSales: (perfRaw['personal_sales'] is num) ? (perfRaw['personal_sales'] as num).toDouble() : 0.0,

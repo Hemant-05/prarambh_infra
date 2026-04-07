@@ -10,15 +10,15 @@ import '../providers/admin_team_provider.dart';
 
 const String _baseUrl = 'https://workiees.com/';
 
-class BrokerProfileScreen extends StatefulWidget {
+class AdvisorProfileScreen extends StatefulWidget {
   final String advisorId;
-  const BrokerProfileScreen({super.key, required this.advisorId});
+  const AdvisorProfileScreen({super.key, required this.advisorId});
 
   @override
-  State<BrokerProfileScreen> createState() => _BrokerProfileScreenState();
+  State<AdvisorProfileScreen> createState() => _AdvisorProfileScreenState();
 }
 
-class _BrokerProfileScreenState extends State<BrokerProfileScreen> {
+class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
   final TextEditingController _suspendReasonCtrl = TextEditingController();
   bool _personalExpanded = true;
 
@@ -230,6 +230,13 @@ class _BrokerProfileScreenState extends State<BrokerProfileScreen> {
                       '${p.slab}%',
                       primaryBlue,
                     ),
+                    _divider(),
+                    _infoRow(
+                      Icons.badge_outlined,
+                      'Advisor Type',
+                      p.advisorType,
+                      primaryBlue,
+                    ),
                   ]),
                   const SizedBox(height: 16),
 
@@ -301,6 +308,34 @@ class _BrokerProfileScreenState extends State<BrokerProfileScreen> {
                       ),
                       _divider(),
                       _infoRow(Icons.numbers, 'IFSC', p.ifscCode, primaryBlue),
+                      _divider(),
+                      _infoRow(
+                        Icons.work_outline,
+                        'Occupation',
+                        p.occupation.isEmpty ? 'N/A' : p.occupation,
+                        primaryBlue,
+                      ),
+                      _divider(),
+                      _infoRow(
+                        Icons.phone_android,
+                        'Nominee Phone',
+                        p.nomineePhone.isEmpty ? 'N/A' : p.nomineePhone,
+                        primaryBlue,
+                      ),
+                      _divider(),
+                      _infoRow(
+                        Icons.credit_card,
+                        'Aadhaar Number',
+                        p.aadhaarNumber.isEmpty ? 'N/A' : p.aadhaarNumber,
+                        primaryBlue,
+                      ),
+                      _divider(),
+                      _infoRow(
+                        Icons.credit_card,
+                        'PAN Number',
+                        p.panNumber.isEmpty ? 'N/A' : p.panNumber,
+                        primaryBlue,
+                      ),
                     ],
                   ]),
                   const SizedBox(height: 16),
@@ -321,10 +356,13 @@ class _BrokerProfileScreenState extends State<BrokerProfileScreen> {
                     const SizedBox(height: 16),
                     Builder(
                       builder: (context) {
-                        final filteredTeam = p.myTeam.where((m) => 
-                          m.advisorCode.toLowerCase() != 'admin001' && 
-                          m.designation.toLowerCase() != 'admin'
-                        ).toList();
+                        final filteredTeam = p.myTeam
+                            .where(
+                              (m) =>
+                                  m.advisorCode.toLowerCase() != 'admin001' &&
+                                  m.designation.toLowerCase() != 'admin',
+                            )
+                            .toList();
 
                         if (filteredTeam.isEmpty) {
                           return _emptyState('No team members yet');
@@ -343,13 +381,19 @@ class _BrokerProfileScreenState extends State<BrokerProfileScreen> {
                                   children: [
                                     CircleAvatar(
                                       radius: 28,
-                                      backgroundColor: primaryBlue.withOpacity(0.1),
-                                      backgroundImage: (member.profilePhoto != null &&
+                                      backgroundColor: primaryBlue.withOpacity(
+                                        0.1,
+                                      ),
+                                      backgroundImage:
+                                          (member.profilePhoto != null &&
                                               member.profilePhoto!.isNotEmpty)
-                                          ? NetworkImage('$_baseUrl${member.profilePhoto}')
-                                              as ImageProvider
+                                          ? NetworkImage(
+                                                  '$_baseUrl${member.profilePhoto}',
+                                                )
+                                                as ImageProvider
                                           : null,
-                                      child: (member.profilePhoto == null ||
+                                      child:
+                                          (member.profilePhoto == null ||
                                               member.profilePhoto!.isEmpty)
                                           ? Text(
                                               member.initials,
@@ -381,10 +425,43 @@ class _BrokerProfileScreenState extends State<BrokerProfileScreen> {
                             },
                           ),
                         );
-                      }
+                      },
                     ),
                   ]),
                   const SizedBox(height: 16),
+
+                  // ── Leader Info ───────────────────────────────────────
+                  if (p.leaderName != null && p.leaderName!.isNotEmpty) ...[
+                    _card(cardColor, [
+                      _sectionTitle(
+                        Icons.assignment_ind_outlined,
+                        'Leader Details',
+                        primaryBlue,
+                      ),
+                      const SizedBox(height: 16),
+                      _infoRow(
+                        Icons.person_pin_outlined,
+                        'Leader Name',
+                        p.leaderName!,
+                        primaryBlue,
+                      ),
+                      _divider(),
+                      _infoRow(
+                        Icons.badge_outlined,
+                        'Leader Code',
+                        p.leaderCode ?? 'N/A',
+                        primaryBlue,
+                      ),
+                      _divider(),
+                      _infoRow(
+                        Icons.work_outline,
+                        'Leader Designation',
+                        p.leaderDesignation ?? 'N/A',
+                        primaryBlue,
+                      ),
+                    ]),
+                    const SizedBox(height: 16),
+                  ],
 
                   // ── Pipeline Stats ─────────────────────────────────────
                   _card(cardColor, [
@@ -635,12 +712,17 @@ class _BrokerProfileScreenState extends State<BrokerProfileScreen> {
                       _divider(),
                     ],
                     if (p.docPanCard != null) ...[
-                      _docRow('PAN Card', p.docPanCard!),
+                      _docRow('PAN Card (Front)', p.docPanCard!),
+                      _divider(),
+                    ],
+                    if (p.docPanCardBack != null) ...[
+                      _docRow('PAN Card (Back)', p.docPanCardBack!),
                       if (p.otherFiles.isNotEmpty) _divider(),
                     ],
                     if (p.otherFiles.isEmpty &&
                         p.docAddressCardFront == null &&
-                        p.docPanCard == null)
+                        p.docPanCard == null &&
+                        p.docPanCardBack == null)
                       _emptyState('No documents uploaded'),
                     ...p.otherFiles.asMap().entries.map(
                       (e) => Column(
@@ -776,6 +858,54 @@ class _BrokerProfileScreenState extends State<BrokerProfileScreen> {
                                               ),
                                             ),
                                           ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                  ]),
+                  const SizedBox(height: 16),
+
+                  // ── Upcoming Installments ──────────────────────────────
+                  _card(cardColor, [
+                    _sectionTitle(
+                      Icons.payment_outlined,
+                      'Upcoming Installments',
+                      primaryBlue,
+                    ),
+                    const SizedBox(height: 12),
+                    p.upcomingInstallments.isEmpty
+                        ? _emptyState('No upcoming installments')
+                        : Column(
+                            children: p.upcomingInstallments
+                                .map(
+                                  (inst) => Container(
+                                    margin: const EdgeInsets.only(bottom: 8),
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: primaryBlue.withOpacity(0.05),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          inst['title'] ?? 'Installment',
+                                          style: GoogleFonts.montserrat(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                        Text(
+                                          '₹${inst['amount'] ?? '0'}',
+                                          style: GoogleFonts.montserrat(
+                                            color: primaryBlue,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
                                         ),
                                       ],
                                     ),

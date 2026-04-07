@@ -82,22 +82,14 @@ class FileDownloadHelper {
       final deviceInfo = DeviceInfoPlugin();
       final androidInfo = await deviceInfo.androidInfo;
       
-      // Android 13 (API 33) and above
       if (androidInfo.version.sdkInt >= 33) {
-        // On Android 13+, WRITE_EXTERNAL_STORAGE is gone. 
-        // We technically don't need it for app-specific dirs or if using MediaStore,
-        // but for public Downloads folder, Permission.storage is still often used by plugins
-        // or we can request individual media permissions.
-        // For simplicity and broad compatibility:
-        final status = await Permission.manageExternalStorage.request();
-        if (status.isGranted) return true;
-        
-        // Fallback to photos/videos if it's an image/pdf 
-        // (Simplified for this use case)
-        return await Permission.storage.request().isGranted;
+        // On Android 13+, apps don't need 'Permission.storage' to write to public directories like Downloads.
+        // Requesting it will just return permanently denied, so we bypass it.
+        return true;
       } else {
         // Android 12 and below
-        return await Permission.storage.request().isGranted;
+        final status = await Permission.storage.request();
+        return status.isGranted;
       }
     } else if (Platform.isIOS) {
       return await Permission.photosAddOnly.request().isGranted;
