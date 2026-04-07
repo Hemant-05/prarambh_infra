@@ -75,6 +75,16 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
             fontSize: 18,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh, color: isDark ? Colors.white : primaryBlue),
+            onPressed: () {
+              context.read<AdminLeadProvider>().fetchUnassignedLeads();
+              context.read<AdminLeadProvider>().fetchLeads();
+            },
+            tooltip: 'Refresh Leads',
+          ),
+        ],
       ),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -343,59 +353,81 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
     bool isDark,
   ) {
     if (leads.isEmpty) {
-      return Center(
-        child: Text(
-          "No new leads match your filters.",
-          style: GoogleFonts.montserrat(color: Colors.grey),
-        ),
-      );
-    }
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      physics: const BouncingScrollPhysics(),
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      return RefreshIndicator(
+        onRefresh: () async {
+          await context.read<AdminLeadProvider>().fetchUnassignedLeads();
+          await context.read<AdminLeadProvider>().fetchLeads();
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
-            Text(
-              'UNASSIGNED LEADS',
-              style: GoogleFonts.montserrat(
-                color: Colors.grey[600],
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-                letterSpacing: 1,
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 4,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                '${leads.length} Result',
-                style: GoogleFonts.montserrat(
-                  color: primaryBlue,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 10,
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.4,
+              child: Center(
+                child: Text(
+                  "No new leads match your filters.",
+                  style: GoogleFonts.montserrat(color: Colors.grey),
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        ...leads.map(
-          (lead) => _buildUnassignedLeadCard(
-            lead,
-            cardColor,
-            primaryBlue,
-            isDark,
-          ),
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: () async {
+        await context.read<AdminLeadProvider>().fetchUnassignedLeads();
+        await context.read<AdminLeadProvider>().fetchLeads();
+      },
+      child: ListView(
+        padding: const EdgeInsets.all(20),
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
         ),
-      ],
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'UNASSIGNED LEADS',
+                style: GoogleFonts.montserrat(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  letterSpacing: 1,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  '${leads.length} Result',
+                  style: GoogleFonts.montserrat(
+                    color: primaryBlue,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...leads.map(
+            (lead) => _buildUnassignedLeadCard(
+              lead,
+              cardColor,
+              primaryBlue,
+              isDark,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -406,25 +438,47 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
     bool isDark,
   ) {
     if (leads.isEmpty) {
-      return Center(
-        child: Text(
-          "No leads in this stage match your filters.",
-          style: GoogleFonts.montserrat(color: Colors.grey),
+      return RefreshIndicator(
+        onRefresh: () async {
+          await context.read<AdminLeadProvider>().fetchUnassignedLeads();
+          await context.read<AdminLeadProvider>().fetchLeads();
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.4,
+              child: Center(
+                child: Text(
+                  "No leads in this stage match your filters.",
+                  style: GoogleFonts.montserrat(color: Colors.grey),
+                ),
+              ),
+            ),
+          ],
         ),
       );
     }
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      physics: const BouncingScrollPhysics(),
-      itemCount: leads.length,
-      itemBuilder: (context, index) {
-        return _buildStageLeadCard(
-          leads[index],
-          cardColor,
-          primaryBlue,
-          isDark,
-        );
+    return RefreshIndicator(
+      onRefresh: () async {
+        await context.read<AdminLeadProvider>().fetchUnassignedLeads();
+        await context.read<AdminLeadProvider>().fetchLeads();
       },
+      child: ListView.builder(
+        padding: const EdgeInsets.all(20),
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        itemCount: leads.length,
+        itemBuilder: (context, index) {
+          return _buildStageLeadCard(
+            leads[index],
+            cardColor,
+            primaryBlue,
+            isDark,
+          );
+        },
+      ),
     );
   }
 

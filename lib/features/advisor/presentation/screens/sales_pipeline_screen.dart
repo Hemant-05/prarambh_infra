@@ -191,6 +191,19 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
               Tab(text: 'Completed'),
             ],
           ),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.refresh, color: primaryBlue),
+              onPressed: () {
+                final authProvider = context.read<AuthProvider>();
+                final advisorCode = authProvider.currentUser?.advisorCode ?? '';
+                context.read<AdvisorLeadProvider>().fetchLeads(
+                  advisorCode: advisorCode,
+                );
+              },
+              tooltip: 'Refresh Leads',
+            ),
+          ],
           shape: Border(
             bottom: BorderSide(color: AppColors.getBorderColor(context)),
           ),
