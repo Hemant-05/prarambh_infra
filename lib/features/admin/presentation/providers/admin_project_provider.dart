@@ -224,6 +224,15 @@ class AdminProjectProvider extends ChangeNotifier {
     }
   }
 
+  Future<ProjectModel> getProjectDetails(String projectId) async {
+    try {
+      return await repository.getProjectDetails(projectId);
+    } catch (e) {
+      debugPrint('Get Project Details Error: $e');
+      rethrow;
+    }
+  }
+
   Future<bool> createUnit(
     Map<String, dynamic> data,
     String projectId, {

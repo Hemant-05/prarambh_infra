@@ -24,6 +24,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
   String _selectedCategory = 'All';
   String _selectedPotential = 'All';
   String _selectedMonth = 'All';
+  String _selectedAttempts = 'All';
 
   @override
   void initState() {
@@ -112,6 +113,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                           category: _selectedCategory,
                           potential: _selectedPotential,
                           month: _selectedMonth,
+                          attempts: _selectedAttempts,
                         ),
                         cardColor,
                         primaryBlue,
@@ -126,6 +128,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                           category: _selectedCategory,
                           potential: _selectedPotential,
                           month: _selectedMonth,
+                          attempts: _selectedAttempts,
                         ).where((l) => l.stage.toLowerCase() == 'suspecting').toList(),
                         cardColor,
                         primaryBlue,
@@ -138,6 +141,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                           category: _selectedCategory,
                           potential: _selectedPotential,
                           month: _selectedMonth,
+                          attempts: _selectedAttempts,
                         ).where((l) => l.stage.toLowerCase() == 'prospecting').toList(),
                         cardColor,
                         primaryBlue,
@@ -150,6 +154,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                           category: _selectedCategory,
                           potential: _selectedPotential,
                           month: _selectedMonth,
+                          attempts: _selectedAttempts,
                         ).where((l) => l.stage.toLowerCase() == 'site visit').toList(),
                         cardColor,
                         primaryBlue,
@@ -162,6 +167,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                           category: _selectedCategory,
                           potential: _selectedPotential,
                           month: _selectedMonth,
+                          attempts: _selectedAttempts,
                         ).where((l) => l.stage.toLowerCase() == 'booking').toList(),
                         cardColor,
                         primaryBlue,
@@ -174,6 +180,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                           category: _selectedCategory,
                           potential: _selectedPotential,
                           month: _selectedMonth,
+                          attempts: _selectedAttempts,
                         ).where((l) => l.stage.toLowerCase() == 'closed').toList(),
                         cardColor,
                         primaryBlue,
@@ -186,6 +193,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                           category: _selectedCategory,
                           potential: _selectedPotential,
                           month: _selectedMonth,
+                          attempts: _selectedAttempts,
                         ).where((l) => l.stage.toLowerCase() == 'completed').toList(),
                         cardColor,
                         primaryBlue,
@@ -264,6 +272,15 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                   LeadFilterHelper.months,
                   _selectedMonth,
                   (v) => setState(() => _selectedMonth = v!),
+                  isDark,
+                  primaryBlue,
+                ),
+                const SizedBox(width: 8),
+                _buildFilterDropdown(
+                  'Attempts',
+                  LeadFilterHelper.attemptOptions,
+                  _selectedAttempts,
+                  (v) => setState(() => _selectedAttempts = v!),
                   isDark,
                   primaryBlue,
                 ),

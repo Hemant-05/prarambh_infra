@@ -52,11 +52,19 @@ class AdminDrawer extends StatelessWidget {
               children: [
                 _buildDrawerItem(
                   context: context,
-                  icon: Icons.analytics_outlined,
-                  title: 'Sales Analytics',
+                  icon: Icons.people_outline,
+                  title: 'Advisor Application',
+                  onTap: () {
+                    Navigator.pushNamed(context, '/advisor_applications');
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.campaign_outlined,
+                  title: 'Leads',
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.pushNamed(context, '/admin_sales_analytics');
+                    Navigator.pushNamed(context, '/lead_management');
                   },
                 ),
                 _buildDrawerItem(
@@ -65,18 +73,6 @@ class AdminDrawer extends StatelessWidget {
                   title: 'Document Management',
                   onTap: () {
                     Navigator.pushNamed(context, '/docs_management');
-                  },
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.account_balance_wallet_outlined,
-                  title: 'Upcoming Installments',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(
-                      context,
-                      '/admin_upcoming_installments',
-                    );
                   },
                 ),
                 _buildDrawerItem(
@@ -99,13 +95,26 @@ class AdminDrawer extends StatelessWidget {
                     Navigator.pop(context); // close drawer
                     Navigator.pushNamed(context, '/meeting_management');
                   },
+                ),              
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.analytics_outlined,
+                  title: 'Sales Analytics',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/admin_sales_analytics');
+                  },
                 ),
                 _buildDrawerItem(
                   context: context,
-                  icon: Icons.people_outline,
-                  title: 'Advisor Application',
+                  icon: Icons.account_balance_wallet_outlined,
+                  title: 'Upcoming Installments',
                   onTap: () {
-                    Navigator.pushNamed(context, '/advisor_applications');
+                    Navigator.pop(context);
+                    Navigator.pushNamed(
+                      context,
+                      '/admin_upcoming_installments',
+                    );
                   },
                 ),
                 _buildDrawerItem(
@@ -126,11 +135,11 @@ class AdminDrawer extends StatelessWidget {
                 ),
                 _buildDrawerItem(
                   context: context,
-                  icon: Icons.campaign_outlined,
-                  title: 'Leads',
+                  icon: Icons.contact_support_outlined,
+                  title: 'User Enquiries',
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.pushNamed(context, '/lead_management');
+                    Navigator.pushNamed(context, '/admin_enquiries');
                   },
                 ),
                 _buildDrawerItem(
@@ -140,15 +149,6 @@ class AdminDrawer extends StatelessWidget {
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(context, '/admin_blogs');
-                  },
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.contact_support_outlined,
-                  title: 'User Enquiries',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, '/admin_enquiries');
                   },
                 ),
               ],

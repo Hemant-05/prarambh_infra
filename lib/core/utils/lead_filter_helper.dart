@@ -9,6 +9,7 @@ class LeadFilterHelper {
     String? category, // 'A', 'B', 'C', 'All'
     String? potential, // 'Hot', 'Warm', 'Cold', 'All'
     String? month, // 'Jan', 'Feb', etc., or 'All'
+    String? attempts, // '0', '1', '2', '3', '4', '5', '5+', or 'All'
   }) {
     return leads.where((lead) {
       // 1. Search Query (Name, Stage, Address)
@@ -42,6 +43,17 @@ class LeadFilterHelper {
         }
       }
 
+      // 5. Communication Attempt Filter
+      if (attempts != null && attempts != 'All' && attempts.isNotEmpty) {
+        final currentCount = lead.communicationAttempt;
+        if (attempts == '5+') {
+          if (currentCount < 5) return false;
+        } else {
+          final target = int.tryParse(attempts);
+          if (target != null && currentCount != target) return false;
+        }
+      }
+
       return true;
     }).toList();
   }
@@ -53,6 +65,7 @@ class LeadFilterHelper {
     String? category,
     String? potential,
     String? month,
+    String? attempts,
   }) {
     return leads.where((leadMap) {
       final lead = Map<String, dynamic>.from(leadMap);
@@ -91,6 +104,17 @@ class LeadFilterHelper {
         } catch (e) {}
       }
 
+      // 5. Attempts
+      if (attempts != null && attempts != 'All' && attempts.isNotEmpty) {
+        final currentCount = int.tryParse((lead['communication_attempt'] ?? '0').toString()) ?? 0;
+        if (attempts == '5+') {
+          if (currentCount < 5) return false;
+        } else {
+          final target = int.tryParse(attempts);
+          if (target != null && currentCount != target) return false;
+        }
+      }
+
       return true;
     }).toList();
   }
@@ -98,5 +122,9 @@ class LeadFilterHelper {
   static List<String> get months => [
     'All', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  ];
+
+  static List<String> get attemptOptions => [
+    'All', '0', '1', '2', '3', '4', '5', '5+'
   ];
 }

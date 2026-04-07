@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
@@ -22,6 +23,7 @@ import '../../../admin/presentation/screens/deal_management_screen.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import 'advisor_unit_details_screen.dart';
 import '../providers/advisor_lead_provider.dart';
+import '../../../advisor/presentation/screens/lead_notes_full_screen.dart';
 
 class LeadDetailsScreen extends StatefulWidget {
   final LeadModel lead;
@@ -51,7 +53,8 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
   ProjectModel? _selectedProject;
 
   String? selectedProperty;
-  int? selectedPropertyId;
+  int? selectedPropertyId; // Now specifically used as Project ID
+  int? selectedUnitId; // New field for Unit ID
   String? visitDate;
   String? meetingPoint;
 
@@ -99,12 +102,13 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
     currentStage = _currentLead.stage.toLowerCase();
     attemptCounter = _currentLead.communicationAttempt;
     _isPriorityToggle = _currentLead.isPriority;
-    selectedProperty = _currentLead.propertyId > 0
-        ? "Property ID: ${_currentLead.propertyId}"
+    selectedProperty = _currentLead.unitId > 0
+        ? "Unit ID: ${_currentLead.unitId}"
         : null;
     selectedPropertyId = _currentLead.propertyId > 0
         ? _currentLead.propertyId
         : null;
+    selectedUnitId = _currentLead.unitId > 0 ? _currentLead.unitId : null;
     visitDate = _currentLead.reminder.isNotEmpty ? _currentLead.reminder : null;
     meetingPoint = _currentLead.meetingPoint.isNotEmpty
         ? _currentLead.meetingPoint
@@ -121,24 +125,36 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (selectedPropertyId != null) {
+      if (selectedUnitId != null && selectedUnitId! > 0) {
         try {
           final provider = context.read<AdminProjectProvider>();
-          final unit = await provider.getUnitDetails(
-            selectedPropertyId.toString(),
-          );
-          if (provider.projects.isEmpty) {
-            await provider.fetchProjects();
-          }
+          final unit = await provider.getUnitDetails(selectedUnitId.toString());
+
           ProjectModel? proj;
           try {
-            proj = provider.projects.firstWhere((p) => p.id == unit.projectId);
-          } catch (_) {}
+            proj = await provider.getProjectDetails(unit.projectId.toString());
+          } catch (_) {
+            // Fallback to searching in list if single fetch fails
+            if (provider.projects.isEmpty) {
+              await provider.fetchProjects();
+            }
+            try {
+              proj = provider.projects.firstWhere(
+                (p) => p.id == unit.projectId,
+              );
+            } catch (_) {}
+          }
 
           if (mounted) {
             setState(() {
               _selectedUnit = unit;
-              if (proj != null) _selectedProject = proj;
+              if (proj != null) {
+                _selectedProject = proj;
+                selectedProperty =
+                    "${proj.projectName} (${unit.towerName} - ${unit.unitNumber})";
+              } else {
+                selectedProperty = "Unit ID: ${unit.id}";
+              }
             });
           }
         } catch (e) {
@@ -214,7 +230,8 @@ Please feel free to contact us for more information.""";
           _selectedProject?.id.toString() ??
           selectedPropertyId?.toString() ??
           '0',
-      'unit_id': selectedPropertyId?.toString() ?? '0',
+      'unit_id':
+          _selectedUnit?.id.toString() ?? selectedUnitId?.toString() ?? '0',
       'reminder': visitDate ?? '',
       'meeting_point': meetingPoint ?? '',
     };
@@ -332,7 +349,11 @@ Please feel free to contact us for more information.""";
     });
   }
 
-  Future<void> _updateStageInDb(String newStage, {String? note}) async {
+  Future<void> _updateStageInDb(
+    String newStage, {
+    String? note,
+    String? reason,
+  }) async {
     if (note != null) {
       setState(() {
         _noteHistory.insert(0, {
@@ -348,9 +369,11 @@ Please feel free to contact us for more information.""";
           _selectedProject?.id.toString() ??
           selectedPropertyId?.toString() ??
           '0',
-      "unit_id": selectedPropertyId?.toString() ?? '0',
+      "unit_id":
+          _selectedUnit?.id.toString() ?? selectedUnitId?.toString() ?? '0',
       "reminder": visitDate ?? '',
       "meeting_point": meetingPoint ?? '',
+      "reason": reason ?? rejectionReason ?? '',
     };
 
     if (note != null && note.isNotEmpty) {
@@ -395,6 +418,8 @@ Please feel free to contact us for more information.""";
       });
       _updateStageInDb(
         'closed',
+        reason:
+            "System Auto-Closed: Max attempts reached ($maxAttempts). Last Reason: $reason",
         note: "System Auto-Closed: Max attempts reached.",
       );
       _triggerLocalNotification(
@@ -488,10 +513,7 @@ Please feel free to contact us for more information.""";
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: textColor),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: backButton(isDark: isDark),
         title: Text(
           'Client Pipeline',
           style: GoogleFonts.montserrat(
@@ -547,9 +569,9 @@ Please feel free to contact us for more information.""";
 
                 // Unified Sections: Property & Notes (Shown if property exists or for all stages)
                 if (selectedPropertyId != null)
-                  _buildClickablePropertyCard(selectedProperty!),
+                _buildClickablePropertyCard(selectedProperty!),
 
-                if (currentStage != 'closed') _buildNoteHistorySection(),
+                _buildNoteHistorySection(),
                 const SizedBox(height: 24),
 
                 if (currentStage == "prospecting")
@@ -702,7 +724,6 @@ Please feel free to contact us for more information.""";
     }
   }
 
-  bool _showAllNotes = false;
 
   // ======================================================================
   // NEW SITE VISIT FEATURES: PHOTO & LOCATION
@@ -1122,6 +1143,33 @@ Please feel free to contact us for more information.""";
                           ),
                         ],
                       ),
+                      if (selectedUnitId != null && selectedUnitId! > 0) ...[
+                        const SizedBox(height: 20),
+                        Divider(color: Colors.grey.shade200),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildInfoItem(
+                                'Project',
+                                _selectedProject?.projectName ?? 'Loading...',
+                                textColor,
+                                icon: Icons.apartment,
+                              ),
+                            ),
+                            Expanded(
+                              child: _buildInfoItem(
+                                'Unit (Block - No)',
+                                _selectedUnit != null
+                                    ? "${_selectedUnit!.towerName} - ${_selectedUnit!.unitNumber}"
+                                    : 'Loading...',
+                                textColor,
+                                icon: Icons.grid_view_rounded,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                       const SizedBox(height: 20),
                       Divider(color: Colors.grey.shade200),
                       const SizedBox(height: 16),
@@ -1249,9 +1297,7 @@ Please feel free to contact us for more information.""";
   Widget _buildNoteHistorySection() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryBlue = AppColors.getPrimaryBlue(context);
-    final notesToShow = _showAllNotes
-        ? _noteHistory
-        : _noteHistory.take(3).toList();
+    final notesToShow = _noteHistory.take(2).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1279,13 +1325,19 @@ Please feel free to contact us for more information.""";
               ),
             ),
             const Spacer(),
-            if (_noteHistory.length > 3)
+            if (_noteHistory.length > 2)
               TextButton(
-                onPressed: () => setState(() => _showAllNotes = !_showAllNotes),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LeadNotesFullScreen(
+                      lead: _currentLead,
+                      noteHistory: _noteHistory,
+                    ),
+                  ),
+                ),
                 child: Text(
-                  _showAllNotes
-                      ? 'Show Less'
-                      : 'View All (${_noteHistory.length})',
+                  'View All (${_noteHistory.length})',
                   style: TextStyle(
                     fontSize: 12,
                     color: primaryBlue,
@@ -1721,7 +1773,8 @@ Please feel free to contact us for more information.""";
                             FileDownloadHelper().downloadFile(
                               context: context,
                               url: _currentLead.siteVisitPhoto,
-                              fileName: "SiteVisit_${_currentLead.clientName.replaceAll(' ', '_')}.jpg",
+                              fileName:
+                                  "SiteVisit_${_currentLead.clientName.replaceAll(' ', '_')}.jpg",
                             );
                           },
                           icon: Icon(
@@ -1975,8 +2028,14 @@ Please feel free to contact us for more information.""";
                           clientEmail: _emailController.text.trim(),
                           advisorCode: _currentLead.advisorCode,
                           leadId: _currentLead.id,
-                          propertyId: _selectedProject?.id.toString() ?? '0',
-                          unitId: selectedPropertyId?.toString() ?? '0',
+                          propertyId:
+                              _selectedProject?.id.toString() ??
+                              selectedPropertyId?.toString() ??
+                              '0',
+                          unitId:
+                              _selectedUnit?.id.toString() ??
+                              selectedUnitId?.toString() ??
+                              '0',
                           tokenAmount: '0',
                           paymentAmount: '0',
                           tokenPaymentMode: '',
@@ -2187,8 +2246,8 @@ Please feel free to contact us for more information.""";
                   clientAdharBack: '',
                   clientPanFront: '',
                   clientPanBack: '',
-                  propertyId: _selectedProject?.id ?? 0,
-                  unitId: selectedPropertyId ?? 0,
+                  propertyId: _selectedProject?.id ?? selectedPropertyId ?? 0,
+                  unitId: _selectedUnit?.id ?? selectedUnitId ?? 0,
                   stage: 'booking',
                   leadId: int.parse(_currentLead.id),
                   isResale: false,
@@ -2899,7 +2958,8 @@ Please feel free to contact us for more information.""";
                 onTap: () => _showCascadedPropertySheet(
                   (prop, unitId, unit, project) => setSheetState(() {
                     localSelectedProp = prop;
-                    selectedPropertyId = unitId;
+                    selectedPropertyId = project.id;
+                    selectedUnitId = unit.id;
                     _selectedUnit = unit;
                     _selectedProject = project;
                   }),
@@ -3195,6 +3255,7 @@ Please feel free to contact us for more information.""";
                     rejectionReason = "$selectedReason - ${notesCtrl.text}";
                     _updateStageInDb(
                       "closed",
+                      reason: rejectionReason,
                       note: "Not Interested: $rejectionReason",
                     );
                     Navigator.pop(ctx);
@@ -3266,7 +3327,8 @@ Please feel free to contact us for more information.""";
                 onTap: () => _showCascadedPropertySheet(
                   (prop, unitId, unit, project) => setSheetState(() {
                     localProp = prop;
-                    selectedPropertyId = unitId;
+                    selectedPropertyId = project.id;
+                    selectedUnitId = unit.id;
                     _selectedUnit = unit;
                     _selectedProject = project;
                   }),
@@ -3702,6 +3764,7 @@ class _EditLeadFormState extends State<_EditLeadForm> {
                                 widget.lead.communicationAttempt,
                             createdAt: widget.lead.createdAt,
                             updatedAt: widget.lead.updatedAt,
+                            unitId: widget.lead.unitId,
                           );
                           widget.onSuccess(updatedLead);
                           Navigator.pop(context);

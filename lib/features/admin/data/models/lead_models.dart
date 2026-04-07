@@ -15,7 +15,8 @@ class LeadModel {
   final bool isPriority;
   final String siteVisitPhoto;
   final String stage;
-  final int propertyId;
+  final int propertyId; // Project ID
+  final int unitId;     // Unit ID
   final String callOutCome;
   final String reason;
   final String notes;
@@ -31,7 +32,7 @@ class LeadModel {
     required this.clientOccupation, required this.leadCategory, required this.leadPotential,
     required this.clientAddress, required this.ownsHouse, required this.annualIncome,
     required this.keyDecisionMaker, required this.isPriority, required this.siteVisitPhoto,
-    required this.stage, required this.propertyId, required this.callOutCome,
+    required this.stage, required this.propertyId, required this.unitId, required this.callOutCome,
     required this.reason, required this.notes, required this.reminder,
     required this.meetingPoint, required this.communicationAttempt,
     required this.createdAt, required this.updatedAt,
@@ -74,6 +75,7 @@ class LeadModel {
       stage: (json['stage'] == null || json['stage'].toString().isEmpty) ? 'suspecting' : json['stage'].toString(),
 
       propertyId: json['property_id'] != null ? int.tryParse(json['property_id'].toString()) ?? 0 : 0,
+      unitId: json['unit_id'] != null ? int.tryParse(json['unit_id'].toString()) ?? 0 : 0,
       callOutCome: json['call_outcome']?.toString() ?? '',
       reason: json['reason']?.toString() ?? '',
       notes: json['notes']?.toString() ?? '',

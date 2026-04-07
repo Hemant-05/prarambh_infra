@@ -25,6 +25,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
   String _selectedCategory = 'All';
   String _selectedPotential = 'All';
   String _selectedMonth = 'All';
+  String _selectedAttempts = 'All';
 
   @override
   void initState() {
@@ -72,7 +73,8 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                       labelText: 'Client Name',
                       border: OutlineInputBorder(),
                     ),
-                    validator: (v) => Validators.validateRequired(v, 'Client Name'),
+                    validator: (v) =>
+                        Validators.validateRequired(v, 'Client Name'),
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -222,12 +224,13 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                     children: [
                       _buildStageList(
                         LeadFilterHelper.filterLeads(
-                          leads: provider.leads,
-                          query: _searchController.text,
-                          category: _selectedCategory,
-                          potential: _selectedPotential,
-                          month: _selectedMonth,
-                        )
+                              leads: provider.leads,
+                              query: _searchController.text,
+                              category: _selectedCategory,
+                              potential: _selectedPotential,
+                               month: _selectedMonth,
+                              attempts: _selectedAttempts,
+                            )
                             .where((l) => l.stage.toLowerCase() == 'suspecting')
                             .toList(),
                         cardColor,
@@ -236,44 +239,15 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                       ),
                       _buildStageList(
                         LeadFilterHelper.filterLeads(
-                          leads: provider.leads,
-                          query: _searchController.text,
-                          category: _selectedCategory,
-                          potential: _selectedPotential,
-                          month: _selectedMonth,
-                        )
-                            .where((l) => l.stage.toLowerCase() == 'prospecting')
-                            .toList(),
-                        cardColor,
-                        primaryBlue,
-                        isDark,
-                      ),
-                      _buildStageList(
-                        LeadFilterHelper.filterLeads(
-                          leads: provider.leads,
-                          query: _searchController.text,
-                          category: _selectedCategory,
-                          potential: _selectedPotential,
-                          month: _selectedMonth,
-                        )
-                            .where((l) => l.stage.toLowerCase() == 'site visit')
-                            .toList(),
-                        cardColor,
-                        primaryBlue,
-                        isDark,
-                      ),
-                      _buildStageList(
-                        LeadFilterHelper.filterLeads(
-                          leads: provider.leads,
-                          query: _searchController.text,
-                          category: _selectedCategory,
-                          potential: _selectedPotential,
-                          month: _selectedMonth,
-                        )
+                              leads: provider.leads,
+                              query: _searchController.text,
+                              category: _selectedCategory,
+                              potential: _selectedPotential,
+                               month: _selectedMonth,
+                              attempts: _selectedAttempts,
+                            )
                             .where(
-                              (l) =>
-                                  l.stage.toLowerCase() == 'booking' ||
-                                  l.stage.toLowerCase() == 'pending_verification',
+                              (l) => l.stage.toLowerCase() == 'prospecting',
                             )
                             .toList(),
                         cardColor,
@@ -282,24 +256,65 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                       ),
                       _buildStageList(
                         LeadFilterHelper.filterLeads(
-                          leads: provider.leads,
-                          query: _searchController.text,
-                          category: _selectedCategory,
-                          potential: _selectedPotential,
-                          month: _selectedMonth,
-                        ).where((l) => l.stage.toLowerCase() == 'closed').toList(),
+                              leads: provider.leads,
+                              query: _searchController.text,
+                              category: _selectedCategory,
+                              potential: _selectedPotential,
+                              month: _selectedMonth,
+                              attempts: _selectedAttempts,
+                            )
+                            .where((l) => l.stage.toLowerCase() == 'site visit')
+                            .toList(),
                         cardColor,
                         primaryBlue,
                         isDark,
                       ),
                       _buildStageList(
                         LeadFilterHelper.filterLeads(
-                          leads: provider.leads,
-                          query: _searchController.text,
-                          category: _selectedCategory,
-                          potential: _selectedPotential,
-                          month: _selectedMonth,
-                        ).where((l) => l.stage.toLowerCase() == 'completed').toList(),
+                              leads: provider.leads,
+                              query: _searchController.text,
+                              category: _selectedCategory,
+                              potential: _selectedPotential,
+                              month: _selectedMonth,
+                              attempts: _selectedAttempts,
+                            )
+                            .where(
+                              (l) =>
+                                  l.stage.toLowerCase() == 'booking' ||
+                                  l.stage.toLowerCase() ==
+                                      'pending_verification',
+                            )
+                            .toList(),
+                        cardColor,
+                        primaryBlue,
+                        isDark,
+                      ),
+                      _buildStageList(
+                        LeadFilterHelper.filterLeads(
+                              leads: provider.leads,
+                              query: _searchController.text,
+                              category: _selectedCategory,
+                              potential: _selectedPotential,
+                              month: _selectedMonth,
+                              attempts: _selectedAttempts,
+                            )
+                            .where((l) => l.stage.toLowerCase() == 'closed')
+                            .toList(),
+                        cardColor,
+                        primaryBlue,
+                        isDark,
+                      ),
+                      _buildStageList(
+                        LeadFilterHelper.filterLeads(
+                              leads: provider.leads,
+                              query: _searchController.text,
+                              category: _selectedCategory,
+                              potential: _selectedPotential,
+                              month: _selectedMonth,
+                              attempts: _selectedAttempts,
+                            )
+                            .where((l) => l.stage.toLowerCase() == 'completed')
+                            .toList(),
                         cardColor,
                         primaryBlue,
                         isDark,
@@ -315,9 +330,9 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
   Widget _buildDiscoveryBar(bool isDark, Color primaryBlue) {
     return Container(
       width: double.infinity,
-      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         border: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.1))),
       ),
       child: Column(
@@ -335,8 +350,15 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
               style: GoogleFonts.montserrat(fontSize: 12),
               decoration: InputDecoration(
                 hintText: 'Search Name or Address...',
-                hintStyle: GoogleFonts.montserrat(fontSize: 11, color: Colors.grey),
-                prefixIcon: const Icon(Icons.search, size: 18, color: Colors.grey),
+                hintStyle: GoogleFonts.montserrat(
+                  fontSize: 11,
+                  color: Colors.grey,
+                ),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  size: 18,
+                  color: Colors.grey,
+                ),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear, size: 16),
@@ -352,7 +374,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
             ),
           ),
           const SizedBox(height: 10),
-          
+
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -383,6 +405,15 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                   isDark,
                   primaryBlue,
                 ),
+                const SizedBox(width: 8),
+                _buildFilterDropdown(
+                  'Attempts',
+                  LeadFilterHelper.attemptOptions,
+                  _selectedAttempts,
+                  (v) => setState(() => _selectedAttempts = v!),
+                  isDark,
+                  primaryBlue,
+                ),
               ],
             ),
           ),
@@ -408,7 +439,9 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
             : (isDark ? Colors.grey[900] : Colors.grey[100]),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: selectedValue != 'All' ? primaryBlue.withOpacity(0.3) : Colors.transparent,
+          color: selectedValue != 'All'
+              ? primaryBlue.withOpacity(0.3)
+              : Colors.transparent,
         ),
       ),
       child: DropdownButtonHideUnderline(
@@ -422,8 +455,12 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                 e == 'All' ? label : e,
                 style: GoogleFonts.montserrat(
                   fontSize: 10,
-                  fontWeight: selectedValue == e ? FontWeight.bold : FontWeight.w500,
-                  color: selectedValue == e ? primaryBlue : (isDark ? Colors.white70 : Colors.black87),
+                  fontWeight: selectedValue == e
+                      ? FontWeight.bold
+                      : FontWeight.w500,
+                  color: selectedValue == e
+                      ? primaryBlue
+                      : (isDark ? Colors.white70 : Colors.black87),
                 ),
               ),
             );
