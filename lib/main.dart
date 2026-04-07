@@ -128,14 +128,13 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => di.sl<AdminBlogProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdminEnquiryProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<AdminAnalyticsProvider>()),
-        ChangeNotifierProvider(create: (_) => di.sl<InstallmentProvider>())
+        ChangeNotifierProvider(create: (_) => di.sl<InstallmentProvider>()),
       ],
       child: MaterialApp(
         title: 'Prarambh Infra',
         debugShowCheckedModeBanner: false,
         theme: _buildLightTheme(),
-        darkTheme: _buildDarkTheme(),
-        themeMode: ThemeMode.system,
+        themeMode: ThemeMode.light,
         navigatorKey: NavService.navigatorKey,
         initialRoute: '/splash',
         routes: _buildRoutes(),
@@ -285,7 +284,8 @@ class MyApp extends StatelessWidget {
           const InstallmentCalculatorScreen(),
       '/advisor_leaderboard': (context) => const AdvisorLeaderboardScreen(),
       '/upcoming_installments': (context) => const UpcomingInstallmentsScreen(),
-      '/admin_upcoming_installments': (context) => const AdminUpcomingInstallmentsScreen(),
+      '/admin_upcoming_installments': (context) =>
+          const AdminUpcomingInstallmentsScreen(),
       '/my_income_analytics': (context) => const MyIncomeAnalyticsScreen(),
       '/client_dashboard': (context) => const ClientDashboardScreen(),
       '/server_error': (context) => const ServerErrorScreen(),
