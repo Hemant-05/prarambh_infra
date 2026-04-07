@@ -5,7 +5,6 @@ import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
-import 'dart:math';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
@@ -3517,6 +3516,7 @@ class _EditLeadFormState extends State<_EditLeadForm> {
   String _potential = 'Warm';
   String _ownsHouse = 'No';
   String _decisionMaker = 'No';
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -3697,100 +3697,121 @@ class _EditLeadFormState extends State<_EditLeadForm> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () async {
-                        final data = {
-                          "client_name": _nameCtrl.text,
-                          "client_number": _phoneCtrl.text,
-                          "source": widget.lead.source,
-                          "client_age": _ageCtrl.text,
-                          "client_occupation": _occCtrl.text,
-                          "lead_category": _category,
-                          "lead_potential": _potential,
-                          "client_address": _addressCtrl.text,
-                          "owns_house": _ownsHouse == 'Yes' ? 1 : 0,
-                          "annual_income": _incomeCtrl.text,
-                          "key_decision_maker": _decisionMaker == 'Yes' ? 1 : 0,
-                        };
+                      onPressed: _isSaving
+                          ? null
+                          : () async {
+                              setState(() => _isSaving = true);
 
-                        bool success = false;
-                        if (widget.isAdmin) {
-                          final provider = context.read<AdminLeadProvider>();
-                          success = await provider.updateLeadStage(
-                            widget.lead.id,
-                            widget.lead.stage,
-                            extraData: data,
-                          );
-                        } else {
-                          final provider = context.read<AdvisorLeadProvider>();
-                          final advisorCode =
-                              context
-                                  .read<AuthProvider>()
-                                  .currentUser
-                                  ?.advisorCode ??
-                              '';
-                          success = await provider.updateLeadStage(
-                            widget.lead.id,
-                            widget.lead.stage,
-                            advisorCode,
-                            extraData: data,
-                          );
-                        }
+                              final data = {
+                                "client_name": _nameCtrl.text,
+                                "client_number": _phoneCtrl.text,
+                                "source": widget.lead.source,
+                                "client_age": _ageCtrl.text,
+                                "client_occupation": _occCtrl.text,
+                                "lead_category": _category,
+                                "lead_potential": _potential,
+                                "client_address": _addressCtrl.text,
+                                "owns_house": _ownsHouse == 'Yes' ? 1 : 0,
+                                "annual_income": _incomeCtrl.text,
+                                "key_decision_maker":
+                                    _decisionMaker == 'Yes' ? 1 : 0,
+                              };
 
-                        if (success && mounted) {
-                          LeadModel updatedLead = LeadModel(
-                            id: widget.lead.id,
-                            clientName: _nameCtrl.text,
-                            clientNumber: _phoneCtrl.text,
-                            advisorCode: widget.lead.advisorCode,
-                            source: widget.lead.source,
-                            clientAge: _ageCtrl.text,
-                            clientOccupation: _occCtrl.text,
-                            leadCategory: _category,
-                            leadPotential: _potential,
-                            clientAddress: _addressCtrl.text,
-                            ownsHouse: _ownsHouse,
-                            annualIncome: _incomeCtrl.text,
-                            keyDecisionMaker: _decisionMaker == 'Yes',
-                            isPriority: widget.lead.isPriority,
-                            siteVisitPhoto: widget.lead.siteVisitPhoto,
-                            stage: widget.lead.stage,
-                            propertyId: widget.lead.propertyId,
-                            callOutCome: widget.lead.callOutCome,
-                            reason: widget.lead.reason,
-                            notes: widget.lead.notes,
-                            reminder: widget.lead.reminder,
-                            meetingPoint: widget.lead.meetingPoint,
-                            communicationAttempt:
-                                widget.lead.communicationAttempt,
-                            createdAt: widget.lead.createdAt,
-                            updatedAt: widget.lead.updatedAt,
-                            unitId: widget.lead.unitId,
-                          );
-                          widget.onSuccess(updatedLead);
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Client details updated successfully!',
-                              ),
-                            ),
-                          );
-                        }
-                      },
+                              bool success = false;
+                              try {
+                                if (widget.isAdmin) {
+                                  final provider =
+                                      context.read<AdminLeadProvider>();
+                                  success = await provider.updateLeadStage(
+                                    widget.lead.id,
+                                    widget.lead.stage,
+                                    extraData: data,
+                                  );
+                                } else {
+                                  final provider =
+                                      context.read<AdvisorLeadProvider>();
+                                  final advisorCode =
+                                      context
+                                          .read<AuthProvider>()
+                                          .currentUser
+                                          ?.advisorCode ??
+                                      '';
+                                  success = await provider.updateLeadStage(
+                                    widget.lead.id,
+                                    widget.lead.stage,
+                                    advisorCode,
+                                    extraData: data,
+                                  );
+                                }
+                              } finally {
+                                if (mounted) setState(() => _isSaving = false);
+                              }
+
+                              if (success && mounted) {
+                                LeadModel updatedLead = LeadModel(
+                                  id: widget.lead.id,
+                                  clientName: _nameCtrl.text,
+                                  clientNumber: _phoneCtrl.text,
+                                  advisorCode: widget.lead.advisorCode,
+                                  source: widget.lead.source,
+                                  clientAge: _ageCtrl.text,
+                                  clientOccupation: _occCtrl.text,
+                                  leadCategory: _category,
+                                  leadPotential: _potential,
+                                  clientAddress: _addressCtrl.text,
+                                  ownsHouse: _ownsHouse,
+                                  annualIncome: _incomeCtrl.text,
+                                  keyDecisionMaker: _decisionMaker == 'Yes',
+                                  isPriority: widget.lead.isPriority,
+                                  siteVisitPhoto: widget.lead.siteVisitPhoto,
+                                  stage: widget.lead.stage,
+                                  propertyId: widget.lead.propertyId,
+                                  callOutCome: widget.lead.callOutCome,
+                                  reason: widget.lead.reason,
+                                  notes: widget.lead.notes,
+                                  reminder: widget.lead.reminder,
+                                  meetingPoint: widget.lead.meetingPoint,
+                                  communicationAttempt:
+                                      widget.lead.communicationAttempt,
+                                  createdAt: widget.lead.createdAt,
+                                  updatedAt: widget.lead.updatedAt,
+                                  unitId: widget.lead.unitId,
+                                );
+                                widget.onSuccess(updatedLead);
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Client details updated successfully!',
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: widget.primaryBlue,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                        elevation: 0,
                       ),
-                      child: Text(
-                        'Save Changes',
-                        style: GoogleFonts.montserrat(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: _isSaving
+                          ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                          : const Text(
+                            'Save Changes',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                     ),
                   ),
                   const SizedBox(height: 20),
