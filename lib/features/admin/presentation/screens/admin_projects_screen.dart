@@ -17,6 +17,14 @@ class AdminProjectsScreen extends StatefulWidget {
 }
 
 class _AdminProjectsScreenState extends State<AdminProjectsScreen> {
+  final TextEditingController _searchCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -50,20 +58,292 @@ class _AdminProjectsScreenState extends State<AdminProjectsScreen> {
           ),
         ),
       ),
-      body: provider.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              padding: const EdgeInsets.all(20),
-              physics: const BouncingScrollPhysics(),
-              itemCount: provider.projects.length,
-              itemBuilder: (context, index) {
-                return _buildProjectCard(
-                  provider.projects[index],
-                  primaryBlue,
-                  isDark,
-                );
-              },
+      body: Column(
+        children: [
+          _buildSearchAndFilter(context, provider, primaryBlue, isDark),
+          Expanded(
+            child: provider.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : provider.filteredProjects.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No projects found matching your criteria',
+                          style: GoogleFonts.montserrat(color: Colors.grey),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            _searchCtrl.clear();
+                            provider.clearFilters();
+                          },
+                          child: const Text('Clear All Filters'),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: provider.filteredProjects.length,
+                    itemBuilder: (context, index) {
+                      return _buildProjectCard(
+                        provider.filteredProjects[index],
+                        primaryBlue,
+                        isDark,
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchAndFilter(
+    BuildContext context,
+    AdminProjectProvider provider,
+    Color primaryBlue,
+    bool isDark,
+  ) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 45,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey[800] : Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: TextField(
+                controller: _searchCtrl,
+                onChanged: (v) => provider.setSearchQuery(v),
+                decoration: InputDecoration(
+                  hintText: 'Search projects...',
+                  hintStyle: GoogleFonts.montserrat(
+                    fontSize: 13,
+                    color: Colors.grey,
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    size: 20,
+                    color: Colors.grey,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  suffixIcon: _searchCtrl.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          onPressed: () {
+                            _searchCtrl.clear();
+                            provider.setSearchQuery('');
+                          },
+                        )
+                      : null,
+                ),
+              ),
             ),
+          ),
+          const SizedBox(width: 12),
+          Stack(
+            children: [
+              IconButton(
+                onPressed: () => _showFilterBottomSheet(context, provider),
+                icon: Icon(
+                  Icons.tune,
+                  color:
+                      (provider.filterType != 'All' ||
+                          provider.filterConstruction != 'All' ||
+                          provider.filterStatus != 'All')
+                      ? primaryBlue
+                      : Colors.grey,
+                ),
+              ),
+              if (provider.filterType != 'All' ||
+                  provider.filterConstruction != 'All' ||
+                  provider.filterStatus != 'All')
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: primaryBlue,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFilterBottomSheet(
+    BuildContext context,
+    AdminProjectProvider provider,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Consumer<AdminProjectProvider>(
+          builder: (context, provider, _) {
+            return Container(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Filter Projects',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          provider.clearFilters();
+                          _searchCtrl.clear();
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Clear All'),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  _buildFilterSection(
+                    'Project Type',
+                    ['All', 'Residential', 'Commercial', 'Mixed Use'],
+                    provider.filterType,
+                    (val) => provider.setFilters(type: val),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildFilterSection(
+                    'Construction Status',
+                    [
+                      'All',
+                      'New Launch',
+                      'Under Construction',
+                      'Ready to Move',
+                    ],
+                    provider.filterConstruction,
+                    (val) => provider.setFilters(construction: val),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildFilterSection(
+                    'Project Status',
+                    ['All', 'Completed', 'Ongoing', 'Upcoming'],
+                    provider.filterStatus,
+                    (val) => provider.setFilters(status: val),
+                  ),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.getPrimaryBlue(context),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Apply Filters',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildFilterSection(
+    String title,
+    List<String> options,
+    String currentValue,
+    Function(String) onSelected,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: GoogleFonts.montserrat(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[600],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: options.map((option) {
+            final isSelected = currentValue == option;
+            return ChoiceChip(
+              checkmarkColor: AppColors.getPrimaryBlue(context),
+              label: Text(option),
+              selected: isSelected,
+              onSelected: (selected) {
+                if (selected) onSelected(option);
+              },
+              selectedColor: AppColors.getPrimaryBlue(context).withOpacity(0.2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              labelStyle: GoogleFonts.montserrat(
+                fontSize: 12,
+                color: isSelected
+                    ? AppColors.getPrimaryBlue(context)
+                    : Colors.grey[700],
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 
@@ -73,7 +353,6 @@ class _AdminProjectsScreenState extends State<AdminProjectsScreen> {
     bool isDark,
   ) {
     final cardColor = AppColors.getCardColor(context);
-    final textColor = isDark ? Colors.white : Colors.black87;
 
     Color statusColor;
     if (project.status.contains('RERA')) {
@@ -110,7 +389,7 @@ class _AdminProjectsScreenState extends State<AdminProjectsScreen> {
                     image: project.images.isNotEmpty
                         ? NetworkImage(project.images[0]) as ImageProvider
                         : const AssetImage(logo),
-                    fit: BoxFit.cover
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),

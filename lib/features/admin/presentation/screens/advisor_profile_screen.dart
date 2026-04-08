@@ -227,7 +227,7 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                     _infoRow(
                       Icons.percent,
                       'Commission Slab',
-                      '${p.slab}%',
+                      '${double.tryParse(p.slab)!.toStringAsFixed(0)} ₹',
                       primaryBlue,
                     ),
                     _divider(),

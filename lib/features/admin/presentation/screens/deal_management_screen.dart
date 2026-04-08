@@ -66,14 +66,14 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
   }
 
   Future<void> _fetchUnitDetails() async {
-    if (widget.deal.propertyId == 0) return;
+    if (widget.deal.unitId == 0) return;
     
     setState(() => _isLoadingUnit = true);
     try {
       final projectProvider = context.read<AdminProjectProvider>();
       
       // Fetch unit details
-      final unit = await projectProvider.getUnitDetails(widget.deal.propertyId.toString());
+      final unit = await projectProvider.getUnitDetails(widget.deal.unitId.toString());
       
       // Ensure projects are fetched to find the project name
       if (projectProvider.projects.isEmpty) {
@@ -212,6 +212,10 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
     bool isFullyPaid =
         _installments.isNotEmpty && paidCount == _installments.length;
     String overallStatus = isFullyPaid ? 'Complete' : 'Pending';
+
+    bool isTokenTaken = (widget.deal.tokenAmount != null &&
+        widget.deal.tokenAmount!.isNotEmpty &&
+        (double.tryParse(widget.deal.tokenAmount!) ?? 0) > 0);
 
     return Scaffold(
       backgroundColor: isDark
@@ -425,12 +429,13 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                     childAspectRatio: 1.2,
                   ),
                   itemCount: widget.deal.propertyDocs.length,
-                  itemBuilder: (context, index) {
-                    return _buildDocumentViewerTile(
-                      "Property Doc ${index + 1}", 
-                      widget.deal.propertyDocs[index]
-                    );
-                  },
+                    itemBuilder: (context, index) {
+                      final doc = widget.deal.propertyDocs[index];
+                      return _buildDocumentViewerTile(
+                        doc['title'] ?? "Property Doc ${index + 1}",
+                        doc['url'],
+                      );
+                    },
                 ),
               ),
               const SizedBox(height: 24),
@@ -665,111 +670,112 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
             ),
             const SizedBox(height: 24),
 
-            Text(
-              "Payment Configuration",
-              style: GoogleFonts.montserrat(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
+            if (isTokenTaken) ...[
+              Text(
+                "Payment Configuration",
+                style: GoogleFonts.montserrat(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: primaryBlue.withOpacity(0.5)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Total Payable Amount (₹)",
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[600],
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: primaryBlue.withOpacity(0.5)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _totalAmountCtrl,
-                    keyboardType: TextInputType.number,
-                    enabled: !_isTotalAmountLocked,
-                    onChanged: (v) => _generateInstallments(),
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.grey.withOpacity(0.05),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Total Payable Amount (₹)",
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[600],
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  Text(
-                    "Installment Plan",
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
-                    initialValue: _selectedPlan,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.grey.withOpacity(0.05),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                    ),
-                    items: _plans
-                        .map(
-                          (e) => DropdownMenuItem(
-                            value: e,
-                            child: Text(
-                              e,
-                              style: GoogleFonts.montserrat(fontSize: 13),
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (widget.isReraApproved || _isPaymentPlanLocked)
-                        ? null
-                        : (val) {
-                            setState(() => _selectedPlan = val!);
-                            _generateInstallments();
-                          },
-                  ),
-                  if (widget.isReraApproved || _isPaymentPlanLocked)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        widget.isReraApproved 
-                            ? "Locked to 100% Upfront due to RERA compliance."
-                            : "Payment Plan is locked after initial configuration.",
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.orange.shade800,
-                          fontWeight: FontWeight.bold,
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _totalAmountCtrl,
+                      keyboardType: TextInputType.number,
+                      enabled: !_isTotalAmountLocked,
+                      onChanged: (v) => _generateInstallments(),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.grey.withOpacity(0.05),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
                       ),
                     ),
-                ],
+                    const SizedBox(height: 16),
+                    Text(
+                      "Installment Plan",
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue: _selectedPlan,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.grey.withOpacity(0.05),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                      ),
+                      items: _plans
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e,
+                              child: Text(
+                                e,
+                                style: GoogleFonts.montserrat(fontSize: 13),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (widget.isReraApproved || _isPaymentPlanLocked)
+                          ? null
+                          : (val) {
+                              setState(() => _selectedPlan = val!);
+                              _generateInstallments();
+                            },
+                    ),
+                    if (widget.isReraApproved || _isPaymentPlanLocked)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          widget.isReraApproved
+                              ? "Locked to 100% Upfront due to RERA compliance."
+                              : "Payment Plan is locked after initial configuration.",
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.orange.shade800,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
+            ],
 
             // Additional Documents Upload (Property Docs)
             Text(
@@ -858,7 +864,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
             const SizedBox(height: 24),
 
             // Installments Tracker
-            if (_installments.isNotEmpty) ...[
+            if (isTokenTaken && _installments.isNotEmpty) ...[
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

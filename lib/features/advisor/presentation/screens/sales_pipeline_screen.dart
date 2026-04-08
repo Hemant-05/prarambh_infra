@@ -162,51 +162,36 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(50),
-        child: AppBar(
-          backgroundColor: cardColor,
-          elevation: 0,
-          bottom: TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            indicatorColor: primaryBlue,
-            indicatorWeight: 3,
-            labelColor: primaryBlue,
-            unselectedLabelColor: isDark ? Colors.white38 : Colors.grey[600],
-            labelStyle: GoogleFonts.montserrat(
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-            ),
-            unselectedLabelStyle: GoogleFonts.montserrat(
-              fontWeight: FontWeight.w500,
-              fontSize: 13,
-            ),
-            tabs: const [
-              Tab(text: 'Suspecting'),
-              Tab(text: 'Prospecting'),
-              Tab(text: 'Site Visit'),
-              Tab(text: 'Booking'),
-              Tab(text: 'Closed'),
-              Tab(text: 'Completed'),
-            ],
+      appBar: AppBar(
+        backgroundColor: cardColor,
+        elevation: 0,
+        toolbarHeight: 0,
+        bottom: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          indicatorColor: primaryBlue,
+          indicatorWeight: 1,
+          labelColor: primaryBlue,
+          unselectedLabelColor: isDark ? Colors.white38 : Colors.grey[600],
+          labelStyle: GoogleFonts.montserrat(
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
           ),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.refresh, color: primaryBlue),
-              onPressed: () {
-                final authProvider = context.read<AuthProvider>();
-                final advisorCode = authProvider.currentUser?.advisorCode ?? '';
-                context.read<AdvisorLeadProvider>().fetchLeads(
-                  advisorCode: advisorCode,
-                );
-              },
-              tooltip: 'Refresh Leads',
-            ),
+          unselectedLabelStyle: GoogleFonts.montserrat(
+            fontWeight: FontWeight.w500,
+            fontSize: 13,
+          ),
+          tabs: const [
+            Tab(text: 'Suspecting'),
+            Tab(text: 'Prospecting'),
+            Tab(text: 'Site Visit'),
+            Tab(text: 'Booking'),
+            Tab(text: 'Closed'),
+            Tab(text: 'Completed'),
           ],
-          shape: Border(
-            bottom: BorderSide(color: AppColors.getBorderColor(context)),
-          ),
+        ),
+        shape: Border(
+          bottom: BorderSide(color: AppColors.getBorderColor(context)),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -241,7 +226,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                               query: _searchController.text,
                               category: _selectedCategory,
                               potential: _selectedPotential,
-                               month: _selectedMonth,
+                              month: _selectedMonth,
                               attempts: _selectedAttempts,
                             )
                             .where((l) => l.stage.toLowerCase() == 'suspecting')
@@ -256,7 +241,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                               query: _searchController.text,
                               category: _selectedCategory,
                               potential: _selectedPotential,
-                               month: _selectedMonth,
+                              month: _selectedMonth,
                               attempts: _selectedAttempts,
                             )
                             .where(
@@ -350,41 +335,68 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
       ),
       child: Column(
         children: [
-          // Search Field
-          Container(
-            height: 40,
-            decoration: BoxDecoration(
-              color: isDark ? Colors.grey[900] : Colors.grey[100],
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (_) => setState(() {}),
-              style: GoogleFonts.montserrat(fontSize: 12),
-              decoration: InputDecoration(
-                hintText: 'Search Name or Address...',
-                hintStyle: GoogleFonts.montserrat(
-                  fontSize: 11,
-                  color: Colors.grey,
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[900] : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (_) => setState(() {}),
+                    style: GoogleFonts.montserrat(fontSize: 12),
+                    decoration: InputDecoration(
+                      hintText: 'Search Name or Address...',
+                      hintStyle: GoogleFonts.montserrat(
+                        fontSize: 11,
+                        color: Colors.grey,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        size: 18,
+                        color: Colors.grey,
+                      ),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 16),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {});
+                              },
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                  ),
                 ),
-                prefixIcon: const Icon(
-                  Icons.search,
-                  size: 18,
-                  color: Colors.grey,
-                ),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, size: 16),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() {});
-                        },
-                      )
-                    : null,
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
               ),
-            ),
+              const SizedBox(width: 8),
+              Container(
+                height: 40,
+                width: 40,
+                decoration: BoxDecoration(
+                  color: primaryBlue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: IconButton(
+                  icon: Icon(Icons.refresh, size: 20, color: primaryBlue),
+                  onPressed: () {
+                    final authProvider = context.read<AuthProvider>();
+                    final advisorCode =
+                        authProvider.currentUser?.advisorCode ?? '';
+                    context.read<AdvisorLeadProvider>().fetchLeads(
+                      advisorCode: advisorCode,
+                    );
+                  },
+                  tooltip: 'Refresh Leads',
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 10),
 

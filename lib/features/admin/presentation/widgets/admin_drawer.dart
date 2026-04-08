@@ -4,6 +4,7 @@ import 'package:prarambh_infra/core/constant/cons_strings.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../providers/admin_profile_provider.dart';
 
 class AdminDrawer extends StatelessWidget {
   const AdminDrawer({super.key});
@@ -19,27 +20,42 @@ class AdminDrawer extends StatelessWidget {
         children: [
           const SizedBox(height: 60),
           // Profile Section
-          CircleAvatar(
-            radius: 40,
-            backgroundImage: const AssetImage(logo),
-            backgroundColor: AppColors.getBorderColor(context),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Amit Jadhav', // You can replace this with Provider data later
-            style: GoogleFonts.montserrat(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: textColor,
-            ),
-          ),
-          Text(
-            'Admin',
-            style: GoogleFonts.montserrat(
-              fontSize: 14,
-              color: primaryBlue,
-              fontWeight: FontWeight.w500,
-            ),
+          Consumer<AdminProfileProvider>(
+            builder: (context, profileProvider, child) {
+              final profile = profileProvider.profile;
+              final isLoading = profileProvider.isLoading;
+              final avatarUrl = profile?.avatarUrl;
+              final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
+
+              return Column(
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundImage: hasAvatar
+                        ? NetworkImage(avatarUrl)
+                        : const AssetImage(logo) as ImageProvider,
+                    backgroundColor: AppColors.getBorderColor(context),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    isLoading ? 'Loading...' : (profile?.name ?? 'Admin User'),
+                    style: GoogleFonts.montserrat(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                  Text(
+                    profile?.role ?? 'Admin',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 14,
+                      color: primaryBlue,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 20),
           Divider(color: AppColors.getBorderColor(context), thickness: 1),

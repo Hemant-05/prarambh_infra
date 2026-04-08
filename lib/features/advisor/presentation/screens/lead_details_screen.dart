@@ -3957,7 +3957,6 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
   RangeValues _priceRange = const RangeValues(0, 10000000);
   RangeValues _areaRange = const RangeValues(0, 10000);
   bool _isHighValueOnly = false;
-  bool _filtersExpanded = false;
 
   final List<String> _configs = ['1BHK', '2BHK', '3BHK', '4BHK'];
   final List<String> _types = ['Apartment', 'Plot', 'Villa', 'Flat'];
@@ -3997,46 +3996,19 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
     return true;
   }
 
-  Widget _filterChip(String label, String? selected, VoidCallback onTap) {
-    final isSelected = selected == label;
-    final primaryBlue = AppColors.getPrimaryBlue(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? primaryBlue
-              : (isDark ? Colors.grey[850] : Colors.grey.shade100),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? primaryBlue
-                : (isDark ? Colors.grey[800]! : Colors.grey.shade300),
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: isSelected
-                ? Colors.white
-                : (isDark ? Colors.white70 : Colors.black87),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildFilterSection(
     String title,
     List<String> options,
     String? selected,
     Function(String) onSelect,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryBlue = AppColors.getPrimaryBlue(context);
+    
+    // Create a list with "Select All" or similar if needed, or just handle null
+    final dropdownOptions = ['Select', ...options];
+    final displayValue = selected ?? 'Select';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -4049,13 +4021,39 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
           ),
         ),
         const SizedBox(height: 6),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          alignment: WrapAlignment.start,
-          children: options
-              .map((o) => _filterChip(o, selected, () => onSelect(o)))
-              .toList(),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.grey[850] : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isDark ? Colors.grey[800]! : Colors.grey.shade200,
+            ),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: displayValue,
+              isExpanded: true,
+              icon: Icon(Icons.keyboard_arrow_down, size: 16, color: primaryBlue),
+              dropdownColor: isDark ? Colors.grey[900] : Colors.white,
+              style: TextStyle(
+                fontSize: 11,
+                color: isDark ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.w500,
+              ),
+              items: dropdownOptions.map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  onSelect(newValue == 'Select' ? 'None' : newValue);
+                }
+              },
+            ),
+          ),
         ),
       ],
     );
@@ -4065,6 +4063,10 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
   Widget build(BuildContext context) {
     final primaryBlue = AppColors.getPrimaryBlue(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    
+    // Determine sidebar width: fixed 280 on wide, 35% on narrow
+    final sidebarWidth = screenWidth > 800 ? 280.0 : screenWidth * 0.38;
 
     return Consumer<AdminProjectProvider>(
       builder: (context, provider, _) {
@@ -4076,6 +4078,7 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
           ),
           child: Column(
             children: [
+              // Header
               Container(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                 child: Column(
@@ -4108,248 +4111,242 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.grey[850] : Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: TextField(
-                        onChanged: (v) =>
-                            setState(() => _searchQuery = v.toLowerCase()),
-                        style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black87,
-                          fontSize: 13,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: 'Search projects or units...',
-                          hintStyle: TextStyle(
-                            color: isDark
-                                ? Colors.white38
-                                : Colors.grey.shade400,
-                            fontSize: 13,
-                          ),
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: isDark
-                                ? Colors.white38
-                                : Colors.grey.shade400,
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    GestureDetector(
-                      onTap: () =>
-                          setState(() => _filtersExpanded = !_filtersExpanded),
-                      child: Row(
-                        children: [
-                          Icon(Icons.tune, size: 16, color: primaryBlue),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Filters',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: primaryBlue,
-                            ),
-                          ),
-                          const Spacer(),
-                          Icon(
-                            _filtersExpanded
-                                ? Icons.expand_less
-                                : Icons.expand_more,
-                            color: primaryBlue,
-                            size: 18,
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (_filtersExpanded) ...[
-                      const SizedBox(height: 12),
-                      _buildFilterSection(
-                        'Configuration',
-                        _configs,
-                        _selectedConfig,
-                        (v) => setState(
-                          () =>
-                              _selectedConfig = _selectedConfig == v ? null : v,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildFilterSection(
-                        'Property Type',
-                        _types,
-                        _selectedType,
-                        (v) => setState(
-                          () => _selectedType = _selectedType == v ? null : v,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildFilterSection(
-                        'Sale Category',
-                        _categories,
-                        _selectedCategory,
-                        (v) => setState(
-                          () => _selectedCategory = _selectedCategory == v
-                              ? null
-                              : v,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildFilterSection(
-                        'Facing',
-                        _facings,
-                        _selectedFacing,
-                        (v) => setState(
-                          () =>
-                              _selectedFacing = _selectedFacing == v ? null : v,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Text(
-                            'Price:',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _isHighValueOnly
-                                ? '1Cr+'
-                                : '\u20b9${(_priceRange.start / 100000).toStringAsFixed(0)}L - \u20b9${(_priceRange.end / 100000).toStringAsFixed(0)}L',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: primaryBlue,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Opacity(
-                        opacity: _isHighValueOnly ? 0.5 : 1.0,
-                        child: IgnorePointer(
-                          ignoring: _isHighValueOnly,
-                          child: RangeSlider(
-                            values: _priceRange,
-                            min: 0,
-                            max: 10000000,
-                            divisions: 100,
-                            activeColor: primaryBlue,
-                            onChanged: (v) => setState(() => _priceRange = v),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      InkWell(
-                        onTap: () => setState(
-                          () => _isHighValueOnly = !_isHighValueOnly,
-                        ),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: Checkbox(
-                                value: _isHighValueOnly,
-                                activeColor: primaryBlue,
-                                onChanged: (v) => setState(
-                                  () => _isHighValueOnly = v ?? false,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Show 1Cr+ Properties Only',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: isDark ? Colors.white70 : Colors.black87,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Text(
-                            'Area (Sqft):',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${_areaRange.start.toStringAsFixed(0)} - ${_areaRange.end.toStringAsFixed(0)}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: primaryBlue,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      RangeSlider(
-                        values: _areaRange,
-                        min: 0,
-                        max: 10000,
-                        divisions: 100,
-                        activeColor: primaryBlue,
-                        onChanged: (v) => setState(() => _areaRange = v),
-                      ),
-                    ],
-                    const SizedBox(height: 8),
                   ],
                 ),
               ),
               const Divider(height: 1),
+
+              // Main Content (Sidebar + Results)
               Expanded(
-                child: provider.isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        physics: const BouncingScrollPhysics(),
-                        itemCount: provider.projects.length,
-                        itemBuilder: (context, i) {
-                          final project = provider.projects[i];
-                          if (_searchQuery.isNotEmpty &&
-                              !project.projectName.toLowerCase().contains(
-                                _searchQuery,
-                              ) &&
-                              !project.city.toLowerCase().contains(
-                                _searchQuery,
-                              )) {
-                            return const SizedBox.shrink();
-                          }
-                          return _ProjectCard(
-                            project: project,
-                            primaryBlue: primaryBlue,
-                            isDark: isDark,
-                            searchQuery: _searchQuery,
-                            unitFilter: _unitMatchesFilters,
-                            onSelectUnit: (unit) {
-                              widget.onSelect(
-                                '${project.projectName} (${unit.towerName}-${unit.unitNumber})',
-                                unit.id,
-                                unit,
-                                project,
-                              );
-                              Navigator.pop(context);
-                            },
-                          );
-                        },
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Sidebar (Filters) - Persistent on all screen sizes
+                    Container(
+                      width: sidebarWidth,
+                      decoration: BoxDecoration(
+                        border: Border(
+                          right: BorderSide(
+                            color: isDark ? Colors.grey[800]! : Colors.grey.shade200,
+                          ),
+                        ),
                       ),
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(12), // Reduced padding for compactness
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'FILTERS',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey,
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _selectedConfig = null;
+                                      _selectedType = null;
+                                      _selectedCategory = null;
+                                      _selectedFacing = null;
+                                      _priceRange = const RangeValues(0, 10000000);
+                                      _areaRange = const RangeValues(0, 10000);
+                                      _isHighValueOnly = false;
+                                      _searchQuery = '';
+                                    });
+                                  },
+                                  icon: const Icon(Icons.refresh, size: 14),
+                                  tooltip: 'Clear All',
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            
+                            // Search in Sidebar
+                            Container(
+                              decoration: BoxDecoration(
+                                color: isDark ? Colors.grey[850] : Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: TextField(
+                                onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : Colors.black87,
+                                  fontSize: 12,
+                                ),
+                                decoration: const InputDecoration(
+                                  hintText: 'Search...',
+                                  prefixIcon: Icon(Icons.search, size: 16),
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(vertical: 8),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            _buildFilterSection(
+                              'Configuration',
+                              _configs,
+                              _selectedConfig,
+                              (v) => setState(() => _selectedConfig = v == 'None' ? null : v),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildFilterSection(
+                              'Type',
+                              _types,
+                              _selectedType,
+                              (v) => setState(() => _selectedType = v == 'None' ? null : v),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildFilterSection(
+                              'Sale',
+                              _categories,
+                              _selectedCategory,
+                              (v) => setState(() => _selectedCategory = v == 'None' ? null : v),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildFilterSection(
+                              'Facing',
+                              _facings,
+                              _selectedFacing,
+                              (v) => setState(() => _selectedFacing = v == 'None' ? null : v),
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            Text(
+                              'Price Range',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            Text(
+                              _isHighValueOnly
+                                  ? '1Cr+'
+                                  : '\u20b9${(_priceRange.start / 100000).toStringAsFixed(0)}L-\u20b9${(_priceRange.end / 100000).toStringAsFixed(0)}L',
+                              style: TextStyle(
+                                fontSize: 9,
+                                color: primaryBlue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            RangeSlider(
+                              values: _priceRange,
+                              min: 0,
+                              max: 10000000,
+                              divisions: 50,
+                              activeColor: primaryBlue,
+                              onChanged: _isHighValueOnly ? null : (v) => setState(() => _priceRange = v),
+                            ),
+                            
+                            InkWell(
+                              onTap: () => setState(() => _isHighValueOnly = !_isHighValueOnly),
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: Checkbox(
+                                      value: _isHighValueOnly,
+                                      onChanged: (v) => setState(() => _isHighValueOnly = v ?? false),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Text('1Cr+', style: TextStyle(fontSize: 10)),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(height: 12),
+                            Text(
+                              'Area (Sqft)',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            Text(
+                              '${_areaRange.start.toStringAsFixed(0)}-${_areaRange.end.toStringAsFixed(0)}',
+                              style: TextStyle(
+                                fontSize: 9,
+                                color: primaryBlue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            RangeSlider(
+                              values: _areaRange,
+                              min: 0,
+                              max: 10000,
+                              divisions: 50,
+                              activeColor: primaryBlue,
+                              onChanged: (v) => setState(() => _areaRange = v),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Results List (Always side-by-side)
+                    Expanded(
+                      child: provider.isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : ListView.builder(
+                              padding: const EdgeInsets.all(12),
+                              physics: const BouncingScrollPhysics(),
+                              itemCount: provider.projects.length,
+                              itemBuilder: (context, i) {
+                                final project = provider.projects[i];
+                                if (_searchQuery.isNotEmpty &&
+                                    !project.projectName.toLowerCase().contains(_searchQuery) &&
+                                    !project.city.toLowerCase().contains(_searchQuery)) {
+                                  return const SizedBox.shrink();
+                                }
+                                return _ProjectCard(
+                                  project: project,
+                                  primaryBlue: primaryBlue,
+                                  isDark: isDark,
+                                  searchQuery: _searchQuery,
+                                  unitFilter: _unitMatchesFilters,
+                                  onSelectUnit: (unit) async {
+                                    // Navigate to Unit Details first
+                                    final bool? selected = await Navigator.push<bool>(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AdvisorUnitDetailsScreen(
+                                          unit: unit,
+                                          project: project,
+                                          isSelectionMode: true,
+                                        ),
+                                      ),
+                                    );
+
+                                    // If unit was selected from details screen
+                                    if (selected == true) {
+                                      widget.onSelect(
+                                        '${project.projectName} (${unit.towerName}-${unit.unitNumber})',
+                                        unit.id,
+                                        unit,
+                                        project,
+                                      );
+                                      Navigator.pop(context);
+                                    }
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -4411,29 +4408,29 @@ class _ProjectCardState extends State<_ProjectCard> {
               );
             }
           },
-          leading: Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: widget.primaryBlue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(Icons.apartment, color: widget.primaryBlue, size: 22),
-          ),
           title: Text(
             project.projectName,
             style: GoogleFonts.montserrat(
               fontWeight: FontWeight.bold,
-              fontSize: 14,
+              fontSize: 16, // Significant increase
+              color: widget.isDark ? Colors.white : Colors.black87,
             ),
           ),
-          subtitle: Text(
-            '${project.city} \u2022 ${project.projectType}',
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              '${project.city} \u2022 ${project.projectType}',
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey.shade500,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
           trailing: Icon(
             _expanded ? Icons.expand_less : Icons.expand_more,
             color: widget.primaryBlue,
+            size: 20,
           ),
           children: [
             Consumer<AdminProjectProvider>(

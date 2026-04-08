@@ -18,7 +18,7 @@ class AdminProfileModel {
       email: json['email'] ?? '',
       phone: json['phone'] ?? '',
       role: json['role'] ?? 'Admin',
-      avatarUrl: json['avatar_url'] ?? '',
+      avatarUrl: json['profile_photo'] ?? '',
     );
   }
 }
