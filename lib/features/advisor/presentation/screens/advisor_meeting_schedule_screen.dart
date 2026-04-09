@@ -4,7 +4,9 @@ import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/advisor_attendance_provider.dart';
+import '../../data/models/advisor_meeting_model.dart';
 import 'advisor_camera_screen.dart';
 import '../../../../core/utils/access_helper.dart';
 
@@ -25,10 +27,8 @@ class _AdvisorMeetingScheduleScreenState
   @override
   void initState() {
     super.initState();
-    // Generate 30 days back and 30 days forward for the calendar
     _generateDaysList();
 
-    // Calculate initial scroll offset to center 'Today'
     double initialOffset =
         (30 * 60.0) -
         (MediaQueryData.fromView(WidgetsBinding.instance.window).size.width /
@@ -39,7 +39,9 @@ class _AdvisorMeetingScheduleScreenState
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AdvisorAttendanceProvider>().fetchMeetings();
+      final auth = context.read<AuthProvider>();
+      final advisorId = auth.currentUser?.id.toString() ?? '';
+      context.read<AdvisorAttendanceProvider>().fetchMeetings(advisorId);
     });
   }
 
@@ -60,14 +62,16 @@ class _AdvisorMeetingScheduleScreenState
   Widget build(BuildContext context) {
     final primaryBlue = AppColors.getPrimaryBlue(context);
     final provider = context.watch<AdvisorAttendanceProvider>();
+    final auth = context.read<AuthProvider>();
+    final advisorId = auth.currentUser?.id.toString() ?? '';
+    
     final scaffoldBg = AppColors.getScaffoldColor(context);
     final cardColor = AppColors.getCardColor(context);
     final textColor = AppColors.getTextColor(context);
     final secondaryTextColor = AppColors.getSecondaryTextColor(context);
     final borderColor = AppColors.getBorderColor(context);
-
-    // RESTORED MISSING VARIABLES
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     final selectedDateMeetings = provider.getMeetingsForDate(_selectedDate);
     final activeMeeting = provider.activeMeeting;
 
@@ -85,6 +89,12 @@ class _AdvisorMeetingScheduleScreenState
             fontSize: 18,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh, color: textColor),
+            onPressed: () => provider.fetchMeetings(advisorId),
+          ),
+        ],
       ),
       body: provider.isLoading
           ? Center(child: CircularProgressIndicator(color: primaryBlue))
@@ -106,12 +116,12 @@ class _AdvisorMeetingScheduleScreenState
                           fontSize: 16,
                         ),
                       ),
-                      const SizedBox(width: 24), // Balance spacing
+                      const SizedBox(width: 24),
                     ],
                   ),
                   const SizedBox(height: 16),
 
-                  // Interactive Real Calendar (Horizontal Scroll)
+                  // Horizontal Scroll Calendar
                   SizedBox(
                     height: 80,
                     child: ListView.builder(
@@ -163,9 +173,7 @@ class _AdvisorMeetingScheduleScreenState
                                     boxShadow: isSelected
                                         ? [
                                             BoxShadow(
-                                              color: primaryBlue.withOpacity(
-                                                0.4,
-                                              ),
+                                              color: primaryBlue.withOpacity(0.4),
                                               blurRadius: 8,
                                               offset: const Offset(0, 4),
                                             ),
@@ -177,14 +185,11 @@ class _AdvisorMeetingScheduleScreenState
                                     style: GoogleFonts.montserrat(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15,
-                                      color: isSelected
-                                          ? Colors.white
-                                          : textColor,
+                                      color: isSelected ? Colors.white : textColor,
                                     ),
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                // Dot indicator for today
                                 if (isToday)
                                   Container(
                                     width: 4,
@@ -205,135 +210,9 @@ class _AdvisorMeetingScheduleScreenState
                   ),
                   const SizedBox(height: 24),
 
-                  // Blue Mark Attendance Card (Only visible if today has a meeting)
-                  if (activeMeeting != null &&
-                      _selectedDate.day == DateTime.now().day)
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [primaryBlue, Colors.blue.shade400],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: primaryBlue.withOpacity(0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Mark Attendance',
-                                style: GoogleFonts.montserrat(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.camera_alt,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.location_on_outlined,
-                                color: Colors.white70,
-                                size: 14,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'At ${activeMeeting.location}',
-                                style: GoogleFonts.montserrat(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.access_time,
-                                color: Colors.white70,
-                                size: 14,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Check in before ${activeMeeting.startTime}',
-                                style: GoogleFonts.montserrat(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                if (AdvisorAccessHelper.check(context, feature: 'attendance')) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => AdvisorCameraScreen(
-                                        meeting: activeMeeting,
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white.withOpacity(0.2),
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                              ),
-                              child: Text(
-                                'Check In',
-                                style: GoogleFonts.montserrat(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  // Action Card removed to focus on meeting list mechanics
 
-                  if (activeMeeting != null &&
-                      _selectedDate.day == DateTime.now().day)
-                    const SizedBox(height: 32),
-
-                  // Dynamic Meetings List based on selected date
+                  // Meetings List
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -352,86 +231,165 @@ class _AdvisorMeetingScheduleScreenState
                   const SizedBox(height: 16),
 
                   if (selectedDateMeetings.isEmpty)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(30),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: borderColor),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.event_busy,
-                            size: 40,
-                            color: Colors.grey.shade400,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            "No meetings scheduled",
-                            style: GoogleFonts.montserrat(
-                              color: secondaryTextColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
+                    _buildEmptyState(cardColor, borderColor, secondaryTextColor)
                   else
                     ...selectedDateMeetings.map(
-                      (m) => _buildMeetingCard(m, primaryBlue, cardColor, borderColor, textColor, secondaryTextColor),
+                      (m) => _buildMeetingCard(m, provider, primaryBlue, cardColor, borderColor, textColor, secondaryTextColor),
                     ),
 
                   const SizedBox(height: 32),
-                  // Attendance History Stats
-                  Text(
-                    'Attendance History',
-                    style: GoogleFonts.montserrat(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: cardColor,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: borderColor),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _statItem('86%', '', textColor, secondaryTextColor),
-                        Container(
-                          width: 1,
-                          height: 30,
-                          color: borderColor,
-                        ),
-                        _statItem('15', 'TOTAL', textColor, secondaryTextColor),
-                        Container(
-                          width: 1,
-                          height: 30,
-                          color: borderColor,
-                        ),
-                        _statItem('13', 'PRESENT', primaryBlue, secondaryTextColor),
-                        Container(
-                          width: 1,
-                          height: 30,
-                          color: borderColor,
-                        ),
-                        _statItem('02', 'ABSENT', Colors.deepOrange, secondaryTextColor),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),
     );
   }
 
-  Widget _buildMeetingCard(dynamic meeting, Color primaryBlue, Color cardColor, Color borderColor, Color textColor, Color secondaryTextColor) {
+  Widget _buildActionCard(dynamic meeting, Color primaryBlue) {
+    bool isCheckInDone = meeting.checkInTime != null;
+    bool isCheckOutDone = meeting.checkOutTime != null;
+    String buttonText = "Check In";
+    if (isCheckInDone && !isCheckOutDone) buttonText = "Check Out";
+    if (isCheckOutDone) buttonText = "Completed";
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isCheckOutDone 
+            ? [Colors.grey.shade600, Colors.grey.shade400] 
+            : [primaryBlue, Colors.blue.shade400],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: (isCheckOutDone ? Colors.grey : primaryBlue).withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                isCheckOutDone ? 'Meeting Finished' : 'Mark Attendance',
+                style: GoogleFonts.montserrat(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isCheckOutDone ? Icons.check_circle_outline : Icons.camera_alt,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Icon(Icons.location_on_outlined, color: Colors.white70, size: 14),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  'At ${meeting.location}',
+                  style: GoogleFonts.montserrat(color: Colors.white70, fontSize: 12),
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          if (!isCheckOutDone)
+            Row(
+              children: [
+                const Icon(Icons.access_time, color: Colors.white70, size: 14),
+                const SizedBox(width: 4),
+                Text(
+                  isCheckInDone ? 'Ongoing since ${meeting.checkInTime}' : 'Starts at ${meeting.startTime}',
+                  style: GoogleFonts.montserrat(color: Colors.white70, fontSize: 12),
+                ),
+              ],
+            ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: isCheckOutDone ? null : () {
+                if (AdvisorAccessHelper.check(context, feature: 'attendance')) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AdvisorCameraScreen(
+                        meeting: meeting,
+                        // Passing isCheckIn flag through the constructor logic would be cleaner
+                        // but for now we'll handle it inside the camera/preview screen based on model
+                      ),
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white.withOpacity(0.2),
+                disabledBackgroundColor: Colors.white.withOpacity(0.1),
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: Text(
+                buttonText,
+                style: GoogleFonts.montserrat(
+                  color: isCheckOutDone ? Colors.white54 : Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(Color cardColor, Color borderColor, Color secondaryTextColor) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(30),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.event_busy, size: 40, color: Colors.grey.shade400),
+          const SizedBox(height: 12),
+          Text(
+            "No meetings scheduled",
+            style: GoogleFonts.montserrat(color: secondaryTextColor, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMeetingCard(AdvisorMeetingModel meeting, AdvisorAttendanceProvider provider, Color primaryBlue, Color cardColor, Color borderColor, Color textColor, Color secondaryTextColor) {
+    bool isCompleted = meeting.checkOutTime != null || meeting.status == 'completed';
+    bool isOngoing = meeting.checkInTime != null && !isCompleted;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -472,18 +430,15 @@ class _AdvisorMeetingScheduleScreenState
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
+                            color: (isCompleted ? Colors.blue : (isOngoing ? Colors.orange : Colors.green)).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            'SCHEDULED',
+                            isCompleted ? 'COMPLETED' : (isOngoing ? 'ONGOING' : 'SCHEDULED'),
                             style: GoogleFonts.montserrat(
-                              color: Colors.green,
+                              color: isCompleted ? Colors.blue : (isOngoing ? Colors.orange : Colors.green),
                               fontSize: 8,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.5,
@@ -495,77 +450,131 @@ class _AdvisorMeetingScheduleScreenState
                     const SizedBox(height: 4),
                     Text(
                       '⏱ ${meeting.startTime} - ${meeting.endTime}',
-                      style: GoogleFonts.montserrat(
-                        color: secondaryTextColor,
-                        fontSize: 11,
-                      ),
+                      style: GoogleFonts.montserrat(color: secondaryTextColor, fontSize: 11),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      meeting.location,
-                      style: GoogleFonts.montserrat(
-                        color: secondaryTextColor.withOpacity(0.7),
-                        fontSize: 11,
+                    if (meeting.checkInTime != null)
+                      Text(
+                        '✓ Checked in at ${meeting.checkInTime}',
+                        style: GoogleFonts.montserrat(color: Colors.green, fontSize: 10, fontWeight: FontWeight.w600),
                       ),
-                    ),
                   ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryBlue.withOpacity(0.1),
-                    foregroundColor: primaryBlue,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text(
-                    'Navigate',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          Builder(
+            builder: (context) {
+              DateTime? startDateTime;
+              DateTime? endDateTime;
+              try {
+                if (meeting.meetingDate.isNotEmpty && meeting.startTime.isNotEmpty && meeting.startTime != '--:--') {
+                  startDateTime = DateTime.parse('${meeting.meetingDate} ${meeting.startTime}');
+                }
+                if (meeting.meetingDate.isNotEmpty && meeting.endTime.isNotEmpty && meeting.endTime != '--:--') {
+                  endDateTime = DateTime.parse('${meeting.meetingDate} ${meeting.endTime}');
+                }
+              } catch (_) {}
+
+              final now = DateTime.now();
+              bool showCheckIn = false;
+              bool showCheckOut = false;
+              bool isAttending = false;
+
+              // Logic for Check In
+              if (meeting.status != 'completed') {
+                if (meeting.checkInTime == null) {
+                  if (startDateTime != null) {
+                    // Strictly block check-in if now is already past end time
+                    bool notEndedYet = endDateTime == null || now.isBefore(endDateTime);
+                    
+                    if (notEndedYet &&
+                        now.isAfter(startDateTime.subtract(const Duration(minutes: 10))) &&
+                        now.isBefore(startDateTime.add(const Duration(minutes: 10)))) {
+                      showCheckIn = true;
+                    }
+                  }
+                } else {
+                  // User has checked in but not checked out
+                  if (meeting.checkOutTime == null) {
+                    isAttending = true;
+                  }
+                }
+              }
+
+              // Logic for Check Out (shown only if checked in AND (status=completed OR time passed))
+              if (meeting.checkInTime != null && meeting.checkOutTime == null) {
+                bool isTimePassed = endDateTime != null && now.isAfter(endDateTime);
+                bool manualCompletion = meeting.status == 'completed';
+                
+                if (manualCompletion || isTimePassed) {
+                  // Allow check-out only within 10 minutes of the finish time
+                  DateTime finishTime = endDateTime ?? now;
+                  if (now.isBefore(finishTime.add(const Duration(minutes: 10)))) {
+                    showCheckOut = true;
+                  }
+                }
+              }
+
+              if (showCheckIn || showCheckOut || isAttending) {
+                return SizedBox(
+                  width: double.infinity,
+                  child: (isAttending && !showCheckOut)
+                      ? Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.orange.withOpacity(0.2)),
+                          ),
+                          child: Text(
+                            'Attending...',
+                            style: GoogleFonts.montserrat(
+                              color: Colors.orange,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        )
+                      : ElevatedButton.icon(
+                          onPressed: provider.isSaving 
+                            ? null 
+                            : () {
+                                if (AdvisorAccessHelper.check(context, feature: 'attendance')) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => AdvisorCameraScreen(
+                                        meeting: meeting,
+                                        isCheckIn: !showCheckOut,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                          icon: provider.isSaving 
+                            ? const SizedBox(height: 14, width: 14, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            : Icon(showCheckOut ? Icons.logout : Icons.login),
+                          label: Text(
+                            showCheckOut ? 'Check Out' : 'Check In', 
+                            style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: showCheckOut ? Colors.blue : primaryBlue,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                        ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
           ),
         ],
       ),
-    );
-  }
-
-  Widget _statItem(String val, String label, Color color, Color secondaryTextColor) {
-    return Column(
-      children: [
-        if (label.isNotEmpty)
-          Text(
-            label,
-            style: GoogleFonts.montserrat(
-              fontSize: 9,
-              color: secondaryTextColor,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
-            ),
-          ),
-        const SizedBox(height: 4),
-        Text(
-          val,
-          style: GoogleFonts.montserrat(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-      ],
     );
   }
 }

@@ -1809,7 +1809,7 @@ class _ApiClient implements ApiClient {
     final _headers = <String, dynamic>{};
     final _data = body;
     final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
+      Options(method: 'PUT', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
             '/meetings/update/${id}',

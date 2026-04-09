@@ -10,11 +10,13 @@ import '../providers/advisor_attendance_provider.dart';
 class AdvisorAttendancePreviewScreen extends StatelessWidget {
   final AdvisorMeetingModel meeting;
   final File imageFile;
+  final bool isCheckIn;
 
   const AdvisorAttendancePreviewScreen({
     super.key,
     required this.meeting,
     required this.imageFile,
+    this.isCheckIn = true,
   });
 
   @override
@@ -22,22 +24,23 @@ class AdvisorAttendancePreviewScreen extends StatelessWidget {
     final primaryBlue = AppColors.getPrimaryBlue(context);
     final provider = context.watch<AdvisorAttendanceProvider>();
     final authProvider = context.read<AuthProvider>();
-    final advisorId = authProvider.currentUser?.id.toInt() ?? '';
+    final advisorId = authProvider.currentUser?.id.toString() ?? '';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Verify Attendance',
+          isCheckIn ? 'Verify Check-in' : 'Verify Check-out',
           style: GoogleFonts.montserrat(
-            color: Colors.black87,
+            color: isDark ? Colors.white : Colors.black87,
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
@@ -67,10 +70,7 @@ class AdvisorAttendancePreviewScreen extends StatelessWidget {
                       top: 12,
                       right: 12,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: primaryBlue,
                           borderRadius: BorderRadius.circular(4),
@@ -94,9 +94,11 @@ class AdvisorAttendancePreviewScreen extends StatelessWidget {
             // Meeting Details
             Text(
               meeting.title,
+              textAlign: TextAlign.center,
               style: GoogleFonts.montserrat(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
               ),
             ),
             const SizedBox(height: 16),
@@ -106,17 +108,18 @@ class AdvisorAttendancePreviewScreen extends StatelessWidget {
                 Icon(Icons.access_time, color: primaryBlue, size: 16),
                 const SizedBox(width: 6),
                 Text(
-                  'Check-in Time: ',
+                  isCheckIn ? 'Meeting starts: ' : 'Ongoing since: ',
                   style: GoogleFonts.montserrat(
                     color: Colors.grey[600],
                     fontSize: 13,
                   ),
                 ),
                 Text(
-                  meeting.startTime,
+                  isCheckIn ? meeting.startTime : (meeting.checkInTime ?? '--:--'),
                   style: GoogleFonts.montserrat(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
+                    color: isDark ? Colors.white70 : Colors.black87,
                   ),
                 ),
               ],
@@ -127,11 +130,15 @@ class AdvisorAttendancePreviewScreen extends StatelessWidget {
               children: [
                 Icon(Icons.location_on_outlined, color: primaryBlue, size: 16),
                 const SizedBox(width: 6),
-                Text(
-                  meeting.location,
-                  style: GoogleFonts.montserrat(
-                    color: Colors.grey[600],
-                    fontSize: 13,
+                Flexible(
+                  child: Text(
+                    meeting.location,
+                    style: GoogleFonts.montserrat(
+                      color: Colors.grey[600],
+                      fontSize: 13,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -148,38 +155,46 @@ class AdvisorAttendancePreviewScreen extends StatelessWidget {
                     : () async {
                         final success = await provider.submitAttendance(
                           meeting.id,
-                          advisorId.toString(),
+                          advisorId,
                           imageFile,
-                          true,
+                          isCheckIn,
                         );
                         if (success && context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Attendance Verified!'),
+                            SnackBar(
+                              content: Text(isCheckIn ? 'Check-in successful!' : 'Check-out successful!'),
                               backgroundColor: Colors.green,
                             ),
                           );
-                          Navigator.pop(context); // Go back to Dashboard
+                          // Pop back to Schedule screen (Camera screen was already popped)
+                          Navigator.pop(context);
+                        } else if (!success && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Failed to verify. Please try again.'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
                         }
                       },
                 icon: provider.isSaving
                     ? const SizedBox(
                         width: 16,
                         height: 16,
-                        child: CircularProgressIndicator(color: Colors.white),
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                       )
                     : const Icon(Icons.verified_outlined, color: Colors.white),
                 label: Text(
                   provider.isSaving
                       ? 'VERIFYING...'
-                      : 'SUBMIT FOR VERIFICATION',
+                      : (isCheckIn ? 'VERIFY CHECK-IN' : 'VERIFY CHECK-OUT'),
                   style: GoogleFonts.montserrat(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF00448E),
+                  backgroundColor: primaryBlue,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -191,17 +206,17 @@ class AdvisorAttendancePreviewScreen extends StatelessWidget {
               width: double.infinity,
               height: 54,
               child: OutlinedButton.icon(
-                onPressed: () => Navigator.pop(context),
-                icon: Icon(Icons.replay, color: Colors.grey[700]),
+                onPressed: provider.isSaving ? null : () => Navigator.pop(context),
+                icon: Icon(Icons.replay, color: isDark ? Colors.white70 : Colors.grey[700]),
                 label: Text(
                   'RETAKE PHOTO',
                   style: GoogleFonts.montserrat(
-                    color: Colors.grey[800],
+                    color: isDark ? Colors.white70 : Colors.grey[800],
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Colors.grey.shade300),
+                  side: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),

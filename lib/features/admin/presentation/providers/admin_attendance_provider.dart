@@ -26,6 +26,8 @@ class AdminAttendanceProvider extends ChangeNotifier with ErrorHandlerMixin {
       _meetings.where((m) => m.status.toLowerCase() == 'upcoming').length;
   int get completedMeetingsCount =>
       _meetings.where((m) => m.status.toLowerCase() == 'completed').length;
+  int get ongoingMeetingsCount =>
+      _meetings.where((m) => m.status.toLowerCase() == 'ongoing').length;
 
   // Keep legacy getter for AttendanceReportScreen compatibility
   dynamic get currentMeeting => _selectedMeeting;
@@ -53,7 +55,9 @@ class AdminAttendanceProvider extends ChangeNotifier with ErrorHandlerMixin {
     try {
       final raw = await repository.getAllMeetings();
       if (raw is List) {
-        _meetings = raw.map((e) => MeetingModel.fromJson(e as Map<String, dynamic>)).toList();
+        _meetings = raw
+            .map((e) => MeetingModel.fromJson(e as Map<String, dynamic>))
+            .toList();
         // Sort newest first
         _meetings.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       } else {
@@ -68,7 +72,7 @@ class AdminAttendanceProvider extends ChangeNotifier with ErrorHandlerMixin {
     }
   }
 
-  Future<void> fetchMeeting(String meetingId) async {
+  Future<void> fetchMeetingById(String meetingId) async {
     setLoading(true);
     setError(null);
     try {
@@ -107,6 +111,26 @@ class AdminAttendanceProvider extends ChangeNotifier with ErrorHandlerMixin {
       return success;
     } catch (e) {
       debugPrint('Delete Meeting Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
+      return false;
+    } finally {
+      isSaving = false;
+    }
+  }
+
+  Future<bool> completeMeeting(String id) async {
+    isSaving = true;
+    try {
+      final now = DateTime.now();
+      final endTime =
+          "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}";
+
+      // mark status as completed and set end_time
+      final success = await repository.updateMeeting(id, {'end_time': endTime});
+      if (success) await fetchAllMeetings();
+      return success;
+    } catch (e) {
+      debugPrint('Complete Meeting Error: $e');
       setError(UIHelper.summarizeError(e.toString()));
       return false;
     } finally {

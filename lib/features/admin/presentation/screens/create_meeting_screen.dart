@@ -55,7 +55,6 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
     if (picked != null) setState(() => _selectedEndTime = picked);
   }
 
-  // Helper to format TimeOfDay to the required API format (HH:mm:ss)
   String _formatApiTime(TimeOfDay time) {
     final h = time.hour.toString().padLeft(2, '0');
     final m = time.minute.toString().padLeft(2, '0');
@@ -78,13 +77,22 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
       return;
     }
 
-    // Format the payload exactly as the PHP backend expects
+    // Basic time validation
+    final startMins = _selectedStartTime!.hour * 60 + _selectedStartTime!.minute;
+    final endMins = _selectedEndTime!.hour * 60 + _selectedEndTime!.minute;
+
+    if (endMins <= startMins) {
+      _showSnack('End time must be after start time', isError: true);
+      return;
+    }
+
     final data = {
       'title': _titleCtrl.text.trim(),
       'location': _locationCtrl.text.trim(),
-      'meeting_date': '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
+      'meeting_date':
+          '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
       'start_time': _formatApiTime(_selectedStartTime!),
-      'end_time': _formatApiTime(_selectedEndTime!)
+      'end_time': _formatApiTime(_selectedEndTime!),
     };
 
     final ok = await context.read<AdminAttendanceProvider>().addMeeting(data);
@@ -92,7 +100,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
 
     if (ok) {
       _showSnack('Meeting created successfully!');
-      Navigator.pop(context, true); // return true → list refresh
+      Navigator.pop(context, true);
     } else {
       _showSnack('Failed to create meeting. Please try again.', isError: true);
     }
@@ -115,14 +123,21 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
     final isSaving = context.watch<AdminAttendanceProvider>().isSaving;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
+      backgroundColor:
+          isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
       appBar: AppBar(
         backgroundColor: primaryBlue,
         elevation: 0,
         centerTitle: true,
         leading: backButton(isDark: false),
-        title: Text('Create Meeting',
-            style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+        title: Text(
+          'Create Meeting',
+          style: GoogleFonts.montserrat(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
@@ -132,13 +147,28 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryBlue,
               padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
               elevation: 4,
             ),
             child: isSaving
-                ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                : Text('Create Meeting',
-                style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                ? const SizedBox(
+                    height: 22,
+                    width: 22,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : Text(
+                    'Create Meeting',
+                    style: GoogleFonts.montserrat(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
           ),
         ),
       ),
@@ -149,36 +179,51 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Text('Meeting Details',
-                  style: GoogleFonts.montserrat(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+              Text(
+                'Meeting Details',
+                style: GoogleFonts.montserrat(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
               const SizedBox(height: 6),
-              Text('Fill in the details below to schedule a meeting.',
-                  style: GoogleFonts.montserrat(fontSize: 13, color: Colors.grey[600], height: 1.4)),
+              Text(
+                'Schedule a meeting. It will automatically complete based on the end time, or you can finish it manually.',
+                style: GoogleFonts.montserrat(
+                  fontSize: 13,
+                  color: Colors.grey[600],
+                  height: 1.4,
+                ),
+              ),
               const SizedBox(height: 24),
 
-              // Main card
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: cardColor,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.grey.withOpacity(0.15)),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 3))],
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Meeting Title
                     _label('MEETING NAME *'),
                     _textField(
                       controller: _titleCtrl,
                       hint: 'e.g., Weekly Site Inspection',
                       icon: Icons.edit_outlined,
-                      validator: (v) => Validators.validateRequired(v, 'Meeting Name'),
+                      validator: (v) =>
+                          Validators.validateRequired(v, 'Meeting Name'),
                     ),
                     const SizedBox(height: 16),
-                    // Date
                     _label('DATE *'),
                     _tapField(
                       value: _selectedDate == null
@@ -191,37 +236,47 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Time Row
-                    Row(children: [
-                      Expanded(
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          _label('START TIME *'),
-                          _tapField(
-                            value: _selectedStartTime == null ? 'Select Time' : _selectedStartTime!.format(context),
-                            icon: Icons.access_time_outlined,
-                            placeholder: _selectedStartTime == null,
-                            isDark: isDark,
-                            onTap: _pickStartTime,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _label('START TIME *'),
+                              _tapField(
+                                value: _selectedStartTime == null
+                                    ? 'Select Time'
+                                    : _selectedStartTime!.format(context),
+                                icon: Icons.access_time_outlined,
+                                placeholder: _selectedStartTime == null,
+                                isDark: isDark,
+                                onTap: _pickStartTime,
+                              ),
+                            ],
                           ),
-                        ]),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          _label('END TIME *'),
-                          _tapField(
-                            value: _selectedEndTime == null ? 'Select Time' : _selectedEndTime!.format(context),
-                            icon: Icons.access_time_filled,
-                            placeholder: _selectedEndTime == null,
-                            isDark: isDark,
-                            onTap: _pickEndTime,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _label('END TIME *'),
+                              _tapField(
+                                value: _selectedEndTime == null
+                                    ? 'Select Time'
+                                    : _selectedEndTime!.format(context),
+                                icon: Icons.access_time_outlined,
+                                placeholder: _selectedEndTime == null,
+                                isDark: isDark,
+                                onTap: _pickEndTime,
+                              ),
+                            ],
                           ),
-                        ]),
-                      ),
-                    ]),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 16),
 
-                    // Location
                     _label('LOCATION'),
                     _textField(
                       controller: _locationCtrl,
@@ -234,7 +289,6 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
 
               const SizedBox(height: 20),
 
-              // Info banner
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
@@ -242,16 +296,23 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: primaryBlue.withOpacity(0.15)),
                 ),
-                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Icon(Icons.info_outline, color: primaryBlue, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Once created, advisors can be marked present/absent from the Attendance Report screen.',
-                      style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey[600], height: 1.5),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline, color: primaryBlue, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Meetings will automatically transition to "Completed" once the End Time has passed.',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          height: 1.5,
+                        ),
+                      ),
                     ),
-                  ),
-                ]),
+                  ],
+                ),
               ),
             ],
           ),

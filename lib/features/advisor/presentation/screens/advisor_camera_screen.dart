@@ -8,7 +8,13 @@ import 'advisor_attendance_preview_screen.dart';
 
 class AdvisorCameraScreen extends StatefulWidget {
   final AdvisorMeetingModel meeting;
-  const AdvisorCameraScreen({super.key, required this.meeting});
+  final bool isCheckIn;
+
+  const AdvisorCameraScreen({
+    super.key,
+    required this.meeting,
+    this.isCheckIn = true,
+  });
 
   @override
   State<AdvisorCameraScreen> createState() => _AdvisorCameraScreenState();
@@ -33,7 +39,6 @@ class _AdvisorCameraScreenState extends State<AdvisorCameraScreen> {
         return;
       }
 
-      // Default to front camera for selfies
       final frontCamera = cameras.firstWhere((c) => c.lensDirection == CameraLensDirection.front, orElse: () => cameras.first);
 
       _controller = CameraController(frontCamera, ResolutionPreset.high, enableAudio: false);
@@ -66,39 +71,56 @@ class _AdvisorCameraScreenState extends State<AdvisorCameraScreen> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => AdvisorAttendancePreviewScreen(meeting: widget.meeting, imageFile: File(image.path))),
+          MaterialPageRoute(
+            builder: (_) => AdvisorAttendancePreviewScreen(
+              meeting: widget.meeting,
+              imageFile: File(image.path),
+              isCheckIn: widget.isCheckIn,
+            ),
+          ),
         );
       }
     } catch (e) {
       debugPrint(e.toString());
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to take photo')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to take photo')));
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final primaryBlue = AppColors.getPrimaryBlue(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
         elevation: 0,
         centerTitle: true,
-        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.black87), onPressed: () => Navigator.pop(context)),
-        title: Text('Check-in Photo Verification', style: GoogleFonts.montserrat(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 16)),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black87),
+          onPressed: () => Navigator.pop(context)
+        ),
+        title: Text(
+          widget.isCheckIn ? 'Check-in Verification' : 'Check-out Verification',
+          style: GoogleFonts.montserrat(
+            color: isDark ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.bold,
+            fontSize: 16
+          )
+        ),
       ),
       body: Column(
         children: [
           const SizedBox(height: 20),
-          // Viewfinder Area
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30.0),
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // The Camera Feed or Error State
                   if (_isReady && _controller != null)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16),
@@ -121,7 +143,6 @@ class _AdvisorCameraScreenState extends State<AdvisorCameraScreen> {
                       child: const Center(child: CircularProgressIndicator()),
                     ),
 
-                  // Live View Badge
                   Positioned(
                     top: 16,
                     child: Container(
@@ -137,7 +158,6 @@ class _AdvisorCameraScreenState extends State<AdvisorCameraScreen> {
                     ),
                   ),
 
-                  // Viewfinder Corners Overlay
                   Positioned.fill(
                     child: CustomPaint(
                       painter: ViewfinderPainter(color: Colors.white.withOpacity(0.8), strokeWidth: 4, cornerLength: 40),
@@ -156,7 +176,6 @@ class _AdvisorCameraScreenState extends State<AdvisorCameraScreen> {
           ),
           const SizedBox(height: 40),
 
-          // Capture Button
           GestureDetector(
             onTap: _isReady ? _capturePhoto : null,
             child: Container(

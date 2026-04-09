@@ -37,4 +37,16 @@ class AdvisorAttendanceRepository {
       rethrow;
     }
   }
+
+  Future<dynamic> getDailyAttendance(String date) async {
+    try {
+      final response = await apiClient.getDailyAttendance(date);
+      if (response['status'] == true || response['status'] == 'success') {
+        return response['data'];
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
 }

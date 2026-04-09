@@ -369,7 +369,7 @@ abstract class ApiClient {
   @POST("/meetings/add")
   Future<dynamic> addMeeting(@Body() dynamic body);
 
-  @POST("/meetings/update/{id}")
+  @PUT("/meetings/update/{id}")
   Future<dynamic> updateMeeting(@Path("id") String id, @Body() dynamic body);
 
   @GET("/meetings")
