@@ -26,6 +26,15 @@ class AdminTeamRepository {
     } catch (e) { rethrow; }
   }
 
+  Future<bool> updateAdvisorType(String advisorId, String advisorType) async {
+    try {
+      final response = await apiClient.updateAdvisor(advisorId, {
+        'advisor_type': advisorType,
+      });
+      return response['status'] == true || response['status'] == 'success';
+    } catch (e) { rethrow; }
+  }
+
   Future<List<dynamic>> getAllAdvisors() async {
     try {
       final response = await apiClient.getAllAdvisors('');

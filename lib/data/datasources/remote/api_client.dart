@@ -63,6 +63,7 @@ abstract class ApiClient {
     @Part(name: "state") String state,
     @Part(name: "pincode") String pincode,
     @Part(name: "leader_code") String leaderCode,
+    @Part(name: "advisor_type") String advisorType,
     @Part(name: "addresscard_front_photo") File aadharFront,
     @Part(name: "addresscard_back_photo") File aadharBack,
     @Part(name: "pancard_photo") File panPhoto,
@@ -495,6 +496,9 @@ abstract class ApiClient {
 
   @GET("/team/advisor/{id}")
   Future<dynamic> getAdvisorTeam(@Path("id") String advisorId);
+
+  @GET("/team/top-performers/{id}")
+  Future<dynamic> getTopPerformers(@Path("id") String id);
 
   @GET("/team/activity")
   Future<dynamic> getTeamActivity(

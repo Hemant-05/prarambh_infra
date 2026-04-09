@@ -59,6 +59,7 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                     children: [
                       _buildInfoRow(context, "Date of Birth", provider.profile!.dob, Icons.calendar_month_outlined, isDark),
                       _buildInfoRow(context, "Gender", provider.profile!.gender, Icons.wc_outlined, isDark),
+                      _buildInfoRow(context, "Advisor Type", provider.profile!.advisorType, Icons.badge_outlined, isDark),
                       _buildInfoRow(context, "Father's Name", provider.profile!.fatherName, Icons.family_restroom, isDark),
                       _buildInfoRow(context, "Occupation", provider.profile!.occupation, Icons.work_outline, isDark, isLast: true),
                     ],

@@ -38,6 +38,7 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
 
   String gender = 'Male';
   String designation = 'Advisor';
+  String advisorType = 'Full-time';
   final stateCtrl = TextEditingController();
   final cityCtrl =  TextEditingController();
 
@@ -100,6 +101,7 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
           occupation: occupationCtrl.text, aadhaar: aadharCtrl.text, pan: panCtrl.text,
           bankName: bankNameCtrl.text, accNumber: accNumberCtrl.text, ifsc: ifscCtrl.text,
           address: addressCtrl.text, city: cityCtrl.text, state: stateCtrl.text, pincode: pincodeCtrl.text, leaderCode: leaderCodeCtrl.text,
+          advisorType: advisorType,
           aadharFront: aadharFront!, aadharBack: aadharBack!, panPhoto: panPhoto!,
           panBackPhoto: panBackPhoto!, 
           profilePhoto: profilePhoto!

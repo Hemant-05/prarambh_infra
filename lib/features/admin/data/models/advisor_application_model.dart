@@ -25,6 +25,8 @@ class AdvisorApplicationModel {
   final String leaderId;
   final String appliedDate;
   final String slab;
+  final String advisorType;
+  final String leaderCode;
   final List<KycDocument> documents;
 
   AdvisorApplicationModel({
@@ -35,7 +37,8 @@ class AdvisorApplicationModel {
     required this.aadhaarNumber, required this.panNumber, required this.bankName,
     required this.accountNumber, required this.ifscCode, required this.address,
     required this.city, required this.state, required this.pincode, required this.status,
-    required this.leaderId, required this.appliedDate, required this.slab, required this.documents,
+    required this.leaderId, required this.appliedDate, required this.slab, 
+    required this.advisorType, required this.leaderCode, required this.documents,
   });
 
   factory AdvisorApplicationModel.fromJson(Map<String, dynamic> json) {
@@ -90,6 +93,8 @@ class AdvisorApplicationModel {
       leaderId: json['leader_id']?.toString() ?? '',
       appliedDate: json['created_at']?.toString().split(' ')[0] ?? '',
       slab: json['slab']?.toString() ?? '',
+      advisorType: json['advisor_type']?.toString() ?? 'Full-time',
+      leaderCode: json['leader_code']?.toString() ?? '',
       documents: docs,
     );
   }

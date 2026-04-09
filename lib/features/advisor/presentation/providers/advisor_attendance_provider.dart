@@ -37,40 +37,58 @@ class AdvisorAttendanceProvider extends ChangeNotifier {
     try {
       final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
       
-      // Call multiple APIs at the same time
-      final results = await Future.wait([
-        repository.getAllMeetings(),
-        repository.getDailyAttendance(today),
-      ]);
+      // 1. Fetch all meetings
+      List<AdvisorMeetingModel> allMeetings = await repository.getAllMeetings();
 
-      List<AdvisorMeetingModel> allMeetings = results[0] as List<AdvisorMeetingModel>;
-      dynamic attendanceData = results[1];
+      // 2. Identify meetings scheduled for today we need to check attendance for
+      final todayMeetings = allMeetings.where((m) => m.meetingDate == today).toList();
 
-      if (attendanceData != null && attendanceData['present_advisors'] != null) {
-        final List presentList = attendanceData['present_advisors'];
-        
-        // Filter for this specific advisor with relaxed ID mapping
-        final myAttendance = presentList.where((a) {
-          final aid = a['advisor_id']?.toString();
-          final code = a['Advisor_code']?.toString();
-          final id = a['id']?.toString();
-          return aid == advisorId || code == advisorId || id == advisorId;
-        }).toList();
+      if (todayMeetings.isNotEmpty) {
+        // 3. Fetch detailed data for EACH today's meeting concurrently
+        final detailsResponses = await Future.wait(
+          todayMeetings.map((m) => repository.getSingleMeeting(m.id))
+        );
 
-        // Merge attendance into meetings
+        // 4. Update the allMeetings list with attendance data from the detailed responses
         _meetings = allMeetings.map((mtg) {
-          final att = myAttendance.firstWhere(
-            (a) => a['meeting_id']?.toString() == mtg.id,
-            orElse: () => null,
-          );
-
-          if (att != null) {
-            return mtg.copyWith(
-              checkInTime: att['check_in_time'],
-              checkOutTime: att['check_out_time'],
-              // If check-out is done, mark as completed from advisor perspective
-              status: att['check_out_time'] != null ? 'completed' : mtg.status,
+          if (mtg.meetingDate == today) {
+            // Find the detailed response for this specific meeting
+            final detail = detailsResponses.firstWhere(
+              (res) => res != null && res['id']?.toString() == mtg.id,
+              orElse: () => null,
             );
+
+            if (detail != null && detail['Attendance'] != null) {
+              final List attendanceList = detail['Attendance'];
+              
+              // Find the attendance record specifically for this advisor
+              final att = attendanceList.firstWhere((a) {
+                final aid = a['advisor_id']?.toString();
+                final code = a['Advisor_code']?.toString();
+                final id = a['id']?.toString();
+                return aid == advisorId || code == advisorId || id == advisorId;
+              }, orElse: () => null);
+
+              if (att != null) {
+                return mtg.copyWith(
+                  checkInTime: att['check_in_time'] ?? mtg.checkInTime,
+                  checkOutTime: att['check_out_time'] ?? mtg.checkOutTime,
+                  status: att['check_out_time'] != null ? 'completed' : mtg.status,
+                );
+              }
+            }
+
+            // Preserve optimistic UI state if the backend hasn't fully updated yet
+            try {
+              final existingMtg = _meetings.firstWhere((m) => m.id == mtg.id);
+              if (existingMtg.checkInTime != null) {
+                return mtg.copyWith(
+                  checkInTime: existingMtg.checkInTime,
+                  checkOutTime: existingMtg.checkOutTime,
+                  status: existingMtg.status,
+                );
+              }
+            } catch (_) {}
           }
           return mtg;
         }).toList();

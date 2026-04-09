@@ -236,6 +236,8 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                       'Advisor Type',
                       p.advisorType,
                       primaryBlue,
+                      onTap: () => _showAdvisorTypePicker(context, p.id, p.advisorType),
+                      trailing: Icon(Icons.edit_outlined, size: 16, color: primaryBlue.withOpacity(0.5)),
                     ),
                   ]),
                   const SizedBox(height: 16),
@@ -1117,45 +1119,119 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
     ],
   );
 
-  Widget _infoRow(IconData icon, String label, String value, Color color) =>
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(8),
+  Widget _infoRow(IconData icon, String label, String value, Color color, {VoidCallback? onTap, Widget? trailing}) =>
+      InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: color, size: 18),
               ),
-              child: Icon(icon, color: color, size: 18),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: GoogleFonts.montserrat(
-                      fontSize: 11,
-                      color: Colors.grey[500],
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 11,
+                        color: Colors.grey[500],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    value,
-                    style: GoogleFonts.montserrat(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                    const SizedBox(height: 2),
+                    Text(
+                      value,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+              if (trailing != null) trailing,
+            ],
+          ),
         ),
       );
+
+  void _showAdvisorTypePicker(BuildContext context, String advisorId, String currentType) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Update Advisor Type',
+                style: GoogleFonts.montserrat(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _typeOption(context, advisorId, 'Full Time', currentType == 'Full Time'),
+              const SizedBox(height: 12),
+              _typeOption(context, advisorId, 'Part Time', currentType == 'Part Time'),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _typeOption(BuildContext context, String advisorId, String type, bool isSelected) {
+    final primaryBlue = Theme.of(context).primaryColor;
+    return InkWell(
+      onTap: isSelected ? null : () async {
+        Navigator.pop(context);
+        final success = await context.read<AdminTeamProvider>().updateAdvisorType(advisorId, type);
+        if (success && context.mounted) {
+          UIHelper.showSuccess(context, 'Advisor type updated successfully');
+        }
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? primaryBlue.withOpacity(0.05) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? primaryBlue : Colors.grey.withOpacity(0.2),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              type,
+              style: GoogleFonts.montserrat(
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected ? primaryBlue : null,
+              ),
+            ),
+            if (isSelected) Icon(Icons.check_circle, color: primaryBlue, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _divider() => const Divider(height: 1, thickness: 0.5);
 

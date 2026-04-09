@@ -14,6 +14,7 @@ class RecruitmentRepository {
     required String pan, required String bankName, required String accNumber,
     required String ifsc, required String address, required String city,
     required String state, required String pincode, required String leaderCode,
+    required String advisorType,
     required File aadharFront, required File aadharBack, required File panPhoto,
     required File panBackPhoto, required File profilePhoto,
   }) async {
@@ -22,6 +23,7 @@ class RecruitmentRepository {
         fullName, email, phone, designation, fatherName, dob, gender,
         nomineeName, nomineePhone, relationship, occupation, aadhaar, pan,
         bankName, accNumber, ifsc, address, city, state, pincode, leaderCode,
+        advisorType,
         aadharFront, aadharBack, panPhoto, panBackPhoto, profilePhoto,
       );
 

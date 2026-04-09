@@ -24,6 +24,18 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
   final _formKey1 = GlobalKey<FormState>();
   final _formKey2 = GlobalKey<FormState>();
   int _currentStep = 0;
+  
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final currentUser = context.read<AuthProvider>().currentUser;
+      final provider = context.read<AdvisorRegistrationProvider>();
+      if (currentUser != null && currentUser.role.toLowerCase() == 'advisor') {
+        provider.leaderCodeCtrl.text = currentUser.advisorCode ?? '';
+      }
+    });
+  }
 
   void _nextStep() {
     if (_formKey1.currentState!.validate()) {
@@ -428,6 +440,13 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                     (v) => setState(() => provider.designation = v!),
                     textColor: textColor,
                   ),
+                  _buildDropdown(
+                    'Advisor Type',
+                    provider.advisorType,
+                    ['Full-time', 'Part-time'],
+                    (v) => setState(() => provider.advisorType = v!),
+                    textColor: textColor,
+                  ),
                 ],
               ),
             ),
@@ -447,6 +466,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
     Color cardColor,
     bool isDark,
   ) {
+    final currentUser = context.read<AuthProvider>().currentUser;
     return Form(
       key: _formKey2,
       child: SingleChildScrollView(
@@ -612,6 +632,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
               'Referral code (mandatory)',
               provider.leaderCodeCtrl,
               textColor: textColor,
+              readOnly: currentUser?.role.toLowerCase() == 'advisor',
               validator: (v) => Validators.validateRequired(v, 'Leader Code'),
             ),
             const SizedBox(height: 40),
@@ -743,6 +764,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
     Color? textColor,
     String? Function(String?)? validator,
     List<TextInputFormatter>? inputFormatters,
+    bool readOnly = false,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -764,6 +786,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
             maxLines: maxLines,
             validator: validator,
             inputFormatters: inputFormatters,
+            readOnly: readOnly,
             keyboardType: isNumber ? TextInputType.number : TextInputType.text,
             style: GoogleFonts.montserrat(fontSize: 14, color: textColor),
             decoration: InputDecoration(

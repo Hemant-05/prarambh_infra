@@ -1878,8 +1878,26 @@ Please feel free to contact us for more information.""";
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
-            onPressed: () => _updateStageInDb("booking"),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            onPressed: () {
+              if (!widget.isAdmin && _currentLead.siteVisitPhoto.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Please upload a site visit photo before proceeding to booking.',
+                    ),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+              _updateStageInDb("booking");
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  (!widget.isAdmin && _currentLead.siteVisitPhoto.isEmpty)
+                      ? Colors.grey
+                      : Colors.green,
+            ),
             child: const Text(
               "Visit Successful - Proceed to Booking",
               style: TextStyle(color: Colors.white),

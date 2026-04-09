@@ -48,19 +48,24 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
   List<DealModel> _getFilteredDeals(List<DealModel> allDeals) {
     return allDeals.where((deal) {
       // 1. Search filter (Client Name or Advisor Code)
-      final matchesSearch = deal.clientName.toLowerCase().contains(_searchQuery) ||
+      final matchesSearch =
+          deal.clientName.toLowerCase().contains(_searchQuery) ||
           deal.advisorCode.toLowerCase().contains(_searchQuery) ||
           deal.id.toString().contains(_searchQuery);
       if (!matchesSearch) return false;
 
       // 2. Payment Status Filter
       if (_selectedPaymentStatus != null) {
-        if (deal.paymentStatus.toLowerCase() != _selectedPaymentStatus!.toLowerCase()) return false;
+        if (deal.paymentStatus.toLowerCase() !=
+            _selectedPaymentStatus!.toLowerCase())
+          return false;
       }
 
       // 3. Verification Status Filter
       if (_selectedVerificationStatus != null) {
-        if (deal.dealStatus.toLowerCase() != _selectedVerificationStatus!.toLowerCase()) return false;
+        if (deal.dealStatus.toLowerCase() !=
+            _selectedVerificationStatus!.toLowerCase())
+          return false;
       }
 
       // 4. Project Filter
@@ -72,7 +77,8 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
       if (_selectedDateRange != null) {
         try {
           final dealDate = DateTime.parse(deal.createdAt.split(' ')[0]);
-          if (dealDate.isBefore(_selectedDateRange!.start) || dealDate.isAfter(_selectedDateRange!.end)) {
+          if (dealDate.isBefore(_selectedDateRange!.start) ||
+              dealDate.isAfter(_selectedDateRange!.end)) {
             return false;
           }
         } catch (_) {}
@@ -115,113 +121,141 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
 
     return Scaffold(
       backgroundColor: bgColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          'Deal Management',
-          style: GoogleFonts.montserrat(
-            color: isDark ? Colors.white : Colors.black87,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
-        actions: [
-          Stack(
-            children: [
-              IconButton(
-                icon: Icon(Icons.filter_list, color: primaryBlue),
-                onPressed: () => _showFilterSheet(context, isDark, primaryBlue),
-              ),
-              if (_activeFilterCount > 0)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                    child: Text(
-                      '$_activeFilterCount',
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                      textAlign: Alignment.center.y > 0 ? TextAlign.center : TextAlign.center,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Search Bar & Filter Row
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchCtrl,
+                      decoration: InputDecoration(
+                        hintText: 'Search deals...',
+                        hintStyle: GoogleFonts.montserrat(
+                          fontSize: 13,
+                          color: Colors.grey,
+                        ),
+                        prefixIcon: const Icon(Icons.search, size: 20),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear, size: 18),
+                                onPressed: () => _searchCtrl.clear(),
+                              )
+                            : null,
+                        filled: true,
+                        fillColor: isDark ? Colors.grey[900] : Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: primaryBlue.withOpacity(0.5),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-            ],
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: TextField(
-              controller: _searchCtrl,
-              decoration: InputDecoration(
-                hintText: 'Search by client or advisor code...',
-                hintStyle: GoogleFonts.montserrat(fontSize: 13, color: Colors.grey),
-                prefixIcon: const Icon(Icons.search, size: 20),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, size: 18),
-                        onPressed: () => _searchCtrl.clear(),
-                      )
-                    : null,
-                filled: true,
-                fillColor: isDark ? Colors.grey[900] : Colors.white,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: primaryBlue.withOpacity(0.5)),
-                ),
+                  const SizedBox(width: 8),
+                  Stack(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.grey[900] : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: IconButton(
+                          icon: Icon(Icons.filter_list, color: primaryBlue),
+                          onPressed: () =>
+                              _showFilterSheet(context, isDark, primaryBlue),
+                        ),
+                      ),
+                      if (_activeFilterCount > 0)
+                        Positioned(
+                          right: 4,
+                          top: 4,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Text(
+                              '$_activeFilterCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ),
 
-          Expanded(
-            child: Consumer<AdminDealProvider>(
-              builder: (context, provider, child) {
-                if (provider.isLoading) {
-                  return Center(
-                    child: CircularProgressIndicator(color: primaryBlue),
-                  );
-                }
+            Expanded(
+              child: Consumer<AdminDealProvider>(
+                builder: (context, provider, child) {
+                  if (provider.isLoading) {
+                    return Center(
+                      child: CircularProgressIndicator(color: primaryBlue),
+                    );
+                  }
 
-                final filteredDeals = _getFilteredDeals(provider.deals);
+                  final filteredDeals = _getFilteredDeals(provider.deals);
 
-                if (filteredDeals.isEmpty) {
-                  return _buildEmptyState(primaryBlue, isFiltered: _searchQuery.isNotEmpty || _activeFilterCount > 0);
-                }
+                  if (filteredDeals.isEmpty) {
+                    return _buildEmptyState(
+                      primaryBlue,
+                      isFiltered:
+                          _searchQuery.isNotEmpty || _activeFilterCount > 0,
+                    );
+                  }
 
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    await provider.fetchAllDeals();
-                  },
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: filteredDeals.length,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      final deal = filteredDeals[index];
-                      return _buildDealCard(context, deal, primaryBlue, isDark);
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      await provider.fetchAllDeals();
                     },
-                  ),
-                );
-              },
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: filteredDeals.length,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemBuilder: (context, index) {
+                        final deal = filteredDeals[index];
+                        return _buildDealCard(
+                          context,
+                          deal,
+                          primaryBlue,
+                          isDark,
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -236,7 +270,10 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
       isScrollControlled: true,
       backgroundColor: sheetBg,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
       ),
       builder: (context) {
         return StatefulBuilder(
@@ -269,7 +306,13 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                             _clearFilters();
                             Navigator.pop(context);
                           },
-                          child: Text('Reset All', style: GoogleFonts.montserrat(color: Colors.red, fontWeight: FontWeight.bold)),
+                          child: Text(
+                            'Reset All',
+                            style: GoogleFonts.montserrat(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -282,9 +325,14 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                       DropdownButtonFormField<String>(
                         value: _selectedPaymentStatus,
                         dropdownColor: sheetBg,
-                        style: GoogleFonts.montserrat(color: textColor, fontSize: 13),
+                        style: GoogleFonts.montserrat(
+                          color: textColor,
+                          fontSize: 13,
+                        ),
                         items: ['Pending', 'Paid', 'Partially Paid']
-                            .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                            .map(
+                              (s) => DropdownMenuItem(value: s, child: Text(s)),
+                            )
                             .toList(),
                         onChanged: (val) {
                           setModalState(() => _selectedPaymentStatus = val);
@@ -300,12 +348,19 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                       DropdownButtonFormField<String>(
                         value: _selectedVerificationStatus,
                         dropdownColor: sheetBg,
-                        style: GoogleFonts.montserrat(color: textColor, fontSize: 13),
+                        style: GoogleFonts.montserrat(
+                          color: textColor,
+                          fontSize: 13,
+                        ),
                         items: ['Verified', 'Not Verified']
-                            .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                            .map(
+                              (s) => DropdownMenuItem(value: s, child: Text(s)),
+                            )
                             .toList(),
                         onChanged: (val) {
-                          setModalState(() => _selectedVerificationStatus = val);
+                          setModalState(
+                            () => _selectedVerificationStatus = val,
+                          );
                           setState(() => _selectedVerificationStatus = val);
                         },
                         decoration: _inputDecoration(isDark),
@@ -319,9 +374,20 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                         value: _selectedProjectId,
                         dropdownColor: sheetBg,
                         isExpanded: true,
-                        style: GoogleFonts.montserrat(color: textColor, fontSize: 13),
+                        style: GoogleFonts.montserrat(
+                          color: textColor,
+                          fontSize: 13,
+                        ),
                         items: projectProvider.projects
-                            .map((p) => DropdownMenuItem(value: p.id, child: Text(p.projectName, overflow: TextOverflow.ellipsis)))
+                            .map(
+                              (p) => DropdownMenuItem(
+                                value: p.id,
+                                child: Text(
+                                  p.projectName,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            )
                             .toList(),
                         onChanged: (val) {
                           setModalState(() => _selectedProjectId = val);
@@ -348,7 +414,10 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                           }
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
                             color: isDark ? Colors.grey[850] : Colors.grey[100],
                             borderRadius: BorderRadius.circular(8),
@@ -360,9 +429,16 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                                 _selectedDateRange == null
                                     ? 'Select Date Range'
                                     : '${DateFormat('MMM dd').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd').format(_selectedDateRange!.end)}',
-                                style: GoogleFonts.montserrat(fontSize: 13, color: textColor),
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 13,
+                                  color: textColor,
+                                ),
                               ),
-                              Icon(Icons.calendar_today, size: 16, color: primaryBlue),
+                              Icon(
+                                Icons.calendar_today,
+                                size: 16,
+                                color: primaryBlue,
+                              ),
                             ],
                           ),
                         ),
@@ -376,20 +452,34 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                         children: [
                           Expanded(
                             child: Slider(
-                              value: (_selectedInstallmentCount ?? 0).toDouble(),
+                              value: (_selectedInstallmentCount ?? 0)
+                                  .toDouble(),
                               min: 0,
                               max: 12,
                               divisions: 12,
-                              label: _selectedInstallmentCount?.toString() ?? 'Any',
+                              label:
+                                  _selectedInstallmentCount?.toString() ??
+                                  'Any',
                               onChanged: (val) {
-                                setModalState(() => _selectedInstallmentCount = val == 0 ? null : val.toInt());
-                                setState(() => _selectedInstallmentCount = val == 0 ? null : val.toInt());
+                                setModalState(
+                                  () => _selectedInstallmentCount = val == 0
+                                      ? null
+                                      : val.toInt(),
+                                );
+                                setState(
+                                  () => _selectedInstallmentCount = val == 0
+                                      ? null
+                                      : val.toInt(),
+                                );
                               },
                             ),
                           ),
                           Text(
                             _selectedInstallmentCount?.toString() ?? 'Any',
-                            style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: primaryBlue),
+                            style: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.bold,
+                              color: primaryBlue,
+                            ),
                           ),
                         ],
                       ),
@@ -403,9 +493,17 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primaryBlue,
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                        child: Text('Apply Filters', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: Colors.white)),
+                        child: Text(
+                          'Apply Filters',
+                          style: GoogleFonts.montserrat(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -425,7 +523,14 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+          Text(
+            label,
+            style: GoogleFonts.montserrat(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
           const SizedBox(height: 8),
           child,
         ],
@@ -438,7 +543,10 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
       filled: true,
       fillColor: isDark ? Colors.grey[850] : Colors.grey[100],
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide.none,
+      ),
     );
   }
 
@@ -463,7 +571,9 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            isFiltered ? "Try adjusting your search or filters." : "Deals initiated by advisors will appear here.",
+            isFiltered
+                ? "Try adjusting your search or filters."
+                : "Deals initiated by advisors will appear here.",
             style: GoogleFonts.montserrat(
               fontSize: 14,
               color: Colors.grey.shade500,
@@ -484,11 +594,17 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
               icon: const Icon(Icons.refresh, color: Colors.white),
               label: const Text(
                 "Refresh",
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryBlue,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -499,7 +615,12 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
     );
   }
 
-  Widget _buildDealCard(BuildContext context, dynamic deal, Color primaryBlue, bool isDark) {
+  Widget _buildDealCard(
+    BuildContext context,
+    dynamic deal,
+    Color primaryBlue,
+    bool isDark,
+  ) {
     final cardColor = isDark ? Colors.grey[900] : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
 
@@ -512,11 +633,7 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => DealManagementScreen(
-              deal: deal,
-            ),
-          ),
+          MaterialPageRoute(builder: (_) => DealManagementScreen(deal: deal)),
         ).then((_) {
           // Refresh when returning in case of updates
           context.read<AdminDealProvider>().fetchAllDeals();
@@ -548,7 +665,10 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [primaryBlue, primaryBlue.withOpacity(0.7)],
@@ -568,7 +688,10 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                     ),
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.grey.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
@@ -585,7 +708,10 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -593,7 +719,13 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(deal.dealStatus.toLowerCase() == 'verified' ? Icons.check_circle : Icons.pending, size: 12, color: statusColor),
+                      Icon(
+                        deal.dealStatus.toLowerCase() == 'verified'
+                            ? Icons.check_circle
+                            : Icons.pending,
+                        size: 12,
+                        color: statusColor,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         deal.dealStatus.toUpperCase(),
@@ -609,7 +741,7 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Client & Advisor details
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -668,7 +800,11 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                       const SizedBox(height: 2),
                       Row(
                         children: [
-                          Icon(Icons.person_outline, size: 12, color: Colors.amber.shade800),
+                          Icon(
+                            Icons.person_outline,
+                            size: 12,
+                            color: Colors.amber.shade800,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             deal.advisorCode,
@@ -685,11 +821,11 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
             Divider(color: Colors.grey.withOpacity(0.15), thickness: 1),
             const SizedBox(height: 12),
-            
+
             // Property & Token info
             Container(
               padding: const EdgeInsets.all(12),
@@ -702,12 +838,20 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: _buildInfoItem("Property Ref", "PROP-${deal.propertyId}", Icons.domain),
+                        child: _buildInfoItem(
+                          "Property Ref",
+                          "PROP-${deal.propertyId}",
+                          Icons.domain,
+                        ),
                       ),
                       Expanded(
                         child: _buildInfoItem(
                           "Token/Booking",
-                          (deal.tokenAmount != null && deal.tokenAmount != '0' && deal.tokenAmount != '') ? "₹${deal.tokenAmount}" : "Pending",
+                          (deal.tokenAmount != null &&
+                                  deal.tokenAmount != '0' &&
+                                  deal.tokenAmount != '')
+                              ? "₹${deal.tokenAmount}"
+                              : "Pending",
                           Icons.monetization_on,
                         ),
                       ),
@@ -717,10 +861,20 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: _buildInfoItem("Mode", (deal.tokenPaymentMode?.isEmpty ?? true) ? "N/A" : deal.tokenPaymentMode!, Icons.account_balance_wallet),
+                        child: _buildInfoItem(
+                          "Mode",
+                          (deal.tokenPaymentMode?.isEmpty ?? true)
+                              ? "N/A"
+                              : deal.tokenPaymentMode!,
+                          Icons.account_balance_wallet,
+                        ),
                       ),
                       Expanded(
-                        child: _buildInfoItem("Date Initiated", deal.createdAt.split(' ')[0], Icons.calendar_today),
+                        child: _buildInfoItem(
+                          "Date Initiated",
+                          deal.createdAt.split(' ')[0],
+                          Icons.calendar_today,
+                        ),
                       ),
                     ],
                   ),
@@ -764,5 +918,4 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
       ],
     );
   }
-}
 }

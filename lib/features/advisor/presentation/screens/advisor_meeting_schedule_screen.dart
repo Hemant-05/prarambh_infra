@@ -481,46 +481,55 @@ class _AdvisorMeetingScheduleScreenState
               bool showCheckOut = false;
               bool isAttending = false;
 
-              // Logic for Check In
-              if (meeting.status != 'completed') {
-                if (meeting.checkInTime == null) {
-                  if (startDateTime != null) {
-                    // Strictly block check-in if now is already past end time
-                    bool notEndedYet = endDateTime == null || now.isBefore(endDateTime);
-                    
-                    if (notEndedYet &&
-                        now.isAfter(startDateTime.subtract(const Duration(minutes: 10))) &&
-                        now.isBefore(startDateTime.add(const Duration(minutes: 10)))) {
-                      showCheckIn = true;
-                    }
+              // 1. Logic for Check In
+              if (meeting.checkInTime == null && meeting.status != 'completed') {
+                if (startDateTime != null) {
+                  // Allow check in 15 mins before start, until end of meeting
+                  DateTime earliestCheckIn = startDateTime.subtract(const Duration(minutes: 15));
+                  bool notEndedYet = endDateTime == null || now.isBefore(endDateTime);
+                  
+                  if (now.isAfter(earliestCheckIn) && notEndedYet) {
+                    showCheckIn = true;
                   }
                 } else {
-                  // User has checked in but not checked out
-                  if (meeting.checkOutTime == null) {
-                    isAttending = true;
-                  }
+                  // Fallback: If times are invalid, allow check-in freely.
+                  showCheckIn = true;
                 }
               }
 
-              // Logic for Check Out (shown only if checked in AND (status=completed OR time passed))
+              // 2. Logic for Check Out & Attending
               if (meeting.checkInTime != null && meeting.checkOutTime == null) {
-                bool isTimePassed = endDateTime != null && now.isAfter(endDateTime);
-                bool manualCompletion = meeting.status == 'completed';
-                
-                if (manualCompletion || isTimePassed) {
-                  // Allow check-out only within 10 minutes of the finish time
-                  DateTime finishTime = endDateTime ?? now;
-                  if (now.isBefore(finishTime.add(const Duration(minutes: 10)))) {
+                isAttending = true;
+
+                if (startDateTime != null && endDateTime != null) {
+                  // Only show Check Out button after 10 minutes of the meeting's start time
+                  DateTime unlockCheckOutTime = startDateTime.add(const Duration(minutes: 10));
+                  // And restrict it from showing 10 mins after end time
+                  DateTime deadlineCheckOutTime = endDateTime.add(const Duration(minutes: 10));
+                  
+                  if (now.isAfter(unlockCheckOutTime) && now.isBefore(deadlineCheckOutTime)) {
                     showCheckOut = true;
                   }
+                } else if (startDateTime != null) {
+                  DateTime unlockCheckOutTime = startDateTime.add(const Duration(minutes: 10));
+                  if (now.isAfter(unlockCheckOutTime)) {
+                    showCheckOut = true;
+                  }
+                } else {
+                  // Fallback: if time format fails, just show the checkout button
+                  showCheckOut = true;
                 }
               }
 
               if (showCheckIn || showCheckOut || isAttending) {
                 return SizedBox(
                   width: double.infinity,
-                  child: (isAttending && !showCheckOut)
-                      ? Container(
+                  child: Column(
+                    children: [
+                      // Status Box
+                      if (isAttending) 
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
@@ -536,38 +545,46 @@ class _AdvisorMeetingScheduleScreenState
                               fontSize: 14,
                             ),
                           ),
-                        )
-                      : ElevatedButton.icon(
-                          onPressed: provider.isSaving 
-                            ? null 
-                            : () {
-                                if (AdvisorAccessHelper.check(context, feature: 'attendance')) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => AdvisorCameraScreen(
-                                        meeting: meeting,
-                                        isCheckIn: !showCheckOut,
+                        ),
+                      
+                      // Action Button
+                      if (showCheckIn || showCheckOut)
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: provider.isSaving 
+                              ? null 
+                              : () {
+                                  if (AdvisorAccessHelper.check(context, feature: 'attendance')) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => AdvisorCameraScreen(
+                                          meeting: meeting,
+                                          isCheckIn: showCheckIn,
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                }
-                              },
-                          icon: provider.isSaving 
-                            ? const SizedBox(height: 14, width: 14, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                            : Icon(showCheckOut ? Icons.logout : Icons.login),
-                          label: Text(
-                            showCheckOut ? 'Check Out' : 'Check In', 
-                            style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: showCheckOut ? Colors.blue : primaryBlue,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
+                                    );
+                                  }
+                                },
+                            icon: provider.isSaving 
+                              ? const SizedBox(height: 14, width: 14, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              : Icon(showCheckOut ? Icons.logout : Icons.login),
+                            label: Text(
+                              showCheckOut ? 'Check Out' : 'Check In', 
+                              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: showCheckOut ? Colors.blue : primaryBlue,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
                           ),
                         ),
+                    ]
+                  )
                 );
               }
               return const SizedBox.shrink();

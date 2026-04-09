@@ -11,6 +11,8 @@ class AdminDashboardModel {
   final List<dynamic> priorityLeads;
   final List<dynamic> pendingVerifications;
   final List<dynamic> recentClosures;
+  final int totalPendingTasks;
+  final List<PendingAction> pendingActions;
 
   AdminDashboardModel({
     required this.unitsSold,
@@ -25,11 +27,21 @@ class AdminDashboardModel {
     required this.priorityLeads,
     required this.pendingVerifications,
     required this.recentClosures,
+    required this.totalPendingTasks,
+    required this.pendingActions,
   });
 
   factory AdminDashboardModel.fromJson(Map<String, dynamic> json) {
     final up = json['units_progress'] ?? {};
     final so = json['sales_overview'] ?? {};
+    final pa = json['pending_actions'] ?? {};
+
+    List<PendingAction> actions = [];
+    if (pa['tasks'] is List) {
+      actions = (pa['tasks'] as List)
+          .map((item) => PendingAction.fromJson(item))
+          .toList();
+    }
 
     return AdminDashboardModel(
       unitsSold: int.tryParse(up['sold']?.toString() ?? '0') ?? 0,
@@ -44,6 +56,28 @@ class AdminDashboardModel {
       priorityLeads: json['priority_leads'] is List ? json['priority_leads'] : [],
       pendingVerifications: json['pending_verifications'] is List ? json['pending_verifications'] : [],
       recentClosures: json['recent_deal_closures'] is List ? json['recent_deal_closures'] : [],
+      totalPendingTasks: int.tryParse(pa['total_tasks']?.toString() ?? '0') ?? 0,
+      pendingActions: actions,
+    );
+  }
+}
+
+class PendingAction {
+  final String iconType;
+  final String title;
+  final String description;
+
+  PendingAction({
+    required this.iconType,
+    required this.title,
+    required this.description,
+  });
+
+  factory PendingAction.fromJson(Map<String, dynamic> json) {
+    return PendingAction(
+      iconType: json['icon_type']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
     );
   }
 }

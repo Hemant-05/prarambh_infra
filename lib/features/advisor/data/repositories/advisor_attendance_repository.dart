@@ -20,6 +20,18 @@ class AdvisorAttendanceRepository {
     }
   }
 
+  Future<dynamic> getSingleMeeting(String id) async {
+    try {
+      final response = await apiClient.getSingleMeeting(id);
+      if (response['status'] == true || response['status'] == 'success') {
+        return response['data']; // Returns the meeting object with Attendance[]
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   Future<bool> checkIn(String meetingId, String advisorId, File photo) async {
     try {
       final response = await apiClient.checkInAttendance(meetingId, advisorId, photo);

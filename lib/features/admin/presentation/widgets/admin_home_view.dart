@@ -15,6 +15,7 @@ import 'package:prarambh_infra/features/admin/presentation/screens/review_applic
 import 'package:prarambh_infra/features/advisor/presentation/screens/lead_details_screen.dart';
 import 'package:prarambh_infra/features/auth/presentation/providers/auth_provider.dart';
 import 'package:prarambh_infra/core/utils/ui_helper.dart';
+import 'package:prarambh_infra/features/admin/data/models/admin_dashboard_model.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -409,6 +410,16 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                     ),
                   ),
 
+                  const SizedBox(height: 30),
+                  _buildPendingActionsSection(
+                    context,
+                    data,
+                    cardColor,
+                    primaryBlue,
+                    textColor,
+                    secondaryTextColor,
+                    isDark,
+                  ),
                   const SizedBox(height: 30),
 
                   Row(
@@ -1092,6 +1103,153 @@ class _AdminHomeViewState extends State<AdminHomeView> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPendingActionsSection(
+    BuildContext context,
+    AdminDashboardModel data,
+    Color cardColor,
+    Color primaryBlue,
+    Color? textColor,
+    Color? secondaryTextColor,
+    bool isDark,
+  ) {
+    if (data.pendingActions.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Pending Actions',
+              style: GoogleFonts.montserrat(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.shade100),
+              ),
+              child: Text(
+                '${data.totalPendingTasks} Tasks',
+                style: GoogleFonts.montserrat(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red.shade700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        ...data.pendingActions.map((action) => _buildPendingActionCard(
+              context,
+              action,
+              cardColor,
+              primaryBlue,
+              textColor,
+              secondaryTextColor,
+              isDark,
+            )),
+      ],
+    );
+  }
+
+  Widget _buildPendingActionCard(
+    BuildContext context,
+    PendingAction action,
+    Color cardColor,
+    Color primaryBlue,
+    Color? textColor,
+    Color? secondaryTextColor,
+    bool isDark,
+  ) {
+    IconData iconData;
+    Color iconBgColor;
+    Color iconColor;
+
+    switch (action.iconType) {
+      case 'document_check':
+        iconData = Icons.verified_user_outlined;
+        iconBgColor = Colors.blue.shade50;
+        iconColor = Colors.blue.shade700;
+        break;
+      case 'user_add':
+        iconData = Icons.person_add_outlined;
+        iconBgColor = Colors.orange.shade50;
+        iconColor = Colors.orange.shade700;
+        break;
+      case 'briefcase':
+        iconData = Icons.work_outline;
+        iconBgColor = Colors.purple.shade50;
+        iconColor = Colors.purple.shade700;
+        break;
+      default:
+        iconData = Icons.notifications_none;
+        iconBgColor = Colors.grey.shade100;
+        iconColor = Colors.grey.shade700;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.getBorderColor(context)),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black26 : Colors.black.withOpacity(0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark ? iconColor.withOpacity(0.1) : iconBgColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(iconData, color: iconColor, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  action.title,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  action.description,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 12,
+                    color: secondaryTextColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right, color: secondaryTextColor, size: 20),
+        ],
       ),
     );
   }

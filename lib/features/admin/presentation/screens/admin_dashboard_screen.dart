@@ -13,6 +13,8 @@ import '../providers/admin_advisor_provider.dart';
 import '../providers/admin_enquiry_provider.dart';
 import '../widgets/admin_drawer.dart';
 import '../widgets/admin_home_view.dart';
+import '../../../../core/globals.dart';
+import '../../../../core/widgets/top_performers_dialog.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -29,6 +31,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _setupErrorListeners();
       context.read<AdminProvider>().fetchDashboardData();
+
+      final adminId = context.read<AuthProvider>().currentUser?.id.toString() ?? '1';
+      TopPerformersDialog.show(
+        context, 
+        userId: adminId, 
+        onViewTeam: () {
+          context.read<AdminProvider>().setDashboardIndex(3); // Team tab index is 3
+        }
+      );
     });
   }
 

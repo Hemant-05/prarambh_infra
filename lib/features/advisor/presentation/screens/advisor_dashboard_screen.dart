@@ -18,6 +18,8 @@ import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_pro
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_achievement_screen.dart';
 import '../../../../core/utils/access_helper.dart';
 import '../../../../core/utils/ui_helper.dart';
+import '../../../../core/globals.dart';
+import '../../../../core/widgets/top_performers_dialog.dart';
 
 class AdvisorDashboardScreen extends StatefulWidget {
   const AdvisorDashboardScreen({super.key});
@@ -41,9 +43,20 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final advisorCode =
-          context.read<AuthProvider>().currentUser?.advisorCode ?? '';
+      final advisor = context.read<AuthProvider>().currentUser;
+      final advisorCode = advisor?.advisorCode ?? '';
+      
       context.read<AdvisorDashboardProvider>().fetchDashboardData(advisorCode);
+
+      TopPerformersDialog.show(
+        context, 
+        userId: advisor?.id.toString() ?? '1', 
+        onViewTeam: () {
+          setState(() {
+            _selectedIndex = 3; // Team tab index is 3
+          });
+        }
+      );
     });
   }
 

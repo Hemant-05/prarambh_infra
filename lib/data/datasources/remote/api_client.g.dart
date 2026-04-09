@@ -168,6 +168,7 @@ class _ApiClient implements ApiClient {
     String state,
     String pincode,
     String leaderCode,
+    String advisorType,
     File aadharFront,
     File aadharBack,
     File panPhoto,
@@ -199,6 +200,7 @@ class _ApiClient implements ApiClient {
     _data.fields.add(MapEntry('state', state));
     _data.fields.add(MapEntry('pincode', pincode));
     _data.fields.add(MapEntry('leader_code', leaderCode));
+    _data.fields.add(MapEntry('advisor_type', advisorType));
     _data.files.add(
       MapEntry(
         'addresscard_front_photo',
@@ -2451,6 +2453,27 @@ class _ApiClient implements ApiClient {
           .compose(
             _dio.options,
             '/team/advisor/${advisorId}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> getTopPerformers(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/team/top-performers/${id}',
             queryParameters: queryParameters,
             data: _data,
           )

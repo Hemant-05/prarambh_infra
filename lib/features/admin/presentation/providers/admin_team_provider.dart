@@ -83,4 +83,23 @@ class AdminTeamProvider extends ChangeNotifier with ErrorHandlerMixin {
       return false;
     }
   }
+
+  Future<bool> updateAdvisorType(String advisorId, String advisorType) async {
+    setLoading(true);
+    setError(null);
+    try {
+      final success = await repository.updateAdvisorType(advisorId, advisorType);
+      if (success) {
+        // Re-fetch to get updated data
+        await fetchProfile(advisorId);
+      }
+      setLoading(false);
+      return success;
+    } catch (e) {
+      debugPrint('Update Advisor Type Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
+      setLoading(false);
+      return false;
+    }
+  }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/widgets/back_button.dart';
+import 'package:prarambh_infra/features/admin/data/models/advisor_application_model.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/review_application_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -20,6 +21,8 @@ class AdvisorApplicationsScreen extends StatefulWidget {
 
 class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
   String _searchQuery = '';
+  DateTimeRange? _selectedDateRange;
+  String _selectedWorkType = 'All'; // 'All', 'Full-time', 'Part-time'
 
   @override
   void initState() {
@@ -30,6 +33,148 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
     });
   }
 
+  void _showFilterSheet(BuildContext context, Color primaryBlue) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Container(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Filter Applications',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _selectedDateRange = null;
+                            _selectedWorkType = 'All';
+                          });
+                          Navigator.pop(context);
+                        },
+                        child: Text('Reset', style: TextStyle(color: primaryBlue)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Work Type',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: ['All', 'Full-time', 'Part-time'].map((type) {
+                      final isSelected = _selectedWorkType == type;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text(type),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            if (selected) {
+                              setSheetState(() => _selectedWorkType = type);
+                              setState(() => _selectedWorkType = type);
+                            }
+                          },
+                          selectedColor: primaryBlue.withOpacity(0.1),
+                          labelStyle: GoogleFonts.montserrat(
+                            color: isSelected ? primaryBlue : Colors.grey[700],
+                            fontSize: 12,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Date Range',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  InkWell(
+                    onTap: () async {
+                      final picked = await showDateRangePicker(
+                        context: context,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime.now(),
+                        initialDateRange: _selectedDateRange,
+                      );
+                      if (picked != null) {
+                        setSheetState(() => _selectedDateRange = picked);
+                        setState(() => _selectedDateRange = picked);
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.calendar_today, size: 18, color: Colors.grey),
+                          const SizedBox(width: 12),
+                          Text(
+                            _selectedDateRange == null
+                                ? 'Select Date Range'
+                                : '${_selectedDateRange!.start.toString().split(' ')[0]} - ${_selectedDateRange!.end.toString().split(' ')[0]}',
+                            style: GoogleFonts.montserrat(fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryBlue,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text(
+                        'Apply Filters',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -38,13 +183,40 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
     final advisorProvider = context.watch<AdminAdvisorProvider>();
     final enquiryProvider = context.watch<AdminEnquiryProvider>();
 
-    final filteredAdvisors = advisorProvider.advisors.where((advisor) {
-      if (_searchQuery.isEmpty) return true;
-      final query = _searchQuery.toLowerCase();
-      return advisor.name.toLowerCase().contains(query) ||
-          advisor.displayId.toLowerCase().contains(query) ||
-          advisor.city.toLowerCase().contains(query);
-    }).toList();
+    // Common filter logic for advisors
+    List<AdvisorApplicationModel> _filterAdvisors(List<AdvisorApplicationModel> advisors) {
+      return advisors.where((advisor) {
+        // Search Filter
+        final matchesSearch = _searchQuery.isEmpty ||
+            advisor.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            advisor.displayId.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            advisor.city.toLowerCase().contains(_searchQuery.toLowerCase());
+
+        // Work Type Filter
+        bool matchesType = true;
+        if (_selectedWorkType != 'All') {
+          matchesType = advisor.advisorType == _selectedWorkType;
+        }
+
+        // Date Filter
+        bool matchesDate = true;
+        if (_selectedDateRange != null) {
+          try {
+            final appliedDate = DateTime.parse(advisor.appliedDate);
+            matchesDate = appliedDate.isAfter(_selectedDateRange!.start.subtract(const Duration(days: 1))) &&
+                appliedDate.isBefore(_selectedDateRange!.end.add(const Duration(days: 1)));
+          } catch (e) {
+            matchesDate = false;
+          }
+        }
+
+        return matchesSearch && matchesType && matchesDate;
+      }).toList();
+    }
+
+    final allAdvisors = advisorProvider.advisors;
+    final byAdminAdvisors = _filterAdvisors(allAdvisors.where((a) => a.leaderId == 'admin001').toList());
+    final byAdvisorAdvisors = _filterAdvisors(allAdvisors.where((a) => a.leaderId != 'admin001').toList());
 
     final filteredEnquiries = enquiryProvider.careerEnquiries.where((enquiry) {
       if (_searchQuery.isEmpty) return true;
@@ -55,77 +227,169 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
     }).toList();
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: backButton(isDark: isDark),
-          title: Text(
-            'Advisor Applications',
-            style: GoogleFonts.montserrat(
-              color: isDark ? Colors.white : Colors.black,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
-          ),
-          bottom: TabBar(
-            indicatorColor: primaryBlue,
-            labelColor: primaryBlue,
-            unselectedLabelColor: Colors.grey,
-            labelStyle: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13),
-            tabs: const [
-              Tab(text: 'By Advisor'),
-              Tab(text: 'App/Web'),
-            ],
-          ),
-        ),
-        body: Column(
-          children: [
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[850] : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        body: SafeArea(
+          child: Column(
+            children: [
+              // --- Custom Header ---
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 15, 20, 10),
+                child: Row(
+                  children: [
+                    backButton(isDark: isDark),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: Text(
+                        'Advisor Applications',
+                        style: GoogleFonts.montserrat(
+                          color: isDark ? Colors.white : Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                child: TextField(
-                  onChanged: (value) => setState(() => _searchQuery = value),
-                  decoration: InputDecoration(
-                    icon: const Icon(Icons.search, color: Colors.grey),
-                    hintText: 'Search applications...',
-                    hintStyle: GoogleFonts.montserrat(color: Colors.grey, fontSize: 14),
-                    border: InputBorder.none,
+              ),
+
+              // --- Search and Filter Row ---
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 50,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.grey[850] : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                        ),
+                        child: TextField(
+                          onChanged: (value) => setState(() => _searchQuery = value),
+                          decoration: InputDecoration(
+                            icon: const Icon(Icons.search, color: Colors.grey, size: 20),
+                            hintText: 'Search advisors...',
+                            hintStyle: GoogleFonts.montserrat(color: Colors.grey, fontSize: 13),
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    GestureDetector(
+                      onTap: () => _showFilterSheet(context, primaryBlue),
+                      child: Container(
+                        height: 50,
+                        width: 50,
+                        decoration: BoxDecoration(
+                          color: (_selectedDateRange != null || _selectedWorkType != 'All')
+                              ? primaryBlue
+                              : (isDark ? Colors.grey[850] : Colors.white),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                        ),
+                        child: Icon(
+                          Icons.tune,
+                          color: (_selectedDateRange != null || _selectedWorkType != 'All')
+                              ? Colors.white
+                              : Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // --- Applied Filters Indicator ---
+              if (_selectedDateRange != null || _selectedWorkType != 'All')
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                  child: Row(
+                    children: [
+                      if (_selectedWorkType != 'All')
+                        _filterChip(_selectedWorkType, () => setState(() => _selectedWorkType = 'All')),
+                      if (_selectedDateRange != null)
+                        _filterChip(
+                          '${_selectedDateRange!.start.toString().split(' ')[0]}...',
+                          () => setState(() => _selectedDateRange = null),
+                        ),
+                    ],
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  _buildAdvisorList(filteredAdvisors, advisorProvider.isLoading, cardColor, isDark),
-                  _buildCareerEnquiryList(filteredEnquiries, enquiryProvider.isLoading, cardColor, isDark, primaryBlue),
+
+              const SizedBox(height: 10),
+
+              // --- TabBar ---
+              TabBar(
+                indicatorColor: primaryBlue,
+                labelColor: primaryBlue,
+                unselectedLabelColor: Colors.grey,
+                labelStyle: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13),
+                tabs: const [
+                  Tab(text: 'By Admin'),
+                  Tab(text: 'By Advisor'),
+                  Tab(text: 'App/Web'),
                 ],
               ),
-            ),
-          ],
+
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    _buildAdvisorList(byAdminAdvisors, advisorProvider.isLoading, cardColor, isDark),
+                    _buildAdvisorList(byAdvisorAdvisors, advisorProvider.isLoading, cardColor, isDark),
+                    _buildCareerEnquiryList(filteredEnquiries, enquiryProvider.isLoading, cardColor, isDark, primaryBlue),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildAdvisorList(List<dynamic> advisors, bool isLoading, Color cardColor, bool isDark) {
+  Widget _filterChip(String label, VoidCallback onClear) {
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, style: GoogleFonts.montserrat(fontSize: 10, color: Colors.blue, fontWeight: FontWeight.bold)),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: onClear,
+            child: const Icon(Icons.close, size: 12, color: Colors.blue),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdvisorList(List<AdvisorApplicationModel> advisors, bool isLoading, Color cardColor, bool isDark) {
     if (isLoading) return const Center(child: CircularProgressIndicator());
     if (advisors.isEmpty) {
-      return Center(child: Text('No advisor applications found', style: GoogleFonts.montserrat(color: Colors.grey)));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.person_search, size: 60, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text('No applications found', style: GoogleFonts.montserrat(color: Colors.grey)),
+          ],
+        ),
+      );
     }
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       physics: const BouncingScrollPhysics(),
       itemCount: advisors.length,
       itemBuilder: (context, index) => _buildAdvisorCard(advisors[index], cardColor, isDark),
@@ -138,7 +402,7 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
       return Center(child: Text('No web/app enquiries found', style: GoogleFonts.montserrat(color: Colors.grey)));
     }
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       physics: const BouncingScrollPhysics(),
       itemCount: enquiries.length,
       itemBuilder: (context, index) => _buildCareerInquiryCard(enquiries[index], isDark, primaryBlue),
@@ -255,15 +519,12 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    // 1. Pre-fill the registration provider
                     context.read<AdvisorRegistrationProvider>().preFillFromEnquiry(
                       name: enquiry.name,
                       email: enquiry.email,
                       phone: enquiry.phone,
                       city: enquiry.city,
                     );
-                    
-                    // 2. Redirect to registration form
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -288,8 +549,7 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
     );
   }
 
-
-  Widget _buildAdvisorCard(var app, Color cardColor, bool isDark) {
+  Widget _buildAdvisorCard(AdvisorApplicationModel app, Color cardColor, bool isDark) {
     Color statusColor;
     Color statusBgColor;
     if (app.status == 'Pending') {
@@ -332,7 +592,6 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              // Avatar with Shield Badge
               Stack(
                 children: [
                   CircleAvatar(
@@ -366,8 +625,6 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                 ],
               ),
               const SizedBox(width: 16),
-
-              // Info Column
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -379,7 +636,7 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                           child: Text(
                             app.name,
                             style: GoogleFonts.montserrat(
-                              fontSize: 16,
+                              fontSize: 15,
                               fontWeight: FontWeight.bold,
                               color: isDark ? Colors.white : Colors.black,
                             ),
@@ -389,10 +646,7 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: statusBgColor,
                             borderRadius: BorderRadius.circular(4),
@@ -400,7 +654,7 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                           child: Text(
                             app.status,
                             style: GoogleFonts.montserrat(
-                              fontSize: 10,
+                              fontSize: 9,
                               fontWeight: FontWeight.bold,
                               color: statusColor,
                             ),
@@ -409,28 +663,37 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                       ],
                     ),
                     const SizedBox(height: 4),
-
                     Text(
-                      '${app.city}, ${app.state} • ID: ${app.displayId}',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                      '${app.city} • ID: ${app.displayId}',
+                      style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey[600]),
                     ),
                     const SizedBox(height: 4),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Icon(
-                          Icons.calendar_today_outlined,
-                          size: 12,
-                          color: Colors.grey[500],
+                        Row(
+                          children: [
+                            Icon(Icons.calendar_today_outlined, size: 11, color: Colors.grey[500]),
+                            const SizedBox(width: 4),
+                            Text(
+                              app.appliedDate,
+                              style: GoogleFonts.montserrat(fontSize: 11, color: Colors.grey[500]),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Applied: ${app.appliedDate}',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 11,
-                            color: Colors.grey[500],
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            app.advisorType,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 9,
+                              color: Colors.grey[700],
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
@@ -439,7 +702,7 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.chevron_right, color: Colors.grey),
+              const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
             ],
           ),
         ),
