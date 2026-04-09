@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../data/models/deal_model.dart';
 import '../providers/admin_deal_provider.dart';
+import '../providers/admin_project_provider.dart';
 import 'deal_management_screen.dart';
 
 class AdminDealsScreen extends StatefulWidget {
@@ -14,11 +17,93 @@ class AdminDealsScreen extends StatefulWidget {
 }
 
 class _AdminDealsScreenState extends State<AdminDealsScreen> {
+  final _searchCtrl = TextEditingController();
+  String _searchQuery = "";
+
+  // Filter States
+  String? _selectedPaymentStatus;
+  String? _selectedVerificationStatus;
+  int? _selectedProjectId;
+  DateTimeRange? _selectedDateRange;
+  int? _selectedInstallmentCount;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AdminDealProvider>().fetchAllDeals();
+      context.read<AdminProjectProvider>().fetchProjects();
+    });
+    _searchCtrl.addListener(() {
+      setState(() => _searchQuery = _searchCtrl.text.toLowerCase());
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  List<DealModel> _getFilteredDeals(List<DealModel> allDeals) {
+    return allDeals.where((deal) {
+      // 1. Search filter (Client Name or Advisor Code)
+      final matchesSearch = deal.clientName.toLowerCase().contains(_searchQuery) ||
+          deal.advisorCode.toLowerCase().contains(_searchQuery) ||
+          deal.id.toString().contains(_searchQuery);
+      if (!matchesSearch) return false;
+
+      // 2. Payment Status Filter
+      if (_selectedPaymentStatus != null) {
+        if (deal.paymentStatus.toLowerCase() != _selectedPaymentStatus!.toLowerCase()) return false;
+      }
+
+      // 3. Verification Status Filter
+      if (_selectedVerificationStatus != null) {
+        if (deal.dealStatus.toLowerCase() != _selectedVerificationStatus!.toLowerCase()) return false;
+      }
+
+      // 4. Project Filter
+      if (_selectedProjectId != null) {
+        if (deal.propertyId != _selectedProjectId) return false;
+      }
+
+      // 5. Date Range Filter
+      if (_selectedDateRange != null) {
+        try {
+          final dealDate = DateTime.parse(deal.createdAt.split(' ')[0]);
+          if (dealDate.isBefore(_selectedDateRange!.start) || dealDate.isAfter(_selectedDateRange!.end)) {
+            return false;
+          }
+        } catch (_) {}
+      }
+
+      // 6. Installments Count Filter
+      if (_selectedInstallmentCount != null) {
+        if (deal.installments.length != _selectedInstallmentCount) return false;
+      }
+
+      return true;
+    }).toList();
+  }
+
+  int get _activeFilterCount {
+    int count = 0;
+    if (_selectedPaymentStatus != null) count++;
+    if (_selectedVerificationStatus != null) count++;
+    if (_selectedProjectId != null) count++;
+    if (_selectedDateRange != null) count++;
+    if (_selectedInstallmentCount != null) count++;
+    return count;
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _selectedPaymentStatus = null;
+      _selectedVerificationStatus = null;
+      _selectedProjectId = null;
+      _selectedDateRange = null;
+      _selectedInstallmentCount = null;
     });
   }
 
@@ -30,46 +115,346 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
 
     return Scaffold(
       backgroundColor: bgColor,
-      body: Consumer<AdminDealProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading) {
-            return Center(
-              child: CircularProgressIndicator(color: primaryBlue),
-            );
-          }
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          'Deal Management',
+          style: GoogleFonts.montserrat(
+            color: isDark ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        actions: [
+          Stack(
+            children: [
+              IconButton(
+                icon: Icon(Icons.filter_list, color: primaryBlue),
+                onPressed: () => _showFilterSheet(context, isDark, primaryBlue),
+              ),
+              if (_activeFilterCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                    child: Text(
+                      '$_activeFilterCount',
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      textAlign: Alignment.center.y > 0 ? TextAlign.center : TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Search Bar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: TextField(
+              controller: _searchCtrl,
+              decoration: InputDecoration(
+                hintText: 'Search by client or advisor code...',
+                hintStyle: GoogleFonts.montserrat(fontSize: 13, color: Colors.grey),
+                prefixIcon: const Icon(Icons.search, size: 20),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        onPressed: () => _searchCtrl.clear(),
+                      )
+                    : null,
+                filled: true,
+                fillColor: isDark ? Colors.grey[900] : Colors.white,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: primaryBlue.withOpacity(0.5)),
+                ),
+              ),
+            ),
+          ),
 
-          if (provider.deals.isEmpty) {
-            return _buildEmptyState(primaryBlue);
-          }
+          Expanded(
+            child: Consumer<AdminDealProvider>(
+              builder: (context, provider, child) {
+                if (provider.isLoading) {
+                  return Center(
+                    child: CircularProgressIndicator(color: primaryBlue),
+                  );
+                }
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              await provider.fetchAllDeals();
-            },
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: provider.deals.length,
-              physics: const AlwaysScrollableScrollPhysics(),
-              itemBuilder: (context, index) {
-                final deal = provider.deals[index];
-                return _buildDealCard(context, deal, primaryBlue, isDark);
+                final filteredDeals = _getFilteredDeals(provider.deals);
+
+                if (filteredDeals.isEmpty) {
+                  return _buildEmptyState(primaryBlue, isFiltered: _searchQuery.isNotEmpty || _activeFilterCount > 0);
+                }
+
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    await provider.fetchAllDeals();
+                  },
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredDeals.length,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemBuilder: (context, index) {
+                      final deal = filteredDeals[index];
+                      return _buildDealCard(context, deal, primaryBlue, isDark);
+                    },
+                  ),
+                );
               },
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildEmptyState(Color primaryBlue) {
+  void _showFilterSheet(BuildContext context, bool isDark, Color primaryBlue) {
+    final projectProvider = context.read<AdminProjectProvider>();
+    final sheetBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: sheetBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Filters',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            _clearFilters();
+                            Navigator.pop(context);
+                          },
+                          child: Text('Reset All', style: GoogleFonts.montserrat(color: Colors.red, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                    const Divider(),
+                    const SizedBox(height: 16),
+
+                    // Payment Status
+                    _buildFilterSection(
+                      'Payment Status',
+                      DropdownButtonFormField<String>(
+                        value: _selectedPaymentStatus,
+                        dropdownColor: sheetBg,
+                        style: GoogleFonts.montserrat(color: textColor, fontSize: 13),
+                        items: ['Pending', 'Paid', 'Partially Paid']
+                            .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                            .toList(),
+                        onChanged: (val) {
+                          setModalState(() => _selectedPaymentStatus = val);
+                          setState(() => _selectedPaymentStatus = val);
+                        },
+                        decoration: _inputDecoration(isDark),
+                      ),
+                    ),
+
+                    // Verification Status
+                    _buildFilterSection(
+                      'Verification Status',
+                      DropdownButtonFormField<String>(
+                        value: _selectedVerificationStatus,
+                        dropdownColor: sheetBg,
+                        style: GoogleFonts.montserrat(color: textColor, fontSize: 13),
+                        items: ['Verified', 'Not Verified']
+                            .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                            .toList(),
+                        onChanged: (val) {
+                          setModalState(() => _selectedVerificationStatus = val);
+                          setState(() => _selectedVerificationStatus = val);
+                        },
+                        decoration: _inputDecoration(isDark),
+                      ),
+                    ),
+
+                    // Project
+                    _buildFilterSection(
+                      'Project',
+                      DropdownButtonFormField<int>(
+                        value: _selectedProjectId,
+                        dropdownColor: sheetBg,
+                        isExpanded: true,
+                        style: GoogleFonts.montserrat(color: textColor, fontSize: 13),
+                        items: projectProvider.projects
+                            .map((p) => DropdownMenuItem(value: p.id, child: Text(p.projectName, overflow: TextOverflow.ellipsis)))
+                            .toList(),
+                        onChanged: (val) {
+                          setModalState(() => _selectedProjectId = val);
+                          setState(() => _selectedProjectId = val);
+                        },
+                        decoration: _inputDecoration(isDark),
+                      ),
+                    ),
+
+                    // Date Range
+                    _buildFilterSection(
+                      'Date Range',
+                      InkWell(
+                        onTap: () async {
+                          final range = await showDateRangePicker(
+                            context: context,
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2030),
+                            initialDateRange: _selectedDateRange,
+                          );
+                          if (range != null) {
+                            setModalState(() => _selectedDateRange = range);
+                            setState(() => _selectedDateRange = range);
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.grey[850] : Colors.grey[100],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                _selectedDateRange == null
+                                    ? 'Select Date Range'
+                                    : '${DateFormat('MMM dd').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd').format(_selectedDateRange!.end)}',
+                                style: GoogleFonts.montserrat(fontSize: 13, color: textColor),
+                              ),
+                              Icon(Icons.calendar_today, size: 16, color: primaryBlue),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Installments
+                    _buildFilterSection(
+                      'Number of Installments',
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Slider(
+                              value: (_selectedInstallmentCount ?? 0).toDouble(),
+                              min: 0,
+                              max: 12,
+                              divisions: 12,
+                              label: _selectedInstallmentCount?.toString() ?? 'Any',
+                              onChanged: (val) {
+                                setModalState(() => _selectedInstallmentCount = val == 0 ? null : val.toInt());
+                                setState(() => _selectedInstallmentCount = val == 0 ? null : val.toInt());
+                              },
+                            ),
+                          ),
+                          Text(
+                            _selectedInstallmentCount?.toString() ?? 'Any',
+                            style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: primaryBlue),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryBlue,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text('Apply Filters', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: Colors.white)),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildFilterSection(String label, Widget child) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+          const SizedBox(height: 8),
+          child,
+        ],
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration(bool isDark) {
+    return InputDecoration(
+      filled: true,
+      fillColor: isDark ? Colors.grey[850] : Colors.grey[100],
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+    );
+  }
+
+  Widget _buildEmptyState(Color primaryBlue, {bool isFiltered = false}) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.handshake_outlined, size: 80, color: Colors.grey.shade400),
+          Icon(
+            isFiltered ? Icons.search_off_outlined : Icons.handshake_outlined,
+            size: 80,
+            color: Colors.grey.shade400,
+          ),
           const SizedBox(height: 16),
           Text(
-            "No Deals Found",
+            isFiltered ? "No Matching Deals" : "No Deals Found",
             style: GoogleFonts.montserrat(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -78,30 +463,37 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            "Deals initiated by advisors will appear here.",
+            isFiltered ? "Try adjusting your search or filters." : "Deals initiated by advisors will appear here.",
             style: GoogleFonts.montserrat(
               fontSize: 14,
               color: Colors.grey.shade500,
             ),
           ),
           const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () {
-              context.read<AdminDealProvider>().fetchAllDeals();
-            },
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            label: const Text(
-              "Refresh",
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryBlue,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          if (isFiltered)
+            TextButton.icon(
+              onPressed: _clearFilters,
+              icon: const Icon(Icons.refresh),
+              label: const Text("Clear All Filters"),
+            )
+          else
+            ElevatedButton.icon(
+              onPressed: () {
+                context.read<AdminDealProvider>().fetchAllDeals();
+              },
+              icon: const Icon(Icons.refresh, color: Colors.white),
+              label: const Text(
+                "Refresh",
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryBlue,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -372,4 +764,5 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
       ],
     );
   }
+}
 }
