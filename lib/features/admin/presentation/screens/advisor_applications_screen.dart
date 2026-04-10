@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:prarambh_infra/features/admin/data/models/advisor_application_model.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/review_application_screen.dart';
@@ -66,7 +67,10 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                           });
                           Navigator.pop(context);
                         },
-                        child: Text('Reset', style: TextStyle(color: primaryBlue)),
+                        child: Text(
+                          'Reset',
+                          style: TextStyle(color: primaryBlue),
+                        ),
                       ),
                     ],
                   ),
@@ -98,7 +102,9 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                           labelStyle: GoogleFonts.montserrat(
                             color: isSelected ? primaryBlue : Colors.grey[700],
                             fontSize: 12,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                         ),
                       );
@@ -128,14 +134,21 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                       }
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey[300]!),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.calendar_today, size: 18, color: Colors.grey),
+                          const Icon(
+                            Icons.calendar_today,
+                            size: 18,
+                            color: Colors.grey,
+                          ),
                           const SizedBox(width: 12),
                           Text(
                             _selectedDateRange == null
@@ -155,7 +168,9 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                       onPressed: () => Navigator.pop(context),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryBlue,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: Text(
                         'Apply Filters',
@@ -184,12 +199,17 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
     final enquiryProvider = context.watch<AdminEnquiryProvider>();
 
     // Common filter logic for advisors
-    List<AdvisorApplicationModel> _filterAdvisors(List<AdvisorApplicationModel> advisors) {
+    List<AdvisorApplicationModel> _filterAdvisors(
+      List<AdvisorApplicationModel> advisors,
+    ) {
       return advisors.where((advisor) {
         // Search Filter
-        final matchesSearch = _searchQuery.isEmpty ||
+        final matchesSearch =
+            _searchQuery.isEmpty ||
             advisor.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            advisor.displayId.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            advisor.displayId.toLowerCase().contains(
+              _searchQuery.toLowerCase(),
+            ) ||
             advisor.city.toLowerCase().contains(_searchQuery.toLowerCase());
 
         // Work Type Filter
@@ -203,8 +223,13 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
         if (_selectedDateRange != null) {
           try {
             final appliedDate = DateTime.parse(advisor.appliedDate);
-            matchesDate = appliedDate.isAfter(_selectedDateRange!.start.subtract(const Duration(days: 1))) &&
-                appliedDate.isBefore(_selectedDateRange!.end.add(const Duration(days: 1)));
+            matchesDate =
+                appliedDate.isAfter(
+                  _selectedDateRange!.start.subtract(const Duration(days: 1)),
+                ) &&
+                appliedDate.isBefore(
+                  _selectedDateRange!.end.add(const Duration(days: 1)),
+                );
           } catch (e) {
             matchesDate = false;
           }
@@ -215,8 +240,16 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
     }
 
     final allAdvisors = advisorProvider.advisors;
-    final byAdminAdvisors = _filterAdvisors(allAdvisors.where((a) => a.leaderId == 'admin001').toList());
-    final byAdvisorAdvisors = _filterAdvisors(allAdvisors.where((a) => a.leaderId != 'admin001').toList());
+    final byAdminAdvisors = _filterAdvisors(
+      allAdvisors
+          .where((a) => a.leaderCode.toLowerCase() == 'admin001')
+          .toList(),
+    );
+    final byAdvisorAdvisors = _filterAdvisors(
+      allAdvisors
+          .where((a) => a.leaderCode.toLowerCase() != 'admin001')
+          .toList(),
+    );
 
     final filteredEnquiries = enquiryProvider.careerEnquiries.where((enquiry) {
       if (_searchQuery.isEmpty) return true;
@@ -229,7 +262,9 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
+        backgroundColor: isDark
+            ? const Color(0xFF121212)
+            : const Color(0xFFF8F9FA),
         body: SafeArea(
           child: Column(
             children: [
@@ -256,7 +291,10 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
 
               // --- Search and Filter Row ---
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
                 child: Row(
                   children: [
                     Expanded(
@@ -266,14 +304,24 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                         decoration: BoxDecoration(
                           color: isDark ? Colors.grey[850] : Colors.white,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                          border: Border.all(
+                            color: Colors.grey.withOpacity(0.2),
+                          ),
                         ),
                         child: TextField(
-                          onChanged: (value) => setState(() => _searchQuery = value),
+                          onChanged: (value) =>
+                              setState(() => _searchQuery = value),
                           decoration: InputDecoration(
-                            icon: const Icon(Icons.search, color: Colors.grey, size: 20),
+                            icon: const Icon(
+                              Icons.search,
+                              color: Colors.grey,
+                              size: 20,
+                            ),
                             hintText: 'Search advisors...',
-                            hintStyle: GoogleFonts.montserrat(color: Colors.grey, fontSize: 13),
+                            hintStyle: GoogleFonts.montserrat(
+                              color: Colors.grey,
+                              fontSize: 13,
+                            ),
                             border: InputBorder.none,
                           ),
                         ),
@@ -286,15 +334,21 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                         height: 50,
                         width: 50,
                         decoration: BoxDecoration(
-                          color: (_selectedDateRange != null || _selectedWorkType != 'All')
+                          color:
+                              (_selectedDateRange != null ||
+                                  _selectedWorkType != 'All')
                               ? primaryBlue
                               : (isDark ? Colors.grey[850] : Colors.white),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                          border: Border.all(
+                            color: Colors.grey.withOpacity(0.2),
+                          ),
                         ),
                         child: Icon(
                           Icons.tune,
-                          color: (_selectedDateRange != null || _selectedWorkType != 'All')
+                          color:
+                              (_selectedDateRange != null ||
+                                  _selectedWorkType != 'All')
                               ? Colors.white
                               : Colors.grey,
                         ),
@@ -307,11 +361,17 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
               // --- Applied Filters Indicator ---
               if (_selectedDateRange != null || _selectedWorkType != 'All')
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 5,
+                  ),
                   child: Row(
                     children: [
                       if (_selectedWorkType != 'All')
-                        _filterChip(_selectedWorkType, () => setState(() => _selectedWorkType = 'All')),
+                        _filterChip(
+                          _selectedWorkType,
+                          () => setState(() => _selectedWorkType = 'All'),
+                        ),
                       if (_selectedDateRange != null)
                         _filterChip(
                           '${_selectedDateRange!.start.toString().split(' ')[0]}...',
@@ -328,7 +388,10 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                 indicatorColor: primaryBlue,
                 labelColor: primaryBlue,
                 unselectedLabelColor: Colors.grey,
-                labelStyle: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13),
+                labelStyle: GoogleFonts.montserrat(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
                 tabs: const [
                   Tab(text: 'By Admin'),
                   Tab(text: 'By Advisor'),
@@ -339,9 +402,25 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
               Expanded(
                 child: TabBarView(
                   children: [
-                    _buildAdvisorList(byAdminAdvisors, advisorProvider.isLoading, cardColor, isDark),
-                    _buildAdvisorList(byAdvisorAdvisors, advisorProvider.isLoading, cardColor, isDark),
-                    _buildCareerEnquiryList(filteredEnquiries, enquiryProvider.isLoading, cardColor, isDark, primaryBlue),
+                    _buildAdvisorList(
+                      byAdminAdvisors,
+                      advisorProvider.isLoading,
+                      cardColor,
+                      isDark,
+                    ),
+                    _buildAdvisorList(
+                      byAdvisorAdvisors,
+                      advisorProvider.isLoading,
+                      cardColor,
+                      isDark,
+                    ),
+                    _buildCareerEnquiryList(
+                      filteredEnquiries,
+                      enquiryProvider.isLoading,
+                      cardColor,
+                      isDark,
+                      primaryBlue,
+                    ),
                   ],
                 ),
               ),
@@ -363,7 +442,14 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: GoogleFonts.montserrat(fontSize: 10, color: Colors.blue, fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: GoogleFonts.montserrat(
+              fontSize: 10,
+              color: Colors.blue,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(width: 4),
           GestureDetector(
             onTap: onClear,
@@ -374,7 +460,12 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
     );
   }
 
-  Widget _buildAdvisorList(List<AdvisorApplicationModel> advisors, bool isLoading, Color cardColor, bool isDark) {
+  Widget _buildAdvisorList(
+    List<AdvisorApplicationModel> advisors,
+    bool isLoading,
+    Color cardColor,
+    bool isDark,
+  ) {
     if (isLoading) return const Center(child: CircularProgressIndicator());
     if (advisors.isEmpty) {
       return Center(
@@ -383,7 +474,10 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
           children: [
             Icon(Icons.person_search, size: 60, color: Colors.grey[300]),
             const SizedBox(height: 16),
-            Text('No applications found', style: GoogleFonts.montserrat(color: Colors.grey)),
+            Text(
+              'No applications found',
+              style: GoogleFonts.montserrat(color: Colors.grey),
+            ),
           ],
         ),
       );
@@ -392,164 +486,53 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       physics: const BouncingScrollPhysics(),
       itemCount: advisors.length,
-      itemBuilder: (context, index) => _buildAdvisorCard(advisors[index], cardColor, isDark),
+      itemBuilder: (context, index) =>
+          _buildAdvisorCard(advisors[index], cardColor, isDark),
     );
   }
 
-  Widget _buildCareerEnquiryList(List<AdminCareerEnquiryModel> enquiries, bool isLoading, Color cardColor, bool isDark, Color primaryBlue) {
+  Widget _buildCareerEnquiryList(
+    List<AdminCareerEnquiryModel> enquiries,
+    bool isLoading,
+    Color cardColor,
+    bool isDark,
+    Color primaryBlue,
+  ) {
     if (isLoading) return const Center(child: CircularProgressIndicator());
     if (enquiries.isEmpty) {
-      return Center(child: Text('No web/app enquiries found', style: GoogleFonts.montserrat(color: Colors.grey)));
+      return Center(
+        child: Text(
+          'No web/app enquiries found',
+          style: GoogleFonts.montserrat(color: Colors.grey),
+        ),
+      );
     }
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       physics: const BouncingScrollPhysics(),
       itemCount: enquiries.length,
-      itemBuilder: (context, index) => _buildCareerInquiryCard(enquiries[index], isDark, primaryBlue),
+      itemBuilder: (context, index) =>
+          _buildCareerInquiryCard(enquiries[index], isDark, primaryBlue),
     );
   }
 
-  Widget _buildCareerInquiryCard(AdminCareerEnquiryModel enquiry, bool isDark, Color primaryBlue) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey[900] : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: primaryBlue.withOpacity(0.1)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: primaryBlue.withOpacity(0.1),
-                child: Icon(Icons.language, color: primaryBlue, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      enquiry.name,
-                      style: GoogleFonts.montserrat(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                    ),
-                    Text(
-                      enquiry.createdAt,
-                      style: GoogleFonts.montserrat(fontSize: 11, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  enquiry.city.toUpperCase(),
-                  style: GoogleFonts.montserrat(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Divider(height: 1),
-          ),
-          Row(
-            children: [
-              Icon(Icons.alternate_email, size: 14, color: Colors.grey[600]),
-              const SizedBox(width: 8),
-              Text(enquiry.email, style: GoogleFonts.montserrat(fontSize: 13, color: Colors.grey[700])),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Icon(Icons.phone_iphone, size: 14, color: Colors.grey[600]),
-              const SizedBox(width: 8),
-              Text(enquiry.phone, style: GoogleFonts.montserrat(fontSize: 13, color: Colors.grey[700])),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'MESSAGE:',
-            style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            enquiry.description,
-            style: GoogleFonts.montserrat(fontSize: 13, color: isDark ? Colors.white70 : Colors.black54),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: TextButton.icon(
-                  onPressed: () => context.read<AdminEnquiryProvider>().deleteCareerEnquiry(enquiry.id.toString()),
-                  icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                  label: Text('Remove', style: GoogleFonts.montserrat(color: Colors.red, fontSize: 13)),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: const BorderSide(color: Colors.red)),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    context.read<AdvisorRegistrationProvider>().preFillFromEnquiry(
-                      name: enquiry.name,
-                      email: enquiry.email,
-                      phone: enquiry.phone,
-                      city: enquiry.city,
-                    );
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AdvisorRegistrationScreen(),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.person_add_alt_1_outlined, size: 18, color: Colors.white),
-                  label: Text('Fill Form', style: GoogleFonts.montserrat(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryBlue,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+  Widget _buildCareerInquiryCard(
+    AdminCareerEnquiryModel enquiry,
+    bool isDark,
+    Color primaryBlue,
+  ) {
+    return _ExpandableCareerInquiryCard(
+      enquiry: enquiry,
+      isDark: isDark,
+      primaryBlue: primaryBlue,
     );
   }
 
-  Widget _buildAdvisorCard(AdvisorApplicationModel app, Color cardColor, bool isDark) {
+  Widget _buildAdvisorCard(
+    AdvisorApplicationModel app,
+    Color cardColor,
+    bool isDark,
+  ) {
     Color statusColor;
     Color statusBgColor;
     if (app.status == 'Pending') {
@@ -577,9 +560,7 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
         decoration: BoxDecoration(
           color: cardColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border(
-            left: BorderSide(color: statusColor, width: 4),
-          ),
+          border: Border(left: BorderSide(color: statusColor, width: 4)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.03),
@@ -607,21 +588,6 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                       ),
                     ),
                   ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.verified_user,
-                        color: Colors.blue,
-                        size: 14,
-                      ),
-                    ),
-                  ),
                 ],
               ),
               const SizedBox(width: 16),
@@ -646,7 +612,10 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: statusBgColor,
                             borderRadius: BorderRadius.circular(4),
@@ -663,26 +632,31 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      '${app.city} • ID: ${app.displayId}',
-                      style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                    const SizedBox(height: 4),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.calendar_today_outlined, size: 11, color: Colors.grey[500]),
+                            Icon(
+                              Icons.calendar_today_outlined,
+                              size: 11,
+                              color: Colors.grey[500],
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               app.appliedDate,
-                              style: GoogleFonts.montserrat(fontSize: 11, color: Colors.grey[500]),
+                              style: GoogleFonts.montserrat(
+                                fontSize: 11,
+                                color: Colors.grey[500],
+                              ),
                             ),
                           ],
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
                             borderRadius: BorderRadius.circular(4),
@@ -707,6 +681,210 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ExpandableCareerInquiryCard extends StatefulWidget {
+  final AdminCareerEnquiryModel enquiry;
+  final bool isDark;
+  final Color primaryBlue;
+
+  const _ExpandableCareerInquiryCard({
+    required this.enquiry,
+    required this.isDark,
+    required this.primaryBlue,
+  });
+
+  @override
+  State<_ExpandableCareerInquiryCard> createState() =>
+      _ExpandableCareerInquiryCardState();
+}
+
+class _ExpandableCareerInquiryCardState extends State<_ExpandableCareerInquiryCard> {
+  bool _isExpanded = false;
+
+  void _launchDialer(String phone) async {
+    final Uri url = Uri.parse("tel:$phone");
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: widget.isDark ? Colors.grey[900] : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: widget.primaryBlue.withOpacity(0.1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header - Always Visible
+          InkWell(
+            onTap: () => setState(() => _isExpanded = !_isExpanded),
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: widget.primaryBlue.withOpacity(0.1),
+                    child: Icon(Icons.language, color: widget.primaryBlue, size: 16),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.enquiry.name,
+                          style: GoogleFonts.montserrat(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: widget.isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        Text(
+                          widget.enquiry.createdAt,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 10,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Dialer Icon
+                  IconButton(
+                    icon: Icon(Icons.phone_forwarded, color: widget.primaryBlue, size: 20),
+                    onPressed: () => _launchDialer(widget.enquiry.phone),
+                    tooltip: 'Call Candidate',
+                  ),
+                  Icon(
+                    _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    color: Colors.grey,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Expanded Content
+          if (_isExpanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Divider(height: 1),
+                  const SizedBox(height: 12),
+                  _buildDetailRow(Icons.alternate_email, widget.enquiry.email),
+                  const SizedBox(height: 4),
+                  _buildDetailRow(Icons.phone_iphone, widget.enquiry.phone),
+                  const SizedBox(height: 12),
+                  Text(
+                    'MESSAGE:',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.enquiry.description,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 13,
+                      color: widget.isDark ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => context
+                              .read<AdminEnquiryProvider>()
+                              .deleteCareerEnquiry(widget.enquiry.id.toString()),
+                          icon: const Icon(Icons.delete_outline, size: 18),
+                          label: const Text('Remove'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.red,
+                            side: const BorderSide(color: Colors.red),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            textStyle: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w600),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            context
+                                .read<AdvisorRegistrationProvider>()
+                                .preFillFromEnquiry(
+                                  name: widget.enquiry.name,
+                                  email: widget.enquiry.email,
+                                  phone: widget.enquiry.phone,
+                                  city: widget.enquiry.city,
+                                );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const AdvisorRegistrationScreen(),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.person_add_alt_1_outlined, size: 18, color: Colors.white),
+                          label: const Text('Fill Form'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: widget.primaryBlue,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            textStyle: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: Colors.grey[600]),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: GoogleFonts.montserrat(
+              fontSize: 12,
+              color: Colors.grey[700],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

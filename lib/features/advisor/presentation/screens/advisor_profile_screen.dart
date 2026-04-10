@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/advisor_profile_provider.dart';
 import '../../data/models/advisor_profile_model.dart';
+import 'advisor_edit_profile_screen.dart';
 
 class AdvisorProfileScreen extends StatefulWidget {
   const AdvisorProfileScreen({super.key});
@@ -173,6 +174,16 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
             ),
             child: Column(
               children: [
+                Align(
+                  alignment: Alignment.topRight,
+                  child: IconButton(
+                    icon: Icon(Icons.edit_note, color: primaryBlue, size: 28),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => AdvisorEditProfileScreen(profile: profile)),
+                    ),
+                  ),
+                ),
                 Text(
                   profile.fullName,
                   style: GoogleFonts.montserrat(fontSize: 22, fontWeight: FontWeight.bold, color: textColor),

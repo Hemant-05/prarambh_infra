@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class DealModel {
   final int id;
   final String clientName;
@@ -53,6 +55,17 @@ class DealModel {
       return {'title': doc['title'], 'url': url};
     }).toList();
 
+    List<dynamic> parseJsonList(dynamic value) {
+      if (value is List) return value;
+      if (value is String) {
+        try {
+          final decoded = jsonDecode(value);
+          if (decoded is List) return decoded;
+        } catch (_) {}
+      }
+      return [];
+    }
+
     return DealModel(
       id: json['id'] ?? 0,
       clientName: json['client_name']?.toString() ?? '',
@@ -68,14 +81,14 @@ class DealModel {
       stage: json['stage']?.toString() ?? '',
       leadId: json['lead_id'] != null ? int.tryParse(json['lead_id'].toString()) ?? 0 : 0,
       isResale: json['is_resale'] == 1 || json['is_resale'] == '1',
-      notes: json['notes'] is List ? json['notes'] : [],
+      notes: parseJsonList(json['notes']),
       dealStatus: json['deal_status']?.toString() ?? 'not verified',
       tokenAmount: json['token_amount']?.toString(),
       tokenPaymentMode: json['token_payment_mode']?.toString(),
       tokenDate: json['token_date']?.toString(),
       propertyDocs: parsedDocs,
       paymentPlan: json['payment_plan'],
-      installments: json['installments'] is List ? json['installments'] : [],
+      installments: parseJsonList(json['installments']),
       paymentAmount: json['payment_amount']?.toString(),
       paymentStatus: json['payment_status']?.toString() ?? 'Pending',
       createdAt: json['created_at']?.toString() ?? '',

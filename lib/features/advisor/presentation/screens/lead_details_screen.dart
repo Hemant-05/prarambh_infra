@@ -20,6 +20,7 @@ import '../../../admin/presentation/providers/admin_project_provider.dart';
 import '../../../admin/presentation/providers/admin_deal_provider.dart';
 import '../../../admin/presentation/screens/deal_management_screen.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../advisor/presentation/providers/advisor_profile_provider.dart';
 import 'advisor_unit_details_screen.dart';
 import '../providers/advisor_lead_provider.dart';
 import '../../../advisor/presentation/screens/lead_notes_full_screen.dart';
@@ -160,6 +161,12 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
           debugPrint('Error fetching property data: $e');
         }
       }
+      
+      if (currentStage == "completed" || currentStage == "close") {
+       WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Optimized: Fetch ONLY the deal for this specific lead
+      context.read<AdminDealProvider>().fetchDealByLeadId(widget.lead.id.toString());
+    });  }
     });
   }
 
@@ -552,6 +559,14 @@ Please feel free to contact us for more information.""";
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (currentStage == "completed" || currentStage == "close")
+                  Column(
+                    children: [
+                      _buildCompletedView(isDark),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+
                 _buildClientInfoCard(cardColor, primaryBlue, textColor),
                 const SizedBox(height: 24),
 
@@ -580,7 +595,6 @@ Please feel free to contact us for more information.""";
                 if (currentStage == "booking" ||
                     currentStage == "pending_verification")
                   _buildBookingFlow(primaryBlue, cardColor),
-                if (currentStage == "completed") _buildCompletedView(isDark),
               ],
             ),
           ),
@@ -1549,43 +1563,259 @@ Please feel free to contact us for more information.""";
   }
 
   Widget _buildCompletedView(bool isDark) {
+    return Consumer<AdminDealProvider>(
+      builder: (context, provider, _) {
+        if (provider.isLoading) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        final deal = provider.currentDeal;
+
+        if (deal == null) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.green.withOpacity(0.1) : Colors.green.shade50,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.green.withOpacity(0.3)),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: const BoxDecoration(
+                    color: Colors.green,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.check, color: Colors.white, size: 32),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  "Lead Successfully Completed",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.green.shade300 : Colors.green.shade800,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return _buildDealProgressView(deal, isDark);
+      },
+    );
+  }
+
+  Widget _buildDealProgressView(DealModel deal, bool isDark) {
+    final primaryBlue = AppColors.getPrimaryBlue(context);
+    final cardColor = isDark ? Colors.grey[900]! : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+
+    double totalAmt = double.tryParse(deal.paymentAmount ?? '0') ?? 0;
+    double paidAmt = 0;
+    
+    for (var inst in deal.installments) {
+      if (inst['status'] == 'Paid') {
+        paidAmt += double.tryParse(inst['amount']?.toString() ?? '0') ?? 0;
+      }
+    }
+    
+    double progress = totalAmt > 0 ? (paidAmt / totalAmt) : 0;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? Colors.green.withOpacity(0.1) : Colors.green.shade50,
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.green.withOpacity(0.3)),
+        border: Border.all(color: primaryBlue.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: Colors.green,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.check, color: Colors.white, size: 32),
+          // Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.monetization_on, color: primaryBlue),
+                  const SizedBox(width: 8),
+                  Text(
+                    "Deal Status: ${deal.dealStatus.toUpperCase()}",
+                    style: GoogleFonts.montserrat(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: primaryBlue,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: deal.stage == 'close' 
+                      ? Colors.green.withOpacity(0.1) 
+                      : (deal.stage == 'ongoing' ? Colors.blue.withOpacity(0.1) : Colors.orange.withOpacity(0.1)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  deal.stage == 'close' 
+                      ? 'FULLY PAID' 
+                      : (deal.stage == 'ongoing' ? 'ONGOING' : 'PENDING'),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: deal.stage == 'close' 
+                        ? Colors.green 
+                        : (deal.stage == 'ongoing' ? Colors.blue : Colors.orange),
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 20),
+          
+          // Progress Bar
           Text(
-            "Lead Successfully Completed",
-            textAlign: TextAlign.center,
+            "Payment Progress",
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white70 : Colors.grey[700],
+            ),
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 10,
+              backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Paid: ₹${paidAmt.toStringAsFixed(0)}",
+                style: const TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                "Total: ₹${totalAmt.toStringAsFixed(0)}",
+                style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey[600]),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          
+          // Installments Details
+          Text(
+            "Installment Plan",
             style: GoogleFonts.montserrat(
-              fontSize: 18,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.green.shade300 : Colors.green.shade800,
+              color: textColor,
             ),
           ),
           const SizedBox(height: 12),
-          Text(
-            "This lead has successfully transitioned through all stages and is now marked as completed.",
-            textAlign: TextAlign.center,
-            style: GoogleFonts.montserrat(
-              fontSize: 14,
-              color: isDark ? Colors.white70 : Colors.black54,
+          if (deal.installments.isEmpty)
+            Text(
+              "No installment plan generated yet.",
+              style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey[600]),
+            )
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: deal.installments.length,
+              itemBuilder: (context, index) {
+                final inst = deal.installments[index];
+                bool isPaid = inst['status'] == 'Paid';
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[850] : Colors.grey[50],
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: isPaid ? Colors.green.withOpacity(0.3) : Colors.orange.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isPaid ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          isPaid ? Icons.check : Icons.access_time,
+                          size: 16,
+                          color: isPaid ? Colors.green : Colors.orange,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Amount: ₹${inst['amount']}",
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: textColor,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              "Due Date: ${inst['date']}",
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isDark ? Colors.white60 : Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isPaid ? Colors.green : Colors.orange,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          inst['status'] ?? 'Pending',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-          ),
         ],
       ),
     );

@@ -373,6 +373,123 @@ class _ApiClient implements ApiClient {
   }
 
   @override
+  Future<dynamic> updateAdvisorProfile(
+    String id,
+    String? fullName,
+    String? email,
+    String? phone,
+    String? fatherName,
+    String? dob,
+    String? gender,
+    String? nomineeName,
+    String? nomineePhone,
+    String? relationship,
+    String? occupation,
+    String? aadhaar,
+    String? pan,
+    String? bankName,
+    String? accNumber,
+    String? ifsc,
+    String? address,
+    String? city,
+    String? state,
+    String? pincode,
+    File? profilePhoto,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{};
+    final _data = FormData();
+    if (fullName != null) {
+      _data.fields.add(MapEntry('full_name', fullName));
+    }
+    if (email != null) {
+      _data.fields.add(MapEntry('email', email));
+    }
+    if (phone != null) {
+      _data.fields.add(MapEntry('phone', phone));
+    }
+    if (fatherName != null) {
+      _data.fields.add(MapEntry('father_name', fatherName));
+    }
+    if (dob != null) {
+      _data.fields.add(MapEntry('date_of_birth', dob));
+    }
+    if (gender != null) {
+      _data.fields.add(MapEntry('gender', gender));
+    }
+    if (nomineeName != null) {
+      _data.fields.add(MapEntry('nomineename', nomineeName));
+    }
+    if (nomineePhone != null) {
+      _data.fields.add(MapEntry('nomineephone', nomineePhone));
+    }
+    if (relationship != null) {
+      _data.fields.add(MapEntry('relationship', relationship));
+    }
+    if (occupation != null) {
+      _data.fields.add(MapEntry('occupation', occupation));
+    }
+    if (aadhaar != null) {
+      _data.fields.add(MapEntry('aadhaar_number', aadhaar));
+    }
+    if (pan != null) {
+      _data.fields.add(MapEntry('pan_number', pan));
+    }
+    if (bankName != null) {
+      _data.fields.add(MapEntry('bank_name', bankName));
+    }
+    if (accNumber != null) {
+      _data.fields.add(MapEntry('account_number', accNumber));
+    }
+    if (ifsc != null) {
+      _data.fields.add(MapEntry('ifsc_code', ifsc));
+    }
+    if (address != null) {
+      _data.fields.add(MapEntry('address', address));
+    }
+    if (city != null) {
+      _data.fields.add(MapEntry('city', city));
+    }
+    if (state != null) {
+      _data.fields.add(MapEntry('state', state));
+    }
+    if (pincode != null) {
+      _data.fields.add(MapEntry('pincode', pincode));
+    }
+    if (profilePhoto != null) {
+      _data.files.add(
+        MapEntry(
+          'profile_photo',
+          MultipartFile.fromFileSync(
+            profilePhoto.path,
+            filename: profilePhoto.path.split(Platform.pathSeparator).last,
+          ),
+        ),
+      );
+    }
+    final _options = _setStreamType<dynamic>(
+      Options(
+            method: 'POST',
+            headers: _headers,
+            extra: _extra,
+            contentType: 'multipart/form-data',
+          )
+          .compose(
+            _dio.options,
+            '/advisor/update/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
   Future<dynamic> changeAdvisorStatus(String id, dynamic body) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
@@ -1763,6 +1880,27 @@ class _ApiClient implements ApiClient {
   }
 
   @override
+  Future<dynamic> getDealByLeadId(String leadId) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/deal/lead/${leadId}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
   Future<dynamic> deleteDeal(String id) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
@@ -1847,9 +1985,12 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> getDailyMeetings(String? date) async {
+  Future<dynamic> getDailyMeetings(String? date, String? advisorId) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'date': date};
+    final queryParameters = <String, dynamic>{
+      r'date': date,
+      r'advisor_id': advisorId,
+    };
     queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;

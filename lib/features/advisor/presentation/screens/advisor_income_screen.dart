@@ -13,6 +13,7 @@ class MyIncomeAnalyticsScreen extends StatefulWidget {
 }
 
 class _MyIncomeAnalyticsScreenState extends State<MyIncomeAnalyticsScreen> {
+  int _selectedTab = 0; // 0: Paid, 1: Pending
   @override
   void initState() {
     super.initState();
@@ -45,12 +46,6 @@ class _MyIncomeAnalyticsScreenState extends State<MyIncomeAnalyticsScreen> {
             fontSize: 18,
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.filter_list, color: primaryBlue),
-          ),
-        ],
       ),
       body: incomeProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -72,23 +67,25 @@ class _MyIncomeAnalyticsScreenState extends State<MyIncomeAnalyticsScreen> {
                       children: [
                         const SizedBox(height: 10),
                         // Period Selection Tabs
-                        _buildPeriodTabs(incomeProvider),
-                        const SizedBox(height: 24),
+                        // _buildPeriodTabs(incomeProvider),
+                        // const SizedBox(height: 24),
 
                         // Total Earnings Card
                         _buildSummaryCard(context, incomeProvider),
                         const SizedBox(height: 32),
 
                         // Earnings by Project
-                        _buildSectionHeader(context, "Earnings by Project"),
+                        _buildSectionHeader(context, "Earnings by Project", showViewAll: false),
                         const SizedBox(height: 16),
                         _buildProjectTable(context, incomeProvider),
                         const SizedBox(height: 32),
 
-                        // Earnings by Property
-                        _buildSectionHeader(context, "Earnings by Property"),
+                        // Earnings by Property (Filtered Transactions)
+                        _buildSectionHeader(context, "Earnings by Property", showViewAll: false),
                         const SizedBox(height: 16),
-                        _buildPropertyTable(context, incomeProvider),
+                        _buildTransactionTabs(),
+                        const SizedBox(height: 16),
+                        _buildTransactionList(context, incomeProvider),
                         const SizedBox(height: 40),
                       ],
                     ),
@@ -147,62 +144,105 @@ class _MyIncomeAnalyticsScreenState extends State<MyIncomeAnalyticsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryBlue = AppColors.getPrimaryBlue(context);
     final totalEarned = provider.incomeData?.summary.totalEarned ?? 0;
+    final totalPending = provider.incomeData?.summary.totalPending ?? 0;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isDark
-              ? [primaryBlue.withOpacity(0.3), primaryBlue.withOpacity(0.1)]
-              : [primaryBlue.withOpacity(0.15), primaryBlue.withOpacity(0.05)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: isDark ? Colors.grey[900] : Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: primaryBlue.withOpacity(0.2)),
+        border: Border.all(color: primaryBlue.withOpacity(0.1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
           Text(
-            "TOTAL EARNINGS (CURRENT PERIOD)",
+            "TOTAL EARNINGS",
             style: GoogleFonts.montserrat(
-              fontSize: 13,
+              fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: AppColors.getSecondaryTextColor(context),
+              color: Colors.grey,
               letterSpacing: 1.2,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
             "₹ ${totalEarned.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}",
             style: GoogleFonts.montserrat(
-              fontSize: 36,
+              fontSize: 32,
               fontWeight: FontWeight.w800,
               color: AppColors.getTextColor(context),
             ),
           ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.trending_up, color: Colors.green, size: 16),
-                const SizedBox(width: 4),
-                Text(
-                  "+12% vs last month",
-                  style: GoogleFonts.montserrat(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: _buildSummaryMiniCard(
+                  context,
+                  "Earned",
+                  "₹${totalEarned.toStringAsFixed(0)}",
+                  Colors.green,
+                  Icons.check_circle_outline,
                 ),
-              ],
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildSummaryMiniCard(
+                  context,
+                  "Pending",
+                  "₹${totalPending.toStringAsFixed(0)}",
+                  Colors.orange,
+                  Icons.pending_actions,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryMiniCard(BuildContext context, String title, String amount, Color color, IconData icon) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 16),
+              const SizedBox(width: 6),
+              Text(
+                title.toUpperCase(),
+                style: GoogleFonts.montserrat(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            amount,
+            style: GoogleFonts.montserrat(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
             ),
           ),
         ],
@@ -210,7 +250,7 @@ class _MyIncomeAnalyticsScreenState extends State<MyIncomeAnalyticsScreen> {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title) {
+  Widget _buildSectionHeader(BuildContext context, String title, {bool showViewAll = true}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -222,6 +262,7 @@ class _MyIncomeAnalyticsScreenState extends State<MyIncomeAnalyticsScreen> {
             color: AppColors.getTextColor(context),
           ),
         ),
+        if (showViewAll)
         TextButton(
           onPressed: () {},
           child: Text(
@@ -234,6 +275,56 @@ class _MyIncomeAnalyticsScreenState extends State<MyIncomeAnalyticsScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildTransactionTabs() {
+    return Container(
+      height: 45,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.getBorderColor(context).withOpacity(0.5),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          _buildTabItem(0, "Paid"),
+          _buildTabItem(1, "Pending"),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabItem(int index, String label) {
+    bool isSelected = _selectedTab == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedTab = index),
+        child: Container(
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.getCardColor(context) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    )
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            style: GoogleFonts.montserrat(
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              color: isSelected ? AppColors.getPrimaryBlue(context) : AppColors.getSecondaryTextColor(context),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -305,77 +396,164 @@ class _MyIncomeAnalyticsScreenState extends State<MyIncomeAnalyticsScreen> {
     );
   }
 
-  Widget _buildPropertyTable(BuildContext context, AdvisorIncomeProvider provider) {
-    final txs = provider.incomeData?.transactions ?? [];
+  Widget _buildTransactionList(BuildContext context, AdvisorIncomeProvider provider) {
+    final allTxs = provider.incomeData?.transactions ?? [];
+    
+    // Filter transactions based on selected tab
+    final txs = _selectedTab == 0 
+        ? allTxs.where((tx) => tx.status.toLowerCase() == 'paid').toList()
+        : allTxs.where((tx) => tx.status.toLowerCase().contains('pending')).toList();
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.getCardColor(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.getBorderColor(context)),
-      ),
-      child: Column(
-        children: [
-          // Table Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.getBorderColor(context).withOpacity(0.3),
-              borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
-            ),
-            child: Row(
-              children: [
-                Expanded(flex: 3, child: _headerCell("PROPERTY NAME")),
-                Expanded(flex: 2, child: _headerCell("PROJECT")),
-                Expanded(flex: 2, child: _headerCell("COMMISSION", textAlign: TextAlign.right)),
-              ],
-            ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (txs.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(40),
+        decoration: BoxDecoration(
+          color: AppColors.getCardColor(context),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.getBorderColor(context)),
+        ),
+        child: Center(
+          child: Text(
+            _selectedTab == 0 ? "No paid transactions yet" : "No pending transactions",
+            style: GoogleFonts.montserrat(color: Colors.grey, fontSize: 13),
           ),
-          // Table Body
-          if (txs.isEmpty)
-             const Padding(padding: EdgeInsets.all(20), child: Text("No property data available"))
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: txs.length,
-              separatorBuilder: (context, index) => Divider(height: 1, color: AppColors.getBorderColor(context)),
-              itemBuilder: (context, index) {
-                final tx = txs[index];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: Row(
+        ),
+      );
+    }
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: txs.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final tx = txs[index];
+        final isPaid = tx.status.toLowerCase() == 'paid';
+        final isUnverified = tx.status.toLowerCase().contains('not verified');
+        
+        final statusColor = isPaid 
+            ? Colors.green 
+            : (isUnverified ? Colors.red : Colors.orange);
+        
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.getCardColor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.getBorderColor(context)),
+          ),
+          child: Column(
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      isPaid ? Icons.check_circle : Icons.pending,
+                      color: statusColor,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                             Container(
-                               width: 32, height: 32,
-                               alignment: Alignment.center,
-                               decoration: BoxDecoration(color: AppColors.getPrimaryBlue(context).withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-                               child: Text(tx.unitNumber.split('-').first, style: TextStyle(color: AppColors.getPrimaryBlue(context), fontWeight: FontWeight.bold, fontSize: 11)),
-                             ),
-                             const SizedBox(width: 10),
-                             Text(tx.unitNumber, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13)),
+                            Text(
+                              tx.projectName,
+                              style: GoogleFonts.montserrat(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                            Text(
+                              "₹${tx.installmentCommission.toStringAsFixed(0)}",
+                              style: GoogleFonts.montserrat(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: isPaid ? Colors.green : null,
+                              ),
+                            ),
                           ],
                         ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Text(tx.projectName, style: GoogleFonts.montserrat(fontSize: 12, color: AppColors.getSecondaryTextColor(context))),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Text("₹ ${tx.totalCommission.toStringAsFixed(0)}", textAlign: TextAlign.right, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13)),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Unit ${tx.unitNumber} • ${tx.clientName ?? 'Unknown'}",
+                              style: GoogleFonts.montserrat(
+                                fontSize: 11,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: statusColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                // Truncate status to avoid overflow
+                                (tx.status.toLowerCase().contains('pending') ? 'PENDING' : tx.status.toUpperCase()),
+                                style: TextStyle(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                  color: statusColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Divider(height: 1),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.payment_outlined, size: 12, color: Colors.grey[400]),
+                      const SizedBox(width: 4),
+                      Text(
+                        "Installment ${tx.installmentIndex} of ${tx.totalInstallments}",
+                        style: GoogleFonts.montserrat(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.getSecondaryTextColor(context),
+                        ),
                       ),
                     ],
                   ),
-                );
-              },
-            ),
-        ],
-      ),
+                  Text(
+                    tx.formattedDate,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 10,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

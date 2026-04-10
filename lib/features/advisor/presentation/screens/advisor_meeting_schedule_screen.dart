@@ -41,7 +41,7 @@ class _AdvisorMeetingScheduleScreenState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthProvider>();
       final advisorId = auth.currentUser?.id.toString() ?? '';
-      context.read<AdvisorAttendanceProvider>().fetchMeetings(advisorId);
+      context.read<AdvisorAttendanceProvider>().fetchMeetings(advisorId, date: _selectedDate);
     });
   }
 
@@ -92,7 +92,7 @@ class _AdvisorMeetingScheduleScreenState
         actions: [
           IconButton(
             icon: Icon(Icons.refresh, color: textColor),
-            onPressed: () => provider.fetchMeetings(advisorId),
+            onPressed: () => provider.fetchMeetings(advisorId, date: _selectedDate),
           ),
         ],
       ),
@@ -145,6 +145,8 @@ class _AdvisorMeetingScheduleScreenState
                             setState(() {
                               _selectedDate = date;
                             });
+                            // Fetch meetings for the newly selected date
+                            provider.fetchMeetings(advisorId, date: date);
                           },
                           child: Container(
                             width: 50,

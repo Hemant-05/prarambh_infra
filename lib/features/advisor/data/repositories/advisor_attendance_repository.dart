@@ -50,6 +50,19 @@ class AdvisorAttendanceRepository {
     }
   }
 
+  Future<List<AdvisorMeetingModel>> getDailyMeetings(String date, String advisorId) async {
+    try {
+      final response = await apiClient.getDailyMeetings(date, advisorId);
+      if (response['status'] == true || response['status'] == 'success') {
+        final List data = response['data'] ?? [];
+        return data.map((e) => AdvisorMeetingModel.fromJson(e)).toList();
+      }
+      throw Exception(response['message'] ?? 'No meetings found');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<dynamic> getDailyAttendance(String date) async {
     try {
       final response = await apiClient.getDailyAttendance(date);

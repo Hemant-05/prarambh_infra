@@ -172,6 +172,7 @@ class _InstallmentCalculatorScreenState extends State<InstallmentCalculatorScree
                 fontWeight: FontWeight.bold,
               ),
               border: InputBorder.none,
+              filled: false,
               contentPadding: const EdgeInsets.symmetric(vertical: 10),
             ),
           ),

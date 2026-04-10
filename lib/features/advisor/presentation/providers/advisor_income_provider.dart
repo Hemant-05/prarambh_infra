@@ -42,25 +42,29 @@ class AdvisorIncomeProvider extends ChangeNotifier {
   List<ProjectIncomeSummary> get earningsByProject {
     if (_incomeData == null) return [];
 
-    final Map<String, ProjectIncomeSummary> projectMap = {};
+    final Map<String, Set<int>> projectDeals = {};
+    final Map<String, double> projectCommission = {};
 
     for (var tx in _incomeData!.transactions) {
-      if (projectMap.containsKey(tx.projectName)) {
-        projectMap[tx.projectName] = ProjectIncomeSummary(
-          projectName: tx.projectName,
-          units: projectMap[tx.projectName]!.units + 1,
-          totalCommission: projectMap[tx.projectName]!.totalCommission + tx.totalCommission,
-        );
-      } else {
-        projectMap[tx.projectName] = ProjectIncomeSummary(
-          projectName: tx.projectName,
-          units: 1,
-          totalCommission: tx.totalCommission,
-        );
-      }
+      projectDeals.putIfAbsent(tx.projectName, () => <int>{}).add(tx.dealId);
+      projectCommission[tx.projectName] = (projectCommission[tx.projectName] ?? 0) + tx.installmentCommission;
     }
 
-    return projectMap.values.toList();
+    return projectDeals.keys.map((projectName) {
+      return ProjectIncomeSummary(
+        projectName: projectName,
+        units: projectDeals[projectName]!.length,
+        totalCommission: projectCommission[projectName]!,
+      );
+    }).toList();
+  }
+
+  List<IncomeTransaction> get paidTransactions {
+    return _incomeData?.transactions.where((tx) => tx.status.toLowerCase() == 'paid').toList() ?? [];
+  }
+
+  List<IncomeTransaction> get pendingTransactions {
+    return _incomeData?.transactions.where((tx) => tx.status.toLowerCase().contains('pending')).toList() ?? [];
   }
 }
 

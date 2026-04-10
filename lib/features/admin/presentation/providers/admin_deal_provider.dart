@@ -10,15 +10,17 @@ class AdminDealProvider extends ChangeNotifier {
   bool _isSaving = false;
   bool _isLoading = false;
   List<DealModel> _deals = [];
+  DealModel? _currentDeal;
 
   bool get isSaving => _isSaving;
   bool get isLoading => _isLoading;
   List<DealModel> get deals => _deals;
+  DealModel? get currentDeal => _currentDeal;
 
-  Future<void> fetchAllDeals() async {
+  Future<void> fetchAllDeals({String advisorCode = ''}) async {
     _isLoading = true; notifyListeners();
     try {
-      _deals = await repository.getAllDeals();
+      _deals = await repository.getAllDeals(advisorCode: advisorCode);
     } catch (e) {
       debugPrint('Fetch Deals Error: $e');
       _deals = [];
@@ -80,6 +82,8 @@ class AdminDealProvider extends ChangeNotifier {
     String? tokenPaymentMode,
     String? tokenDate,
     String? paymentPlan,
+    String? dealStatus,
+    String? stage,
     List<String>? docTitles,
     List<File>? docFiles,
   }) async {
@@ -89,7 +93,8 @@ class AdminDealProvider extends ChangeNotifier {
         dealId: dealId, installmentsJson: installmentsJson, 
         totalAmount: totalAmount, status: status,
         tokenAmount: tokenAmount, tokenPaymentMode: tokenPaymentMode,
-        tokenDate: tokenDate, paymentPlan: paymentPlan,
+        tokenDate: tokenDate, paymentPlan: paymentPlan, dealStatus: dealStatus,
+        stage: stage,
         docTitles: docTitles, docFiles: docFiles,
       );
       if (success) await fetchAllDeals();
@@ -108,6 +113,21 @@ class AdminDealProvider extends ChangeNotifier {
       return await repository.getSingleDeal(id);
     } catch (e) {
       debugPrint('Get Single Deal Error: $e');
+      return null;
+    } finally {
+      _isLoading = false; notifyListeners();
+    }
+  }
+
+  Future<DealModel?> fetchDealByLeadId(String leadId) async {
+    _isLoading = true; 
+    _currentDeal = null;
+    notifyListeners();
+    try {
+      _currentDeal = await repository.getDealByLeadId(leadId);
+      return _currentDeal;
+    } catch (e) {
+      debugPrint('Fetch Deal By Lead Id Error: $e');
       return null;
     } finally {
       _isLoading = false; notifyListeners();

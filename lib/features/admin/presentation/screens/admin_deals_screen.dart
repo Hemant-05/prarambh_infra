@@ -625,7 +625,11 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
     final textColor = isDark ? Colors.white : Colors.black87;
 
     Color statusColor = Colors.orange;
-    if (deal.dealStatus.toLowerCase() == 'verified') {
+    if (deal.stage == 'close') {
+      statusColor = Colors.green;
+    } else if (deal.stage == 'ongoing') {
+      statusColor = Colors.blue;
+    } else if (deal.dealStatus.toLowerCase() == 'verified') {
       statusColor = Colors.green;
     }
 
@@ -640,18 +644,18 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
         });
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: cardColor,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: primaryBlue.withOpacity(0.15), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: primaryBlue.withOpacity(0.06),
-              blurRadius: 20,
-              spreadRadius: 2,
-              offset: const Offset(0, 8),
+              color: primaryBlue.withOpacity(0.04),
+              blurRadius: 10,
+              spreadRadius: 0,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -665,72 +669,53 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [primaryBlue, primaryBlue.withOpacity(0.7)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         "DEAL #${deal.id}",
                         style: GoogleFonts.montserrat(
-                          fontSize: 10,
+                          fontSize: 9,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        "L-${deal.leadId}",
-                        style: GoogleFonts.montserrat(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade600,
-                        ),
+                    const SizedBox(width: 6),
+                    Text(
+                      "L-${deal.leadId}",
+                      style: GoogleFonts.montserrat(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade500,
                       ),
                     ),
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: statusColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: statusColor.withOpacity(0.3)),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     children: [
                       Icon(
-                        deal.dealStatus.toLowerCase() == 'verified'
+                        deal.stage == 'close' || deal.dealStatus.toLowerCase() == 'verified'
                             ? Icons.check_circle
-                            : Icons.pending,
-                        size: 12,
+                            : (deal.stage == 'ongoing' ? Icons.play_circle_fill : Icons.pending),
+                        size: 9,
                         color: statusColor,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 3),
                       Text(
-                        deal.dealStatus.toUpperCase(),
+                        (deal.stage == 'close' ? 'CLOSED' : (deal.stage == 'ongoing' ? 'ONGOING' : deal.dealStatus)).toUpperCase(),
                         style: GoogleFonts.montserrat(
-                          fontSize: 9,
+                          fontSize: 8,
                           fontWeight: FontWeight.bold,
                           color: statusColor,
                         ),
@@ -740,12 +725,12 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
 
             // Client & Advisor details
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
                   child: Column(
@@ -754,23 +739,23 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                       Text(
                         deal.clientName,
                         style: GoogleFonts.montserrat(
-                          fontSize: 18,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
                           color: textColor,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Row(
                         children: [
-                          Icon(Icons.phone, size: 14, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
+                          Icon(Icons.phone, size: 10, color: Colors.grey[500]),
+                          const SizedBox(width: 2),
                           Text(
                             "+91 ${deal.clientNumber}",
                             style: GoogleFonts.montserrat(
-                              fontSize: 13,
-                              color: Colors.grey[600],
+                              fontSize: 11,
+                              color: Colors.grey[500],
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -780,19 +765,18 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.amber.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: Colors.amber.withOpacity(0.3)),
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
                         "ADVISOR",
                         style: GoogleFonts.montserrat(
-                          fontSize: 9,
+                          fontSize: 7,
                           fontWeight: FontWeight.bold,
                           color: Colors.amber.shade700,
                         ),
@@ -800,16 +784,12 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                       const SizedBox(height: 2),
                       Row(
                         children: [
-                          Icon(
-                            Icons.person_outline,
-                            size: 12,
-                            color: Colors.amber.shade800,
-                          ),
-                          const SizedBox(width: 4),
+                          Icon(Icons.person_outline, size: 10, color: Colors.amber.shade800),
+                          const SizedBox(width: 2),
                           Text(
                             deal.advisorCode,
                             style: GoogleFonts.montserrat(
-                              fontSize: 12,
+                              fontSize: 10,
                               fontWeight: FontWeight.bold,
                               color: Colors.amber.shade900,
                             ),
@@ -822,64 +802,24 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
               ],
             ),
 
-            const SizedBox(height: 16),
-            Divider(color: Colors.grey.withOpacity(0.15), thickness: 1),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
+            Divider(color: Colors.grey.withOpacity(0.1), height: 1),
+            const SizedBox(height: 8),
 
-            // Property & Token info
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isDark ? Colors.grey.shade800 : Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildInfoItem(
-                          "Property Ref",
-                          "PROP-${deal.propertyId}",
-                          Icons.domain,
-                        ),
-                      ),
-                      Expanded(
-                        child: _buildInfoItem(
-                          "Token/Booking",
-                          (deal.tokenAmount != null &&
-                                  deal.tokenAmount != '0' &&
-                                  deal.tokenAmount != '')
-                              ? "₹${deal.tokenAmount}"
-                              : "Pending",
-                          Icons.monetization_on,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildInfoItem(
-                          "Mode",
-                          (deal.tokenPaymentMode?.isEmpty ?? true)
-                              ? "N/A"
-                              : deal.tokenPaymentMode!,
-                          Icons.account_balance_wallet,
-                        ),
-                      ),
-                      Expanded(
-                        child: _buildInfoItem(
-                          "Date Initiated",
-                          deal.createdAt.split(' ')[0],
-                          Icons.calendar_today,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+            // Property & Token info Compact Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildInfoItem("Property", "PROP-${deal.propertyId}", Icons.domain),
+                _buildInfoItem(
+                  "Token",
+                  (deal.tokenAmount != null && deal.tokenAmount != '0' && deal.tokenAmount != '')
+                      ? "₹${deal.tokenAmount}"
+                      : "Pending",
+                  Icons.monetization_on,
+                ),
+                _buildInfoItem("Date", deal.createdAt.split(' ')[0], Icons.calendar_today),
+              ],
             ),
           ],
         ),
@@ -893,23 +833,23 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
       children: [
         Row(
           children: [
-            Icon(icon, size: 12, color: Colors.grey[500]),
-            const SizedBox(width: 4),
+            Icon(icon, size: 10, color: Colors.grey[500]),
+            const SizedBox(width: 3),
             Text(
               label,
               style: GoogleFonts.montserrat(
-                fontSize: 10,
+                fontSize: 9,
                 color: Colors.grey[500],
                 fontWeight: FontWeight.w500,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
         Text(
           value,
           style: GoogleFonts.montserrat(
-            fontSize: 13,
+            fontSize: 11,
             fontWeight: FontWeight.bold,
           ),
           maxLines: 1,

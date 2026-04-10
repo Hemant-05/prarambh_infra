@@ -53,6 +53,10 @@ class AdvisorMeetingModel {
       } catch (_) {}
     }
 
+    final att = json['my_attendance'];
+    final String? cIn = (att != null ? att['check_in_time'] : json['check_in_time'])?.toString();
+    final String? cOut = (att != null ? att['check_out_time'] : json['check_out_time'])?.toString();
+
     return AdvisorMeetingModel(
       id: json['id']?.toString() ?? '',
       title: json['title'] ?? 'Untitled Meeting',
@@ -60,8 +64,8 @@ class AdvisorMeetingModel {
       meetingDate: dateStr,
       startTime: sTime,
       endTime: eTime,
-      checkInTime: json['check_in_time']?.toString(),
-      checkOutTime: json['check_out_time']?.toString(),
+      checkInTime: cIn,
+      checkOutTime: cOut,
       status: calculatedStatus,
     );
   }

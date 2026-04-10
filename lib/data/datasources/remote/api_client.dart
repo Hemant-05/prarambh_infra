@@ -86,6 +86,32 @@ abstract class ApiClient {
   @POST("/advisor/update/{id}")
   Future<dynamic> updateAdvisor(@Path("id") String id, @Body() dynamic body);
 
+  @MultiPart()
+  @POST("/advisor/update/{id}")
+  Future<dynamic> updateAdvisorProfile(
+    @Path("id") String id,
+    @Part(name: "full_name") String? fullName,
+    @Part(name: "email") String? email,
+    @Part(name: "phone") String? phone,
+    @Part(name: "father_name") String? fatherName,
+    @Part(name: "date_of_birth") String? dob,
+    @Part(name: "gender") String? gender,
+    @Part(name: "nomineename") String? nomineeName,
+    @Part(name: "nomineephone") String? nomineePhone,
+    @Part(name: "relationship") String? relationship,
+    @Part(name: "occupation") String? occupation,
+    @Part(name: "aadhaar_number") String? aadhaar,
+    @Part(name: "pan_number") String? pan,
+    @Part(name: "bank_name") String? bankName,
+    @Part(name: "account_number") String? accNumber,
+    @Part(name: "ifsc_code") String? ifsc,
+    @Part(name: "address") String? address,
+    @Part(name: "city") String? city,
+    @Part(name: "state") String? state,
+    @Part(name: "pincode") String? pincode,
+    @Part(name: "profile_photo") File? profilePhoto,
+  );
+
   @POST("/advisor/status/{id}")
   Future<dynamic> changeAdvisorStatus(
     @Path("id") String id,
@@ -361,6 +387,9 @@ abstract class ApiClient {
   @GET("/deals/{id}")
   Future<dynamic> getSingleDeal(@Path("id") String id);
 
+  @GET("/deal/lead/{lead_id}")
+  Future<dynamic> getDealByLeadId(@Path("lead_id") String leadId);
+
   @DELETE("/deals/delete/{id}")
   Future<dynamic> deleteDeal(@Path("id") String id);
 
@@ -377,7 +406,10 @@ abstract class ApiClient {
   Future<dynamic> getAllMeetings();
 
   @GET("/meetings/daily")
-  Future<dynamic> getDailyMeetings(@Query("date") String? date);
+  Future<dynamic> getDailyMeetings(
+    @Query("date") String? date,
+    @Query("advisor_id") String? advisorId,
+  );
 
   @GET("/meetings/{id}")
   Future<dynamic> getSingleMeeting(@Path("id") String id);

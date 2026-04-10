@@ -39,6 +39,8 @@ class AdminDealRepository {
     String? tokenPaymentMode,
     String? tokenDate,
     String? paymentPlan,
+    String? dealStatus,
+    String? stage,
     List<String>? docTitles,
     List<File>? docFiles,
   }) async {
@@ -53,8 +55,19 @@ class AdminDealRepository {
       
       if (tokenAmount != null && tokenAmount.isNotEmpty) {
         payload["token_amount"] = tokenAmount;
-        payload["deal_status"] = "verified"; // <-- The requested status update feature!
+        if (dealStatus != null && dealStatus.isNotEmpty) {
+          payload["deal_status"] = dealStatus;
+        } else {
+          payload["deal_status"] = "verified"; // <-- The requested status update feature!
+        }
+      } else if (dealStatus != null && dealStatus.isNotEmpty) {
+        payload["deal_status"] = dealStatus;
       }
+      
+      if (stage != null && stage.isNotEmpty) {
+        payload["stage"] = stage;
+      }
+      
       if (tokenPaymentMode != null && tokenPaymentMode.isNotEmpty) payload["token_payment_mode"] = tokenPaymentMode;
       if (tokenDate != null && tokenDate.isNotEmpty) payload["token_date"] = tokenDate;
       
@@ -78,9 +91,9 @@ class AdminDealRepository {
     } catch (e) { rethrow; }
   }
 
-  Future<List<DealModel>> getAllDeals() async {
+  Future<List<DealModel>> getAllDeals({String advisorCode = ''}) async {
     try {
-      final response = await apiClient.getAllDeals('');
+      final response = await apiClient.getAllDeals(advisorCode);
       if (response['status']) {
         final List data = response['data'] ?? [];
         return data.map((json) => DealModel.fromJson(json)).toList();
@@ -97,6 +110,18 @@ class AdminDealRepository {
       }
       throw Exception(response['message'] ?? 'Failed to load deal');
     } catch (e) { rethrow; }
+  }
+
+  Future<DealModel?> getDealByLeadId(String leadId) async {
+    try {
+      final response = await apiClient.getDealByLeadId(leadId);
+      if (response['status'] == true || response['status'] == 'success') {
+        return DealModel.fromJson(response['data']);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<bool> deleteDeal(String id) async {

@@ -215,7 +215,8 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
 
     bool isTokenTaken = (widget.deal.tokenAmount != null &&
         widget.deal.tokenAmount!.isNotEmpty &&
-        (double.tryParse(widget.deal.tokenAmount!) ?? 0) > 0);
+        (double.tryParse(widget.deal.tokenAmount!) ?? 0) > 0) || 
+        (double.tryParse(_tokenAmountCtrl.text) ?? 0) > 0;
 
     return Scaffold(
       backgroundColor: isDark
@@ -272,6 +273,8 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                           paymentPlan: _selectedPlan != 'Select Plan'
                               ? _selectedPlan
                               : null,
+                          dealStatus: (isTokenTaken || isFullyPaid) ? 'verified' : widget.deal.dealStatus,
+                          stage: isFullyPaid ? 'close' : (isTokenTaken ? 'ongoing' : widget.deal.stage),
                           docTitles: _newPropertyDoc != null 
                               ? [_docTitleCtrl.text.isEmpty ? 'Property Document' : _docTitleCtrl.text] 
                               : null,
@@ -279,12 +282,19 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                         );
 
                         if (success && mounted) {
-                          // AUTOMATION: Update Lead status to 'completed'
+                          // AUTOMATION: Update Lead status to 'completed' or 'close'
                           if (mounted) {
-                            context.read<AdminLeadProvider>().updateLeadStage(
-                              widget.deal.leadId.toString(),
-                              'completed',
-                            );
+                            if (isFullyPaid) {
+                              context.read<AdminLeadProvider>().updateLeadStage(
+                                widget.deal.leadId.toString(),
+                                'close',
+                              );
+                            } else {
+                              context.read<AdminLeadProvider>().updateLeadStage(
+                                widget.deal.leadId.toString(),
+                                'completed',
+                              );
+                            }
                           }
 
                           ScaffoldMessenger.of(context).showSnackBar(

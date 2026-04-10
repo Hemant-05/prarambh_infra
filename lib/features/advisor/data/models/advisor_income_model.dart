@@ -43,12 +43,14 @@ class IncomeTransaction {
   final int totalSqft;
   final double commissionPerSqft;
   final double totalCommission;
+  final double installmentCommission;
+  final int installmentIndex;
+  final int totalInstallments;
   final String status;
-  final String createdAt;
+  final String installmentDate;
   final String projectName;
   final String unitNumber;
-  final String clientName;
-  final String clientNumber;
+  final String? clientName;
   final String formattedDate;
 
   IncomeTransaction({
@@ -57,12 +59,14 @@ class IncomeTransaction {
     required this.totalSqft,
     required this.commissionPerSqft,
     required this.totalCommission,
+    required this.installmentCommission,
+    required this.installmentIndex,
+    required this.totalInstallments,
     required this.status,
-    required this.createdAt,
+    required this.installmentDate,
     required this.projectName,
     required this.unitNumber,
-    required this.clientName,
-    required this.clientNumber,
+    this.clientName,
     required this.formattedDate,
   });
 
@@ -73,12 +77,14 @@ class IncomeTransaction {
       totalSqft: json['total_sqft'] ?? 0,
       commissionPerSqft: double.tryParse(json['commission_per_sqft'].toString()) ?? 0.0,
       totalCommission: double.tryParse(json['total_commission'].toString()) ?? 0.0,
+      installmentCommission: double.tryParse(json['installment_commission'].toString()) ?? 0.0,
+      installmentIndex: json['installment_index'] ?? 1,
+      totalInstallments: json['total_installments'] ?? 1,
       status: json['status'] ?? 'Pending',
-      createdAt: json['created_at'] ?? '',
+      installmentDate: json['installment_date'] ?? '',
       projectName: json['project_name'] ?? 'Unknown Project',
       unitNumber: json['unit_number'] ?? 'N/A',
-      clientName: json['client_name'] ?? 'Unknown Client',
-      clientNumber: json['client_number'] ?? '',
+      clientName: json['client_name'],
       formattedDate: json['formatted_date'] ?? '',
     );
   }
