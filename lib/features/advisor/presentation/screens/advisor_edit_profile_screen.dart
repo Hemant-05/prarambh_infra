@@ -124,12 +124,19 @@ class _AdvisorEditProfileScreenState extends State<AdvisorEditProfileScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('Edit Profile', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(
+          'Edit Profile',
+          style: GoogleFonts.montserrat(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.transparent,
+        backgroundColor: isDark ? Theme.of(context).cardColor : AppColors.getPrimaryBlue(context),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),

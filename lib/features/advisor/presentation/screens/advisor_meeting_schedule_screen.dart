@@ -78,20 +78,21 @@ class _AdvisorMeetingScheduleScreenState
     return Scaffold(
       backgroundColor: scaffoldBg,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: isDark ? Theme.of(context).cardColor : primaryBlue,
         elevation: 0,
-        leading: backButton(isDark: isDark),
+        centerTitle: true,
+        leading: backButton(isDark: !isDark),
         title: Text(
           'Meetings',
           style: GoogleFonts.montserrat(
-            color: textColor,
+            color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh, color: textColor),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: () => provider.fetchMeetings(advisorId, date: _selectedDate),
           ),
         ],

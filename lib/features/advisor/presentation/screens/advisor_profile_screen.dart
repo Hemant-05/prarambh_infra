@@ -174,16 +174,7 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
             ),
             child: Column(
               children: [
-                Align(
-                  alignment: Alignment.topRight,
-                  child: IconButton(
-                    icon: Icon(Icons.edit_note, color: primaryBlue, size: 28),
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => AdvisorEditProfileScreen(profile: profile)),
-                    ),
-                  ),
-                ),
+                // Removed old edit button from here
                 Text(
                   profile.fullName,
                   style: GoogleFonts.montserrat(fontSize: 22, fontWeight: FontWeight.bold, color: textColor),

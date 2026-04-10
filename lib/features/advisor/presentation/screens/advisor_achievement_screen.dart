@@ -33,13 +33,14 @@ class _AdvisorAchievementScreenState extends State<AdvisorAchievementScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: isDark ? Theme.of(context).cardColor : primaryBlue,
         elevation: 0,
-        leading: BackButton(color: textColor),
+        centerTitle: true,
+        leading: BackButton(color: Colors.white),
         title: Text(
           "My Achievements",
           style: GoogleFonts.montserrat(
-            color: textColor,
+            color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),

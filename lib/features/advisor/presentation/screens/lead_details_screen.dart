@@ -517,13 +517,14 @@ Please feel free to contact us for more information.""";
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: isDark ? Theme.of(context).cardColor : primaryBlue,
         elevation: 0,
-        leading: backButton(isDark: isDark),
+        centerTitle: true,
+        leading: backButton(isDark: !isDark),
         title: Text(
           'Client Pipeline',
           style: GoogleFonts.montserrat(
-            color: textColor,
+            color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
@@ -533,7 +534,7 @@ Please feel free to contact us for more information.""";
             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
+              color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -542,10 +543,10 @@ Please feel free to contact us for more information.""";
                   : currentStage == 'completed'
                   ? 'COMPLETED'
                   : currentStage.toUpperCase(),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
-                color: statusColor,
+                color: Colors.white,
               ),
             ),
           ),

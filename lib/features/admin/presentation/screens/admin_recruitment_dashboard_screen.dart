@@ -306,13 +306,13 @@ class _AdminRecruitmentDashboardScreenState
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: isDark ? Theme.of(context).cardColor : primaryBlue,
         elevation: 0,
         leading: backButton(isDark: isDark),
         title: Text(
           provider.hasError ? 'Error' : 'Recruitment Dashboard',
           style: GoogleFonts.montserrat(
-            color: textColor,
+            color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),

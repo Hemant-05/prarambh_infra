@@ -262,32 +262,36 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        backgroundColor: isDark
-            ? const Color(0xFF121212)
-            : const Color(0xFFF8F9FA),
-        body: SafeArea(
-          child: Column(
-            children: [
-              // --- Custom Header ---
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 15, 20, 10),
-                child: Row(
-                  children: [
-                    backButton(isDark: isDark),
-                    const SizedBox(width: 5),
-                    Expanded(
-                      child: Text(
-                        'Advisor Applications',
-                        style: GoogleFonts.montserrat(
-                          color: isDark ? Colors.white : Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+        backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
+        appBar: AppBar(
+          backgroundColor: isDark ? Theme.of(context).cardColor : primaryBlue,
+          elevation: 0,
+          leading: backButton(isDark: !isDark),
+          title: Text(
+            'Advisor Applications',
+            style: GoogleFonts.montserrat(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: IconButton(
+                icon: const Icon(Icons.refresh, color: Colors.white),
+                onPressed: () {
+                  context.read<AdminAdvisorProvider>().fetchAdvisors(
+                    status: 'pending',
+                  );
+                  context.read<AdminEnquiryProvider>().fetchCareerEnquiries();
+                },
               ),
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
 
               // --- Search and Filter Row ---
               Padding(
@@ -427,7 +431,6 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
             ],
           ),
         ),
-      ),
     );
   }
 
@@ -680,8 +683,8 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
             ],
           ),
         ),
-      ),
-    );
+     ),
+  );
   }
 }
 
@@ -701,7 +704,8 @@ class _ExpandableCareerInquiryCard extends StatefulWidget {
       _ExpandableCareerInquiryCardState();
 }
 
-class _ExpandableCareerInquiryCardState extends State<_ExpandableCareerInquiryCard> {
+class _ExpandableCareerInquiryCardState
+    extends State<_ExpandableCareerInquiryCard> {
   bool _isExpanded = false;
 
   void _launchDialer(String phone) async {
@@ -742,7 +746,11 @@ class _ExpandableCareerInquiryCardState extends State<_ExpandableCareerInquiryCa
                   CircleAvatar(
                     radius: 18,
                     backgroundColor: widget.primaryBlue.withOpacity(0.1),
-                    child: Icon(Icons.language, color: widget.primaryBlue, size: 16),
+                    child: Icon(
+                      Icons.language,
+                      color: widget.primaryBlue,
+                      size: 16,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -754,7 +762,9 @@ class _ExpandableCareerInquiryCardState extends State<_ExpandableCareerInquiryCa
                           style: GoogleFonts.montserrat(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
-                            color: widget.isDark ? Colors.white : Colors.black87,
+                            color: widget.isDark
+                                ? Colors.white
+                                : Colors.black87,
                           ),
                         ),
                         Text(
@@ -769,12 +779,18 @@ class _ExpandableCareerInquiryCardState extends State<_ExpandableCareerInquiryCa
                   ),
                   // Dialer Icon
                   IconButton(
-                    icon: Icon(Icons.phone_forwarded, color: widget.primaryBlue, size: 20),
+                    icon: Icon(
+                      Icons.phone_forwarded,
+                      color: widget.primaryBlue,
+                      size: 20,
+                    ),
                     onPressed: () => _launchDialer(widget.enquiry.phone),
                     tooltip: 'Call Candidate',
                   ),
                   Icon(
-                    _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    _isExpanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
                     color: Colors.grey,
                   ),
                 ],
@@ -818,15 +834,22 @@ class _ExpandableCareerInquiryCardState extends State<_ExpandableCareerInquiryCa
                         child: OutlinedButton.icon(
                           onPressed: () => context
                               .read<AdminEnquiryProvider>()
-                              .deleteCareerEnquiry(widget.enquiry.id.toString()),
+                              .deleteCareerEnquiry(
+                                widget.enquiry.id.toString(),
+                              ),
                           icon: const Icon(Icons.delete_outline, size: 18),
                           label: const Text('Remove'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.red,
                             side: const BorderSide(color: Colors.red),
                             padding: const EdgeInsets.symmetric(vertical: 8),
-                            textStyle: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w600),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            textStyle: GoogleFonts.montserrat(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                         ),
                       ),
@@ -845,18 +868,28 @@ class _ExpandableCareerInquiryCardState extends State<_ExpandableCareerInquiryCa
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const AdvisorRegistrationScreen(),
+                                builder: (context) =>
+                                    const AdvisorRegistrationScreen(),
                               ),
                             );
                           },
-                          icon: const Icon(Icons.person_add_alt_1_outlined, size: 18, color: Colors.white),
+                          icon: const Icon(
+                            Icons.person_add_alt_1_outlined,
+                            size: 18,
+                            color: Colors.white,
+                          ),
                           label: const Text('Fill Form'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: widget.primaryBlue,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 8),
-                            textStyle: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            textStyle: GoogleFonts.montserrat(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                         ),
                       ),

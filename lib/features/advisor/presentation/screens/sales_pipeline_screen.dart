@@ -589,7 +589,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                     : cardColor));
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(16),
@@ -621,7 +621,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
             );
           },
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -671,11 +671,11 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                                       : Colors.amber[700],
                                   size: 10,
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: 3),
                                 Text(
                                   "PRIORITY",
                                   style: GoogleFonts.montserrat(
-                                    fontSize: 9,
+                                    fontSize: 7,
                                     fontWeight: FontWeight.bold,
                                     color: isDark
                                         ? Colors.amberAccent
@@ -708,7 +708,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                   lead.clientName,
                   style: GoogleFonts.montserrat(
                     fontWeight: FontWeight.bold,
-                    fontSize: 18,
+                    fontSize: 15,
                     color: textColor,
                   ),
                 ),
@@ -720,7 +720,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                     Text(
                       lead.clientNumber,
                       style: GoogleFonts.montserrat(
-                        fontSize: 13,
+                        fontSize: 12,
                         color: secondaryTextColor,
                       ),
                     ),
@@ -728,7 +728,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                 ),
 
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Divider(
                     height: 1,
                     color: AppColors.getBorderColor(context),
@@ -745,7 +745,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                         Text(
                           '${lead.communicationAttempt} Attempts',
                           style: GoogleFonts.montserrat(
-                            fontSize: 11,
+                            fontSize: 10,
                             fontWeight: FontWeight.w600,
                             color: accentColor,
                           ),
@@ -755,7 +755,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                     Text(
                       lead.createdAt,
                       style: GoogleFonts.montserrat(
-                        fontSize: 11,
+                        fontSize: 10,
                         color: secondaryTextColor,
                       ),
                     ),

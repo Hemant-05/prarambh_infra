@@ -26,13 +26,27 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<AdminAnalyticsProvider>();
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryBlue = AppColors.getPrimaryBlue(context);
+
     return Scaffold(
       backgroundColor: AppColors.getScaffoldColor(context),
       appBar: AppBar(
-        title: const Text('Sales Analytics'),
+        backgroundColor: isDark ? Theme.of(context).cardColor : primaryBlue,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text(
+          'Sales Analytics',
+          style: GoogleFonts.montserrat(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: () => provider.fetchSalesAnalytics(),
           ),
         ],

@@ -37,16 +37,23 @@ class _AdvisorContestsListScreenState extends State<AdvisorContestsListScreen> {
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: isDark ? Theme.of(context).cardColor : primaryBlue,
         elevation: 0,
         centerTitle: true,
         leading: backButton(isDark: isDark),
         title: Text(
           'Running Contests',
-          style: GoogleFonts.montserrat(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 18),
+          style: GoogleFonts.montserrat(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
         ),
         actions: [
-          IconButton(icon: Icon(Icons.filter_list, color: isDark ? Colors.white : Colors.black87), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.filter_list, color: Colors.white),
+            onPressed: () {},
+          ),
         ],
       ),
       body: Column(

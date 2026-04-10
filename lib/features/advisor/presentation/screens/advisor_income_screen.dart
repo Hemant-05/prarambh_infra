@@ -28,20 +28,19 @@ class _MyIncomeAnalyticsScreenState extends State<MyIncomeAnalyticsScreen> {
   @override
   Widget build(BuildContext context) {
     final incomeProvider = context.watch<AdvisorIncomeProvider>();
-    final primaryBlue = AppColors.getPrimaryBlue(context);
-    final textColor = AppColors.getTextColor(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: AppColors.getScaffoldColor(context),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: isDark ? Theme.of(context).cardColor : AppColors.primaryBlueLight,
         elevation: 0,
         centerTitle: true,
-        leading: BackButton(color: textColor),
+        leading: const BackButton(color: Colors.white),
         title: Text(
           'My Income Analytics',
           style: GoogleFonts.montserrat(
-            color: textColor,
+            color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),

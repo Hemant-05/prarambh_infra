@@ -268,7 +268,7 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
         backgroundColor: primaryBlue,
         elevation: 0,
         centerTitle: true,
-        leading: backButton(isDark: isDark),
+        leading: backButton(isDark: !isDark),
         title: Text(
           'DOCS MANAGEMENT',
           style: GoogleFonts.montserrat(

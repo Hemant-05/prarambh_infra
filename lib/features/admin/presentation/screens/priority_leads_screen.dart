@@ -130,23 +130,21 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: isDark ? Theme.of(context).cardColor : primaryBlue,
         elevation: 0,
         leading: backButton(isDark: isDark),
         title: Text(
           'All Priority Leads',
           style: GoogleFonts.montserrat(
-            color: isDark ? Colors.white : Colors.black87,
+            color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
         ),
         actions: [
-          if (allLeads.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: IconButton(
-                onPressed: () async {
+          IconButton(
+            icon: const Icon(Icons.download, color: Colors.white),
+            onPressed: () async {
                   showDialog(
                     context: context,
                     barrierDismissible: false,
@@ -164,10 +162,8 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
                     }
                   }
                 },
-                icon: Icon(Icons.description_outlined, color: primaryBlue),
-                tooltip: 'Export Current View as Excel',
               ),
-            ),
+            
         ],
       ),
       body: body,

@@ -356,7 +356,7 @@ class _AdvisorProjectsScreenState extends State<AdvisorProjectsScreen> {
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 24),
+        margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
           color: cardColor,
           borderRadius: BorderRadius.circular(20),
@@ -379,7 +379,7 @@ class _AdvisorProjectsScreenState extends State<AdvisorProjectsScreen> {
                     top: Radius.circular(20),
                   ),
                   child: Container(
-                    height: 200,
+                    height: 140,
                     width: double.infinity,
                     color: Colors.grey.shade200,
                     child: displayImage.isNotEmpty
@@ -426,7 +426,7 @@ class _AdvisorProjectsScreenState extends State<AdvisorProjectsScreen> {
             ),
             // Details Section
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -437,7 +437,7 @@ class _AdvisorProjectsScreenState extends State<AdvisorProjectsScreen> {
                         child: Text(
                           project.projectName,
                           style: GoogleFonts.montserrat(
-                            fontSize: 20,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: isDark ? Colors.white : Colors.black87,
                           ),
@@ -468,7 +468,7 @@ class _AdvisorProjectsScreenState extends State<AdvisorProjectsScreen> {
                         child: Text(
                           '${project.fullAddress}, ${project.city}',
                           style: GoogleFonts.montserrat(
-                            fontSize: 12,
+                            fontSize: 11,
                             color: Colors.grey[600],
                             fontWeight: FontWeight.w500,
                           ),
@@ -478,8 +478,8 @@ class _AdvisorProjectsScreenState extends State<AdvisorProjectsScreen> {
                       ),
                     ],
                   ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16),
+                   const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
                     child: Divider(height: 1),
                   ),
                   Row(

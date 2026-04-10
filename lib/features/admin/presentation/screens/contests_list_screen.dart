@@ -35,14 +35,14 @@ class _ContestsListScreenState extends State<ContestsListScreen> {
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: isDark ? Theme.of(context).cardColor : primaryBlue,
         elevation: 0,
         centerTitle: true,
         leading: backButton(isDark: isDark),
         title: Text(
           'Running Contests',
           style: GoogleFonts.montserrat(
-            color: isDark ? Colors.white : Colors.black87,
+            color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),

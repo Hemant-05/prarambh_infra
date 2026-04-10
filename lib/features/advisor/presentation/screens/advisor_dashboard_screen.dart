@@ -14,6 +14,8 @@ import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_pro
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_meeting_schedule_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/document_center_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/sales_pipeline_screen.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_edit_profile_screen.dart';
+import '../providers/advisor_profile_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_promotion_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_achievement_screen.dart';
 import '../../../../core/utils/access_helper.dart';
@@ -45,17 +47,17 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final advisor = context.read<AuthProvider>().currentUser;
       final advisorCode = advisor?.advisorCode ?? '';
-      
+
       context.read<AdvisorDashboardProvider>().fetchDashboardData(advisorCode);
 
       TopPerformersDialog.show(
-        context, 
-        userId: advisor?.id.toString() ?? '1', 
+        context,
+        userId: advisor?.id.toString() ?? '1',
         onViewTeam: () {
           setState(() {
             _selectedIndex = 3; // Team tab index is 3
           });
-        }
+        },
       );
     });
   }
@@ -70,9 +72,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
   Widget build(BuildContext context) {
     final authState = context.watch<AuthProvider>();
     if (authState.currentUser == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final primaryBlue = Theme.of(context).primaryColor;
@@ -102,6 +102,27 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           ),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: _selectedIndex == 4
+            ? [
+                Consumer<AdvisorProfileProvider>(
+                  builder: (context, profileProvider, _) {
+                    if (profileProvider.profile == null)
+                      return const SizedBox.shrink();
+                    return IconButton(
+                      icon: const Icon(Icons.edit_note, size: 28),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AdvisorEditProfileScreen(
+                            profile: profileProvider.profile!,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ]
+            : null,
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -213,7 +234,8 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           child: UIHelper.buildInlineError(
             context: context,
             message: provider.errorMessage!,
-            onRetry: () => provider.fetchDashboardData(advisor?.advisorCode ?? ''),
+            onRetry: () =>
+                provider.fetchDashboardData(advisor?.advisorCode ?? ''),
           ),
         ),
       );
@@ -557,15 +579,10 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     BuildContext context,
     SalesConversion sales,
   ) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: GridView.count(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 1.8,
+    return SizedBox(
+      height: 60,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _buildSalesCard(
             context,
@@ -609,33 +626,39 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     final valueColor = isDark ? Colors.white : Colors.black87;
     final labelColor = isDark ? accentColor : Colors.black87;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accentColor.withOpacity(isDark ? 0.4 : 0.1)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: GoogleFonts.montserrat(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: valueColor,
-            ),
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 2),
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: accentColor.withOpacity(isDark ? 0.4 : 0.1),
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: GoogleFonts.montserrat(
-              fontSize: 9,
-              fontWeight: FontWeight.bold,
-              color: labelColor,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              value,
+              style: GoogleFonts.montserrat(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: valueColor,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: GoogleFonts.montserrat(
+                fontSize: 8,
+                fontWeight: FontWeight.bold,
+                color: labelColor,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -663,7 +686,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
         crossAxisCount: 3,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 1.1,
+        childAspectRatio: 1.25,
       ),
       itemCount: actions.length,
       itemBuilder: (context, index) {
@@ -711,14 +734,14 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                 Icon(
                   actions[index]['icon'] as IconData,
                   color: primaryBlue,
-                  size: 28,
+                  size: 22,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   actions[index]['label'] as String,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.montserrat(
-                    fontSize: 10,
+                    fontSize: 9,
                     color: primaryBlue,
                     fontWeight: FontWeight.w500,
                   ),
@@ -1222,7 +1245,9 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           _drawerItem(context, Icons.campaign_outlined, 'Promotions', () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const AdvisorPromotionScreen()),
+              MaterialPageRoute(
+                builder: (context) => const AdvisorPromotionScreen(),
+              ),
             );
           }),
           _drawerItem(
