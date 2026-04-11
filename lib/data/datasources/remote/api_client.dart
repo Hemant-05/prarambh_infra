@@ -91,6 +91,13 @@ abstract class ApiClient {
 
   @MultiPart()
   @POST("/advisor/update/{id}")
+  Future<dynamic> updateAdvisorType(
+    @Path("id") String id,
+    @Part(name: "advisor_type") String advisorType,
+  );
+
+  @MultiPart()
+  @POST("/advisor/update/{id}")
   Future<dynamic> updateAdvisorProfile(
     @Path("id") String id,
     @Part(name: "full_name") String? fullName,

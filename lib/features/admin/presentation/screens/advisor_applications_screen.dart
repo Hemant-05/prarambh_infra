@@ -240,16 +240,7 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
     }
 
     final allAdvisors = advisorProvider.advisors;
-    final byAdminAdvisors = _filterAdvisors(
-      allAdvisors
-          .where((a) => a.leaderCode.toLowerCase() == 'admin001')
-          .toList(),
-    );
-    final byAdvisorAdvisors = _filterAdvisors(
-      allAdvisors
-          .where((a) => a.leaderCode.toLowerCase() != 'admin001')
-          .toList(),
-    );
+    final filteredAdvisors = _filterAdvisors(allAdvisors);
 
     final filteredEnquiries = enquiryProvider.careerEnquiries.where((enquiry) {
       if (_searchQuery.isEmpty) return true;
@@ -260,7 +251,7 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
     }).toList();
 
     return DefaultTabController(
-      length: 3,
+      length: 2,
       child: Scaffold(
         backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
         appBar: AppBar(
@@ -397,8 +388,7 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                   fontSize: 13,
                 ),
                 tabs: const [
-                  Tab(text: 'By Admin'),
-                  Tab(text: 'By Advisor'),
+                  Tab(text: 'Advisors'),
                   Tab(text: 'App/Web'),
                 ],
               ),
@@ -407,13 +397,7 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                 child: TabBarView(
                   children: [
                     _buildAdvisorList(
-                      byAdminAdvisors,
-                      advisorProvider.isLoading,
-                      cardColor,
-                      isDark,
-                    ),
-                    _buildAdvisorList(
-                      byAdvisorAdvisors,
+                      filteredAdvisors,
                       advisorProvider.isLoading,
                       cardColor,
                       isDark,

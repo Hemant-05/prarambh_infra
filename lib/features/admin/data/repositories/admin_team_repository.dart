@@ -40,9 +40,7 @@ class AdminTeamRepository {
 
   Future<bool> updateAdvisorType(String advisorId, String advisorType) async {
     try {
-      final response = await apiClient.updateAdvisor(advisorId, {
-        'advisor_type': advisorType,
-      });
+      final response = await apiClient.updateAdvisorType(advisorId, advisorType);
       return response['status'] == true || response['status'] == 'success';
     } catch (e) { rethrow; }
   }
