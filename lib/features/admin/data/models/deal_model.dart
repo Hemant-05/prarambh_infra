@@ -28,6 +28,11 @@ class DealModel {
   final List<dynamic> propertyDocs;
   final List<dynamic> installments;
 
+  // New fields for direct property info
+  final String? projectName;
+  final String? unitNumber;
+  final String? towerName;
+
   DealModel({
     required this.id, required this.clientName, required this.clientNumber,
     required this.advisorCode,
@@ -40,18 +45,23 @@ class DealModel {
     required this.propertyDocs, this.paymentPlan, required this.installments,
     this.paymentAmount, required this.paymentStatus, required this.createdAt,
     required this.updatedAt,
+    this.projectName, this.unitNumber, this.towerName,
   });
 
   factory DealModel.fromJson(Map<String, dynamic> json) {
-    const String baseUrl = "https://workiees.com/";
+    const String baseUrl = "https://workiees.com/api/public/";
+
+    String sanitizeUrl(dynamic url) {
+      if (url == null || url.toString().isEmpty) return '';
+      String sUrl = url.toString();
+      if (sUrl.startsWith('http')) return sUrl;
+      return baseUrl + (sUrl.startsWith('/') ? sUrl.substring(1) : sUrl);
+    }
 
     // Safely parse the documents array and append base URL to files
     List<dynamic> docs = json['property_docs'] is List ? json['property_docs'] : [];
     List<dynamic> parsedDocs = docs.map((doc) {
-      String url = doc['url'] ?? '';
-      if (url.isNotEmpty && !url.startsWith('http')) {
-        url = baseUrl + (url.startsWith('/') ? url.substring(1) : url);
-      }
+      String url = sanitizeUrl(doc['url']);
       return {'title': doc['title'], 'url': url};
     }).toList();
 
@@ -72,10 +82,10 @@ class DealModel {
       clientNumber: json['client_number']?.toString() ?? '',
       advisorCode: json['advisor_code']?.toString() ?? '',
       clientEmail: json['client_email']?.toString() ?? '',
-      clientAdharFront: json['client_adhar_front']?.toString() ?? '',
-      clientAdharBack: json['client_adhar_back']?.toString() ?? '',
-      clientPanFront: json['client_pan_front']?.toString() ?? '',
-      clientPanBack: json['client_pan_back']?.toString() ?? '',
+      clientAdharFront: sanitizeUrl(json['client_adhar_front']),
+      clientAdharBack: sanitizeUrl(json['client_adhar_back']),
+      clientPanFront: sanitizeUrl(json['client_pan_front']),
+      clientPanBack: sanitizeUrl(json['client_pan_back']),
       propertyId: json['property_id'] != null ? int.tryParse(json['property_id'].toString()) ?? 0 : 0,
       unitId: json['unit_id'] != null ? int.tryParse(json['unit_id'].toString()) ?? 0 : 0,
       stage: json['stage']?.toString() ?? '',
@@ -93,6 +103,9 @@ class DealModel {
       paymentStatus: json['payment_status']?.toString() ?? 'Pending',
       createdAt: json['created_at']?.toString() ?? '',
       updatedAt: json['updated_at']?.toString() ?? '',
+      projectName: json['project_name']?.toString(),
+      unitNumber: json['unit_number']?.toString(),
+      towerName: json['tower_name']?.toString(),
     );
   }
 }
