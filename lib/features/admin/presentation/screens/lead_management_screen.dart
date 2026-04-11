@@ -14,7 +14,8 @@ import '../../../advisor/presentation/screens/lead_details_screen.dart';
 import '../../../../core/utils/lead_filter_helper.dart'; // NEW
 
 class LeadManagementScreen extends StatefulWidget {
-  const LeadManagementScreen({super.key});
+  final int initialIndex;
+  const LeadManagementScreen({super.key, this.initialIndex = 0});
 
   @override
   State<LeadManagementScreen> createState() => _LeadManagementScreenState();
@@ -33,7 +34,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 7, vsync: this);
+    _tabController = TabController(length: 7, vsync: this, initialIndex: widget.initialIndex);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AdminLeadProvider>().fetchUnassignedLeads();
@@ -858,7 +859,6 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
     final textColor = isDark ? Colors.white : Colors.black87;
     final isCompleted = lead.stage.toLowerCase() == 'completed';
     final isDead = lead.stage.toLowerCase() == 'dead';
-
     return InkWell(
       onTap: () {
         context.read<AdvisorProfileProvider>().clearProfile();

@@ -13,7 +13,8 @@ import 'package:prarambh_infra/features/recruitment/presentation/providers/advis
 import 'package:prarambh_infra/features/recruitment/presentation/screens/advisor_registration_screen.dart';
 
 class AdvisorApplicationsScreen extends StatefulWidget {
-  const AdvisorApplicationsScreen({super.key});
+  final int initialIndex;
+  const AdvisorApplicationsScreen({super.key, this.initialIndex = 0});
 
   @override
   State<AdvisorApplicationsScreen> createState() =>
@@ -252,6 +253,7 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
 
     return DefaultTabController(
       length: 2,
+      initialIndex: widget.initialIndex,
       child: Scaffold(
         backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
         appBar: AppBar(

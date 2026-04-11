@@ -345,6 +345,9 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                                   "Deal verified by admin. Token collected: ₹${_tokenAmountCtrl.text} via $_tokenPaymentMode.",
                                   now,
                                 );
+                                context.read<AdminLeadProvider>().removeLeadFromPriority(
+                                  activeDeal.leadId.toString(),
+                                );
                               }
 
                               if (isFullyPaid) {

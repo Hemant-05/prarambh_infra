@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:prarambh_infra/core/utils/ui_helper.dart';
+import 'package:prarambh_infra/features/admin/data/models/lead_models.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_profile_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/back_button.dart';
 import '../providers/admin_provider.dart';
@@ -41,9 +44,16 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
 
     final adminState = context.watch<AdminProvider>();
     final leadProvider = context.watch<AdminLeadProvider>();
-    final allLeads = adminState.dashboardData?.priorityLeads ?? [];
     
-    final filteredLeads = LeadFilterHelper.filterLeadMaps(
+    // Use data from leadProvider if it has been refreshed, otherwise fallback to dashboard data
+    // Convert dashboard maps to LeadModel for consistency
+    final List<LeadModel> allLeads = leadProvider.priorityLeads.isNotEmpty 
+        ? leadProvider.priorityLeads 
+        : (adminState.dashboardData?.priorityLeads ?? [])
+            .map((item) => LeadModel.fromJson(item as Map<String, dynamic>))
+            .toList();
+
+    final filteredLeads = LeadFilterHelper.filterLeads(
       leads: allLeads,
       query: _searchController.text,
       category: _selectedCategory,
@@ -60,7 +70,7 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
     }
 
     Widget body;
-    if (adminState.isLoading) {
+    if (adminState.isLoading || leadProvider.isLoading) {
       body = const Center(child: CircularProgressIndicator());
     } else if (adminState.hasError) {
       body = Center(
@@ -78,7 +88,11 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.priority_high_rounded, size: 64, color: Colors.grey.withOpacity(0.5)),
+            Icon(
+              Icons.priority_high_rounded,
+              size: 64,
+              color: Colors.grey.withOpacity(0.5),
+            ),
             const SizedBox(height: 16),
             Text(
               'No priority leads found',
@@ -92,28 +106,38 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
         children: [
           // Filter section
           _buildDiscoveryBar(isDark, primaryBlue),
-          
+
           Expanded(
             child: filteredLeads.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.search_off, size: 48, color: Colors.grey.withOpacity(0.5)),
+                        Icon(
+                          Icons.search_off,
+                          size: 48,
+                          color: Colors.grey.withOpacity(0.5),
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'No leads match your criteria',
-                          style: GoogleFonts.montserrat(color: Colors.grey, fontSize: 14),
+                          style: GoogleFonts.montserrat(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
                         ),
                       ],
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
                     physics: const BouncingScrollPhysics(),
                     itemCount: filteredLeads.length,
                     itemBuilder: (context, index) {
-                      final lead = Map<String, dynamic>.from(filteredLeads[index]);
+                      final lead = filteredLeads[index];
                       return _buildPriorityLeadListItem(
                         context,
                         lead,
@@ -131,11 +155,13 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
+      backgroundColor: isDark
+          ? const Color(0xFF121212)
+          : const Color(0xFFF8F9FA),
       appBar: AppBar(
         backgroundColor: isDark ? Theme.of(context).cardColor : primaryBlue,
         elevation: 0,
-        leading: backButton(isDark: isDark),
+        leading: backButton(isDark: !isDark),
         title: Text(
           'All Priority Leads',
           style: GoogleFonts.montserrat(
@@ -146,27 +172,34 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
         ),
         actions: [
           IconButton(
+            onPressed: () => context.read<AdminLeadProvider>().fetchPriorityLeads(),
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+          ),
+          IconButton(
             icon: const Icon(Icons.download, color: Colors.white),
             onPressed: () async {
-                  showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (context) => const Center(child: CircularProgressIndicator()),
-                  );
-                  
-                  final success = await ExcelHelper.exportLeadsToExcel(filteredLeads);
-                  
-                  if (context.mounted) {
-                    Navigator.pop(context); // Close loading dialog
-                    if (success) {
-                      UIHelper.showSuccess(context, 'Data exported successfully');
-                    } else {
-                      UIHelper.showError(context, 'Failed to export data');
-                    }
-                  }
-                },
-              ),
-            
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) =>
+                    const Center(child: CircularProgressIndicator()),
+              );
+
+              final success = await ExcelHelper.exportLeadsToExcel(
+                filteredLeads,
+              );
+
+              if (context.mounted) {
+                Navigator.pop(context); // Close loading dialog
+                if (success) {
+                  UIHelper.showSuccess(context, 'Data exported successfully');
+                } else {
+                  UIHelper.showError(context, 'Failed to export data');
+                }
+              }
+            },
+          ),
+          
         ],
       ),
       body: body,
@@ -193,8 +226,15 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
               style: GoogleFonts.montserrat(fontSize: 13),
               decoration: InputDecoration(
                 hintText: 'Search Name, Stage, or Address...',
-                hintStyle: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey),
-                prefixIcon: const Icon(Icons.search, size: 20, color: Colors.grey),
+                hintStyle: GoogleFonts.montserrat(
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  size: 20,
+                  color: Colors.grey,
+                ),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear, size: 18),
@@ -210,7 +250,7 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          
+
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -273,7 +313,9 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
               style: GoogleFonts.montserrat(
                 fontSize: 10,
                 fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                color: isActive ? primaryBlue : (isDark ? Colors.white70 : Colors.black87),
+                color: isActive
+                    ? primaryBlue
+                    : (isDark ? Colors.white70 : Colors.black87),
               ),
             ),
             const SizedBox(width: 4),
@@ -292,7 +334,8 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
     final isActive = _startDate != null || _endDate != null;
     String label = 'Date Range';
     if (_startDate != null && _endDate != null) {
-      label = '${DateFormat('dd MMM').format(_startDate!)} - ${DateFormat('dd MMM').format(_endDate!)}';
+      label =
+          '${DateFormat('dd MMM').format(_startDate!)} - ${DateFormat('dd MMM').format(_endDate!)}';
     } else if (_startDate != null) {
       label = 'From ${DateFormat('dd MMM').format(_startDate!)}';
     } else if (_endDate != null) {
@@ -321,7 +364,9 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
               style: GoogleFonts.montserrat(
                 fontSize: 10,
                 fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                color: isActive ? primaryBlue : (isDark ? Colors.white70 : Colors.black87),
+                color: isActive
+                    ? primaryBlue
+                    : (isDark ? Colors.white70 : Colors.black87),
               ),
             ),
             const SizedBox(width: 4),
@@ -392,19 +437,34 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
                         Navigator.pop(context);
                       },
                       leading: isSelected
-                          ? Icon(Icons.check_circle, color: primaryBlue, size: 20)
-                          : const Icon(Icons.circle_outlined, color: Colors.grey, size: 20),
+                          ? Icon(
+                              Icons.check_circle,
+                              color: primaryBlue,
+                              size: 20,
+                            )
+                          : const Icon(
+                              Icons.circle_outlined,
+                              color: Colors.grey,
+                              size: 20,
+                            ),
                       title: Text(
                         item,
                         style: GoogleFonts.montserrat(
-                          color: isSelected ? primaryBlue : (isDark ? Colors.white70 : Colors.black87),
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          color: isSelected
+                              ? primaryBlue
+                              : (isDark ? Colors.white70 : Colors.black87),
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.w500,
                           fontSize: 14,
                         ),
                       ),
                       trailing: isSelected
                           ? Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: primaryBlue.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(4),
@@ -462,16 +522,13 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
 
   Widget _buildPriorityLeadListItem(
     BuildContext context,
-    Map<String, dynamic> lead,
+    LeadModel lead,
     Color cardColor,
     Color primaryBlue,
     Color? textColor,
     Color? secondaryTextColor,
     bool isDark,
   ) {
-    final category = (lead['lead_category'] ?? '').toString();
-    final potential = (lead['lead_potential'] ?? '').toString();
-    
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -480,7 +537,9 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
         border: Border.all(color: AppColors.getBorderColor(context)),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.04),
+            color: isDark
+                ? Colors.black.withOpacity(0.2)
+                : Colors.black.withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -494,113 +553,114 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
             showDialog(
               context: context,
               barrierDismissible: false,
-              builder: (context) => const Center(child: CircularProgressIndicator()),
+              builder: (context) =>
+                  const Center(child: CircularProgressIndicator()),
             );
             final fetchedLead = await context
                 .read<AdminLeadProvider>()
-                .getSingleLead(lead['id'].toString());
+                .getSingleLead(lead.id.toString());
             if (context.mounted) {
               Navigator.pop(context);
               if (fetchedLead != null) {
+                context.read<AdvisorProfileProvider>().clearProfile();
+                context.read<AdvisorProfileProvider>().fetchProfileByCode(
+                  fetchedLead.advisorCode,
+                );
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => LeadDetailsScreen(lead: fetchedLead, isAdmin: true),
+                    builder: (context) =>
+                        LeadDetailsScreen(lead: fetchedLead, isAdmin: true),
                   ),
                 );
               }
             }
           },
           child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.all(16), // Reduced padding
+            child: Row(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.red.withOpacity(0.2)),
-                      ),
-                      child: Text(
-                        (lead['stage'] ?? 'Pending').toString().toUpperCase().replaceAll('_', ' '),
-                        style: GoogleFonts.montserrat(
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red.shade700,
-                        ),
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        if (category.isNotEmpty) ...[
-                          _buildMiniBadge('CAT $category', Colors.purple, isDark),
-                          const SizedBox(width: 4),
-                        ],
-                        if (potential.isNotEmpty) ...[
-                          _buildMiniBadge(potential.toUpperCase(), Colors.orange, isDark),
-                          const SizedBox(width: 8),
-                        ],
-                        Text(
-                          (lead['created_at'] ?? '').toString().split(' ')[0],
-                          style: GoogleFonts.montserrat(
-                            fontSize: 10,
-                            color: secondaryTextColor,
-                            fontWeight: FontWeight.w500,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            lead.createdAt.split(' ')[0],
+                            style: GoogleFonts.montserrat(
+                              fontSize: 10,
+                              color: secondaryTextColor,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        lead.clientName,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  lead['client_name']?.toString() ?? 'Unknown Client',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.phone_android,
+                            size: 12,
+                            color: primaryBlue,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            lead.clientNumber,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 13,
+                              color: primaryBlue,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 6),
-                Row(
+                const SizedBox(width: 12),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.phone_android, size: 14, color: primaryBlue),
-                    const SizedBox(width: 8),
-                    Text(
-                      lead['client_number']?.toString() ?? '',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 14,
-                        color: primaryBlue,
-                        fontWeight: FontWeight.w600,
+                    GestureDetector(
+                      onTap: () async {
+                        final number = lead.clientNumber;
+                        if (number.isNotEmpty) {
+                          final Uri url = Uri.parse('tel:$number');
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url);
+                          }
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.call,
+                          size: 20,
+                          color: Colors.green,
+                        ),
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.priority_high, size: 14, color: Colors.orange.shade800),
-                        const SizedBox(width: 4),
-                        Text(
-                          'HIGH ATTENTION REQUIRED',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.orange.shade800,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
+                    const SizedBox(height: 8),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14,
+                      color: primaryBlue.withOpacity(0.5),
                     ),
-                    Icon(Icons.arrow_forward, size: 18, color: primaryBlue),
                   ],
                 ),
               ],

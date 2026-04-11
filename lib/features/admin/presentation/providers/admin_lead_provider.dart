@@ -9,11 +9,13 @@ class AdminLeadProvider extends ChangeNotifier with ErrorHandlerMixin {
   AdminLeadProvider({required this.repository});
 
   List<LeadModel> _leads = [];
+  List<LeadModel> _priorityLeads = [];
   List<LeadModel> _unassignedLeads = [];
   List<AdvisorAssignModel> _availableAdvisors = [];
   bool _isSaving = false;
 
   List<LeadModel> get leads => _leads;
+  List<LeadModel> get priorityLeads => _priorityLeads;
   List<LeadModel> get unassignedLeads => _unassignedLeads;
   List<AdvisorAssignModel> get availableAdvisors => _availableAdvisors;
   bool get isSaving => _isSaving;
@@ -50,6 +52,20 @@ class AdminLeadProvider extends ChangeNotifier with ErrorHandlerMixin {
     }
   }
 
+  Future<void> fetchPriorityLeads() async {
+    setLoading(true);
+    setError(null);
+    try {
+      _priorityLeads = await repository.getPriorityLeads();
+    } catch (e) {
+      debugPrint('Fetch Priority Leads Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
+      _priorityLeads = [];
+    } finally {
+      setLoading(false);
+    }
+  }
+
   Future<bool> addLead(Map<String, dynamic> data) async {
     isSaving = true;
     try {
@@ -58,6 +74,40 @@ class AdminLeadProvider extends ChangeNotifier with ErrorHandlerMixin {
       return success;
     } catch (e) {
       debugPrint('Add Lead Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
+      return false;
+    } finally {
+      isSaving = false;
+    }
+  }
+
+  Future<bool> addLeadToPriority(String leadId) async {
+    isSaving = true;
+    try {
+      final success = await repository.addLeadToPriority(leadId);
+      if (success) {
+        await fetchPriorityLeads();
+      }
+      return success;
+    } catch (e) {
+      debugPrint('Add Lead Priority Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
+      return false;
+    } finally {
+      isSaving = false;
+    }
+  }
+
+  Future<bool> removeLeadFromPriority(String leadId) async {
+    isSaving = true;
+    try {
+      final success = await repository.removeLeadFromPriority(leadId);
+      if (success) {
+        await fetchPriorityLeads();
+      }
+      return success;
+    } catch (e) {
+      debugPrint('Remove Lead Priority Error: $e');
       setError(UIHelper.summarizeError(e.toString()));
       return false;
     } finally {

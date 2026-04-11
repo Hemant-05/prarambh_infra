@@ -11,9 +11,12 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/utils/ui_helper.dart';
 import '../providers/admin_advisor_provider.dart';
 import '../providers/admin_enquiry_provider.dart';
+import '../providers/admin_project_provider.dart';
+import '../providers/admin_deal_provider.dart';
+import '../providers/admin_team_provider.dart';
+import '../providers/admin_profile_provider.dart';
 import '../widgets/admin_drawer.dart';
 import '../widgets/admin_home_view.dart';
-import '../../../../core/globals.dart';
 import '../../../../core/widgets/top_performers_dialog.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -24,7 +27,6 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-
   @override
   void initState() {
     super.initState();
@@ -32,13 +34,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       _setupErrorListeners();
       context.read<AdminProvider>().fetchDashboardData();
 
-      final adminId = context.read<AuthProvider>().currentUser?.id.toString() ?? '1';
+      final adminId =
+          context.read<AuthProvider>().currentUser?.id.toString() ?? '1';
       TopPerformersDialog.show(
-        context, 
-        userId: adminId, 
+        context,
+        userId: adminId,
         onViewTeam: () {
-          context.read<AdminProvider>().setDashboardIndex(3); // Team tab index is 3
-        }
+          context.read<AdminProvider>().setDashboardIndex(
+            3,
+          ); // Team tab index is 3
+        },
       );
     });
   }
@@ -90,12 +95,32 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     'My Profile',
   ];
 
+  void _refreshCurrentPage(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        context.read<AdminProvider>().fetchDashboardData();
+        break;
+      case 1:
+        context.read<AdminProjectProvider>().fetchProjects();
+        break;
+      case 2:
+        context.read<AdminDealProvider>().fetchAllDeals();
+        break;
+      case 3:
+        context.read<AdminTeamProvider>().fetchTeam();
+        break;
+      case 4:
+        final userId =
+            context.read<AuthProvider>().currentUser?.id.toString() ?? '1';
+        context.read<AdminProfileProvider>().fetchProfile(userId);
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (context.watch<AuthProvider>().currentUser == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final primaryBlue = Theme.of(context).primaryColor;
@@ -122,8 +147,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-            onPressed: () {},
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            tooltip: 'Refresh Data',
+            onPressed: () => _refreshCurrentPage(context, currentIndex),
           ),
         ],
       ),
@@ -144,7 +170,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           fontWeight: FontWeight.w600,
           color: Colors.white,
         ),
-        unselectedLabelStyle: GoogleFonts.montserrat(fontSize: 10, color: Colors.white70),
+        unselectedLabelStyle: GoogleFonts.montserrat(
+          fontSize: 10,
+          color: Colors.white70,
+        ),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.business), label: 'Project'),

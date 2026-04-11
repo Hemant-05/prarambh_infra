@@ -10,7 +10,8 @@ import '../providers/admin_project_provider.dart';
 import 'deal_management_screen.dart';
 
 class AdminDealsScreen extends StatefulWidget {
-  const AdminDealsScreen({super.key});
+  final String? initialVerificationStatus;
+  const AdminDealsScreen({super.key, this.initialVerificationStatus});
 
   @override
   State<AdminDealsScreen> createState() => _AdminDealsScreenState();
@@ -30,6 +31,7 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedVerificationStatus = widget.initialVerificationStatus;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AdminDealProvider>().fetchAllDeals();
       context.read<AdminProjectProvider>().fetchProjects();

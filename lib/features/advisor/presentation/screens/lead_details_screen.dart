@@ -133,7 +133,7 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
         try {
           final provider = context.read<AdminProjectProvider>();
           final unit = await provider.getUnitDetails(selectedUnitId.toString());
-          
+
           ProjectModel? proj;
           try {
             proj = await provider.getProjectDetails(unit.projectId.toString());
@@ -1285,7 +1285,7 @@ Please feel free to contact us for more information.""";
               child: Row(
                 children: [
                   CircleAvatar(
-                    radius: 28,
+                    radius: 34,
                     backgroundColor: primaryBlue.withOpacity(0.1),
                     backgroundImage: profile.profilePhoto.isNotEmpty
                         ? NetworkImage(profile.profilePhoto)
@@ -1308,36 +1308,32 @@ Please feel free to contact us for more information.""";
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: primaryBlue.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                profile.advisorCode,
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: primaryBlue,
-                                ),
-                              ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: primaryBlue.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            profile.advisorCode,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: primaryBlue,
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              profile.designation,
-                              style: GoogleFonts.montserrat(
-                                fontSize: 11,
-                                color: Colors.grey[600],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          profile.designation,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 11,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),

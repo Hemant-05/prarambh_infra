@@ -117,7 +117,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                             child: CircleAvatar(
                               radius: 42,
                               backgroundImage: provider.profile?.avatarUrl != null
-                                  ? NetworkImage(provider.profile!.avatarUrl!)
+                                  ? NetworkImage(provider.profile!.avatarUrl)
                                   : const AssetImage(logo),
                               backgroundColor: Colors.grey[200],
                             ),

@@ -12,11 +12,15 @@ import 'package:prarambh_infra/features/admin/presentation/providers/admin_lead_
 import 'package:prarambh_infra/features/admin/presentation/screens/deal_management_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/priority_leads_screen.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/review_application_screen.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/admin_deals_screen.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/lead_management_screen.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/advisor_applications_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/lead_details_screen.dart';
 import 'package:prarambh_infra/features/auth/presentation/providers/auth_provider.dart';
 import 'package:prarambh_infra/core/utils/ui_helper.dart';
 import 'package:prarambh_infra/features/admin/data/models/admin_dashboard_model.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class AdminHomeView extends StatefulWidget {
@@ -520,6 +524,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                           getPercent(data.suspectingLeads),
                           const Color(0xFF2962FF),
                           null,
+                          1,
                         ),
                         const SizedBox(height: 16),
                         _buildSalesRow(
@@ -529,6 +534,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                           getPercent(data.prospectingLeads),
                           const Color(0xFF448AFF),
                           null,
+                          2,
                         ),
                         const SizedBox(height: 16),
                         _buildSalesRow(
@@ -538,6 +544,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                           getPercent(data.siteVisitingLeads),
                           const Color(0xFFFF9100),
                           Icons.warning_amber_rounded,
+                          3,
                         ),
                         const SizedBox(height: 16),
                         _buildSalesRow(
@@ -547,6 +554,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                           getPercent(data.bookingLeads),
                           const Color(0xFF90CAF9),
                           null,
+                          4,
                         ),
                         const SizedBox(height: 16),
                         _buildSalesRow(
@@ -556,6 +564,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                           getPercent(data.referralLeads),
                           const Color(0xFFBBDEFB),
                           null,
+                          0,
                         ),
                       ],
                     ),
@@ -606,7 +615,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                       : ListView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          itemCount: data.pendingVerifications.length,
+                          itemCount: min(data.pendingVerifications.length, 3),
                           itemBuilder: (context, index) {
                             final ad = data.pendingVerifications[index];
                             return _buildVerificationCard(
@@ -625,20 +634,35 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                   const SizedBox(height: 30),
 
                   // Recent Deal Closures
-                  Text(
-                    'Recent Deal Closures',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Recent Deal Closures',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminDealsScreen())),
+                        child: Text(
+                          'View All',
+                          style: GoogleFonts.montserrat(
+                            color: primaryBlue,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   data.recentClosures.isNotEmpty
                       ? ListView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          itemCount: data.recentClosures.length,
+                          itemCount: min(data.recentClosures.length, 3),
                           itemBuilder: (context, index) {
                             final closure = data.recentClosures[index];
                             final statusColor = Colors.green;
@@ -794,11 +818,16 @@ class _AdminHomeViewState extends State<AdminHomeView> {
     double percent,
     Color barColor,
     IconData? icon,
+    int tabIndex,
   ) {
     final textColor = Theme.of(context).textTheme.bodyMedium?.color;
     final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
 
-    return Column(
+    return InkWell(
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => LeadManagementScreen(initialIndex: tabIndex)));
+      },
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
@@ -852,6 +881,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
           ),
         ),
       ],
+      ),
     );
   }
 
@@ -999,20 +1029,20 @@ class _AdminHomeViewState extends State<AdminHomeView> {
         }
       },
       child: Container(
-        width: 220,
+        width: 200, // Reduced width
         margin: const EdgeInsets.only(right: 16),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12), // Reduced padding
         decoration: BoxDecoration(
           color: cardColor,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.getBorderColor(context)),
           boxShadow: [
             BoxShadow(
               color: isDark
                   ? Colors.black.withOpacity(0.2)
                   : Colors.black.withOpacity(0.04),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -1022,84 +1052,54 @@ class _AdminHomeViewState extends State<AdminHomeView> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
+                Text(
+                  (lead['created_at'] ?? '').toString().split(' ')[0],
+                  style: GoogleFonts.montserrat(
+                    fontSize: 10,
+                    color: secondaryTextColor,
+                    fontWeight: FontWeight.w500,
                   ),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red.withOpacity(0.2)),
-                  ),
-                  child: Text(
-                    (lead['stage'] ?? 'Pending')
-                        .toString()
-                        .toUpperCase()
-                        .replaceAll('_', ' '),
-                    style: GoogleFonts.montserrat(
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red.shade700,
+                ),
+                GestureDetector(
+                  onTap: () async {
+                    final number = lead['client_number']?.toString();
+                    if (number != null && number.isNotEmpty) {
+                      final Uri url = Uri.parse('tel:$number');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url);
+                      }
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      shape: BoxShape.circle,
                     ),
+                    child: const Icon(Icons.call, size: 14, color: Colors.green),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 8),
             Text(
-              lead['client_name']?.toString() ?? 'Unknown Client',
+              lead['client_name']?.toString() ?? 'Unknown',
               style: GoogleFonts.montserrat(
-                fontSize: 15,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: textColor,
-                letterSpacing: -0.2,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Icon(
-                  Icons.phone_android,
-                  size: 12,
-                  color: primaryBlue.withOpacity(0.7),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  lead['client_number']?.toString() ?? '',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 12,
-                    color: primaryBlue,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-            const Spacer(),
+            const SizedBox(height: 4),
             Text(
-              (lead['created_at'] ?? '').toString().split(' ')[0],
+              lead['client_number']?.toString() ?? '',
               style: GoogleFonts.montserrat(
-                fontSize: 10,
-                color: secondaryTextColor,
-                fontWeight: FontWeight.w500,
+                fontSize: 12,
+                color: primaryBlue,
+                fontWeight: FontWeight.w600,
               ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'HIGH ATTENTION',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.orange.shade800,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                Icon(Icons.arrow_forward_ios, size: 10, color: primaryBlue),
-              ],
             ),
           ],
         ),
@@ -1214,7 +1214,17 @@ class _AdminHomeViewState extends State<AdminHomeView> {
           ),
         ],
       ),
-      child: Row(
+      child: InkWell(
+        onTap: () {
+          if (action.title.toLowerCase().contains("career enquiries")) {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdvisorApplicationsScreen(initialIndex: 1)));
+          } else if (action.title.toLowerCase().contains("kyc approvals")) {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdvisorApplicationsScreen(initialIndex: 0)));
+          } else if (action.title.toLowerCase().contains("deal verification")) {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminDealsScreen(initialVerificationStatus: 'not verified')));
+          }
+        },
+        child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
@@ -1250,6 +1260,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
           ),
           Icon(Icons.chevron_right, color: secondaryTextColor, size: 20),
         ],
+      ),
       ),
     );
   }

@@ -90,6 +90,38 @@ class LeadModel {
       description: json['description']?.toString() ?? '',
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'client_name': clientName,
+      'client_number': clientNumber,
+      'advisor_code': advisorCode,
+      'source': source,
+      'client_age': clientAge,
+      'client_occupation': clientOccupation,
+      'lead_category': leadCategory,
+      'lead_potential': leadPotential,
+      'client_address': clientAddress,
+      'owns_house': ownsHouse,
+      'annual_income': annualIncome,
+      'key_decision_maker': keyDecisionMaker,
+      'is_priority': isPriority,
+      'site_visit_photo': siteVisitPhoto,
+      'stage': stage,
+      'property_id': propertyId,
+      'unit_id': unitId,
+      'call_outcome': callOutCome,
+      'reason': reason,
+      'notes': notes,
+      'reminder': reminder,
+      'meeting_point': meetingPoint,
+      'communication_attempt': communicationAttempt,
+      'created_at': createdAt,
+      'updated_at': updatedAt,
+      'description': description,
+    };
+  }
 }
 
 class AdvisorAssignModel {
