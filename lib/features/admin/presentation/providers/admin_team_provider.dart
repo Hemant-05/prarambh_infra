@@ -65,6 +65,20 @@ class AdminTeamProvider extends ChangeNotifier with ErrorHandlerMixin {
     }
   }
 
+  Future<void> fetchProfileByCode(String code) async {
+    setLoading(true);
+    setError(null);
+    try {
+      _selectedProfile = await repository.getBrokerProfileByCode(code);
+    } catch (e) {
+      debugPrint('Fetch Profile By Code Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
+      _selectedProfile = null;
+    } finally {
+      setLoading(false);
+    }
+  }
+
   Future<bool> updateAdvisorStatus(String advisorId, String status, String reason) async {
     setLoading(true);
     setError(null);

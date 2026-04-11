@@ -8,7 +8,8 @@ class LeadFilterHelper {
     String? query,
     String? category, // 'A', 'B', 'C', 'All'
     String? potential, // 'Hot', 'Warm', 'Cold', 'All'
-    String? month, // 'Jan', 'Feb', etc., or 'All'
+    DateTime? startDate,
+    DateTime? endDate,
     String? attempts, // '0', '1', '2', '3', '4', '5', '5+', or 'All'
   }) {
     return leads.where((lead) {
@@ -31,16 +32,13 @@ class LeadFilterHelper {
         if (lead.leadPotential.toLowerCase() != potential.toLowerCase()) return false;
       }
 
-      // 4. Month Filter
-      if (month != null && month != 'All' && month.isNotEmpty) {
+      // 4. Date Range Filter
+      if (startDate != null || endDate != null) {
         try {
-          // lead.createdAt is usually 'YYYY-MM-DD'
           final date = DateTime.parse(lead.createdAt);
-          final leadMonth = DateFormat('MMM').format(date);
-          if (leadMonth != month) return false;
-        } catch (e) {
-          // If date parsing fails, we skip month filtering for this lead
-        }
+          if (startDate != null && date.isBefore(startDate)) return false;
+          if (endDate != null && date.isAfter(endDate.add(const Duration(days: 1)))) return false;
+        } catch (e) {}
       }
 
       // 5. Communication Attempt Filter
@@ -64,7 +62,8 @@ class LeadFilterHelper {
     String? query,
     String? category,
     String? potential,
-    String? month,
+    DateTime? startDate,
+    DateTime? endDate,
     String? attempts,
   }) {
     return leads.where((leadMap) {
@@ -92,14 +91,14 @@ class LeadFilterHelper {
         if (pot != potential.toLowerCase()) return false;
       }
 
-      // 4. Month
-      if (month != null && month != 'All' && month.isNotEmpty) {
+      // 4. Date Range Filter
+      if (startDate != null || endDate != null) {
         try {
           final dateStr = (lead['created_at'] ?? '').toString();
           if (dateStr.isNotEmpty) {
             final date = DateTime.parse(dateStr);
-            final leadMonth = DateFormat('MMM').format(date);
-            if (leadMonth != month) return false;
+            if (startDate != null && date.isBefore(startDate)) return false;
+            if (endDate != null && date.isAfter(endDate.add(const Duration(days: 1)))) return false;
           }
         } catch (e) {}
       }
@@ -119,11 +118,6 @@ class LeadFilterHelper {
     }).toList();
   }
   
-  static List<String> get months => [
-    'All', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-  ];
-
   static List<String> get attemptOptions => [
     'All', '0', '1', '2', '3', '4', '5', '5+'
   ];

@@ -16,6 +16,18 @@ class AdminTeamRepository {
     } catch (e) { rethrow; }
   }
 
+  Future<BrokerProfileModel> getBrokerProfileByCode(String code) async {
+    try {
+      final response = await apiClient.getAdvisorByCode(code);
+      if (response['status'] == true || response['status'] == 'success') {
+        return BrokerProfileModel.fromJson(response['data']);
+      }
+      throw Exception(response['message'] ?? 'Failed to load advisor by code');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<bool> updateAdvisorStatus(String advisorId, String status, String reason) async {
     try {
       final response = await apiClient.changeAdvisorStatus(advisorId, {

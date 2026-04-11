@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:prarambh_infra/core/utils/ui_helper.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -21,7 +22,8 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedCategory = 'All';
   String _selectedPotential = 'All';
-  String _selectedMonth = 'All';
+  DateTime? _startDate;
+  DateTime? _endDate;
 
   @override
   void dispose() {
@@ -46,7 +48,8 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
       query: _searchController.text,
       category: _selectedCategory,
       potential: _selectedPotential,
-      month: _selectedMonth,
+      startDate: _startDate,
+      endDate: _endDate,
     );
 
     if (leadProvider.hasError) {
@@ -208,37 +211,29 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
           ),
           const SizedBox(height: 12),
           
-          // Quality Filter Row
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildFilterDropdown(
+                _buildFilterChip(
                   'Category',
                   ['All', 'A', 'B', 'C'],
                   _selectedCategory,
-                  (v) => setState(() => _selectedCategory = v!),
+                  (v) => setState(() => _selectedCategory = v),
                   isDark,
                   primaryBlue,
                 ),
                 const SizedBox(width: 8),
-                _buildFilterDropdown(
+                _buildFilterChip(
                   'Potential',
                   ['All', 'Hot', 'Warm', 'Cold'],
                   _selectedPotential,
-                  (v) => setState(() => _selectedPotential = v!),
+                  (v) => setState(() => _selectedPotential = v),
                   isDark,
                   primaryBlue,
                 ),
                 const SizedBox(width: 8),
-                _buildFilterDropdown(
-                  'Month',
-                  LeadFilterHelper.months,
-                  _selectedMonth,
-                  (v) => setState(() => _selectedMonth = v!),
-                  isDark,
-                  primaryBlue,
-                ),
+                _buildDateRangeChip(isDark, primaryBlue),
               ],
             ),
           ),
@@ -247,47 +242,222 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
     );
   }
 
-  Widget _buildFilterDropdown(
+  Widget _buildFilterChip(
     String label,
     List<String> items,
     String selectedValue,
-    ValueChanged<String?> onChanged,
+    Function(String) onSelect,
     bool isDark,
     Color primaryBlue,
   ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: selectedValue != 'All'
-            ? primaryBlue.withOpacity(0.1)
-            : (isDark ? Colors.grey[900] : Colors.grey[100]),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: selectedValue != 'All' ? primaryBlue.withOpacity(0.3) : Colors.transparent,
+    final isActive = selectedValue != 'All';
+    return GestureDetector(
+      onTap: () => _showFilterPicker(label, items, selectedValue, onSelect),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive
+              ? primaryBlue.withOpacity(0.1)
+              : (isDark ? Colors.grey[900] : Colors.grey[100]),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isActive ? primaryBlue.withOpacity(0.5) : Colors.transparent,
+            width: 1,
+          ),
         ),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: selectedValue,
-          onChanged: onChanged,
-          items: items.map((e) {
-            return DropdownMenuItem<String>(
-              value: e,
-              child: Text(
-                e == 'All' ? label : e,
-                style: GoogleFonts.montserrat(
-                  fontSize: 11,
-                  fontWeight: selectedValue == e ? FontWeight.bold : FontWeight.w500,
-                  color: selectedValue == e ? primaryBlue : (isDark ? Colors.white70 : Colors.black87),
-                ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              selectedValue == 'All' ? label : selectedValue,
+              style: GoogleFonts.montserrat(
+                fontSize: 10,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                color: isActive ? primaryBlue : (isDark ? Colors.white70 : Colors.black87),
               ),
-            );
-          }).toList(),
-          icon: const Icon(Icons.keyboard_arrow_down, size: 14),
-          dropdownColor: isDark ? Colors.grey[900] : Colors.white,
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 14,
+              color: isActive ? primaryBlue : Colors.grey,
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  Widget _buildDateRangeChip(bool isDark, Color primaryBlue) {
+    final isActive = _startDate != null || _endDate != null;
+    String label = 'Date Range';
+    if (_startDate != null && _endDate != null) {
+      label = '${DateFormat('dd MMM').format(_startDate!)} - ${DateFormat('dd MMM').format(_endDate!)}';
+    } else if (_startDate != null) {
+      label = 'From ${DateFormat('dd MMM').format(_startDate!)}';
+    } else if (_endDate != null) {
+      label = 'Until ${DateFormat('dd MMM').format(_endDate!)}';
+    }
+
+    return GestureDetector(
+      onTap: _selectDateRange,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive
+              ? primaryBlue.withOpacity(0.1)
+              : (isDark ? Colors.grey[900] : Colors.grey[100]),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isActive ? primaryBlue.withOpacity(0.5) : Colors.transparent,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.montserrat(
+                fontSize: 10,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                color: isActive ? primaryBlue : (isDark ? Colors.white70 : Colors.black87),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              isActive ? Icons.date_range : Icons.calendar_today_outlined,
+              size: 14,
+              color: isActive ? primaryBlue : Colors.grey,
+            ),
+            if (isActive) ...[
+              const SizedBox(width: 4),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _startDate = null;
+                    _endDate = null;
+                  });
+                },
+                child: Icon(Icons.close, size: 14, color: primaryBlue),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showFilterPicker(
+    String label,
+    List<String> items,
+    String selectedValue,
+    Function(String) onSelect,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryBlue = Theme.of(context).primaryColor;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? Colors.grey[900] : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Select $label',
+                style: GoogleFonts.montserrat(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final item = items[index];
+                    final isSelected = item == selectedValue;
+                    return ListTile(
+                      dense: true,
+                      onTap: () {
+                        onSelect(item);
+                        Navigator.pop(context);
+                      },
+                      leading: isSelected
+                          ? Icon(Icons.check_circle, color: primaryBlue, size: 20)
+                          : const Icon(Icons.circle_outlined, color: Colors.grey, size: 20),
+                      title: Text(
+                        item,
+                        style: GoogleFonts.montserrat(
+                          color: isSelected ? primaryBlue : (isDark ? Colors.white70 : Colors.black87),
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                      ),
+                      trailing: isSelected
+                          ? Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: primaryBlue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'Active',
+                                style: GoogleFonts.montserrat(
+                                  color: primaryBlue,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            )
+                          : null,
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _selectDateRange() async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2023),
+      lastDate: DateTime.now().add(const Duration(days: 1)),
+      initialDateRange: _startDate != null && _endDate != null
+          ? DateTimeRange(start: _startDate!, end: _endDate!)
+          : null,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Theme.of(context).primaryColor,
+              primary: Theme.of(context).primaryColor,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        _startDate = picked.start;
+        _endDate = picked.end;
+      });
+    }
   }
 
   Widget _buildPriorityLeadListItem(

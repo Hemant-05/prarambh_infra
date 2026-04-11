@@ -25,6 +25,7 @@ class LeadModel {
   final int communicationAttempt;
   final String createdAt;
   final String updatedAt;
+  final String description;
 
   LeadModel({
     required this.id, required this.clientName, required this.clientNumber,
@@ -36,6 +37,7 @@ class LeadModel {
     required this.reason, required this.notes, required this.reminder,
     required this.meetingPoint, required this.communicationAttempt,
     required this.createdAt, required this.updatedAt,
+    required this.description,
   });
 
   factory LeadModel.fromJson(Map<String, dynamic> json) {
@@ -85,6 +87,7 @@ class LeadModel {
       communicationAttempt: json['communication_attempt'] != null ? int.tryParse(json['communication_attempt'].toString()) ?? 0 : 0,
       createdAt: json['created_at']?.toString().split(' ')[0] ?? '',
       updatedAt: json['updated_at']?.toString().split(' ')[0] ?? '',
+      description: json['description']?.toString() ?? '',
     );
   }
 }

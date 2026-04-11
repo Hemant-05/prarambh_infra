@@ -43,12 +43,7 @@ class _AssignLeadScreenState extends State<AssignLeadScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
 
-    // Generate dynamic tags based on the new database fields
-    List<String> dynamicTags = [
-      widget.lead.source.toUpperCase(),
-      widget.lead.leadCategory.toUpperCase(),
-      widget.lead.stage.toUpperCase(),
-    ];
+    // No dynamic tags needed
 
     return Scaffold(
       backgroundColor: isDark
@@ -80,99 +75,67 @@ class _AssignLeadScreenState extends State<AssignLeadScreen> {
           // --- Lead Info Header ---
           Container(
             color: isDark ? Colors.grey[900] : Colors.white,
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[50],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.person_outline,
+                    Text(
+                      widget.lead.clientName,
+                      style: GoogleFonts.montserrat(
                         color: primaryBlue,
-                        size: 30,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.lead.clientName,
-                            style: GoogleFonts.montserrat(
-                              color: primaryBlue,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '+91 ${widget.lead.clientNumber} • ${widget.lead.isPriority ? "HOT LEAD" : "STANDARD"}',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 12,
-                              color: widget.lead.isPriority
-                                  ? Colors.red
-                                  : Colors.grey[600],
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                    Text(
+                      '+91 ${widget.lead.clientNumber}',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
+                    if (widget.lead.description.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.lead.description,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 11,
+                          color: primaryBlue.withOpacity(0.7),
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
-                const SizedBox(height: 16),
-      
-                // Dynamic Tags
-                Row(
-                  children: dynamicTags
-                      .map(
-                        (tag) => Container(
-                          margin: const EdgeInsets.only(right: 8),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            tag,
-                            style: GoogleFonts.montserrat(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
-                const SizedBox(height: 20),
-      
+                const SizedBox(height: 12),
+
                 // Search Bar
                 TextField(
                   controller: _searchController,
+                  style: GoogleFonts.montserrat(fontSize: 13),
                   decoration: InputDecoration(
-                    hintText: 'Search advisors by name or code...',
+                    hintText: 'Search advisor name and code',
                     hintStyle: GoogleFonts.montserrat(
                       color: Colors.grey[400],
-                      fontSize: 14,
+                      fontSize: 12,
+                    ),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
                     ),
                     prefixIcon: const Icon(
                       Icons.search,
                       color: Colors.grey,
+                      size: 20,
                     ),
                     filled: true,
-                    fillColor: Colors.grey[50],
+                    fillColor: isDark ? Colors.black26 : Colors.grey[50],
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide.none,
@@ -182,39 +145,25 @@ class _AssignLeadScreenState extends State<AssignLeadScreen> {
               ],
             ),
           ),
-      
+
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'AVAILABLE ADVISORS',
                   style: GoogleFonts.montserrat(
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: FontWeight.bold,
                     color: Colors.grey[600],
                     letterSpacing: 1,
                   ),
                 ),
-                Row(
-                  children: [
-                    Icon(Icons.filter_list, size: 14, color: primaryBlue),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Filter',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: primaryBlue,
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
-      
+
           // --- Advisors List ---
           Expanded(
             child:
@@ -222,29 +171,23 @@ class _AssignLeadScreenState extends State<AssignLeadScreen> {
                   AdminLeadProvider,
                   ({bool isLoading, List<AdvisorAssignModel> advisors})
                 >(
-                  selector: (_, p) => (
-                    isLoading: p.isLoading,
-                    advisors: p.availableAdvisors,
-                  ),
+                  selector: (_, p) =>
+                      (isLoading: p.isLoading, advisors: p.availableAdvisors),
                   builder: (context, data, _) {
                     if (data.isLoading) {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
+                      return const Center(child: CircularProgressIndicator());
                     }
-      
+
                     // Filter advisors based on search query AND exclude Admin
                     final filteredAdvisors = data.advisors.where((a) {
                       final matchesSearch =
                           _searchQuery.isEmpty ||
                           a.name.toLowerCase().contains(_searchQuery) ||
-                          a.advisorCode.toLowerCase().contains(
-                            _searchQuery,
-                          );
+                          a.advisorCode.toLowerCase().contains(_searchQuery);
                       return matchesSearch &&
                           a.advisorCode.toLowerCase() != 'admin001';
                     }).toList();
-      
+
                     if (filteredAdvisors.isEmpty) {
                       return Center(
                         child: Text(
@@ -253,7 +196,7 @@ class _AssignLeadScreenState extends State<AssignLeadScreen> {
                         ),
                       );
                     }
-      
+
                     return ListView.separated(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
@@ -268,40 +211,64 @@ class _AssignLeadScreenState extends State<AssignLeadScreen> {
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           child: Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
                             children: [
-                              Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    advisor.name,
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: textColor,
+                              CircleAvatar(
+                                radius: 22,
+                                backgroundColor: primaryBlue.withOpacity(0.1),
+                                backgroundImage: _isValidImage(advisor.profile)
+                                    ? NetworkImage(
+                                        _getImageUrl(advisor.profile),
+                                      )
+                                    : null,
+                                child: !_isValidImage(advisor.profile)
+                                    ? Icon(
+                                        Icons.person,
+                                        color: primaryBlue,
+                                        size: 24,
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      advisor.name,
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: textColor,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.people_outline,
-                                        size: 12,
-                                        color: Colors.grey[500],
+                                    Text(
+                                      advisor.advisorCode,
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: primaryBlue,
                                       ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${advisor.activeLeads} Leads',
-                                        style: GoogleFonts.montserrat(
-                                          fontSize: 11,
-                                          color: Colors.grey[600],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.people_outline,
+                                          size: 11,
+                                          color: Colors.grey[500],
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '${advisor.activeLeads} Active Leads',
+                                          style: GoogleFonts.montserrat(
+                                            fontSize: 10,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                               Selector<AdminLeadProvider, bool>(
                                 selector: (_, p) => p.isSaving,
@@ -310,24 +277,26 @@ class _AssignLeadScreenState extends State<AssignLeadScreen> {
                                     onPressed: isSaving
                                         ? null
                                         : () async {
+                                            final messenger =
+                                                ScaffoldMessenger.of(context);
+                                            final navigator =
+                                                Navigator.of(context);
                                             final provider = context
                                                 .read<AdminLeadProvider>();
                                             final success = await provider
                                                 .assignLeadToAdvisor(
-                                                  widget.lead.id,
-                                                  advisor.advisorCode,
-                                                );
+                                              widget.lead.id,
+                                              advisor.advisorCode,
+                                            );
                                             if (success) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
+                                              messenger.showSnackBar(
                                                 SnackBar(
                                                   content: Text(
                                                     'Lead assigned to ${advisor.name}',
                                                   ),
                                                 ),
                                               );
-                                              Navigator.pop(context);
+                                              navigator.pop();
                                             }
                                           },
                                     style: ElevatedButton.styleFrom(
@@ -336,20 +305,17 @@ class _AssignLeadScreenState extends State<AssignLeadScreen> {
                                         horizontal: 20,
                                       ),
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          6,
-                                        ),
+                                        borderRadius: BorderRadius.circular(6),
                                       ),
                                     ),
                                     child: isSaving
                                         ? const SizedBox(
                                             height: 15,
                                             width: 15,
-                                            child:
-                                                CircularProgressIndicator(
-                                                  color: Colors.white,
-                                                  strokeWidth: 2,
-                                                ),
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2,
+                                            ),
                                           )
                                         : Text(
                                             'Assign',
@@ -373,5 +339,19 @@ class _AssignLeadScreenState extends State<AssignLeadScreen> {
         ],
       ),
     );
+  }
+
+  bool _isValidImage(String profile) {
+    if (profile.isEmpty) return false;
+    final lower = profile.toLowerCase();
+    return lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.png') ||
+        lower.endsWith('.webp');
+  }
+
+  String _getImageUrl(String profile) {
+    if (profile.startsWith('http')) return profile;
+    return "https://workiees.com/${profile.startsWith('/') ? profile.substring(1) : profile}";
   }
 }

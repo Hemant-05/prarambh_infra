@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/widgets/back_button.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_lead_provider.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_profile_provider.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_unit_details_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
@@ -20,9 +23,9 @@ import '../../../admin/presentation/providers/admin_project_provider.dart';
 import '../../../admin/presentation/providers/admin_deal_provider.dart';
 import '../../../admin/presentation/screens/deal_management_screen.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../advisor/presentation/providers/advisor_profile_provider.dart';
-import 'advisor_unit_details_screen.dart';
-import '../providers/advisor_lead_provider.dart';
+import '../../../advisor/data/models/advisor_profile_model.dart';
+import '../../../admin/presentation/screens/advisor_profile_screen.dart'
+    as admin;
 import '../../../advisor/presentation/screens/lead_notes_full_screen.dart';
 
 class LeadDetailsScreen extends StatefulWidget {
@@ -44,6 +47,7 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
   late String currentStage;
   late int attemptCounter;
   String? rejectionReason;
+  bool _isLoading = false;
 
   // Priority toggle
   late bool _isPriorityToggle;
@@ -129,7 +133,7 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
         try {
           final provider = context.read<AdminProjectProvider>();
           final unit = await provider.getUnitDetails(selectedUnitId.toString());
-
+          
           ProjectModel? proj;
           try {
             proj = await provider.getProjectDetails(unit.projectId.toString());
@@ -161,12 +165,15 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
           debugPrint('Error fetching property data: $e');
         }
       }
-      
+
       if (currentStage == "completed" || currentStage == "close") {
-       WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Optimized: Fetch ONLY the deal for this specific lead
-      context.read<AdminDealProvider>().fetchDealByLeadId(widget.lead.id.toString());
-    });  }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          // Optimized: Fetch ONLY the deal for this specific lead
+          context.read<AdminDealProvider>().fetchDealByLeadId(
+            widget.lead.id.toString(),
+          );
+        });
+      }
     });
   }
 
@@ -560,6 +567,26 @@ Please feel free to contact us for more information.""";
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (widget.isAdmin && widget.lead.advisorCode.isNotEmpty) ...[
+                  Consumer<AdvisorProfileProvider>(
+                    builder: (context, profileProvider, _) {
+                      if (profileProvider.isLoading) {
+                        return _buildAdvisorSkeleton(cardColor);
+                      }
+                      if (profileProvider.profile != null) {
+                        return _buildAdvisorInfoCard(
+                          profileProvider.profile!,
+                          cardColor,
+                          primaryBlue,
+                          textColor,
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                ],
+
                 if (currentStage == "completed" || currentStage == "close")
                   Column(
                     children: [
@@ -584,7 +611,7 @@ Please feel free to contact us for more information.""";
 
                 // Unified Sections: Property & Notes (Shown if property exists or for all stages)
                 if (selectedPropertyId != null)
-                _buildClickablePropertyCard(selectedProperty!),
+                  _buildClickablePropertyCard(selectedProperty!),
 
                 _buildNoteHistorySection(),
                 const SizedBox(height: 24),
@@ -738,7 +765,6 @@ Please feel free to contact us for more information.""";
     }
   }
 
-
   // ======================================================================
   // NEW SITE VISIT FEATURES: PHOTO & LOCATION
   // ======================================================================
@@ -836,7 +862,7 @@ Please feel free to contact us for more information.""";
     );
   }
 
-  bool _isLoading = false;
+  // bool _isLoading = false;
 
   // ======================================================================
   // VISUAL COMPONENTS
@@ -1224,6 +1250,236 @@ Please feel free to contact us for more information.""";
     );
   }
 
+  Widget _buildAdvisorInfoCard(
+    AdvisorProfileModel profile,
+    Color cardColor,
+    Color primaryBlue,
+    Color textColor,
+  ) {
+    return InkWell(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              admin.AdvisorProfileScreen(advisorId: profile.advisorCode),
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: primaryBlue.withOpacity(0.1),
+                    backgroundImage: profile.profilePhoto.isNotEmpty
+                        ? NetworkImage(profile.profilePhoto)
+                        : null,
+                    child: profile.profilePhoto.isEmpty
+                        ? Icon(Icons.person, color: primaryBlue, size: 28)
+                        : null,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          profile.fullName,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: primaryBlue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                profile.advisorCode,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryBlue,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              profile.designation,
+                              style: GoogleFonts.montserrat(
+                                fontSize: 11,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 14,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(width: 8),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () async {
+                        final Uri telUri = Uri.parse('tel:${profile.phone}');
+                        if (await canLaunchUrl(telUri)) {
+                          await launchUrl(telUri);
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.call,
+                          color: Colors.green,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Divider(height: 1, color: Colors.grey.shade200),
+            Theme(
+              data: Theme.of(
+                context,
+              ).copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                initiallyExpanded: false,
+                title: Text(
+                  'ADVISOR DETAILS',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[600],
+                    letterSpacing: 1,
+                  ),
+                ),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      left: 20,
+                      right: 20,
+                      bottom: 20,
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildInfoItem(
+                                'Advisor Type',
+                                profile.advisorType,
+                                textColor,
+                                icon: Icons.badge_outlined,
+                              ),
+                            ),
+                            Expanded(
+                              child: _buildInfoItem(
+                                'Slab Rate',
+                                '₹ ${double.tryParse(profile.slab)?.toStringAsFixed(0) ?? profile.slab}',
+                                textColor,
+                                icon: Icons.percent,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildInfoItem(
+                          'Contact Number',
+                          '+91 ${profile.phone}',
+                          textColor,
+                          icon: Icons.phone_android,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdvisorSkeleton(Color cardColor) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(radius: 28, backgroundColor: Colors.grey.shade100),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: 16,
+                  width: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 12,
+                  width: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCircleAction(IconData icon, Color color) => Container(
     padding: const EdgeInsets.all(10),
     decoration: BoxDecoration(color: color, shape: BoxShape.circle),
@@ -1582,7 +1838,9 @@ Please feel free to contact us for more information.""";
             width: double.infinity,
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: isDark ? Colors.green.withOpacity(0.1) : Colors.green.shade50,
+              color: isDark
+                  ? Colors.green.withOpacity(0.1)
+                  : Colors.green.shade50,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.green.withOpacity(0.3)),
             ),
@@ -1603,7 +1861,9 @@ Please feel free to contact us for more information.""";
                   style: GoogleFonts.montserrat(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.green.shade300 : Colors.green.shade800,
+                    color: isDark
+                        ? Colors.green.shade300
+                        : Colors.green.shade800,
                   ),
                 ),
               ],
@@ -1623,13 +1883,13 @@ Please feel free to contact us for more information.""";
 
     double totalAmt = double.tryParse(deal.paymentAmount ?? '0') ?? 0;
     double paidAmt = 0;
-    
+
     for (var inst in deal.installments) {
       if (inst['status'] == 'Paid') {
         paidAmt += double.tryParse(inst['amount']?.toString() ?? '0') ?? 0;
       }
     }
-    
+
     double progress = totalAmt > 0 ? (paidAmt / totalAmt) : 0;
 
     return Container(
@@ -1669,30 +1929,37 @@ Please feel free to contact us for more information.""";
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
-                  color: deal.stage == 'close' 
-                      ? Colors.green.withOpacity(0.1) 
-                      : (deal.stage == 'ongoing' ? Colors.blue.withOpacity(0.1) : Colors.orange.withOpacity(0.1)),
+                  color: deal.stage == 'close'
+                      ? Colors.green.withOpacity(0.1)
+                      : (deal.stage == 'ongoing'
+                            ? Colors.blue.withOpacity(0.1)
+                            : Colors.orange.withOpacity(0.1)),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  deal.stage == 'close' 
-                      ? 'FULLY PAID' 
+                  deal.stage == 'close'
+                      ? 'FULLY PAID'
                       : (deal.stage == 'ongoing' ? 'ONGOING' : 'PENDING'),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: deal.stage == 'close' 
-                        ? Colors.green 
-                        : (deal.stage == 'ongoing' ? Colors.blue : Colors.orange),
+                    color: deal.stage == 'close'
+                        ? Colors.green
+                        : (deal.stage == 'ongoing'
+                              ? Colors.blue
+                              : Colors.orange),
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          
+
           // Progress Bar
           Text(
             "Payment Progress",
@@ -1718,16 +1985,23 @@ Please feel free to contact us for more information.""";
             children: [
               Text(
                 "Paid: ₹${paidAmt.toStringAsFixed(0)}",
-                style: const TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Text(
                 "Total: ₹${totalAmt.toStringAsFixed(0)}",
-                style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey[600]),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.white54 : Colors.grey[600],
+                ),
               ),
             ],
           ),
           const SizedBox(height: 24),
-          
+
           // Installments Details
           Text(
             "Installment Plan",
@@ -1741,7 +2015,10 @@ Please feel free to contact us for more information.""";
           if (deal.installments.isEmpty)
             Text(
               "No installment plan generated yet.",
-              style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey[600]),
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? Colors.white54 : Colors.grey[600],
+              ),
             )
           else
             ListView.builder(
@@ -1757,14 +2034,20 @@ Please feel free to contact us for more information.""";
                   decoration: BoxDecoration(
                     color: isDark ? Colors.grey[850] : Colors.grey[50],
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: isPaid ? Colors.green.withOpacity(0.3) : Colors.orange.withOpacity(0.3)),
+                    border: Border.all(
+                      color: isPaid
+                          ? Colors.green.withOpacity(0.3)
+                          : Colors.orange.withOpacity(0.3),
+                    ),
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: isPaid ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                          color: isPaid
+                              ? Colors.green.withOpacity(0.1)
+                              : Colors.orange.withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -1791,14 +2074,19 @@ Please feel free to contact us for more information.""";
                               "Due Date: ${inst['date']}",
                               style: TextStyle(
                                 fontSize: 11,
-                                color: isDark ? Colors.white60 : Colors.grey[600],
+                                color: isDark
+                                    ? Colors.white60
+                                    : Colors.grey[600],
                               ),
                             ),
                           ],
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: isPaid ? Colors.green : Colors.orange,
                           borderRadius: BorderRadius.circular(8),
@@ -2126,8 +2414,8 @@ Please feel free to contact us for more information.""";
             style: ElevatedButton.styleFrom(
               backgroundColor:
                   (!widget.isAdmin && _currentLead.siteVisitPhoto.isEmpty)
-                      ? Colors.grey
-                      : Colors.green,
+                  ? Colors.grey
+                  : Colors.green,
             ),
             child: const Text(
               "Visit Successful - Proceed to Booking",
@@ -3962,23 +4250,24 @@ class _EditLeadFormState extends State<_EditLeadForm> {
                                 "client_address": _addressCtrl.text,
                                 "owns_house": _ownsHouse == 'Yes' ? 1 : 0,
                                 "annual_income": _incomeCtrl.text,
-                                "key_decision_maker":
-                                    _decisionMaker == 'Yes' ? 1 : 0,
+                                "key_decision_maker": _decisionMaker == 'Yes'
+                                    ? 1
+                                    : 0,
                               };
 
                               bool success = false;
                               try {
                                 if (widget.isAdmin) {
-                                  final provider =
-                                      context.read<AdminLeadProvider>();
+                                  final provider = context
+                                      .read<AdminLeadProvider>();
                                   success = await provider.updateLeadStage(
                                     widget.lead.id,
                                     widget.lead.stage,
                                     extraData: data,
                                   );
                                 } else {
-                                  final provider =
-                                      context.read<AdvisorLeadProvider>();
+                                  final provider = context
+                                      .read<AdvisorLeadProvider>();
                                   final advisorCode =
                                       context
                                           .read<AuthProvider>()
@@ -4008,6 +4297,7 @@ class _EditLeadFormState extends State<_EditLeadForm> {
                                   leadCategory: _category,
                                   leadPotential: _potential,
                                   clientAddress: _addressCtrl.text,
+                                  description: widget.lead.description,
                                   ownsHouse: _ownsHouse,
                                   annualIncome: _incomeCtrl.text,
                                   keyDecisionMaker: _decisionMaker == 'Yes',
@@ -4047,20 +4337,20 @@ class _EditLeadFormState extends State<_EditLeadForm> {
                       ),
                       child: _isSaving
                           ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
                           : const Text(
-                            'Save Changes',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                              'Save Changes',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -4253,7 +4543,7 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryBlue = AppColors.getPrimaryBlue(context);
-    
+
     // Create a list with "Select All" or similar if needed, or just handle null
     final dropdownOptions = ['Select', ...options];
     final displayValue = selected ?? 'Select';
@@ -4283,7 +4573,11 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
             child: DropdownButton<String>(
               value: displayValue,
               isExpanded: true,
-              icon: Icon(Icons.keyboard_arrow_down, size: 16, color: primaryBlue),
+              icon: Icon(
+                Icons.keyboard_arrow_down,
+                size: 16,
+                color: primaryBlue,
+              ),
               dropdownColor: isDark ? Colors.grey[900] : Colors.white,
               style: TextStyle(
                 fontSize: 11,
@@ -4313,7 +4607,7 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
     final primaryBlue = AppColors.getPrimaryBlue(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
-    
+
     // Determine sidebar width: fixed 280 on wide, 35% on narrow
     final sidebarWidth = screenWidth > 800 ? 280.0 : screenWidth * 0.38;
 
@@ -4376,12 +4670,16 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
                       decoration: BoxDecoration(
                         border: Border(
                           right: BorderSide(
-                            color: isDark ? Colors.grey[800]! : Colors.grey.shade200,
+                            color: isDark
+                                ? Colors.grey[800]!
+                                : Colors.grey.shade200,
                           ),
                         ),
                       ),
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(12), // Reduced padding for compactness
+                        padding: const EdgeInsets.all(
+                          12,
+                        ), // Reduced padding for compactness
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -4404,7 +4702,10 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
                                       _selectedType = null;
                                       _selectedCategory = null;
                                       _selectedFacing = null;
-                                      _priceRange = const RangeValues(0, 10000000);
+                                      _priceRange = const RangeValues(
+                                        0,
+                                        10000000,
+                                      );
                                       _areaRange = const RangeValues(0, 10000);
                                       _isHighValueOnly = false;
                                       _searchQuery = '';
@@ -4418,15 +4719,19 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
                               ],
                             ),
                             const SizedBox(height: 12),
-                            
+
                             // Search in Sidebar
                             Container(
                               decoration: BoxDecoration(
-                                color: isDark ? Colors.grey[850] : Colors.grey.shade100,
+                                color: isDark
+                                    ? Colors.grey[850]
+                                    : Colors.grey.shade100,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: TextField(
-                                onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
+                                onChanged: (v) => setState(
+                                  () => _searchQuery = v.toLowerCase(),
+                                ),
                                 style: TextStyle(
                                   color: isDark ? Colors.white : Colors.black87,
                                   fontSize: 12,
@@ -4435,7 +4740,9 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
                                   hintText: 'Search...',
                                   prefixIcon: Icon(Icons.search, size: 16),
                                   border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(vertical: 8),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
                                 ),
                               ),
                             ),
@@ -4445,31 +4752,40 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
                               'Configuration',
                               _configs,
                               _selectedConfig,
-                              (v) => setState(() => _selectedConfig = v == 'None' ? null : v),
+                              (v) => setState(
+                                () => _selectedConfig = v == 'None' ? null : v,
+                              ),
                             ),
                             const SizedBox(height: 12),
                             _buildFilterSection(
                               'Type',
                               _types,
                               _selectedType,
-                              (v) => setState(() => _selectedType = v == 'None' ? null : v),
+                              (v) => setState(
+                                () => _selectedType = v == 'None' ? null : v,
+                              ),
                             ),
                             const SizedBox(height: 12),
                             _buildFilterSection(
                               'Sale',
                               _categories,
                               _selectedCategory,
-                              (v) => setState(() => _selectedCategory = v == 'None' ? null : v),
+                              (v) => setState(
+                                () =>
+                                    _selectedCategory = v == 'None' ? null : v,
+                              ),
                             ),
                             const SizedBox(height: 12),
                             _buildFilterSection(
                               'Facing',
                               _facings,
                               _selectedFacing,
-                              (v) => setState(() => _selectedFacing = v == 'None' ? null : v),
+                              (v) => setState(
+                                () => _selectedFacing = v == 'None' ? null : v,
+                              ),
                             ),
                             const SizedBox(height: 16),
-                            
+
                             Text(
                               'Price Range',
                               style: TextStyle(
@@ -4494,11 +4810,15 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
                               max: 10000000,
                               divisions: 50,
                               activeColor: primaryBlue,
-                              onChanged: _isHighValueOnly ? null : (v) => setState(() => _priceRange = v),
+                              onChanged: _isHighValueOnly
+                                  ? null
+                                  : (v) => setState(() => _priceRange = v),
                             ),
-                            
+
                             InkWell(
-                              onTap: () => setState(() => _isHighValueOnly = !_isHighValueOnly),
+                              onTap: () => setState(
+                                () => _isHighValueOnly = !_isHighValueOnly,
+                              ),
                               child: Row(
                                 children: [
                                   SizedBox(
@@ -4506,11 +4826,16 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
                                     width: 24,
                                     child: Checkbox(
                                       value: _isHighValueOnly,
-                                      onChanged: (v) => setState(() => _isHighValueOnly = v ?? false),
+                                      onChanged: (v) => setState(
+                                        () => _isHighValueOnly = v ?? false,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 4),
-                                  const Text('1Cr+', style: TextStyle(fontSize: 10)),
+                                  const Text(
+                                    '1Cr+',
+                                    style: TextStyle(fontSize: 10),
+                                  ),
                                 ],
                               ),
                             ),
@@ -4556,8 +4881,12 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
                               itemBuilder: (context, i) {
                                 final project = provider.projects[i];
                                 if (_searchQuery.isNotEmpty &&
-                                    !project.projectName.toLowerCase().contains(_searchQuery) &&
-                                    !project.city.toLowerCase().contains(_searchQuery)) {
+                                    !project.projectName.toLowerCase().contains(
+                                      _searchQuery,
+                                    ) &&
+                                    !project.city.toLowerCase().contains(
+                                      _searchQuery,
+                                    )) {
                                   return const SizedBox.shrink();
                                 }
                                 return _ProjectCard(
@@ -4568,16 +4897,18 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
                                   unitFilter: _unitMatchesFilters,
                                   onSelectUnit: (unit) async {
                                     // Navigate to Unit Details first
-                                    final bool? selected = await Navigator.push<bool>(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => AdvisorUnitDetailsScreen(
-                                          unit: unit,
-                                          project: project,
-                                          isSelectionMode: true,
-                                        ),
-                                      ),
-                                    );
+                                    final bool? selected =
+                                        await Navigator.push<bool>(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                AdvisorUnitDetailsScreen(
+                                                  unit: unit,
+                                                  project: project,
+                                                  isSelectionMode: true,
+                                                ),
+                                          ),
+                                        );
 
                                     // If unit was selected from details screen
                                     if (selected == true) {

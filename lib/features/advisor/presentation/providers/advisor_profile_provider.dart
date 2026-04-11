@@ -18,13 +18,35 @@ class AdvisorProfileProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
 
+  void clearProfile() {
+    _profile = null;
+    _isLoading = false;
+    notifyListeners();
+  }
+
   Future<void> fetchProfile(String advisorId) async {
+    _profile = null;
     _isLoading = true;
     notifyListeners();
     try {
       _profile = await repository.getAdvisorProfile(advisorId);
     } catch (e) {
       debugPrint('Fetch Advisor Profile Error: $e');
+      _profile = null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchProfileByCode(String code) async {
+    _profile = null;
+    _isLoading = true;
+    notifyListeners();
+    try {
+      _profile = await repository.getAdvisorByCode(code);
+    } catch (e) {
+      debugPrint('Fetch Advisor By Code Error: $e');
       _profile = null;
     } finally {
       _isLoading = false;

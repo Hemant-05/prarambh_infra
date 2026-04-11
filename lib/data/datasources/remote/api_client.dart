@@ -80,6 +80,9 @@ abstract class ApiClient {
   @GET("/advisor/{id}")
   Future<dynamic> getSingleAdvisor(@Path("id") String id);
 
+  @GET("/advisor/code/{code}")
+  Future<dynamic> getAdvisorByCode(@Path("code") String code);
+
   @GET("/advisor/profile/{id}")
   Future<dynamic> getAdvisorProfile(@Path("id") String id);
 

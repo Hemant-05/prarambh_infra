@@ -10,11 +10,23 @@ class AdvisorProfileRepository {
 
   Future<AdvisorProfileModel> getAdvisorProfile(String advisorId) async {
     try {
-      final response = await apiClient.getSingleAdvisor(advisorId);
+      final response = await apiClient.getAdvisorProfile(advisorId);
       if (response['status'] == true || response['status'] == 'success') {
         return AdvisorProfileModel.fromJson(response['data']);
       }
       throw Exception(response['message'] ?? 'Failed to load profile details');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<AdvisorProfileModel> getAdvisorByCode(String code) async {
+    try {
+      final response = await apiClient.getAdvisorByCode(code);
+      if (response['status'] == true || response['status'] == 'success') {
+        return AdvisorProfileModel.fromJson(response['data']);
+      }
+      throw Exception(response['message'] ?? 'Failed to load advisor by code');
     } catch (e) {
       rethrow;
     }

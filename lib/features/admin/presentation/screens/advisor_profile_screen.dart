@@ -26,7 +26,12 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AdminTeamProvider>().fetchProfile(widget.advisorId);
+      final id = widget.advisorId;
+      if (id.startsWith('PIA') || id.startsWith('admin')) {
+        context.read<AdminTeamProvider>().fetchProfileByCode(id);
+      } else {
+        context.read<AdminTeamProvider>().fetchProfile(id);
+      }
     });
   }
 

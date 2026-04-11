@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_lead_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/assign_lead_screen.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_profile_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -24,8 +26,9 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
   final TextEditingController _searchController = TextEditingController();
   String _selectedCategory = 'All';
   String _selectedPotential = 'All';
-  String _selectedMonth = 'All';
   String _selectedAttempts = 'All';
+  DateTime? _startDate;
+  DateTime? _endDate;
 
   @override
   void initState() {
@@ -62,10 +65,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
         backgroundColor: isDark ? Theme.of(context).cardColor : primaryBlue,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.white,
-          ),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -78,10 +78,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
         ),
         actions: [
           IconButton(
-            icon: const Icon(
-              Icons.refresh,
-              color: Colors.white,
-            ),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: () {
               context.read<AdminLeadProvider>().fetchUnassignedLeads();
               context.read<AdminLeadProvider>().fetchLeads();
@@ -126,7 +123,8 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                           query: _searchController.text,
                           category: _selectedCategory,
                           potential: _selectedPotential,
-                          month: _selectedMonth,
+                          startDate: _startDate,
+                          endDate: _endDate,
                           attempts: _selectedAttempts,
                         ),
                         cardColor,
@@ -141,26 +139,14 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                               query: _searchController.text,
                               category: _selectedCategory,
                               potential: _selectedPotential,
-                              month: _selectedMonth,
-                              attempts: _selectedAttempts,
-                            )
-                            .where((l) => l.stage.toLowerCase() == 'suspecting')
-                            .toList(),
-                        cardColor,
-                        primaryBlue,
-                        isDark,
-                      ),
-                      _buildStageList(
-                        LeadFilterHelper.filterLeads(
-                              leads: provider.leads,
-                              query: _searchController.text,
-                              category: _selectedCategory,
-                              potential: _selectedPotential,
-                              month: _selectedMonth,
+                              startDate: _startDate,
+                              endDate: _endDate,
                               attempts: _selectedAttempts,
                             )
                             .where(
-                              (l) => l.stage.toLowerCase() == 'prospecting',
+                              (l) =>
+                                  l.stage.toLowerCase() == 'suspecting' &&
+                                  l.advisorCode.isNotEmpty,
                             )
                             .toList(),
                         cardColor,
@@ -173,10 +159,15 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                               query: _searchController.text,
                               category: _selectedCategory,
                               potential: _selectedPotential,
-                              month: _selectedMonth,
+                              startDate: _startDate,
+                              endDate: _endDate,
                               attempts: _selectedAttempts,
                             )
-                            .where((l) => l.stage.toLowerCase() == 'site visit')
+                            .where(
+                              (l) =>
+                                  l.stage.toLowerCase() == 'prospecting' &&
+                                  l.advisorCode.isNotEmpty,
+                            )
                             .toList(),
                         cardColor,
                         primaryBlue,
@@ -188,10 +179,15 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                               query: _searchController.text,
                               category: _selectedCategory,
                               potential: _selectedPotential,
-                              month: _selectedMonth,
+                              startDate: _startDate,
+                              endDate: _endDate,
                               attempts: _selectedAttempts,
                             )
-                            .where((l) => l.stage.toLowerCase() == 'booking')
+                            .where(
+                              (l) =>
+                                  l.stage.toLowerCase() == 'site visit' &&
+                                  l.advisorCode.isNotEmpty,
+                            )
                             .toList(),
                         cardColor,
                         primaryBlue,
@@ -203,10 +199,15 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                               query: _searchController.text,
                               category: _selectedCategory,
                               potential: _selectedPotential,
-                              month: _selectedMonth,
+                              startDate: _startDate,
+                              endDate: _endDate,
                               attempts: _selectedAttempts,
                             )
-                            .where((l) => l.stage.toLowerCase() == 'closed')
+                            .where(
+                              (l) =>
+                                  l.stage.toLowerCase() == 'booking' &&
+                                  l.advisorCode.isNotEmpty,
+                            )
                             .toList(),
                         cardColor,
                         primaryBlue,
@@ -218,10 +219,35 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                               query: _searchController.text,
                               category: _selectedCategory,
                               potential: _selectedPotential,
-                              month: _selectedMonth,
+                              startDate: _startDate,
+                              endDate: _endDate,
                               attempts: _selectedAttempts,
                             )
-                            .where((l) => l.stage.toLowerCase() == 'completed')
+                            .where(
+                              (l) =>
+                                  l.stage.toLowerCase() == 'closed' &&
+                                  l.advisorCode.isNotEmpty,
+                            )
+                            .toList(),
+                        cardColor,
+                        primaryBlue,
+                        isDark,
+                      ),
+                      _buildStageList(
+                        LeadFilterHelper.filterLeads(
+                              leads: provider.leads,
+                              query: _searchController.text,
+                              category: _selectedCategory,
+                              potential: _selectedPotential,
+                              startDate: _startDate,
+                              endDate: _endDate,
+                              attempts: _selectedAttempts,
+                            )
+                            .where(
+                              (l) =>
+                                  l.stage.toLowerCase() == 'completed' &&
+                                  l.advisorCode.isNotEmpty,
+                            )
                             .toList(),
                         cardColor,
                         primaryBlue,
@@ -303,15 +329,6 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                 ),
                 const SizedBox(width: 8),
                 _buildFilterChip(
-                  'Month',
-                  LeadFilterHelper.months,
-                  _selectedMonth,
-                  (v) => setState(() => _selectedMonth = v),
-                  isDark,
-                  primaryBlue,
-                ),
-                const SizedBox(width: 8),
-                _buildFilterChip(
                   'Attempts',
                   LeadFilterHelper.attemptOptions,
                   _selectedAttempts,
@@ -319,12 +336,106 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                   isDark,
                   primaryBlue,
                 ),
+                const SizedBox(width: 8),
+                _buildDateRangeChip(isDark, primaryBlue),
               ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildDateRangeChip(bool isDark, Color primaryBlue) {
+    final isActive = _startDate != null || _endDate != null;
+    String label = 'Date Range';
+    if (_startDate != null && _endDate != null) {
+      label =
+          '${DateFormat('dd MMM').format(_startDate!)} - ${DateFormat('dd MMM').format(_endDate!)}';
+    } else if (_startDate != null) {
+      label = 'From ${DateFormat('dd MMM').format(_startDate!)}';
+    } else if (_endDate != null) {
+      label = 'Until ${DateFormat('dd MMM').format(_endDate!)}';
+    }
+
+    return GestureDetector(
+      onTap: _selectDateRange,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive
+              ? primaryBlue.withOpacity(0.1)
+              : (isDark ? Colors.grey[900] : Colors.grey[100]),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isActive ? primaryBlue.withOpacity(0.5) : Colors.transparent,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.montserrat(
+                fontSize: 10,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                color: isActive
+                    ? primaryBlue
+                    : (isDark ? Colors.white70 : Colors.black87),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              isActive ? Icons.date_range : Icons.calendar_today_outlined,
+              size: 14,
+              color: isActive ? primaryBlue : Colors.grey,
+            ),
+            if (isActive) ...[
+              const SizedBox(width: 4),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _startDate = null;
+                    _endDate = null;
+                  });
+                },
+                child: Icon(Icons.close, size: 14, color: primaryBlue),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selectDateRange() async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2023),
+      lastDate: DateTime.now().add(const Duration(days: 1)),
+      initialDateRange: _startDate != null && _endDate != null
+          ? DateTimeRange(start: _startDate!, end: _endDate!)
+          : null,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: AppColors.getPrimaryBlue(context),
+              primary: AppColors.getPrimaryBlue(context),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        _startDate = picked.start;
+        _endDate = picked.end;
+      });
+    }
   }
 
   Widget _buildFilterChip(
@@ -358,7 +469,9 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
               style: GoogleFonts.montserrat(
                 fontSize: 10,
                 fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                color: isActive ? primaryBlue : (isDark ? Colors.white70 : Colors.black87),
+                color: isActive
+                    ? primaryBlue
+                    : (isDark ? Colors.white70 : Colors.black87),
               ),
             ),
             const SizedBox(width: 4),
@@ -417,19 +530,34 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                         Navigator.pop(context);
                       },
                       leading: isSelected
-                          ? Icon(Icons.check_circle, color: primaryBlue, size: 20)
-                          : const Icon(Icons.circle_outlined, color: Colors.grey, size: 20),
+                          ? Icon(
+                              Icons.check_circle,
+                              color: primaryBlue,
+                              size: 20,
+                            )
+                          : const Icon(
+                              Icons.circle_outlined,
+                              color: Colors.grey,
+                              size: 20,
+                            ),
                       title: Text(
                         item,
                         style: GoogleFonts.montserrat(
-                          color: isSelected ? primaryBlue : (isDark ? Colors.white70 : Colors.black87),
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          color: isSelected
+                              ? primaryBlue
+                              : (isDark ? Colors.white70 : Colors.black87),
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.w500,
                           fontSize: 14,
                         ),
                       ),
                       trailing: isSelected
                           ? Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: primaryBlue.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(4),
@@ -593,82 +721,130 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
   ) {
     final textColor = isDark ? Colors.white : Colors.black87;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
+    return InkWell(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => AssignLeadScreen(lead: lead)),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Text(
-              lead.clientName,
-              style: GoogleFonts.montserrat(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-                color: textColor,
-              ),
-              overflow: TextOverflow.ellipsis,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.withOpacity(0.15)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
-          ),
-          Row(
-            children: [
-              IconButton(
-                onPressed: () async {
-                  final Uri launchUri = Uri(
-                    scheme: 'tel',
-                    path: lead.clientNumber,
-                  );
-                  if (await canLaunchUrl(launchUri)) {
-                    await launchUrl(launchUri);
-                  }
-                },
-                icon: Icon(Icons.phone_outlined, color: primaryBlue, size: 20),
-                tooltip: 'Call Lead',
-                constraints: const BoxConstraints(),
-                padding: const EdgeInsets.all(8),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => AssignLeadScreen(lead: lead),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        lead.clientName,
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: textColor,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'Source: ${lead.source.toUpperCase()}',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 10,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (lead.description.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 20),
+                          child: Text(
+                            lead.description,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 10,
+                              color: Colors.grey[500],
+                              fontStyle: FontStyle.italic,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryBlue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () async {
+                        final Uri launchUri = Uri(
+                          scheme: 'tel',
+                          path: lead.clientNumber,
+                        );
+                        if (await canLaunchUrl(launchUri)) {
+                          await launchUrl(launchUri);
+                        }
+                      },
+                      icon: Icon(
+                        Icons.phone_outlined,
+                        color: primaryBlue,
+                        size: 18,
+                      ),
+                      tooltip: 'Call Lead',
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(8),
+                    ),
+                    const SizedBox(width: 4),
+                    ElevatedButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AssignLeadScreen(lead: lead),
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryBlue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        'Assign Agent',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 9,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  'Assign Agent',
-                  style: GoogleFonts.montserrat(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+            const SizedBox(height: 10),
+            _buildLeadMetadataRow(lead, isDark),
+          ],
+        ),
       ),
     );
   }
@@ -682,98 +858,221 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
     final textColor = isDark ? Colors.white : Colors.black87;
     final isCompleted = lead.stage.toLowerCase() == 'completed';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: isCompleted
-            ? (isDark ? Colors.green.withOpacity(0.1) : Colors.green[50])
-            : cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isCompleted ? Colors.green.withOpacity(0.3) : Colors.grey.withOpacity(0.15),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+    return InkWell(
+      onTap: () {
+        context.read<AdvisorProfileProvider>().clearProfile();
+        context.read<AdvisorProfileProvider>().fetchProfileByCode(
+          lead.advisorCode,
+        );
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => LeadDetailsScreen(lead: lead, isAdmin: true),
           ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isCompleted
+              ? (isDark ? Colors.green.withOpacity(0.1) : Colors.green[50])
+              : cardColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isCompleted
+                ? Colors.green.withOpacity(0.3)
+                : Colors.grey.withOpacity(0.15),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  lead.clientName,
-                  style: GoogleFonts.montserrat(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: textColor,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        lead.clientName,
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: textColor,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'Source: ${lead.source.toUpperCase()}',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 10,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (lead.description.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 20),
+                          child: Text(
+                            lead.description,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 10,
+                              color: Colors.grey[500],
+                              fontStyle: FontStyle.italic,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-                if (!isCompleted)
-                  Text(
-                    'Stage: ${lead.stage.toUpperCase()}',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 10,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w600,
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () async {
+                        final Uri launchUri = Uri(
+                          scheme: 'tel',
+                          path: lead.clientNumber,
+                        );
+                        if (await canLaunchUrl(launchUri)) {
+                          await launchUrl(launchUri);
+                        }
+                      },
+                      icon: Icon(
+                        Icons.phone_outlined,
+                        color: primaryBlue,
+                        size: 18,
+                      ),
+                      tooltip: 'Call Lead',
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(8),
                     ),
-                  ),
+                    const SizedBox(width: 4),
+                    ElevatedButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              LeadDetailsScreen(lead: lead, isAdmin: true),
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryBlue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        'Details',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 9,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
-          ),
-          Row(
-            children: [
-              IconButton(
-                onPressed: () async {
-                  final Uri launchUri = Uri(
-                    scheme: 'tel',
-                    path: lead.clientNumber,
-                  );
-                  if (await canLaunchUrl(launchUri)) {
-                    await launchUrl(launchUri);
-                  }
-                },
-                icon: Icon(Icons.phone_outlined, color: primaryBlue, size: 20),
-                tooltip: 'Call Lead',
-                constraints: const BoxConstraints(),
-                padding: const EdgeInsets.all(8),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => LeadDetailsScreen(lead: lead, isAdmin: true),
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryBlue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Text(
-                  'Details',
-                  style: GoogleFonts.montserrat(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
-                  ),
-                ),
-              ),
-            ],
+
+            _buildLeadMetadataRow(lead, isDark),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLeadMetadataRow(LeadModel lead, bool isDark) {
+    Color potentialColor = Colors.orange;
+    if (lead.leadPotential.toLowerCase() == 'hot') {
+      potentialColor = Colors.red;
+    } else if (lead.leadPotential.toLowerCase() == 'cold') {
+      potentialColor = Colors.blue;
+    }
+
+    return Container(
+      padding: const EdgeInsets.only(top: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _buildMetadataItem(
+              Icons.local_fire_department_rounded,
+              lead.leadPotential.toUpperCase(),
+              potentialColor,
+              isDark,
+            ),
+            const SizedBox(width: 8),
+            _buildMetadataItem(
+              Icons.category_outlined,
+              'CAT ${lead.leadCategory.toUpperCase()}',
+              Colors.purple,
+              isDark,
+            ),
+            const SizedBox(width: 8),
+            _buildMetadataItem(
+              Icons.phone_callback_rounded,
+              '${lead.communicationAttempt} Attempts',
+              Colors.teal,
+              isDark,
+            ),
+            const SizedBox(width: 8),
+            _buildMetadataItem(
+              Icons.calendar_today_rounded,
+              lead.createdAt,
+              Colors.grey[600]!,
+              isDark,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetadataItem(
+    IconData icon,
+    String label,
+    Color color,
+    bool isDark,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: GoogleFonts.montserrat(
+              fontSize: 8,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
         ],
       ),
