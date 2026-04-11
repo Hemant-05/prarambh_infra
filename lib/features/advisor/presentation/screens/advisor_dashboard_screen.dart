@@ -871,122 +871,92 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     BuildContext context,
     List<PromotionMetric> metrics,
   ) {
-    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
-    final cardColor = Theme.of(context).cardColor;
-    final primaryBlue = Theme.of(context).primaryColor;
-
     if (metrics.isEmpty) {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: cardColor,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.getBorderColor(context)),
         ),
         child: Center(
           child: Text(
-            "No promotion metrics set yet.",
-            style: GoogleFonts.montserrat(color: secondaryTextColor),
+            "No promotion metrics available right now.",
+            style: GoogleFonts.montserrat(
+              color: Theme.of(context).textTheme.bodySmall?.color,
+            ),
           ),
         ),
       );
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.getBorderColor(context)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.getBorderColor(context).withOpacity(0.5),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
+    final primaryBlue = Theme.of(context).primaryColor;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      children: metrics.map((m) {
+        // Calculate progress percentage
+        double progress = (double.tryParse(m.achieved) ?? 0) / 100;
+        if (progress > 1.0) progress = 1.0;
+        if (progress < 0) progress = 0;
+
+        // Icons based on metric name
+        IconData metricIcon = Icons.auto_graph;
+        if (m.metric.contains('Booking')) metricIcon = Icons.shopping_bag_outlined;
+        if (m.metric.contains('Team Size')) metricIcon = Icons.groups_outlined;
+        if (m.metric.contains('Attendance')) metricIcon = Icons.event_available_outlined;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: primaryBlue.withOpacity(isDark ? 0.2 : 0.1),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'METRIC',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: secondaryTextColor,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    'TARGET',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.montserrat(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: secondaryTextColor,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    'ACHIEVED',
-                    textAlign: TextAlign.right,
-                    style: GoogleFonts.montserrat(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: secondaryTextColor,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            ],
           ),
-          ...metrics.map(
-            (m) => Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: AppColors.getBorderColor(context)),
-                ),
-              ),
-              child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      m.metric,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 13,
-                        fontWeight: m.metric.contains('Team Booking')
-                            ? FontWeight.bold
-                            : FontWeight.w500,
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
+                  Row(
+                    children: [
+                      Icon(metricIcon, size: 18, color: primaryBlue),
+                      const SizedBox(width: 8),
+                      Text(
+                        m.metric,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                  Expanded(
-                    child: Text(
-                      m.target,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
-                      ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
                     ),
-                  ),
-                  Expanded(
+                    decoration: BoxDecoration(
+                      color: primaryBlue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                     child: Text(
-                      m.achieved,
-                      textAlign: TextAlign.right,
+                      '${m.achieved}%',
                       style: GoogleFonts.montserrat(
-                        fontSize: 14,
+                        fontSize: 10,
                         fontWeight: FontWeight.bold,
                         color: primaryBlue,
                       ),
@@ -994,10 +964,74 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 8,
+                  backgroundColor: primaryBlue.withOpacity(0.1),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    progress >= 1.0 ? Colors.green : primaryBlue,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'Achieved: ',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 11,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      Text(
+                        m.metric.contains('Attendance')
+                            ? '${m.achievedNumber}%'
+                            : m.achievedNumber.toString(),
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        'Target: ',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 11,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      Text(
+                        m.targetNumber == 0
+                            ? 'N/A'
+                            : (m.metric.contains('Attendance')
+                                ? '${m.targetNumber}%'
+                                : m.targetNumber.toString()),
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: m.targetNumber == 0
+                              ? Colors.grey
+                              : Theme.of(context).textTheme.bodyMedium?.color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      }).toList(),
     );
   }
 

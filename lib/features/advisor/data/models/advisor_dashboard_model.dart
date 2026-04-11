@@ -99,14 +99,24 @@ class PromotionMetric {
   final String metric;
   final String target;
   final String achieved;
+  final int targetNumber;
+  final int achievedNumber;
 
-  PromotionMetric({required this.metric, required this.target, required this.achieved});
+  PromotionMetric({
+    required this.metric,
+    required this.target,
+    required this.achieved,
+    required this.targetNumber,
+    required this.achievedNumber,
+  });
 
   factory PromotionMetric.fromJson(Map<String, dynamic> json) {
     return PromotionMetric(
       metric: json['metric']?.toString() ?? '',
       target: json['target']?.toString() ?? '0',
       achieved: json['achieved']?.toString() ?? '0',
+      targetNumber: int.tryParse(json['target_number']?.toString() ?? '0') ?? 0,
+      achievedNumber: int.tryParse(json['achieved_number']?.toString() ?? '0') ?? 0,
     );
   }
 }

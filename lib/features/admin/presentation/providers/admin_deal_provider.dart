@@ -64,7 +64,9 @@ class AdminDealProvider extends ChangeNotifier {
   Future<bool> addDealNote(String dealId, String title, String time) async {
     _isSaving = true; notifyListeners();
     try {
-      return await repository.addDealNote(dealId, {'title': title, 'time': time});
+      final success = await repository.addDealNote(dealId, {'title': title, 'time': time});
+      if (success) await fetchAllDeals();
+      return success;
     } catch (e) {
       debugPrint('Add Note Error: $e');
       return false;

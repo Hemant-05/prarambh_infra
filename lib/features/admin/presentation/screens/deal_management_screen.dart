@@ -230,7 +230,6 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryBlue = AppColors.getPrimaryBlue(context);
@@ -238,15 +237,21 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
     final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
     final textColor = isDark ? Colors.white : const Color(0xFF1E293B);
 
+    final dealProvider = context.watch<AdminDealProvider>();
+    final activeDeal = dealProvider.deals.firstWhere(
+      (d) => d.id == widget.deal.id,
+      orElse: () => widget.deal,
+    );
+
     int paidCount = _installments.where((i) => i['status'] == 'Paid').length;
     bool isFullyPaid =
         _installments.isNotEmpty && paidCount == _installments.length;
     String overallStatus = isFullyPaid ? 'Complete' : 'Pending';
 
     bool isTokenTaken =
-        (widget.deal.tokenAmount != null &&
-            widget.deal.tokenAmount!.isNotEmpty &&
-            (double.tryParse(widget.deal.tokenAmount!) ?? 0) > 0) ||
+        (activeDeal.tokenAmount != null &&
+            activeDeal.tokenAmount!.isNotEmpty &&
+            (double.tryParse(activeDeal.tokenAmount!) ?? 0) > 0) ||
         (double.tryParse(_tokenAmountCtrl.text) ?? 0) > 0;
 
     return Scaffold(
@@ -300,60 +305,60 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                           return;
                         }
 
-                        bool success = await provider.savePaymentPlan(
-                          dealId: widget.deal.id.toString(),
-                          installmentsJson: jsonEncode(_installments),
-                          totalAmount: _totalAmountCtrl.text,
-                          status: overallStatus,
-                          tokenAmount: _tokenAmountCtrl.text,
-                          tokenPaymentMode: _tokenPaymentMode,
-                          tokenDate: _tokenDate != 'Select Date'
-                              ? _tokenDate
-                              : null,
-                          paymentPlan: _selectedPlan != 'Select Plan'
-                              ? _selectedPlan
-                              : null,
-                          dealStatus: (isTokenTaken || isFullyPaid)
-                              ? 'verified'
-                              : widget.deal.dealStatus,
-                          stage: isFullyPaid
-                              ? 'close'
-                              : (isTokenTaken ? 'ongoing' : widget.deal.stage),
-                          docTitles: _newPropertyDoc != null
-                              ? [
-                                  _docTitleCtrl.text.isEmpty
-                                      ? 'Property Document'
-                                      : _docTitleCtrl.text,
-                                ]
-                              : null,
-                          docFiles: _newPropertyDoc != null
-                              ? [_newPropertyDoc!]
-                              : null,
-                        );
-
-                        if (success && mounted) {
-                          if (mounted) {
-                            if (isFullyPaid) {
-                              context.read<AdminLeadProvider>().updateLeadStage(
-                                widget.deal.leadId.toString(),
-                                'close',
-                              );
-                            } else {
-                              context.read<AdminLeadProvider>().updateLeadStage(
-                                widget.deal.leadId.toString(),
-                                'completed',
-                              );
-                            }
-                          }
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Deal Configuration Saved Successfully!',
-                              ),
-                            ),
+                          bool success = await provider.savePaymentPlan(
+                            dealId: activeDeal.id.toString(),
+                            installmentsJson: jsonEncode(_installments),
+                            totalAmount: _totalAmountCtrl.text,
+                            status: overallStatus,
+                            tokenAmount: _tokenAmountCtrl.text,
+                            tokenPaymentMode: _tokenPaymentMode,
+                            tokenDate: _tokenDate != 'Select Date'
+                                ? _tokenDate
+                                : null,
+                            paymentPlan: _selectedPlan != 'Select Plan'
+                                ? _selectedPlan
+                                : null,
+                            dealStatus: (isTokenTaken || isFullyPaid)
+                                ? 'verified'
+                                : activeDeal.dealStatus,
+                            stage: isFullyPaid
+                                ? 'close'
+                                : (isTokenTaken ? 'ongoing' : activeDeal.stage),
+                            docTitles: _newPropertyDoc != null
+                                ? [
+                                    _docTitleCtrl.text.isEmpty
+                                        ? 'Property Document'
+                                        : _docTitleCtrl.text,
+                                  ]
+                                : null,
+                            docFiles: _newPropertyDoc != null
+                                ? [_newPropertyDoc!]
+                                : null,
                           );
+
+                          if (success && mounted) {
+                            if (mounted) {
+                              if (isFullyPaid) {
+                                context.read<AdminLeadProvider>().updateLeadStage(
+                                  activeDeal.leadId.toString(),
+                                  'close',
+                                );
+                              } else {
+                                context.read<AdminLeadProvider>().updateLeadStage(
+                                  activeDeal.leadId.toString(),
+                                  'completed',
+                                );
+                              }
+                            }
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Deal Configuration Saved Successfully!',
+                                ),
+                              ),
+                            );
+                          }
                           Navigator.pop(context);
-                        }
                       },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryBlue,
@@ -395,11 +400,11 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
               Icons.person_outline,
               primaryBlue,
             ),
-            _buildUnifiedClientKYCCard(cardColor, primaryBlue, textColor),
+            _buildUnifiedClientKYCCard(cardColor, primaryBlue, textColor, activeDeal),
             const SizedBox(height: 16),
 
             // 3. Advisor & Units Section
-            if (widget.deal.advisorCode.isNotEmpty) ...[
+            if (activeDeal.advisorCode.isNotEmpty) ...[
               _buildModernSectionHeader(
                 "Advisor Info",
                 Icons.support_agent_outlined,
@@ -424,7 +429,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
             ],
 
             // 4. Property Documents
-            if (widget.deal.propertyDocs.isNotEmpty) ...[
+            if (activeDeal.propertyDocs.isNotEmpty) ...[
               _buildModernSectionHeader(
                 "Archive Documents",
                 Icons.folder_shared_outlined,
@@ -453,9 +458,9 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                     crossAxisSpacing: 16,
                     childAspectRatio: 1.4,
                   ),
-                  itemCount: widget.deal.propertyDocs.length,
+                  itemCount: activeDeal.propertyDocs.length,
                   itemBuilder: (context, index) {
-                    final doc = widget.deal.propertyDocs[index];
+                    final doc = activeDeal.propertyDocs[index];
                     return _buildDocumentThumbnail(
                       doc['title'] ?? "Document",
                       doc['url'] ?? "",
@@ -492,8 +497,8 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                     context,
                     Icons.business_center_outlined,
                     "Project",
-                    widget.deal.projectName?.trim().isNotEmpty == true
-                        ? widget.deal.projectName!
+                    activeDeal.projectName?.trim().isNotEmpty == true
+                        ? activeDeal.projectName!
                         : (_unit?.projectId != null
                               ? "Project #${_unit!.projectId}"
                               : "Loading..."),
@@ -509,7 +514,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                             constraints,
                             Icons.tag,
                             "Unit",
-                            widget.deal.unitNumber ??
+                            activeDeal.unitNumber ??
                                 _unit?.unitNumber ??
                                 "N/A",
                           ),
@@ -517,7 +522,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                             constraints,
                             Icons.layers_outlined,
                             "Tower",
-                            widget.deal.towerName ?? _unit?.towerName ?? "N/A",
+                            activeDeal.towerName ?? _unit?.towerName ?? "N/A",
                           ),
                           _buildCompactDetail(
                             constraints,
@@ -993,7 +998,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Note History",
+                        "NOTE HISTORY",
                         style: GoogleFonts.montserrat(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -1013,7 +1018,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  if (widget.deal.notes.isEmpty)
+                  if (activeDeal.notes.isEmpty)
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1027,7 +1032,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                       ),
                     )
                   else
-                    ...widget.deal.notes.reversed.map((n) {
+                    ...activeDeal.notes.reversed.map((n) {
                       return Container(
                         margin: const EdgeInsets.only(bottom: 12),
                         padding: const EdgeInsets.all(12),
@@ -1883,6 +1888,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
     Color cardColor,
     Color primaryBlue,
     Color textColor,
+    DealModel deal,
   ) {
     return Container(
       decoration: BoxDecoration(
@@ -1922,7 +1928,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.deal.clientName.toUpperCase(),
+                        deal.clientName.toUpperCase(),
                         style: GoogleFonts.montserrat(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -1932,13 +1938,24 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "+91 ${widget.deal.clientNumber}",
+                        "+91 ${deal.clientNumber}",
                         style: GoogleFonts.montserrat(
                           fontSize: 15,
                           color: Colors.grey[600],
                           fontWeight: FontWeight.w600,
                         ),
                       ),
+                      if (deal.clientEmail.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          deal.clientEmail,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 12,
+                            color: Colors.grey[500],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1947,7 +1964,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                   Colors.green,
                   onTap: () async {
                     final Uri telUri = Uri.parse(
-                      'tel:${widget.deal.clientNumber}',
+                      'tel:${deal.clientNumber}',
                     );
                     if (await canLaunchUrl(telUri)) {
                       await launchUrl(telUri);
@@ -1959,26 +1976,33 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
           ),
           Divider(height: 1, color: Colors.grey.shade100),
           Padding(
-            padding: const EdgeInsets.all(24),
-            child: Row(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: _buildInfoItem(
-                    'Email Address',
-                    widget.deal.clientEmail.isNotEmpty
-                        ? widget.deal.clientEmail
-                        : 'N/A',
-                    textColor,
-                    icon: Icons.email_outlined,
+                Text(
+                  "KYC DOCUMENTS",
+                  style: GoogleFonts.montserrat(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                    letterSpacing: 1,
                   ),
                 ),
-                Expanded(
-                  child: _buildInfoItem(
-                    'Phone Number',
-                    widget.deal.clientNumber,
-                    textColor,
-                    icon: Icons.phone_android_outlined,
-                  ),
+                const SizedBox(height: 16),
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 1.5,
+                  children: [
+                    _buildDocumentThumbnail("Aadhaar Front", deal.clientAdharFront),
+                    _buildDocumentThumbnail("Aadhaar Back", deal.clientAdharBack),
+                    _buildDocumentThumbnail("PAN Front", deal.clientPanFront),
+                    _buildDocumentThumbnail("PAN Back", deal.clientPanBack),
+                  ],
                 ),
               ],
             ),

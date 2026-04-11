@@ -49,7 +49,7 @@ class DealModel {
   });
 
   factory DealModel.fromJson(Map<String, dynamic> json) {
-    const String baseUrl = "https://workiees.com/api/public/";
+    const String baseUrl = "https://workiees.com/";
 
     String sanitizeUrl(dynamic url) {
       if (url == null || url.toString().isEmpty) return '';
