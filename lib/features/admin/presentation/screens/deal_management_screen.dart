@@ -338,10 +338,19 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
 
                           if (success && mounted) {
                             if (mounted) {
+                              if ((isTokenTaken || isFullyPaid) && activeDeal.dealStatus != 'verified') {
+                                final now = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
+                                context.read<AdminLeadProvider>().addLeadNote(
+                                  activeDeal.leadId.toString(),
+                                  "Deal verified by admin. Token collected: ₹${_tokenAmountCtrl.text} via $_tokenPaymentMode.",
+                                  now,
+                                );
+                              }
+
                               if (isFullyPaid) {
                                 context.read<AdminLeadProvider>().updateLeadStage(
                                   activeDeal.leadId.toString(),
-                                  'close',
+                                  'completed',
                                 );
                               } else {
                                 context.read<AdminLeadProvider>().updateLeadStage(
@@ -572,6 +581,39 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
             const SizedBox(height: 32),
 
             const SizedBox(height: 24),
+
+            // Site Visit Photo if available
+            Consumer<AdminLeadProvider>(
+              builder: (context, leadProvider, _) {
+                final matched = leadProvider.leads.where((l) => l.id == activeDeal.leadId.toString()).toList();
+                if (matched.isNotEmpty && matched.first.siteVisitPhoto.isNotEmpty) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildModernSectionHeader(
+                        "Site Visit Image",
+                        Icons.image_outlined,
+                        primaryBlue,
+                      ),
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 24),
+                        width: double.infinity,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                          image: DecorationImage(
+                            image: NetworkImage(matched.first.siteVisitPhoto),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
 
             // 6. Booking Commitment
             _buildModernSectionHeader(

@@ -8,6 +8,10 @@ import 'package:prarambh_infra/core/theme/app_colors.dart';
 import 'package:prarambh_infra/features/auth/presentation/providers/auth_provider.dart';
 import '../providers/advisor_dashboard_provider.dart';
 import '../../data/models/advisor_dashboard_model.dart';
+import '../providers/advisor_lead_provider.dart';
+import '../providers/advisor_project_provider.dart';
+import '../providers/advisor_team_provider.dart';
+import '../providers/advisor_profile_provider.dart';
 
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_contests_list_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_projects_screen.dart';
@@ -15,7 +19,6 @@ import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_mee
 import 'package:prarambh_infra/features/advisor/presentation/screens/document_center_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/sales_pipeline_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_edit_profile_screen.dart';
-import '../providers/advisor_profile_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_promotion_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_achievement_screen.dart';
 import '../../../../core/utils/access_helper.dart';
@@ -68,6 +71,46 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     });
   }
 
+  Future<void> _handleGlobalRefresh() async {
+    final authProvider = context.read<AuthProvider>();
+    final advisorCode = authProvider.currentUser?.advisorCode ?? '';
+    final advisorId = authProvider.currentUser?.id.toString() ?? '';
+
+    switch (_selectedIndex) {
+      case 0:
+        await context.read<AdvisorDashboardProvider>().fetchDashboardData(
+          advisorCode,
+        );
+        break;
+      case 1:
+        await context.read<AdvisorProjectProvider>().fetchProjects();
+        break;
+      case 2:
+        await context.read<AdvisorLeadProvider>().fetchLeads(
+          advisorCode: advisorCode,
+        );
+        break;
+      case 3:
+        await context.read<AdvisorTeamProvider>().fetchTeamTree(advisorId);
+        break;
+      case 4:
+        await context.read<AdvisorProfileProvider>().fetchProfileByCode(
+          advisorCode,
+        );
+        break;
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${_appBarTitles[_selectedIndex]} Refreshed'),
+          duration: const Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthProvider>();
@@ -102,27 +145,30 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           ),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
-        actions: _selectedIndex == 4
-            ? [
-                Consumer<AdvisorProfileProvider>(
-                  builder: (context, profileProvider, _) {
-                    if (profileProvider.profile == null)
-                      return const SizedBox.shrink();
-                    return IconButton(
-                      icon: const Icon(Icons.edit_note, size: 28),
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => AdvisorEditProfileScreen(
-                            profile: profileProvider.profile!,
-                          ),
-                        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _handleGlobalRefresh,
+          ),
+          if (_selectedIndex == 4)
+            Consumer<AdvisorProfileProvider>(
+              builder: (context, profileProvider, _) {
+                if (profileProvider.profile == null)
+                  return const SizedBox.shrink();
+                return IconButton(
+                  icon: const Icon(Icons.edit_note, size: 28),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AdvisorEditProfileScreen(
+                        profile: profileProvider.profile!,
                       ),
-                    );
-                  },
-                ),
-              ]
-            : null,
+                    ),
+                  ),
+                );
+              },
+            ),
+        ],
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -211,7 +257,14 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           ],
         ),
       ),
-      body: IndexedStack(index: _selectedIndex, children: screens),
+      body: Column(
+        children: [
+          _buildGlobalTaskReminderBar(context),
+          Expanded(
+            child: IndexedStack(index: _selectedIndex, children: screens),
+          ),
+        ],
+      ),
     );
   }
 
@@ -903,9 +956,11 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
 
         // Icons based on metric name
         IconData metricIcon = Icons.auto_graph;
-        if (m.metric.contains('Booking')) metricIcon = Icons.shopping_bag_outlined;
+        if (m.metric.contains('Booking'))
+          metricIcon = Icons.shopping_bag_outlined;
         if (m.metric.contains('Team Size')) metricIcon = Icons.groups_outlined;
-        if (m.metric.contains('Attendance')) metricIcon = Icons.event_available_outlined;
+        if (m.metric.contains('Attendance'))
+          metricIcon = Icons.event_available_outlined;
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
@@ -1014,8 +1069,8 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                         m.targetNumber == 0
                             ? 'N/A'
                             : (m.metric.contains('Attendance')
-                                ? '${m.targetNumber}%'
-                                : m.targetNumber.toString()),
+                                  ? '${m.targetNumber}%'
+                                  : m.targetNumber.toString()),
                         style: GoogleFonts.montserrat(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -1337,6 +1392,302 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
         ),
       ),
       onTap: onTap,
+    );
+  }
+
+  Widget _buildGlobalTaskReminderBar(BuildContext context) {
+    return Consumer<AdvisorDashboardProvider>(
+      builder: (context, provider, _) {
+        final tasks = provider.data?.pendingActions ?? [];
+        if (tasks.isEmpty) return const SizedBox.shrink();
+
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
+        return GestureDetector(
+          onTap: () => _showPendingTasksBottomSheet(context),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isDark
+                    ? [
+                        Colors.orange.withOpacity(0.2),
+                        Colors.orange.withOpacity(0.1),
+                      ]
+                    : [Colors.orange.shade50, Colors.white],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              border: Border(
+                bottom: BorderSide(
+                  color: Colors.orange.withOpacity(isDark ? 0.3 : 0.2),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.notification_important,
+                    size: 16,
+                    color: Colors.orange,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Pending Tasks Reminder",
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isDark
+                              ? Colors.orange
+                              : Colors.orange.shade900,
+                        ),
+                      ),
+                      Text(
+                        "You have ${tasks.length} tasks scheduled for today.",
+                        style: GoogleFonts.montserrat(
+                          fontSize: 10,
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  "VIEW ALL",
+                  style: GoogleFonts.montserrat(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 10,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showPendingTasksBottomSheet(BuildContext context) {
+    final provider = context.read<AdvisorDashboardProvider>();
+    final tasks = provider.data?.pendingActions ?? [];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryBlue = Theme.of(context).primaryColor;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.7,
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              // Handle Bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Icon(Icons.notifications_active, color: primaryBlue),
+                    const SizedBox(width: 12),
+                    Text(
+                      "Your Tasks & Reminders",
+                      style: GoogleFonts.montserrat(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: primaryBlue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        "${tasks.length} Total",
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: primaryBlue,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: tasks.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.check_circle_outline,
+                              size: 64,
+                              color: Colors.grey.withOpacity(0.3),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              "All caught up!",
+                              style: GoogleFonts.montserrat(
+                                color: Colors.grey,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(20),
+                        itemCount: tasks.length,
+                        itemBuilder: (context, index) {
+                          final task = tasks[index];
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.grey.withOpacity(0.1)
+                                  : Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isDark
+                                    ? Colors.white10
+                                    : Colors.grey.shade200,
+                              ),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: primaryBlue.withOpacity(0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    task.iconType == 'bell'
+                                        ? Icons.notifications
+                                        : Icons.event,
+                                    color: primaryBlue,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        task.title,
+                                        style: GoogleFonts.montserrat(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        task.subtitle,
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.access_time,
+                                            size: 12,
+                                            color: Colors.grey,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            task.time,
+                                            style: GoogleFonts.montserrat(
+                                              fontSize: 10,
+                                              color: Colors.grey,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryBlue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      "Close",
+                      style: GoogleFonts.montserrat(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

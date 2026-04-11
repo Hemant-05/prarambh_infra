@@ -19,10 +19,10 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final advisorId =
-          context.read<AuthProvider>().currentUser?.id.toString() ?? '';
-      if (advisorId.isNotEmpty) {
-        context.read<AdvisorProfileProvider>().fetchProfile(advisorId);
+      final advisorCode =
+          context.read<AuthProvider>().currentUser?.advisorCode ?? '';
+      if (advisorCode.isNotEmpty) {
+        context.read<AdvisorProfileProvider>().fetchProfileByCode(advisorCode);
       }
     });
   }
@@ -39,10 +39,10 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
           ? Center(child: CircularProgressIndicator(color: primaryBlue))
           : RefreshIndicator(
               onRefresh: () async {
-                final id =
-                    context.read<AuthProvider>().currentUser?.id.toString() ??
+                final code =
+                    context.read<AuthProvider>().currentUser?.advisorCode ??
                     '';
-                await provider.fetchProfile(id);
+                await provider.fetchProfileByCode(code);
               },
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),

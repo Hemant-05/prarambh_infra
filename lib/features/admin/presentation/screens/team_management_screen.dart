@@ -967,7 +967,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
                   ),
                 ),
                 Text(
-                  'Sub-Advisors',
+                  'Team Size',
                   style: GoogleFonts.montserrat(
                     fontSize: 9,
                     color: Colors.grey[500],
@@ -976,8 +976,6 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
                 ),
               ],
             ),
-            const SizedBox(width: 12),
-            Icon(Icons.chevron_right, color: Colors.grey[400]),
           ],
         ),
       ),

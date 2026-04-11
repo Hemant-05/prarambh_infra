@@ -3631,12 +3631,12 @@ Please feel free to contact us for more information.""";
                       setState(() => attemptCounter++);
                       if (attemptCounter >= 10) {
                         setState(() {
-                          currentStage = 'closed';
+                          currentStage = 'dead';
                           rejectionReason =
                               "Max attempts (10) reached during reschedule.";
                         });
                         _updateStageInDb(
-                          'closed',
+                          'dead',
                           note:
                               "System Auto-Closed: Max attempts (10) reached while rescheduling.",
                         );
@@ -3790,7 +3790,7 @@ Please feel free to contact us for more information.""";
                     if (selectedReason == null) return;
                     rejectionReason = "$selectedReason - ${notesCtrl.text}";
                     _updateStageInDb(
-                      "closed",
+                      "dead",
                       reason: rejectionReason,
                       note: "Not Interested: $rejectionReason",
                     );

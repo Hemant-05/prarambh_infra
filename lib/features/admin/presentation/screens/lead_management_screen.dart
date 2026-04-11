@@ -108,7 +108,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                     Tab(text: 'Prospecting'),
                     Tab(text: 'Site Visit'),
                     Tab(text: 'Booking'),
-                    Tab(text: 'Closed'),
+                    Tab(text: 'Dead'),
                     Tab(text: 'Completed'),
                   ],
                 ),
@@ -225,7 +225,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                             )
                             .where(
                               (l) =>
-                                  l.stage.toLowerCase() == 'closed' &&
+                                  l.stage.toLowerCase() == 'dead' &&
                                   l.advisorCode.isNotEmpty,
                             )
                             .toList(),
@@ -857,6 +857,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
   ) {
     final textColor = isDark ? Colors.white : Colors.black87;
     final isCompleted = lead.stage.toLowerCase() == 'completed';
+    final isDead = lead.stage.toLowerCase() == 'dead';
 
     return InkWell(
       onTap: () {
@@ -878,12 +879,16 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
         decoration: BoxDecoration(
           color: isCompleted
               ? (isDark ? Colors.green.withOpacity(0.1) : Colors.green[50])
-              : cardColor,
+              : (isDead
+                    ? (isDark ? Colors.red.withOpacity(0.1) : Colors.red[50])
+                    : cardColor),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isCompleted
                 ? Colors.green.withOpacity(0.3)
-                : Colors.grey.withOpacity(0.15),
+                : (isDead
+                      ? Colors.red.withOpacity(0.3)
+                      : Colors.grey.withOpacity(0.15)),
           ),
           boxShadow: [
             BoxShadow(

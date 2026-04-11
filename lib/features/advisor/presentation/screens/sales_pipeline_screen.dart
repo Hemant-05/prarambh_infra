@@ -188,7 +188,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
             Tab(text: 'Prospecting'),
             Tab(text: 'Site Visit'),
             Tab(text: 'Booking'),
-            Tab(text: 'Closed'),
+            Tab(text: 'Dead Lead'),
             Tab(text: 'Completed'),
           ],
         ),
@@ -303,7 +303,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                               endDate: _endDate,
                               attempts: _selectedAttempts,
                             )
-                            .where((l) => l.stage.toLowerCase() == 'closed')
+                            .where((l) => l.stage.toLowerCase() == 'dead')
                             .toList(),
                         cardColor,
                         primaryBlue,
@@ -380,28 +380,6 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                       contentPadding: const EdgeInsets.symmetric(vertical: 10),
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                height: 40,
-                width: 40,
-                decoration: BoxDecoration(
-                  color: primaryBlue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: IconButton(
-                  icon: Icon(Icons.refresh, size: 20, color: primaryBlue),
-                  onPressed: () {
-                    final authProvider = context.read<AuthProvider>();
-                    final advisorCode =
-                        authProvider.currentUser?.advisorCode ?? '';
-                    context.read<AdvisorLeadProvider>().fetchLeads(
-                      advisorCode: advisorCode,
-                    );
-                  },
-                  tooltip: 'Refresh Leads',
-                  padding: EdgeInsets.zero,
                 ),
               ),
             ],
@@ -754,7 +732,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
     final isBooking =
         lead.stage.toLowerCase() == 'booking' ||
         lead.stage.toLowerCase() == 'pending_verification';
-    final isClosed = lead.stage.toLowerCase() == 'closed';
+    final isDead = lead.stage.toLowerCase() == 'dead';
     final isCompleted = lead.stage.toLowerCase() == 'completed';
     final textColor = Theme.of(context).textTheme.bodyLarge?.color;
     final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
@@ -764,7 +742,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
         ? (isDark ? Colors.greenAccent : Colors.green[700]!)
         : (isBooking
               ? (isDark ? Colors.orangeAccent : Colors.orange[800]!)
-              : (isClosed ? Colors.redAccent : primaryBlue));
+              : (isDead ? Colors.redAccent : primaryBlue));
 
     Color backgroundColor = isCompleted
         ? (isDark
@@ -774,7 +752,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
               ? (isDark
                     ? Colors.orange.withOpacity(0.1)
                     : Colors.orange.withOpacity(0.05))
-              : (isClosed
+              : (isDead
                     ? (isDark
                           ? Colors.red.withOpacity(0.1)
                           : Colors.red.withOpacity(0.05))
@@ -786,7 +764,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
         color: backgroundColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isBooking || isClosed || isCompleted
+          color: isBooking || isDead || isCompleted
               ? accentColor.withOpacity(isDark ? 0.4 : 0.2)
               : AppColors.getBorderColor(context),
         ),
@@ -880,7 +858,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                         ],
                       ],
                     ),
-                    if (isClosed)
+                    if (isDead)
                       Icon(
                         Icons.do_disturb_alt_rounded,
                         color: isDark ? Colors.redAccent : Colors.red,
