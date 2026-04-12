@@ -21,6 +21,7 @@ import 'package:prarambh_infra/features/advisor/presentation/screens/sales_pipel
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_edit_profile_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_promotion_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_achievement_screen.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/career_growth_screen.dart';
 import '../../../../core/utils/access_helper.dart';
 import '../../../../core/utils/ui_helper.dart';
 import '../../../../core/globals.dart';
@@ -947,146 +948,147 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     final primaryBlue = Theme.of(context).primaryColor;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Column(
-      children: metrics.map((m) {
-        // Calculate progress percentage
-        double progress = (double.tryParse(m.achieved) ?? 0) / 100;
-        if (progress > 1.0) progress = 1.0;
-        if (progress < 0) progress = 0;
-
-        // Icons based on metric name
-        IconData metricIcon = Icons.auto_graph;
-        if (m.metric.contains('Booking'))
-          metricIcon = Icons.shopping_bag_outlined;
-        if (m.metric.contains('Team Size')) metricIcon = Icons.groups_outlined;
-        if (m.metric.contains('Attendance'))
-          metricIcon = Icons.event_available_outlined;
-
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: primaryBlue.withOpacity(isDark ? 0.2 : 0.1),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.getBorderColor(context)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+      child: Column(
+        children: metrics.asMap().entries.map((entry) {
+          final index = entry.key;
+          final m = entry.value;
+
+          double progress = (double.tryParse(m.achieved) ?? 0) / 100;
+          if (progress > 1.0) progress = 1.0;
+          if (progress < 0) progress = 0;
+
+          IconData metricIcon = Icons.auto_graph;
+          if (m.metric.contains('Booking')) metricIcon = Icons.shopping_bag_outlined;
+          if (m.metric.contains('Team Size')) metricIcon = Icons.groups_outlined;
+          if (m.metric.contains('Attendance')) metricIcon = Icons.event_available_outlined;
+
+          return Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(metricIcon, size: 18, color: primaryBlue),
-                      const SizedBox(width: 8),
-                      Text(
-                        m.metric,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                      Row(
+                        children: [
+                          Icon(metricIcon, size: 18, color: primaryBlue),
+                          const SizedBox(width: 8),
+                          Text(
+                            m.metric,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).textTheme.bodyMedium?.color,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: primaryBlue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '${m.achieved}%',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: primaryBlue,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: primaryBlue.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      '${m.achieved}%',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: primaryBlue,
+                  const SizedBox(height: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 8,
+                      backgroundColor: primaryBlue.withOpacity(0.1),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        progress >= 1.0 ? Colors.green : primaryBlue,
                       ),
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Achieved: ',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 11,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          Text(
+                            m.metric.contains('Attendance')
+                                ? '${m.achievedNumber}%'
+                                : m.achievedNumber.toString(),
+                            style: GoogleFonts.montserrat(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: primaryBlue,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'Target: ',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 11,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          Text(
+                            m.metric.contains('Attendance')
+                                ? '${m.targetNumber}%'
+                                : m.targetNumber.toString(),
+                            style: GoogleFonts.montserrat(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ],
               ),
-              const SizedBox(height: 12),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 8,
-                  backgroundColor: primaryBlue.withOpacity(0.1),
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    progress >= 1.0 ? Colors.green : primaryBlue,
-                  ),
+              if (index < metrics.length - 1)
+                Divider(
+                  height: 32,
+                  color: AppColors.getBorderColor(context),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        'Achieved: ',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 11,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      Text(
-                        m.metric.contains('Attendance')
-                            ? '${m.achievedNumber}%'
-                            : m.achievedNumber.toString(),
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        'Target: ',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 11,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      Text(
-                        m.targetNumber == 0
-                            ? 'N/A'
-                            : (m.metric.contains('Attendance')
-                                  ? '${m.targetNumber}%'
-                                  : m.targetNumber.toString()),
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: m.targetNumber == 0
-                              ? Colors.grey
-                              : Theme.of(context).textTheme.bodyMedium?.color,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
             ],
-          ),
-        );
-      }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -1335,7 +1337,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const AdvisorPromotionScreen(),
+                builder: (context) => const CareerGrowthScreen(),
               ),
             );
           }),
