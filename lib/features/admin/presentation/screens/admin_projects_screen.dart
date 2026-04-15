@@ -522,32 +522,6 @@ class _AdminProjectsScreenState extends State<AdminProjectsScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            ProjectInventoryScreen(project: project),
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: primaryBlue),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Text(
-                      'Inventory',
-                      style: GoogleFonts.montserrat(
-                        color: primaryBlue,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
                 // NEW DELETE BUTTON
                 IconButton(
                   icon: const Icon(

@@ -7,6 +7,7 @@ import 'package:prarambh_infra/features/admin/data/models/document_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:provider/provider.dart';
+import 'package:prarambh_infra/core/widgets/pdf_viewer_screen.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/admin_document_provider.dart';
 import 'add_document_screen.dart';
@@ -74,17 +75,16 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
         ),
       );
     } else {
-      // Launch PDF in external browser/viewer
-      final Uri url = Uri.parse(doc.url);
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Could not open PDF.')));
-        }
-      }
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PdfViewerScreen(
+            url: doc.url,
+            title: 'View Document: ${doc.name}',
+            fileName: "${doc.name.replaceAll(' ', '_')}.pdf",
+          ),
+        ),
+      );
     }
   }
 
@@ -277,6 +277,11 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
             fontSize: 16,
           ),
         ),
+        actions: [
+          IconButton(icon: Icon(Icons.refresh), onPressed: (){
+            context.read<AdminDocumentProvider>().fetchDocuments();
+          },)
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: primaryBlue,
@@ -415,7 +420,6 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text('Active', style: GoogleFonts.montserrat(fontSize: 8)),
                   ],
                 ),
               ),

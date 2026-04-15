@@ -3,14 +3,59 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:prarambh_infra/features/admin/presentation/providers/admin_project_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/installment_provider.dart';
 import 'package:prarambh_infra/features/auth/presentation/providers/auth_provider.dart';
 import 'package:prarambh_infra/features/admin/data/models/installment_model.dart';
+import 'package:prarambh_infra/features/admin/data/models/unit_model.dart';
+import 'package:prarambh_infra/features/admin/data/models/deal_model.dart';
 
-class InstallmentDetailsScreen extends StatelessWidget {
+class InstallmentDetailsScreen extends StatefulWidget {
   final UpcomingInstallmentModel installment;
 
   const InstallmentDetailsScreen({super.key, required this.installment});
+
+  @override
+  State<InstallmentDetailsScreen> createState() => _InstallmentDetailsScreenState();
+}
+
+class _InstallmentDetailsScreenState extends State<InstallmentDetailsScreen> {
+  UnitModel? _unit;
+  bool _isLoadingUnit = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDetailedInfo();
+  }
+
+  Future<void> _fetchDetailedInfo() async {
+    setState(() => _isLoadingUnit = true);
+    try {
+      final installmentRepo = context.read<InstallmentProvider>().repository;
+      final projectProvider = context.read<AdminProjectProvider>();
+
+      // 1. Fetch Deal to get Unit ID
+      final dealResponse = await installmentRepo.apiClient.getSingleDeal(widget.installment.dealId.toString());
+      if (dealResponse['status'] == true) {
+        final deal = DealModel.fromJson(dealResponse['data']);
+        
+        // 2. Fetch Unit Details
+        final unit = await projectProvider.getUnitDetails(deal.unitId.toString());
+        if (mounted) {
+          setState(() {
+            _unit = unit;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching unit details: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingUnit = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,41 +106,63 @@ class InstallmentDetailsScreen extends StatelessWidget {
 
   Widget _buildPropertyInfoCard(BuildContext context) {
     final primaryBlue = Theme.of(context).primaryColor;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return _buildBaseCard(
       context,
-      title: 'Property Info',
+      title: 'Property details',
       icon: Icons.business,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildDetailRow('PROJECT NAME', installment.projectName ?? 'N/A', isBoldValue: true),
-          const SizedBox(height: 12),
-          _buildDetailRow('REFERENCE ID', '#INV-${installment.dealId}-${installment.installmentIndex}', isBoldValue: true),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: primaryBlue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.location_on_outlined, size: 14, color: primaryBlue),
-                const SizedBox(width: 6),
-                Text(
-                  installment.unitNumber ?? "Sector 4, Main Road", // Static fallback if missing
-                  style: GoogleFonts.montserrat(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: primaryBlue,
-                  ),
-                ),
-              ],
-            ),
+      child: _isLoadingUnit 
+        ? Center(child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: CircularProgressIndicator(color: primaryBlue, strokeWidth: 2),
+          ))
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                   Expanded(child: _buildDetailRow('PROJECT NAME', widget.installment.projectName ?? 'N/A', isBoldValue: true)),
+                   if (_unit != null) ...[
+                     const SizedBox(width: 12),
+                     Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: primaryBlue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          _unit!.saleCategory.toUpperCase(),
+                          style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: primaryBlue),
+                        ),
+                      ),
+                   ],
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: _buildDetailRow('UNIT / PLOT NO', _unit?.unitNumber ?? widget.installment.unitNumber ?? 'N/A', isBoldValue: true)),
+                  Expanded(child: _buildDetailRow('PROPERTY TYPE', _unit?.propertyType ?? 'N/A', isBoldValue: true)),
+                ],
+              ),
+              const Divider(height: 32),
+              Row(
+                children: [
+                  Expanded(child: _buildDetailRow('AREA (SQFT)', _unit?.areaSqft.toString() ?? 'N/A', isBoldValue: true)),
+                  Expanded(child: _buildDetailRow('RATE / SQFT', _unit != null ? '₹${_unit!.ratePerSqft}' : 'N/A', isBoldValue: true)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: _buildDetailRow('FACING', _unit?.facing ?? 'N/A', isBoldValue: true)),
+                  Expanded(child: _buildDetailRow('DIMENSIONS', _unit?.plotDimensions ?? 'N/A', isBoldValue: true)),
+                ],
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -111,7 +178,7 @@ class InstallmentDetailsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'INSTALLMENT AMOUNT - (${installment.installmentIndex + 1}ST INSTALLMENT)',
+            'INSTALLMENT AMOUNT - (${widget.installment.installmentIndex + 1}ST INSTALLMENT)',
             style: GoogleFonts.montserrat(
               fontSize: 10,
               fontWeight: FontWeight.bold,
@@ -120,7 +187,7 @@ class InstallmentDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            amountFormatter.format(double.tryParse(installment.installmentAmount) ?? 0),
+            amountFormatter.format(double.tryParse(widget.installment.installmentAmount) ?? 0),
             style: GoogleFonts.montserrat(
               fontSize: 32,
               fontWeight: FontWeight.bold,
@@ -131,7 +198,7 @@ class InstallmentDetailsScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildDetailRow('DUE DATE', DateFormat('MMM dd, yyyy').format(DateTime.parse(installment.installmentDate)), isBoldValue: true),
+              _buildDetailRow('DUE DATE', DateFormat('MMM dd, yyyy').format(DateTime.parse(widget.installment.installmentDate)), isBoldValue: true),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -140,17 +207,17 @@ class InstallmentDetailsScreen extends StatelessWidget {
                    Row(
                     children: [
                       Icon(
-                        installment.installmentStatus == 'Paid' ? Icons.check_circle : Icons.pending_actions,
+                        widget.installment.installmentStatus == 'Paid' ? Icons.check_circle : Icons.pending_actions,
                         size: 16,
-                        color: installment.installmentStatus == 'Paid' ? Colors.green : Colors.orange,
+                        color: widget.installment.installmentStatus == 'Paid' ? Colors.green : Colors.orange,
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        installment.installmentStatus,
+                        widget.installment.installmentStatus,
                         style: GoogleFonts.montserrat(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: installment.installmentStatus == 'Paid' ? Colors.green : Colors.orange,
+                          color: widget.installment.installmentStatus == 'Paid' ? Colors.green : Colors.orange,
                         ),
                       ),
                     ],
@@ -186,7 +253,7 @@ class InstallmentDetailsScreen extends StatelessWidget {
             Text('PAYOUT AMOUNT', style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey.shade500)),
             const SizedBox(height: 4),
             Text(
-              amountFormatter.format((double.tryParse(installment.installmentAmount) ?? 0) * 0.02), // Placeholder calculation
+              amountFormatter.format((double.tryParse(widget.installment.installmentAmount) ?? 0) * 0.02), // Placeholder calculation
               style: GoogleFonts.montserrat(fontSize: 20, fontWeight: FontWeight.bold, color: primaryBlue),
             ),
           ],
@@ -209,7 +276,7 @@ class InstallmentDetailsScreen extends StatelessWidget {
             radius: 25,
             backgroundColor: primaryBlue.withOpacity(0.1),
             child: Text(
-              installment.advisorName.isNotEmpty ? installment.advisorName[0].toUpperCase() : 'A',
+              widget.installment.advisorName.isNotEmpty ? widget.installment.advisorName[0].toUpperCase() : 'A',
               style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: primaryBlue),
             ),
           ),
@@ -217,8 +284,8 @@ class InstallmentDetailsScreen extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(installment.advisorName, style: GoogleFonts.montserrat(fontSize: 16, fontWeight: FontWeight.bold)),
-              Text('ID: ${installment.advisorCode}', style: GoogleFonts.montserrat(fontSize: 12, color: isDark ? Colors.white60 : Colors.grey.shade600)),
+              Text(widget.installment.advisorName, style: GoogleFonts.montserrat(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text('ID: ${widget.installment.advisorCode}', style: GoogleFonts.montserrat(fontSize: 12, color: isDark ? Colors.white60 : Colors.grey.shade600)),
             ],
           ),
         ],
@@ -239,11 +306,7 @@ class InstallmentDetailsScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-               _buildDetailRow('NAME', installment.clientName, isBoldValue: true),
-               IconButton(
-                icon: Icon(Icons.edit_outlined, size: 18, color: primaryBlue),
-                onPressed: () {},
-               ),
+               _buildDetailRow('NAME', widget.installment.clientName, isBoldValue: true)
             ],
           ),
           const SizedBox(height: 12),
@@ -254,14 +317,14 @@ class InstallmentDetailsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('CONTACT', style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey.shade500)),
-                  Text(installment.clientNumber, style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.w600)),
+                  Text(widget.installment.clientNumber, style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.w600)),
                 ],
               ),
               Row(
                 children: [
-                  _circularIconButton(context, Icons.phone_outlined, Colors.green, () => launchUrl(Uri.parse('tel:${installment.clientNumber}'))),
+                  _circularIconButton(context, Icons.phone_outlined, Colors.green, () => launchUrl(Uri.parse('tel:${widget.installment.clientNumber}'))),
                   const SizedBox(width: 12),
-                  _circularIconButton(context, Icons.chat_bubble_outline, Colors.blue, () => launchUrl(Uri.parse('sms:${installment.clientNumber}'))),
+                  _circularIconButton(context, Icons.chat_bubble_outline, Colors.blue, () => launchUrl(Uri.parse('sms:${widget.installment.clientNumber}'))),
                 ],
               ),
             ],
@@ -294,25 +357,25 @@ class InstallmentDetailsScreen extends StatelessWidget {
       children: [
         Expanded(
           child: OutlinedButton(
-            onPressed: () => provider.downloadInvoice(installment),
+            onPressed: () => provider.downloadInvoice(widget.installment),
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: primaryBlue),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             child: Text(
-              'DOWNLOAD\nINVOICE',
+              'DOWNLOAD\nRECEIPT',
               textAlign: TextAlign.center,
               style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: primaryBlue, fontSize: 13),
             ),
           ),
         ),
-        if (isAdmin && installment.installmentStatus != 'Paid') ...[
+        if (isAdmin && widget.installment.installmentStatus != 'Paid') ...[
           const SizedBox(width: 16),
           Expanded(
             child: ElevatedButton(
               onPressed: () async {
-                final success = await provider.markAsPaid(installment.dealId, installment.installmentIndex);
+                final success = await provider.markAsPaid(widget.installment.dealId, widget.installment.installmentIndex);
                 if (success && context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Marked as paid successfully!')));
                   Navigator.pop(context);

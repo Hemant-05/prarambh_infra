@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_advisor_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/verification_success_screen.dart';
+import '../../../../core/widgets/full_screen_image_viewer.dart';
 import 'package:prarambh_infra/core/utils/ui_helper.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -137,37 +138,50 @@ class ReviewApplicationScreen extends StatelessWidget {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(12),
                           child: profileUrl != null
-                              ? Image.network(
-                                  profileUrl,
-                                  height: 100,
-                                  width: 100,
-                                  fit: BoxFit.cover,
-                                  // NEW: Loading Builder
-                                  loadingBuilder: (context, child, loadingProgress) {
-                                    if (loadingProgress == null)
-                                      return child; // Image is fully loaded
-                                    return Container(
-                                      height: 100,
-                                      width: 100,
-                                      color: Colors.grey[200],
-                                      child: Center(
-                                        child: CircularProgressIndicator(
-                                          color: primaryBlue,
-                                          value:
-                                              loadingProgress
-                                                      .expectedTotalBytes !=
-                                                  null
-                                              ? loadingProgress
-                                                        .cumulativeBytesLoaded /
-                                                    loadingProgress
-                                                        .expectedTotalBytes!
-                                              : null, // Shows exact progress if the server provides it
+                              ? InkWell(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => FullScreenImageViewer(
+                                          imageUrl: profileUrl!,
+                                          heroTag: 'admin_review_main_${advisor.id}',
                                         ),
                                       ),
                                     );
                                   },
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      Container(
+                                  child: Hero(
+                                    tag: 'admin_review_main_${advisor.id}',
+                                    child: Image.network(
+                                      profileUrl!,
+                                      height: 100,
+                                      width: 100,
+                                      fit: BoxFit.cover,
+                                      loadingBuilder:
+                                          (context, child, loadingProgress) {
+                                        if (loadingProgress == null) return child;
+                                        return Container(
+                                          height: 100,
+                                          width: 100,
+                                          color: Colors.grey[200],
+                                          child: Center(
+                                            child: CircularProgressIndicator(
+                                              color: primaryBlue,
+                                              value: loadingProgress
+                                                          .expectedTotalBytes !=
+                                                      null
+                                                  ? loadingProgress
+                                                          .cumulativeBytesLoaded /
+                                                      loadingProgress
+                                                          .expectedTotalBytes!
+                                                  : null,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              Container(
                                         height: 100,
                                         width: 100,
                                         color: Colors.grey[300],
@@ -177,6 +191,8 @@ class ReviewApplicationScreen extends StatelessWidget {
                                           color: Colors.white,
                                         ),
                                       ),
+                                    ),
+                                  ),
                                 )
                               : Container(
                                   height: 100,
@@ -219,15 +235,7 @@ class ReviewApplicationScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Leader Code : ${advisor.leaderCode}',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${advisor.designation} • ID: ${advisor.displayId}',
+                    advisor.designation,
                     style: GoogleFonts.montserrat(
                       fontSize: 14,
                       color: Colors.grey[600],
@@ -285,7 +293,7 @@ class ReviewApplicationScreen extends StatelessWidget {
                 'Mobile',
                 primaryBlue,
               ),
-              Divider(height: 1, color: Colors.grey.withOpacity(0.2)),
+              Divider(height: 1, color: Colors.grey.withValues(alpha: 0.2)),
               _buildContactRow(
                 Icons.email_outlined,
                 advisor.email,
@@ -314,7 +322,7 @@ class ReviewApplicationScreen extends StatelessWidget {
             _buildInfoCard(cardColor, 'BANK & VERIFICATION', [
               _buildDetailRow('PAN Number', advisor.panNumber),
               _buildDetailRow('Aadhaar Number', advisor.aadhaarNumber),
-              Divider(height: 24, color: Colors.grey.withOpacity(0.2)),
+              Divider(height: 24, color: Colors.grey.withValues(alpha: 0.2)),
               _buildDetailRow('Bank Name', advisor.bankName),
               _buildDetailRow('Account Number', advisor.accountNumber),
               _buildDetailRow('IFSC Code', advisor.ifscCode),
@@ -382,48 +390,50 @@ class ReviewApplicationScreen extends StatelessWidget {
                                       color: Colors.grey[100],
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
-                                        color: Colors.grey.withOpacity(0.2),
+                                        color: Colors.grey.withValues(alpha: 0.2),
                                       ),
                                     ),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(8),
                                       child: doc.type == 'IMAGE'
-                                          ? Image.network(
-                                              doc.url,
-                                              fit: BoxFit.cover,
-                                              // NEW: Loading Builder for grid images
-                                              loadingBuilder: (context, child, loadingProgress) {
-                                                if (loadingProgress == null)
-                                                  return child;
-                                                return Container(
-                                                  color: Colors.grey[100],
-                                                  child: Center(
-                                                    child: SizedBox(
-                                                      width: 24,
-                                                      height:
-                                                          24, // Smaller spinner for the grid
-                                                      child: CircularProgressIndicator(
-                                                        color: primaryBlue,
-                                                        strokeWidth: 2.5,
-                                                        value:
-                                                            loadingProgress
-                                                                    .expectedTotalBytes !=
-                                                                null
-                                                            ? loadingProgress
-                                                                      .cumulativeBytesLoaded /
-                                                                  loadingProgress
-                                                                      .expectedTotalBytes!
-                                                            : null,
-                                                      ),
+                                          ? InkWell(
+                                              onTap: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (_) => FullScreenImageViewer(
+                                                      imageUrl: doc.url,
+                                                      heroTag: 'admin_review_doc_${doc.id}_${index}',
                                                     ),
                                                   ),
                                                 );
                                               },
-                                              errorBuilder: (c, o, s) =>
-                                                  const Icon(
-                                                    Icons.broken_image,
-                                                    color: Colors.grey,
-                                                  ),
+                                              child: Hero(
+                                                tag: 'admin_review_doc_${doc.id}_${index}',
+                                                child: Image.network(
+                                                  doc.url,
+                                                  fit: BoxFit.cover,
+                                                  loadingBuilder: (context, child, loadingProgress) {
+                                                    if (loadingProgress == null) return child;
+                                                    return Center(
+                                                      child: SizedBox(
+                                                        width: 24,
+                                                        height: 24,
+                                                        child: CircularProgressIndicator(
+                                                          color: primaryBlue,
+                                                          strokeWidth: 2.5,
+                                                          value: loadingProgress.expectedTotalBytes != null
+                                                              ? loadingProgress.cumulativeBytesLoaded /
+                                                                  loadingProgress.expectedTotalBytes!
+                                                              : null,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                  errorBuilder: (c, o, s) =>
+                                                      const Icon(Icons.broken_image, color: Colors.grey),
+                                                ),
+                                              ),
                                             )
                                           : const Icon(
                                               Icons.picture_as_pdf,
@@ -628,7 +638,7 @@ class ReviewApplicationScreen extends StatelessWidget {
                             color: Colors.white,
                           ),
                     label: Text(
-                      'Verify & Approve Broker',
+                      'Verify & Approve Advisor',
                       style: GoogleFonts.montserrat(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,

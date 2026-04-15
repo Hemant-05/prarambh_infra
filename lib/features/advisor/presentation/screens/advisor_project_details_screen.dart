@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/file_download_helper.dart';
 import '../../../../core/utils/ui_helper.dart';
+import '../../../../core/widgets/pdf_viewer_screen.dart';
 import '../../../admin/data/models/project_model.dart';
 import '../providers/advisor_project_provider.dart';
 import 'advisor_unit_details_screen.dart';
@@ -327,10 +328,16 @@ class _AdvisorProjectDetailsScreenState
                         ? path
                         : 'https://workiees.com/${path.startsWith('/') ? path.substring(1) : path}';
                     
-                    FileDownloadHelper().downloadFile(
-                      context: context,
-                      url: fullUrl,
-                      fileName: "${project.projectName.replaceAll(' ', '_')}_Brochure.pdf",
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PdfViewerScreen(
+                          url: fullUrl,
+                          title: '${project.projectName} Brochure',
+                          fileName:
+                              "${project.projectName.replaceAll(' ', '_')}_Brochure.pdf",
+                        ),
+                      ),
                     );
                   },
                 ),

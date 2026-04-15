@@ -54,6 +54,22 @@ class AdvisorProfileProvider extends ChangeNotifier {
     }
   }
 
+  Future<AdvisorProfileModel?> fetchAdvisorById(String id) async{
+    _isLoading = true;
+    notifyListeners();
+    AdvisorProfileModel profileModel;
+    try{
+      profileModel = await repository.getSingleAdvisor(id);
+      return profileModel;
+    }catch(e){
+      debugPrint("fetch advisor by id error : $e ");
+    }finally{
+      _isLoading = false;
+      notifyListeners();
+    }
+    return null;
+  }
+
   Future<bool> updateProfile({
     required String id,
     String? fullName,

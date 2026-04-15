@@ -262,7 +262,7 @@ class BrokerProfileModel {
       docAddressCardBack: docs['addresscard_back'],
       docPanCard: docs['pancard'],
       docPanCardBack: docs['pancard_back'],
-      docProfile: docs['profile'],
+      docProfile: docs['profile_photo'],
       otherFiles: otherFilesRaw.map((e) => DocumentFileModel.fromJson(e)).toList(),
       achievements: json['achievements'] as List<dynamic>? ?? [],
       contests: contestsRaw.map((e) => ContestModel.fromJson(e)).toList(),

@@ -264,7 +264,7 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
             // Section 2: Reward
             _buildSectionCard(
               cardColor,
-              'Reward Configuration',
+              'Reward',
               Icons.emoji_events_outlined,
               [
                 Row(
@@ -386,10 +386,17 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
                         ),
                         GestureDetector(
                           onTap: () => _removeRule(entry.key),
-                          child: const Icon(
-                            Icons.close,
-                            size: 16,
-                            color: Colors.red,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Icon(
+                              Icons.close,
+                              size: 16,
+                              color: Colors.red,
+                            ),
                           ),
                         ),
                       ],

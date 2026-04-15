@@ -32,6 +32,7 @@ class VerificationSuccessScreen extends StatelessWidget {
                     builder: (context) => AssignDocumentsScreen(
                       advisorId: advisor.id,
                       advisorName: advisor.name,
+                      advisorProfile : advisor.documents.last.url,
                       advisorCode: advisor.displayId,
                     ),
                   ),

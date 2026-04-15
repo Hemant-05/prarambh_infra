@@ -122,7 +122,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
               : () => Navigator.pop(context),
         ),
         title: Text(
-          'Advisor Registration',
+          'Advisor Recruitment',
           style: GoogleFonts.montserrat(
             color: textColor,
             fontWeight: FontWeight.bold,
@@ -293,7 +293,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                     validator: (v) => Validators.validateRequired(v, 'Full Name'),
                   ),
                   _buildTextField(
-                    'Father\'s Name',
+                    'Father Name',
                     'As per Aadhar/PAN',
                     provider.fatherNameCtrl,
                     textColor: textColor,
@@ -365,7 +365,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                     ],
                   ),
                   _buildTextField(
-                    'Email Address',
+                    'Email ID',
                     'email@gmail.com',
                     provider.emailCtrl,
                     icon: Icons.email_outlined,
@@ -443,7 +443,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                   _buildDropdown(
                     'Advisor Type',
                     provider.advisorType,
-                    ['Full-time', 'Part-time'],
+                    ['Full time', 'Part time'],
                     (v) => setState(() => provider.advisorType = v!),
                     textColor: textColor,
                   ),

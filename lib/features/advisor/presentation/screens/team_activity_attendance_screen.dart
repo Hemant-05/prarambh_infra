@@ -37,9 +37,9 @@ class _TeamActivityAttendanceScreenState
       appBar: AppBar(
         backgroundColor: primaryBlue,
         elevation: 0,
-        leading: backButton(isDark: false),
+        leading: backButton(isDark: !isDark),
         title: Text(
-          'Booking & Attendance',
+          'Team Attendance',
           style: GoogleFonts.montserrat(
             color: Colors.white,
             fontWeight: FontWeight.bold,

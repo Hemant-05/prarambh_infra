@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:prarambh_infra/core/utils/file_download_helper.dart';
 import 'package:prarambh_infra/core/utils/ui_helper.dart';
+import 'package:prarambh_infra/core/widgets/pdf_viewer_screen.dart';
 import '../../../admin/data/models/project_model.dart';
 import 'contact_us_screen.dart';
 
@@ -282,10 +282,16 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
                         ? path
                         : 'https://workiees.com/${path.startsWith('/') ? path.substring(1) : path}';
                     
-                    FileDownloadHelper().downloadFile(
-                      context: context,
-                      url: fullUrl,
-                      fileName: "${item.projectName.replaceAll(' ', '_')}_Brochure.pdf",
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PdfViewerScreen(
+                          url: fullUrl,
+                          title: '${item.projectName} Brochure',
+                          fileName:
+                              "${item.projectName.replaceAll(' ', '_')}_Brochure.pdf",
+                        ),
+                      ),
                     );
                   },
                   style: ElevatedButton.styleFrom(

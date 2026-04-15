@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -235,6 +236,29 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
               MaterialPageRoute(builder: (_) => const ContactUsScreen()),
             );
           }),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              'RESOURCES',
+              style: GoogleFonts.montserrat(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          _drawerItem(
+            Icons.gavel_outlined,
+            "RERA Compliance",
+            () => launchUrl(Uri.parse('https://rera.mp.gov.in')),
+          ),
+          _drawerItem(
+            Icons.language_outlined,
+            "Company Website",
+            () => launchUrl(Uri.parse('https://prarambhinfra.com')),
+          ),
           const Spacer(),
           const Divider(),
           _drawerItem(Icons.logout, "Logout", () {

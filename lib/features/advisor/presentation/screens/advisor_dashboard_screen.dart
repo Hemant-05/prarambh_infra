@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_profile_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_team_screen.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +10,7 @@ import 'package:prarambh_infra/core/theme/app_colors.dart';
 import 'package:prarambh_infra/features/auth/presentation/providers/auth_provider.dart';
 import '../providers/advisor_dashboard_provider.dart';
 import '../../data/models/advisor_dashboard_model.dart';
+import '../../data/models/resale_unit_model.dart';
 import '../providers/advisor_lead_provider.dart';
 import '../providers/advisor_project_provider.dart';
 import '../providers/advisor_team_provider.dart';
@@ -22,6 +25,7 @@ import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_edi
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_promotion_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_achievement_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/career_growth_screen.dart';
+import '../../../../core/widgets/full_screen_image_viewer.dart';
 import '../../../../core/utils/access_helper.dart';
 import '../../../../core/utils/ui_helper.dart';
 import '../../../../core/globals.dart';
@@ -38,11 +42,11 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
   int _selectedIndex = 0;
 
   final List<String> _appBarTitles = [
-    'Business Dashboard',
-    'Projects & Inventory',
-    'Sales Pipeline',
-    'My Team',
-    'My Profile',
+    'ADVISOR DASHBOARD',
+    'MY PROFILE',
+    'PROJECTS & INVENTORY',
+    'SALES PIPELINE',
+    'MY TEAM',
   ];
 
   @override
@@ -59,7 +63,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
         userId: advisor?.id.toString() ?? '1',
         onViewTeam: () {
           setState(() {
-            _selectedIndex = 3; // Team tab index is 3
+            _selectedIndex = 4; // Team tab index is 3
           });
         },
       );
@@ -84,20 +88,20 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
         );
         break;
       case 1:
-        await context.read<AdvisorProjectProvider>().fetchProjects();
+        await context.read<AdvisorProfileProvider>().fetchProfileByCode(
+          advisorCode,
+        );
         break;
       case 2:
+        await context.read<AdvisorProjectProvider>().fetchProjects();
+        break;
+      case 3:
         await context.read<AdvisorLeadProvider>().fetchLeads(
           advisorCode: advisorCode,
         );
         break;
-      case 3:
-        await context.read<AdvisorTeamProvider>().fetchTeamTree(advisorId);
-        break;
       case 4:
-        await context.read<AdvisorProfileProvider>().fetchProfileByCode(
-          advisorCode,
-        );
+        await context.read<AdvisorTeamProvider>().fetchTeamTree(advisorId);
         break;
     }
 
@@ -124,10 +128,10 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
 
     final List<Widget> screens = [
       _buildDashboardContent(context),
+      const AdvisorProfileScreen(),
       const AdvisorProjectsScreen(),
       const SalesPipelineScreen(),
       const AdvisorTeamScreen(),
-      const AdvisorProfileScreen(),
     ];
 
     return Scaffold(
@@ -151,7 +155,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: _handleGlobalRefresh,
           ),
-          if (_selectedIndex == 4)
+          if (_selectedIndex == 1)
             Consumer<AdvisorProfileProvider>(
               builder: (context, profileProvider, _) {
                 if (profileProvider.profile == null)
@@ -214,6 +218,17 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             BottomNavigationBarItem(
               icon: Padding(
                 padding: EdgeInsets.only(bottom: 4),
+                child: Icon(Icons.person_outline),
+              ),
+              activeIcon: Padding(
+                padding: EdgeInsets.only(bottom: 4),
+                child: Icon(Icons.person),
+              ),
+              label: 'Profile',
+            ),
+            BottomNavigationBarItem(
+              icon: Padding(
+                padding: EdgeInsets.only(bottom: 4),
                 child: Icon(Icons.business_outlined),
               ),
               activeIcon: Padding(
@@ -243,17 +258,6 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                 child: Icon(Icons.people),
               ),
               label: 'Team',
-            ),
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.only(bottom: 4),
-                child: Icon(Icons.person_outline),
-              ),
-              activeIcon: Padding(
-                padding: EdgeInsets.only(bottom: 4),
-                child: Icon(Icons.person),
-              ),
-              label: 'Profile',
             ),
           ],
         ),
@@ -381,146 +385,174 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             ),
           ),
         ),
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.getBorderColor(context)),
-            boxShadow: [
-              BoxShadow(
-                color: isDark
-                    ? Colors.black.withOpacity(0.3)
-                    : Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+        InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AdvisorProfileScreen(),
               ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  CircleAvatar(
-                    radius: 35,
-                    backgroundColor: primaryBlue.withOpacity(0.1),
-                    backgroundImage: data.profilePhoto.isNotEmpty
-                        ? NetworkImage(data.profilePhoto)
-                        : null,
-                    child: data.profilePhoto.isEmpty
-                        ? Icon(Icons.person, size: 30, color: primaryBlue)
-                        : null,
-                  ),
-                  Positioned(
-                    bottom: -8,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      alignment: Alignment.center,
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        data.status.toUpperCase(),
-                        style: GoogleFonts.montserrat(
-                          fontSize: 9,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            );
+          },
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.getBorderColor(context)),
+              boxShadow: [
+                BoxShadow(
+                  color: isDark
+                      ? Colors.black.withOpacity(0.3)
+                      : Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Stack(
+                  clipBehavior: Clip.none,
                   children: [
-                    Text(
-                      data.name,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: primaryBlue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        data.role,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: primaryBlue,
+                    InkWell(
+                      onTap: () {
+                        if (data.profilePhoto.isNotEmpty) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => FullScreenImageViewer(
+                                imageUrl: data.profilePhoto,
+                                heroTag: 'top_profile_photo',
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      child: Hero(
+                        tag: 'top_profile_photo',
+                        child: CircleAvatar(
+                          radius: 35,
+                          backgroundColor: primaryBlue.withOpacity(0.1),
+                          backgroundImage: data.profilePhoto.isNotEmpty
+                              ? NetworkImage(data.profilePhoto)
+                              : null,
+                          child: data.profilePhoto.isEmpty
+                              ? Icon(Icons.person, size: 30, color: primaryBlue)
+                              : null,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.badge_outlined,
-                          size: 14,
-                          color: secondaryTextColor,
+                    Positioned(
+                      bottom: -8,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'ID: ${data.advisorId}',
+                        child: Text(
+                          data.status.toUpperCase(),
                           style: GoogleFonts.montserrat(
-                            fontSize: 12,
-                            color: textColor,
+                            fontSize: 9,
+                            color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.person_outline,
-                          size: 14,
-                          color: secondaryTextColor,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Parent: ',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 12,
-                            color: secondaryTextColor,
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            data.parentName,
-                            style: GoogleFonts.montserrat(
-                              fontSize: 12,
-                              color: primaryBlue,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        data.name,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: primaryBlue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          data.role,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: primaryBlue,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.badge_outlined,
+                            size: 14,
+                            color: secondaryTextColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'ADV CODE: ${data.advisorId}',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 12,
+                              color: textColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.person_outline,
+                            size: 14,
+                            color: secondaryTextColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Leader: ',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 12,
+                              color: secondaryTextColor,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              data.parentName,
+                              style: GoogleFonts.montserrat(
+                                fontSize: 12,
+                                color: primaryBlue,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -536,91 +568,106 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     final textColor = Theme.of(context).textTheme.bodyMedium?.color;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: primaryBlue.withOpacity(0.3)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: isDark
-                  ? primaryBlue.withOpacity(0.2)
-                  : const Color(0xFF1E2A47),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                const Icon(Icons.star_border, color: Colors.white, size: 30),
-                Positioned(
-                  bottom: 4,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.amber,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      'LVL',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CareerGrowthScreen()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: primaryBlue.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: isDark
+                    ? primaryBlue.withOpacity(0.2)
+                    : const Color(0xFF1E2A47),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Icon(Icons.star_border, color: Colors.white, size: 30),
+                  Positioned(
+                    bottom: 4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.amber,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        'LVL',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  data.currentLevel,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Text(
-                      'NEXT: ${data.nextLevel}',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: primaryBlue,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        data.currentLevel,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(Icons.arrow_outward, size: 12, color: primaryBlue),
-                  ],
-                ),
-              ],
+                      Spacer(),
+                      Text(
+                        '${data.progressPercent}%',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF1E2A47),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(
+                        'NEXT PROMOTION: ${data.nextLevel}',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: primaryBlue,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(Icons.arrow_outward, size: 12, color: primaryBlue),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          Text(
-            '${data.progressPercent}%',
-            style: GoogleFonts.montserrat(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : const Color(0xFF1E2A47),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -634,33 +681,45 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     SalesConversion sales,
   ) {
     return SizedBox(
-      height: 60,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      height: 100, // Increased height for better design
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
         children: [
           _buildSalesCard(
             context,
             sales.suspecting.toString(),
             'SUSPECTING',
-            const Color(0xFF2962FF),
+            const Color(0xFF6366F1), // Indigo
+            Icons.search,
           ),
           _buildSalesCard(
             context,
             sales.prospecting.toString(),
             'PROSPECTING',
-            const Color(0xFF448AFF),
+            const Color(0xFF3B82F6), // Blue
+            Icons.lightbulb_outline,
           ),
           _buildSalesCard(
             context,
             sales.siteVisit.toString(),
             'SITE VISIT',
-            const Color(0xFFFF9100),
+            const Color(0xFFF59E0B), // Amber
+            Icons.location_on_outlined,
           ),
           _buildSalesCard(
             context,
             sales.booking.toString(),
             'BOOKING',
-            const Color(0xFF4CAF50),
+            const Color(0xFF10B981), // Emerald
+            Icons.book_outlined,
+          ),
+          _buildSalesCard(
+            context,
+            sales.completed.toString(),
+            'COMPLETED',
+            const Color(0xFF059669), // Green
+            Icons.task_alt,
           ),
         ],
       ),
@@ -672,44 +731,67 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     String value,
     String label,
     Color accentColor,
+    IconData icon,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark
-        ? Theme.of(context).cardColor
-        : accentColor.withOpacity(0.1);
-    final valueColor = isDark ? Colors.white : Colors.black87;
-    final labelColor = isDark ? accentColor : Colors.black87;
+    final cardColor = Theme.of(context).cardColor;
 
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 2),
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: accentColor.withOpacity(isDark ? 0.4 : 0.1),
-          ),
+    return Container(
+      width: 100,
+      margin: const EdgeInsets.only(right: 12),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.white10 : accentColor.withOpacity(0.12),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withOpacity(isDark ? 0.05 : 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              value,
-              style: GoogleFonts.montserrat(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: valueColor,
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: accentColor.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 16,
+                color: accentColor,
               ),
             ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: GoogleFonts.montserrat(
-                fontSize: 8,
-                fontWeight: FontWeight.bold,
-                color: labelColor,
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                Text(
+                  label,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: accentColor,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -973,9 +1055,12 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           if (progress < 0) progress = 0;
 
           IconData metricIcon = Icons.auto_graph;
-          if (m.metric.contains('Booking')) metricIcon = Icons.shopping_bag_outlined;
-          if (m.metric.contains('Team Size')) metricIcon = Icons.groups_outlined;
-          if (m.metric.contains('Attendance')) metricIcon = Icons.event_available_outlined;
+          if (m.metric.contains('Booking'))
+            metricIcon = Icons.shopping_bag_outlined;
+          if (m.metric.contains('Team Size'))
+            metricIcon = Icons.groups_outlined;
+          if (m.metric.contains('Attendance'))
+            metricIcon = Icons.event_available_outlined;
 
           return Column(
             children: [
@@ -994,7 +1079,9 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                             style: GoogleFonts.montserrat(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context).textTheme.bodyMedium?.color,
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.color,
                             ),
                           ),
                         ],
@@ -1081,10 +1168,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                 ],
               ),
               if (index < metrics.length - 1)
-                Divider(
-                  height: 32,
-                  color: AppColors.getBorderColor(context),
-                ),
+                Divider(height: 32, color: AppColors.getBorderColor(context)),
             ],
           );
         }).toList(),
@@ -1097,7 +1181,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildSectionTitle(context, 'Active Contests'),
+        _buildSectionTitle(context, 'Active Contest'),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
@@ -1226,15 +1310,33 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             color: Theme.of(context).cardColor,
             child: Column(
               children: [
-                CircleAvatar(
-                  radius: 40,
-                  backgroundColor: primaryBlue.withOpacity(0.1),
-                  backgroundImage: data != null && data.profilePhoto.isNotEmpty
-                      ? NetworkImage(data.profilePhoto)
-                      : null,
-                  child: data == null || data.profilePhoto.isEmpty
-                      ? Icon(Icons.person, size: 35, color: primaryBlue)
-                      : null,
+                GestureDetector(
+                  onTap: () {
+                    if (data != null && data.profilePhoto.isNotEmpty) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => FullScreenImageViewer(
+                            imageUrl: data.profilePhoto,
+                            heroTag: 'drawer_profile_photo',
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: Hero(
+                    tag: 'drawer_profile_photo',
+                    child: CircleAvatar(
+                      radius: 40,
+                      backgroundColor: primaryBlue.withOpacity(0.1),
+                      backgroundImage: data != null && data.profilePhoto.isNotEmpty
+                          ? NetworkImage(data.profilePhoto)
+                          : null,
+                      child: data == null || data.profilePhoto.isEmpty
+                          ? Icon(Icons.person, size: 35, color: primaryBlue)
+                          : null,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -1257,7 +1359,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             ),
           ),
           Divider(color: AppColors.getBorderColor(context)),
-          _drawerItem(context, Icons.description_outlined, 'Document View', () {
+          _drawerItem(context, Icons.description_outlined, 'DOCUMENT VIEW', () {
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -1265,7 +1367,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
               ),
             );
           }),
-          _drawerItem(context, Icons.emoji_events_outlined, 'Contests', () {
+          _drawerItem(context, Icons.emoji_events_outlined, 'CONTEST', () {
             if (AdvisorAccessHelper.check(context, feature: 'contests')) {
               Navigator.push(
                 context,
@@ -1278,7 +1380,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           _drawerItem(
             context,
             Icons.account_balance_wallet_outlined,
-            'My Income',
+            'MY INCOME',
             () {
               Navigator.pushNamed(context, '/my_income_analytics');
             },
@@ -1286,28 +1388,23 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           _drawerItem(
             context,
             Icons.event_available_outlined,
-            'Upcoming Installment',
+            'UPCOMING INSTALLMENT',
             () {
               Navigator.pushNamed(context, '/upcoming_installments');
             },
           ),
-          _drawerItem(
-            context,
-            Icons.military_tech_outlined,
-            'Achievements',
-            () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AdvisorAchievementScreen(),
-                ),
-              );
-            },
-          ),
+          _drawerItem(context, Icons.military_tech_outlined, 'ACHIEVEMENT', () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AdvisorAchievementScreen(),
+              ),
+            );
+          }),
           _drawerItem(
             context,
             Icons.calculate_outlined,
-            'Calculator - INSTALLMENT',
+            'CALCULATOR - INSTALLMENT',
             () {
               Navigator.pushNamed(context, '/installment_calculator');
             },
@@ -1315,7 +1412,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           _drawerItem(
             context,
             Icons.badge_outlined,
-            'Meeting & Attendance',
+            'MEETING & ATTENDANCE',
             () {
               Navigator.push(
                 context,
@@ -1325,15 +1422,15 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
               );
             },
           ),
-          _drawerItem(context, Icons.leaderboard_outlined, 'Leader board', () {
+          _drawerItem(context, Icons.leaderboard_outlined, 'STARWALL', () {
             Navigator.pushNamed(context, '/advisor_leaderboard');
           }),
-          _drawerItem(context, Icons.people_outline, 'My Recruitment', () {
+          _drawerItem(context, Icons.people_outline, 'MY RECRUITMENT', () {
             if (AdvisorAccessHelper.check(context, feature: 'recruitment')) {
               Navigator.pushNamed(context, '/recruiter_dashboard');
             }
           }),
-          _drawerItem(context, Icons.campaign_outlined, 'Promotions', () {
+          _drawerItem(context, Icons.campaign_outlined, 'PROMOTION', () {
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -1344,8 +1441,37 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           _drawerItem(
             context,
             Icons.groups_outlined,
-            'Business plan - click 6 points',
-            () {},
+            'BUSINESS PLAN', // Shortened label
+            () {
+              if (AdvisorAccessHelper.check(context, feature: 'business_plan')) {
+                Navigator.pushNamed(context, '/business_plan');
+              }
+            },
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              'EXTERNAL LINKS',
+              style: GoogleFonts.montserrat(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          _drawerItem(
+            context,
+            Icons.gavel_outlined,
+            'RERA COMPLIANCE',
+            () => launchUrl(Uri.parse('https://rera.mp.gov.in')),
+          ),
+          _drawerItem(
+            context,
+            Icons.language_outlined,
+            'COMPANY WEBSITE',
+            () => launchUrl(Uri.parse('https://prarambhinfra.com')),
           ),
           Divider(color: AppColors.getBorderColor(context)),
           ListTile(
@@ -1372,6 +1498,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
               }
             },
           ),
+          SizedBox(height: 40),
         ],
       ),
     );
@@ -1448,7 +1575,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Pending Tasks Reminder",
+                        "Alerts",
                         style: GoogleFonts.montserrat(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -1458,7 +1585,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                         ),
                       ),
                       Text(
-                        "You have ${tasks.length} tasks scheduled for today.",
+                        "${tasks.length} tasks · Resale properties available",
                         style: GoogleFonts.montserrat(
                           fontSize: 10,
                           color: isDark ? Colors.white70 : Colors.black87,
@@ -1492,6 +1619,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
   void _showPendingTasksBottomSheet(BuildContext context) {
     final provider = context.read<AdvisorDashboardProvider>();
     final tasks = provider.data?.pendingActions ?? [];
+    final resaleUnits = provider.resaleUnits;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryBlue = Theme.of(context).primaryColor;
 
@@ -1501,7 +1629,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
-          height: MediaQuery.of(context).size.height * 0.7,
+          height: MediaQuery.of(context).size.height * 0.82,
           decoration: BoxDecoration(
             color: Theme.of(context).scaffoldBackgroundColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -1519,13 +1647,24 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                 child: Row(
                   children: [
-                    Icon(Icons.notifications_active, color: primaryBlue),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.notifications_active,
+                        color: Colors.orange,
+                        size: 20,
+                      ),
+                    ),
                     const SizedBox(width: 12),
                     Text(
-                      "Your Tasks & Reminders",
+                      "Alerts & Reminders",
                       style: GoogleFonts.montserrat(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -1542,7 +1681,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        "${tasks.length} Total",
+                        "${tasks.length} Tasks",
                         style: GoogleFonts.montserrat(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -1555,34 +1694,178 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
               ),
               const Divider(height: 1),
               Expanded(
-                child: tasks.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.check_circle_outline,
-                              size: 64,
-                              color: Colors.grey.withOpacity(0.3),
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(0, 12, 0, 8),
+                  children: [
+                    // ── Resale Properties Section ──────────────────────
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(6),
                             ),
-                            const SizedBox(height: 16),
-                            Text(
-                              "All caught up!",
-                              style: GoogleFonts.montserrat(
-                                color: Colors.grey,
-                                fontWeight: FontWeight.w500,
+                            child: const Icon(
+                              Icons.home_work_outlined,
+                              color: Colors.amber,
+                              size: 14,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'RESALE PROPERTIES',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.8,
+                              color: isDark ? Colors.white70 : Colors.black54,
+                            ),
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: Colors.amber.withOpacity(0.3),
                               ),
                             ),
-                          ],
+                            child: Text(
+                              '${resaleUnits.length} Listed',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.amber.shade700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    resaleUnits.isEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? Colors.white.withOpacity(0.04)
+                                    : Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isDark
+                                      ? Colors.white12
+                                      : Colors.grey.shade200,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'No resale properties available',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 12,
+                                    color: isDark
+                                        ? Colors.white54
+                                        : Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        : SizedBox(
+                            height: 170,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              itemCount: resaleUnits.length,
+                              itemBuilder: (ctx, i) => _buildResaleCard(
+                                resaleUnits[i],
+                                primaryBlue,
+                                isDark,
+                              ),
+                            ),
+                          ),
+
+                    const SizedBox(height: 16),
+                    Divider(
+                      height: 1,
+                      color: isDark ? Colors.white12 : Colors.grey.shade200,
+                    ),
+                    const SizedBox(height: 8),
+
+                    // ── Pending Tasks Section ──────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: primaryBlue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(
+                              Icons.task_alt_outlined,
+                              color: primaryBlue,
+                              size: 14,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'PENDING TASKS',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.8,
+                              color: isDark ? Colors.white70 : Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (tasks.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.white.withOpacity(0.04)
+                                : Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.check_circle_outline,
+                                size: 40,
+                                color: Colors.grey.withOpacity(0.4),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'All caught up!',
+                                style: GoogleFonts.montserrat(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       )
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(20),
-                        itemCount: tasks.length,
-                        itemBuilder: (context, index) {
-                          final task = tasks[index];
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
+                    else
+                      ...tasks.map(
+                        (task) => Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                          child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: isDark
@@ -1659,9 +1942,12 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                                 ),
                               ],
                             ),
-                          );
-                        },
+                          ),
+                        ),
                       ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.all(20),
@@ -1686,10 +1972,158 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                   ),
                 ),
               ),
+              SizedBox(height: 40),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildResaleCard(ResaleUnitModel unit, Color blue, bool isDark) {
+    final isAvailable = unit.isAvailable;
+    final statusColor = isAvailable ? Colors.green : Colors.red;
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+
+    final totalVal = unit.totalValue;
+    final formatted = totalVal >= 100000
+        ? '₹${(totalVal / 100000).toStringAsFixed(1)}L'
+        : '₹${NumberFormat('#,##0', 'en_IN').format(totalVal)}';
+
+    return Container(
+      width: 210,
+      margin: const EdgeInsets.only(right: 12),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark ? Colors.white12 : Colors.grey.shade200,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header strip
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.amber.withOpacity(0.1),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(14),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.home_work_outlined,
+                  size: 14,
+                  color: Colors.amber,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    unit.colonyName.trim(),
+                    style: GoogleFonts.montserrat(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : const Color(0xFF1A2340),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        unit.configuration,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: blue,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        isAvailable ? 'Available' : 'Sold Out',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: statusColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Plot ${unit.plotNumber}  ·  ${unit.plotDimensions}',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 11,
+                    color: isDark ? Colors.white70 : Colors.grey.shade700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${unit.areaSqft} sq.ft  ·  ${unit.propertyType}',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 11,
+                    color: isDark ? Colors.white54 : Colors.grey.shade500,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  formatted,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: blue,
+                  ),
+                ),
+                Text(
+                  '₹${unit.ratePerSqft}/sq.ft',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 9,
+                    color: isDark ? Colors.white38 : Colors.grey.shade400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -76,7 +76,7 @@ class _AdminRecruitmentDashboardScreenState
                   _buildStatCard(
                     'TOTAL',
                     data.totalRecruits.toString(),
-                    'Recruits',
+                    'Advisors',
                     Icons.people_outline,
                     primaryBlue,
                     cardColor,
@@ -85,7 +85,7 @@ class _AdminRecruitmentDashboardScreenState
                   _buildStatCard(
                     'ACTIVE',
                     data.activeRecruits.toString(),
-                    'Onboarded',
+                    'Onboard',
                     Icons.check_circle_outline,
                     Colors.green,
                     cardColor,
@@ -94,14 +94,14 @@ class _AdminRecruitmentDashboardScreenState
                   _buildStatCard(
                     'PENDING',
                     data.pendingApprovals.toString(),
-                    'Approval',
+                    'Verification',
                     Icons.pending_actions_outlined,
                     Colors.orange,
                     cardColor,
                     isDark,
                   ),
                   _buildStatCard(
-                    'SUSPENDED',
+                    'TERMINATED',
                     data.inactiveOrSuspended.toString(),
                     'Inactive',
                     Icons.block_outlined,
@@ -272,7 +272,7 @@ class _AdminRecruitmentDashboardScreenState
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
-                                  applicant.status,
+                                  applicant.status.toLowerCase() == 'suspended' ? "Terminated" : applicant.status,
                                   style: GoogleFonts.montserrat(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -310,7 +310,7 @@ class _AdminRecruitmentDashboardScreenState
         elevation: 0,
         leading: backButton(isDark: isDark),
         title: Text(
-          provider.hasError ? 'Error' : 'Recruitment Dashboard',
+          provider.hasError ? 'Error' : 'Recruitment Portal',
           style: GoogleFonts.montserrat(
             color: Colors.white,
             fontSize: 18,
@@ -400,6 +400,7 @@ class _AdminRecruitmentDashboardScreenState
             subtitle,
             style: GoogleFonts.montserrat(
               fontSize: 11,
+              fontWeight: FontWeight.w600,
               color: secondaryTextColor,
             ),
           ),

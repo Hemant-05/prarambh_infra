@@ -62,7 +62,10 @@ class _TopPerformersDialogState extends State<TopPerformersDialog> {
       if (response['status'] == true && response['data'] != null) {
         final List data = response['data'];
         setState(() {
-          _performers = data.map((e) => TopPerformerModel.fromJson(e)).toList();
+          _performers = data
+              .take(3)
+              .map((e) => TopPerformerModel.fromJson(e))
+              .toList();
           _isLoading = false;
         });
       } else {
@@ -199,7 +202,7 @@ class _TopPerformersDialogState extends State<TopPerformersDialog> {
                                     radius: 26,
                                     backgroundColor: Colors.grey.shade200,
                                     backgroundImage: performer.profilePhoto.isNotEmpty
-                                        ? NetworkImage(performer.profilePhoto)
+                                        ? NetworkImage( "https://workiees.com/${performer.profilePhoto}")
                                         : null,
                                     child: performer.profilePhoto.isEmpty
                                         ? const Icon(Icons.person, color: Colors.grey)
@@ -289,7 +292,7 @@ class _TopPerformersDialogState extends State<TopPerformersDialog> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Check full leaderboard for details',
+                      'Check full StarWall for details',
                       style: GoogleFonts.montserrat(color: Colors.grey.shade400, fontSize: 10),
                     ),
                   ],

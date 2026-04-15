@@ -42,6 +42,8 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
                 (selectedFilter == 'Sold Out' &&
                     (u.availabilityStatus.toLowerCase() == 'sold' ||
                         u.availabilityStatus.toLowerCase() == 'sold out')) ||
+                (selectedFilter == 'Resale' &&
+                    u.saleCategory.toLowerCase() == 'resale') ||
                 u.availabilityStatus.toUpperCase() ==
                     selectedFilter.toUpperCase(),
           )
@@ -108,6 +110,11 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
                   selectedFilter == 'Sold Out',
                   primaryBlue,
                 ),
+                _buildFilterChip(
+                  'Resale',
+                  selectedFilter == 'Resale',
+                  primaryBlue,
+                ),
               ],
             ),
           ),
@@ -137,6 +144,11 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
                   '${provider.soldUnitsCount}',
                   'SOLD',
                   Colors.red,
+                ),
+                _buildStatText(
+                  '${provider.resaleUnitsCount}',
+                  'RESALE',
+                  Colors.purple,
                 ),
               ],
             ),
@@ -221,7 +233,10 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
   Widget _buildUnitCard(UnitModel unit, BuildContext context) {
     Color bgColor;
     Color textColor;
-    if (unit.availabilityStatus.toUpperCase() == 'AVAILABLE') {
+    if (unit.saleCategory.toLowerCase() == 'resale') {
+      bgColor = Colors.purple[50]!;
+      textColor = Colors.purple[800]!;
+    } else if (unit.availabilityStatus.toUpperCase() == 'AVAILABLE') {
       bgColor = const Color(0xFFE8F5E9);
       textColor = Colors.green[800]!;
     } else if (unit.availabilityStatus.toUpperCase() == 'BOOKED') {
@@ -250,7 +265,9 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              unit.availabilityStatus,
+              unit.saleCategory.toLowerCase() == 'resale'
+                  ? 'RESALE (${unit.availabilityStatus})'
+                  : unit.availabilityStatus,
               style: GoogleFonts.montserrat(
                 fontSize: 9,
                 fontWeight: FontWeight.bold,

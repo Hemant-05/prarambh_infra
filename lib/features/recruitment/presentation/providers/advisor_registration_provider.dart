@@ -38,7 +38,7 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
 
   String gender = 'Male';
   String designation = 'Advisor';
-  String advisorType = 'Full-time';
+  String advisorType = 'Full time';
   final stateCtrl = TextEditingController();
   final cityCtrl =  TextEditingController();
 

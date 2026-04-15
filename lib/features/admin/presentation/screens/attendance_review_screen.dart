@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/widgets/full_screen_image_viewer.dart';
 
 class AttendanceReviewScreen extends StatefulWidget {
   final String advisorName;
@@ -237,63 +238,26 @@ class _AttendanceReviewScreenState extends State<AttendanceReviewScreen> {
           child: photoUrl.isNotEmpty
               ? InkWell(
                   onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => Dialog(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            AppBar(
-                              title: Text(
-                                title,
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              automaticallyImplyLeading: false,
-                              actions: [
-                                IconButton(
-                                  icon: const Icon(Icons.close),
-                                  onPressed: () => Navigator.pop(context),
-                                ),
-                              ],
-                              backgroundColor: Colors.transparent,
-                              elevation: 0,
-                              centerTitle: true,
-                            ),
-                            ClipRRect(
-                              borderRadius: const BorderRadius.vertical(
-                                bottom: Radius.circular(16),
-                              ),
-                              child: Image.network(
-                                photoUrl,
-                                fit: BoxFit.contain,
-                                errorBuilder: (_, __, ___) => const Padding(
-                                  padding: EdgeInsets.all(40),
-                                  child: Icon(
-                                    Icons.broken_image,
-                                    size: 80,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FullScreenImageViewer(
+                          imageUrl: photoUrl,
+                          heroTag: 'admin_attendance_${title}_${widget.advisorId}',
                         ),
                       ),
                     );
                   },
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      photoUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
-                          const Icon(Icons.image_not_supported, size: 40),
+                  child: Hero(
+                    tag: 'admin_attendance_${title}_${widget.advisorId}',
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        photoUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            const Icon(Icons.image_not_supported, size: 40),
+                      ),
                     ),
                   ),
                 )

@@ -3,9 +3,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:graphview/GraphView.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/full_screen_image_viewer.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/advisor_team_provider.dart';
 import '../../data/models/advisor_team_model.dart';
+import 'advisor_promotion_screen.dart';
+import 'career_growth_screen.dart';
+import 'team_activity_attendance_screen.dart';
+import '../../../recruitment/presentation/screens/recruiter_dashboard_screen.dart';
 
 class AdvisorTeamScreen extends StatefulWidget {
   const AdvisorTeamScreen({super.key});
@@ -163,6 +168,7 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: _showTreeFab && _graphInitialized
           ? FloatingActionButton(
+        heroTag: 'advisor_team_center_fab',
         onPressed: _centerOnRoot,
         backgroundColor: primaryBlue,
         elevation: 4,
@@ -276,12 +282,20 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
                         final advisorId = context.read<AuthProvider>().currentUser?.id.toString() ?? '';
                         return provider.fetchTeamTree(advisorId);
                       },
-                      child: ListView.builder(
-                          padding: const EdgeInsets.all(20),
-                          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-                          itemCount: flatList.length,
-                          itemBuilder: (context, index) => _buildListCard(context, flatList[index], primaryBlue, isDark),
-                        ),
+                      child: Column(
+                        children: [
+                          // Quick Action Buttons
+                          _buildQuickActions(context, primaryBlue, isDark),
+                          Expanded(
+                            child: ListView.builder(
+                                padding: const EdgeInsets.all(20),
+                                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                                itemCount: flatList.length,
+                                itemBuilder: (context, index) => _buildListCard(context, flatList[index], primaryBlue, isDark),
+                              ),
+                          ),
+                        ],
+                      ),
                     ),
               ],
             ),
@@ -345,14 +359,48 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.all(2),
-            decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all(color: isMatch ? Colors.orange : blue.withOpacity(0.4), width: 1.5)),
-            child: CircleAvatar(
-              radius: 20,
-              backgroundColor: isMatch ? Colors.orange.withOpacity(0.1) : blue.withOpacity(0.1),
-              backgroundImage: node.profilePhoto.isNotEmpty ? NetworkImage(node.profilePhoto) : null,
-              child: node.profilePhoto.isEmpty ? Text(initials, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: isMatch ? Colors.orange : blue, fontSize: 13)) : null,
+          InkWell(
+            onTap: () {
+              if (node.profilePhoto.isNotEmpty) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FullScreenImageViewer(
+                      imageUrl: node.profilePhoto,
+                      heroTag: 'team_tree_${node.advisorCode}',
+                    ),
+                  ),
+                );
+              }
+            },
+            child: Hero(
+              tag: 'team_tree_${node.advisorCode}',
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isMatch ? Colors.orange : blue.withOpacity(0.4),
+                    width: 1.5,
+                  ),
+                ),
+                child: CircleAvatar(
+                  radius: 20,
+                  backgroundColor: isMatch ? Colors.orange.withOpacity(0.1) : blue.withOpacity(0.1),
+                  backgroundImage: node.profilePhoto.isNotEmpty ? NetworkImage(node.profilePhoto) : null,
+                  child: node.profilePhoto.isEmpty
+                      ? Text(
+                          initials,
+                          style: GoogleFonts.montserrat(
+                            fontWeight: FontWeight.bold,
+                            color: isMatch ? Colors.orange : blue,
+                            fontSize: 13,
+                          ),
+                        )
+                      : null,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -367,6 +415,119 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
 
     if (isRoot) return KeyedSubtree(key: _rootNodeKey, child: card);
     return card;
+  }
+
+  Widget _buildQuickActions(BuildContext context, Color blue, bool isDark) {
+    final cardColor = Theme.of(context).cardColor;
+    final advisorCode = context.read<AuthProvider>().currentUser?.advisorCode ?? '';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: cardColor,
+        border: Border(
+          bottom: BorderSide(color: AppColors.getBorderColor(context)),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _quickActionBtn(
+            context,
+            icon: Icons.account_balance_wallet_outlined,
+            label: 'Income',
+            blue: blue,
+            isDark: isDark,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AdvisorPromotionScreen()),
+            ),
+          ),
+          _quickActionBtn(
+            context,
+            icon: Icons.trending_up,
+            label: 'Status',
+            blue: blue,
+            isDark: isDark,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CareerGrowthScreen()),
+            ),
+          ),
+          _quickActionBtn(
+            context,
+            icon: Icons.person_add_alt_1_outlined,
+            label: 'Recruit',
+            blue: blue,
+            isDark: isDark,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const RecruiterDashboardScreen()),
+            ),
+          ),
+          _quickActionBtn(
+            context,
+            icon: Icons.calendar_month_outlined,
+            label: 'Attend.',
+            blue: blue,
+            isDark: isDark,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => TeamActivityAttendanceScreen(advisorCode: advisorCode),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _quickActionBtn(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Color blue,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white.withOpacity(0.07) : const Color(0xFFF0F4FF),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: blue.withOpacity(0.18),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.15 : 0.05),
+                  blurRadius: 6,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Icon(icon, color: blue, size: 22),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: GoogleFonts.montserrat(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white70 : const Color(0xFF1A2340),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildListCard(BuildContext context, AdvisorTeamNode node, Color blue, bool isDark) {
@@ -400,11 +561,29 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: blue.withOpacity(0.1),
-            backgroundImage: node.profilePhoto.isNotEmpty ? NetworkImage(node.profilePhoto) : null,
-            child: node.profilePhoto.isEmpty ? Text(initials, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: blue, fontSize: 16)) : null,
+          InkWell(
+            onTap: () {
+              if (node.profilePhoto.isNotEmpty) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FullScreenImageViewer(
+                      imageUrl: node.profilePhoto,
+                      heroTag: 'team_list_${node.advisorCode}',
+                    ),
+                  ),
+                );
+              }
+            },
+            child: Hero(
+              tag: 'team_list_${node.advisorCode}',
+              child: CircleAvatar(
+                radius: 24,
+                backgroundColor: blue.withOpacity(0.1),
+                backgroundImage: node.profilePhoto.isNotEmpty ? NetworkImage(node.profilePhoto) : null,
+                child: node.profilePhoto.isEmpty ? Text(initials, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: blue, fontSize: 16)) : null,
+              ),
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(

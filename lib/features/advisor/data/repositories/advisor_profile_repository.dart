@@ -32,6 +32,18 @@ class AdvisorProfileRepository {
     }
   }
 
+  Future<AdvisorProfileModel> getSingleAdvisor(String id) async {
+    try {
+      final response = await apiClient.getSingleAdvisor(id);
+      if (response['status']) {
+        return AdvisorProfileModel.fromJson(response['data']);
+      }
+      throw Exception(response['message'] ?? 'Failed to load advisor');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<bool> updateProfile({
     required String id,
     String? fullName,

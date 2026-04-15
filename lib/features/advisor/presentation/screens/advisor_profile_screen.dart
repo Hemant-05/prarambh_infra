@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/full_screen_image_viewer.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/advisor_profile_provider.dart';
 import '../../data/models/advisor_profile_model.dart';
@@ -15,16 +16,38 @@ class AdvisorProfileScreen extends StatefulWidget {
 }
 
 class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
+  AdvisorProfileModel? leaderModel;
+  bool _leaderFetched = false;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final advisorCode =
           context.read<AuthProvider>().currentUser?.advisorCode ?? '';
       if (advisorCode.isNotEmpty) {
-        context.read<AdvisorProfileProvider>().fetchProfileByCode(advisorCode);
+        await context.read<AdvisorProfileProvider>().fetchProfileByCode(advisorCode);
+        if (mounted) {
+          final profile = context.read<AdvisorProfileProvider>().profile;
+          final leaderId = profile?.leaderId ?? '';
+          if (leaderId.isNotEmpty && leaderId != 'null') {
+            await _fetchLeaderById(leaderId);
+          } else {
+            setState(() => _leaderFetched = true);
+          }
+        }
       }
     });
+  }
+
+  Future<void> _fetchLeaderById(String id) async {
+    final model = await context.read<AdvisorProfileProvider>().fetchAdvisorById(id);
+    if (mounted) {
+      setState(() {
+        leaderModel = model;
+        _leaderFetched = true;
+      });
+    }
   }
 
   @override
@@ -35,13 +58,12 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: provider.isLoading || provider.profile == null
+      body: provider.isLoading || provider.profile == null || !_leaderFetched
           ? Center(child: CircularProgressIndicator(color: primaryBlue))
           : RefreshIndicator(
               onRefresh: () async {
                 final code =
-                    context.read<AuthProvider>().currentUser?.advisorCode ??
-                    '';
+                    context.read<AuthProvider>().currentUser?.advisorCode ?? '';
                 await provider.fetchProfileByCode(code);
               },
               child: CustomScrollView(
@@ -95,7 +117,7 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                             ),
                             _buildInfoRow(
                               context,
-                              "Father's Name",
+                              "Father Name",
                               provider.profile!.fatherName,
                               Icons.family_restroom,
                               isDark,
@@ -109,6 +131,58 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                               isLast: true,
                             ),
                           ],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildExpandableSection(
+                          context: context,
+                          title: "Leader Details",
+                          icon: Icons.account_balance_outlined,
+                          primaryBlue: primaryBlue,
+                          isDark: isDark,
+                          children: leaderModel == null
+                              ? [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    child: Text(
+                                      'No leader assigned',
+                                      style: GoogleFonts.montserrat(
+                                        color: Colors.grey,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                ]
+                              : [
+                                  _buildInfoRow(
+                                    context,
+                                    "Leader Name",
+                                    leaderModel!.fullName,
+                                    Icons.person,
+                                    isDark,
+                                  ),
+                                  _buildInfoRow(
+                                    context,
+                                    "Designation",
+                                    leaderModel!.designation,
+                                    Icons.work,
+                                    isDark,
+                                  ),
+                                  _buildInfoRow(
+                                    context,
+                                    "Leader Code",
+                                    leaderModel!.advisorCode,
+                                    Icons.code,
+                                    isDark,
+                                  ),
+                                  _buildInfoRow(
+                                    context,
+                                    "Number",
+                                    leaderModel!.phone,
+                                    Icons.phone,
+                                    isDark,
+                                    isLast: true,
+                                  ),
+                                ],
                         ),
                         const SizedBox(height: 16),
                         _buildExpandableSection(
@@ -414,15 +488,33 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                 color: Theme.of(context).scaffoldBackgroundColor,
                 shape: BoxShape.circle,
               ),
-              child: CircleAvatar(
-                radius: 50,
-                backgroundColor: primaryBlue.withOpacity(0.1),
-                backgroundImage: profile.profilePhoto.isNotEmpty
-                    ? NetworkImage(profile.profilePhoto)
-                    : null,
-                child: profile.profilePhoto.isEmpty
-                    ? Icon(Icons.person, size: 50, color: primaryBlue)
-                    : null,
+              child: InkWell(
+                onTap: () {
+                  if (profile.profilePhoto.isNotEmpty) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FullScreenImageViewer(
+                          imageUrl: profile.profilePhoto,
+                          heroTag: 'profile_photo_header',
+                        ),
+                      ),
+                    );
+                  }
+                },
+                child: Hero(
+                  tag: 'profile_photo_header',
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundColor: primaryBlue.withOpacity(0.1),
+                    backgroundImage: profile.profilePhoto.isNotEmpty
+                        ? NetworkImage(profile.profilePhoto)
+                        : null,
+                    child: profile.profilePhoto.isEmpty
+                        ? Icon(Icons.person, size: 50, color: primaryBlue)
+                        : null,
+                  ),
+                ),
               ),
             ),
           ),

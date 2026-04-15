@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_attendance_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_document_provider.dart';
@@ -71,6 +72,7 @@ import 'features/admin/presentation/screens/admin_enquiries_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: [SystemUiOverlay.top]);
   await di.init();
   runApp(const MyApp());
 }

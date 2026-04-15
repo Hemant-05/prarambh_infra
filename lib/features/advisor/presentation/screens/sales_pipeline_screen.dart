@@ -197,6 +197,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'sales_pipeline_add_lead_fab',
         onPressed: () {
           if (AdvisorAccessHelper.check(context, feature: 'lead generation')) {
             _showAddLeadDialog();

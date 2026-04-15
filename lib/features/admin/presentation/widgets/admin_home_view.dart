@@ -556,16 +556,6 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                           null,
                           4,
                         ),
-                        const SizedBox(height: 16),
-                        _buildSalesRow(
-                          context,
-                          'Referral',
-                          data.referralLeads.toString(),
-                          getPercent(data.referralLeads),
-                          const Color(0xFFBBDEFB),
-                          null,
-                          0,
-                        ),
                       ],
                     ),
                   ),
@@ -638,7 +628,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Recent Deal Closures',
+                        'Recent Deal Done',
                         style: GoogleFonts.montserrat(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -646,7 +636,12 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                         ),
                       ),
                       TextButton(
-                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminDealsScreen())),
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AdminDealsScreen(),
+                          ),
+                        ),
                         child: Text(
                           'View All',
                           style: GoogleFonts.montserrat(
@@ -825,62 +820,67 @@ class _AdminHomeViewState extends State<AdminHomeView> {
 
     return InkWell(
       onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (_) => LeadManagementScreen(initialIndex: tabIndex)));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => LeadManagementScreen(initialIndex: tabIndex),
+          ),
+        );
       },
       child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: textColor,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: textColor,
+                    ),
                   ),
-                ),
-                if (icon != null) ...[
-                  const SizedBox(width: 4),
-                  Icon(icon, size: 14, color: Colors.orange),
+                  if (icon != null) ...[
+                    const SizedBox(width: 4),
+                    Icon(icon, size: 14, color: Colors.orange),
+                  ],
                 ],
-              ],
-            ),
-            Row(
-              children: [
-                Text(
-                  count,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
+              ),
+              Row(
+                children: [
+                  Text(
+                    count,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
                   ),
-                ),
-                Text(
-                  ' leads',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 11,
-                    color: secondaryTextColor,
+                  Text(
+                    ' leads',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 11,
+                      color: secondaryTextColor,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: LinearProgressIndicator(
-            value: percent,
-            backgroundColor: AppColors.getBorderColor(context),
-            valueColor: AlwaysStoppedAnimation<Color>(barColor),
-            minHeight: 8,
+                ],
+              ),
+            ],
           ),
-        ),
-      ],
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: percent,
+              backgroundColor: AppColors.getBorderColor(context),
+              valueColor: AlwaysStoppedAnimation<Color>(barColor),
+              minHeight: 8,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1076,7 +1076,11 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                       color: Colors.green.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.call, size: 14, color: Colors.green),
+                    child: const Icon(
+                      Icons.call,
+                      size: 14,
+                      color: Colors.green,
+                    ),
                   ),
                 ),
               ],
@@ -1151,15 +1155,17 @@ class _AdminHomeViewState extends State<AdminHomeView> {
           ],
         ),
         const SizedBox(height: 16),
-        ...data.pendingActions.map((action) => _buildPendingActionCard(
-              context,
-              action,
-              cardColor,
-              primaryBlue,
-              textColor,
-              secondaryTextColor,
-              isDark,
-            )),
+        ...data.pendingActions.map(
+          (action) => _buildPendingActionCard(
+            context,
+            action,
+            cardColor,
+            primaryBlue,
+            textColor,
+            secondaryTextColor,
+            isDark,
+          ),
+        ),
       ],
     );
   }
@@ -1217,50 +1223,69 @@ class _AdminHomeViewState extends State<AdminHomeView> {
       child: InkWell(
         onTap: () {
           if (action.title.toLowerCase().contains("career enquiries")) {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdvisorApplicationsScreen(initialIndex: 1)));
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    const AdvisorApplicationsScreen(initialIndex: 1),
+              ),
+            );
           } else if (action.title.toLowerCase().contains("kyc approvals")) {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdvisorApplicationsScreen(initialIndex: 0)));
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    const AdvisorApplicationsScreen(initialIndex: 0),
+              ),
+            );
           } else if (action.title.toLowerCase().contains("deal verification")) {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminDealsScreen(initialVerificationStatus: 'not verified')));
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const AdminDealsScreen(
+                  initialVerificationStatus: 'not verified',
+                ),
+              ),
+            );
           }
         },
         child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isDark ? iconColor.withOpacity(0.1) : iconBgColor,
-              borderRadius: BorderRadius.circular(12),
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isDark ? iconColor.withOpacity(0.1) : iconBgColor,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(iconData, color: iconColor, size: 24),
             ),
-            child: Icon(iconData, color: iconColor, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  action.title,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    action.title,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  action.description,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 12,
-                    color: secondaryTextColor,
+                  const SizedBox(height: 2),
+                  Text(
+                    action.description,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 12,
+                      color: secondaryTextColor,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Icon(Icons.chevron_right, color: secondaryTextColor, size: 20),
-        ],
-      ),
+            Icon(Icons.chevron_right, color: secondaryTextColor, size: 20),
+          ],
+        ),
       ),
     );
   }

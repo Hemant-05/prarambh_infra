@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/full_screen_image_viewer.dart';
 import '../../../../core/utils/ui_helper.dart';
 import '../providers/advisor_profile_provider.dart';
 import '../../data/models/advisor_profile_model.dart';
@@ -149,31 +150,65 @@ class _AdvisorEditProfileScreenState extends State<AdvisorEditProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Profile Photo Section
-              GestureDetector(
-                onTap: _pickImage,
-                child: Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor: primaryBlue.withOpacity(0.1),
-                      backgroundImage: _profileImage != null 
-                          ? FileImage(_profileImage!) 
-                          : (widget.profile.profilePhoto.isNotEmpty ? NetworkImage(widget.profile.profilePhoto) : null) as ImageProvider?,
-                      child: (_profileImage == null && widget.profile.profilePhoto.isEmpty) 
-                          ? Icon(Icons.person, size: 50, color: primaryBlue) 
-                          : null,
+              Stack(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      if (_profileImage != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => FullScreenImageViewer(
+                              imageUrl: _profileImage!.path,
+                              heroTag: 'edit_profile_photo',
+                            ),
+                          ),
+                        );
+                      } else if (widget.profile.profilePhoto.isNotEmpty) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => FullScreenImageViewer(
+                              imageUrl: widget.profile.profilePhoto,
+                              heroTag: 'edit_profile_photo',
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    child: Hero(
+                      tag: 'edit_profile_photo',
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundColor: primaryBlue.withOpacity(0.1),
+                        backgroundImage: _profileImage != null
+                            ? FileImage(_profileImage!)
+                            : (widget.profile.profilePhoto.isNotEmpty
+                                ? NetworkImage(widget.profile.profilePhoto)
+                                : null) as ImageProvider?,
+                        child: (_profileImage == null && widget.profile.profilePhoto.isEmpty)
+                            ? Icon(Icons.person, size: 50, color: primaryBlue)
+                            : null,
+                      ),
                     ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: _pickImage,
                       child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(color: primaryBlue, shape: BoxShape.circle),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: primaryBlue,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
                         child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
               const SizedBox(height: 32),
 

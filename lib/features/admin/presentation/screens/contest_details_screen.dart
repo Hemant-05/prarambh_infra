@@ -230,10 +230,6 @@ class _ContestDetailsScreenState extends State<ContestDetailsScreen> {
                         'Top Performers',
                         style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
                       ),
-                      Text(
-                        'View Leaderboard >',
-                        style: GoogleFonts.montserrat(fontSize: 12, color: primaryBlue, fontWeight: FontWeight.bold),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 16),

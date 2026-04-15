@@ -187,16 +187,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                   color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                'Schedule a meeting. It will automatically complete based on the end time, or you can finish it manually.',
-                style: GoogleFonts.montserrat(
-                  fontSize: 13,
-                  color: Colors.grey[600],
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 14),
 
               Container(
                 padding: const EdgeInsets.all(20),

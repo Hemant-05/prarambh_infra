@@ -25,10 +25,12 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
   final List<String> _categories = [
     'Project Brochures',
     'Project Site Maps',
-    'RERA Certification',
+    'RERA',
+    'Company Legal Documents',
     'Business Plan',
-    'Contest Circulars',
-    'General Guidelines'
+    'Circulars',
+    'Company Rules & Regulations',
+    'Others'
   ];
 
   @override

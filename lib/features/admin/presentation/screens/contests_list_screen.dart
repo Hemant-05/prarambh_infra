@@ -38,7 +38,7 @@ class _ContestsListScreenState extends State<ContestsListScreen> {
         backgroundColor: isDark ? Theme.of(context).cardColor : primaryBlue,
         elevation: 0,
         centerTitle: true,
-        leading: backButton(isDark: isDark),
+        leading: backButton(isDark: !isDark),
         title: Text(
           'Running Contests',
           style: GoogleFonts.montserrat(

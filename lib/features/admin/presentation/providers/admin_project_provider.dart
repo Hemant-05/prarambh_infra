@@ -86,6 +86,10 @@ class AdminProjectProvider extends ChangeNotifier {
       )
       .length;
 
+  int get resaleUnitsCount => _inventory
+      .where((u) => u.saleCategory.toLowerCase() == 'resale')
+      .length;
+
   Future<void> fetchProjects() async {
     _isLoading = true;
     notifyListeners();

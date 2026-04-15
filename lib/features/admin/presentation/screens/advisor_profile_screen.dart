@@ -4,6 +4,7 @@ import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/assign_documents_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/widgets/full_screen_image_viewer.dart';
 import 'package:prarambh_infra/core/utils/ui_helper.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/admin_team_provider.dart';
@@ -141,27 +142,45 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                               ),
                             ],
                           ),
-                          child: CircleAvatar(
-                            radius: 36,
-                            backgroundColor: Colors.grey[200],
-                            backgroundImage:
-                                (p.profilePhoto != null &&
-                                    p.profilePhoto!.isNotEmpty)
-                                ? NetworkImage('$_baseUrl${p.profilePhoto}')
-                                      as ImageProvider
-                                : null,
-                            child:
-                                (p.profilePhoto == null ||
-                                    p.profilePhoto!.isEmpty)
-                                ? Text(
-                                    p.initials,
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: primaryBlue,
+                          child: InkWell(
+                            onTap: () {
+                              if (p.profilePhoto != null && p.profilePhoto!.isNotEmpty) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => FullScreenImageViewer(
+                                      imageUrl: '$_baseUrl${p.profilePhoto}',
+                                      heroTag: 'admin_advisor_profile_${p.advisorCode}',
                                     ),
-                                  )
-                                : null,
+                                  ),
+                                );
+                              }
+                            },
+                            child: Hero(
+                              tag: 'admin_advisor_profile_${p.advisorCode}',
+                              child: CircleAvatar(
+                                radius: 36,
+                                backgroundColor: Colors.grey[200],
+                                backgroundImage:
+                                    (p.profilePhoto != null &&
+                                        p.profilePhoto!.isNotEmpty)
+                                    ? NetworkImage('$_baseUrl${p.profilePhoto}')
+                                          as ImageProvider
+                                    : null,
+                                child:
+                                    (p.profilePhoto == null ||
+                                        p.profilePhoto!.isEmpty)
+                                    ? Text(
+                                        p.initials,
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                          color: primaryBlue,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -386,31 +405,49 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                                 padding: const EdgeInsets.only(right: 16),
                                 child: Column(
                                   children: [
-                                    CircleAvatar(
-                                      radius: 28,
-                                      backgroundColor: primaryBlue.withOpacity(
-                                        0.1,
-                                      ),
-                                      backgroundImage:
-                                          (member.profilePhoto != null &&
-                                              member.profilePhoto!.isNotEmpty)
-                                          ? NetworkImage(
-                                                  '$_baseUrl${member.profilePhoto}',
-                                                )
-                                                as ImageProvider
-                                          : null,
-                                      child:
-                                          (member.profilePhoto == null ||
-                                              member.profilePhoto!.isEmpty)
-                                          ? Text(
-                                              member.initials,
-                                              style: GoogleFonts.montserrat(
-                                                fontWeight: FontWeight.bold,
-                                                color: primaryBlue,
-                                                fontSize: 14,
+                                    InkWell(
+                                      onTap: () {
+                                        if (member.profilePhoto != null && member.profilePhoto!.isNotEmpty) {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => FullScreenImageViewer(
+                                                imageUrl: '$_baseUrl${member.profilePhoto}',
+                                                heroTag: 'admin_advisor_team_${member.advisorCode}',
                                               ),
-                                            )
-                                          : null,
+                                            ),
+                                          );
+                                        }
+                                      },
+                                      child: Hero(
+                                        tag: 'admin_advisor_team_${member.advisorCode}',
+                                        child: CircleAvatar(
+                                          radius: 28,
+                                          backgroundColor: primaryBlue.withOpacity(
+                                            0.1,
+                                          ),
+                                          backgroundImage:
+                                              (member.profilePhoto != null &&
+                                                  member.profilePhoto!.isNotEmpty)
+                                              ? NetworkImage(
+                                                      '$_baseUrl${member.profilePhoto}',
+                                                    )
+                                                    as ImageProvider
+                                              : null,
+                                          child:
+                                              (member.profilePhoto == null ||
+                                                  member.profilePhoto!.isEmpty)
+                                              ? Text(
+                                                  member.initials,
+                                                  style: GoogleFonts.montserrat(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: primaryBlue,
+                                                    fontSize: 14,
+                                                  ),
+                                                )
+                                              : null,
+                                        ),
+                                      ),
                                     ),
                                     const SizedBox(height: 6),
                                     SizedBox(
@@ -693,6 +730,7 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                                 builder: (context) => AssignDocumentsScreen(
                                   advisorId: p.id,
                                   advisorName: p.name,
+                                  advisorProfile: p.profilePhoto??'',
                                   advisorCode: p.advisorCode,
                                 ),
                               ),
@@ -1031,7 +1069,7 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                             const SizedBox(width: 10),
                             Expanded(
                               child: _statusBtn(
-                                label: 'Suspend',
+                                label: 'Terminate',
                                 color: Colors.red,
                                 icon: Icons.block,
                                 onTap: () => _handleStatusChange(
@@ -1412,17 +1450,34 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
           ),
           // View button
           GestureDetector(
-            onTap: () => _openDocument(context, name, fullUrl, isImage),
-            child: Container(
-              padding: const EdgeInsets.all(7),
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Icon(
-                Icons.visibility_outlined,
-                size: 16,
-                color: Colors.blue[600],
+            onTap: () {
+              if (isImage) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FullScreenImageViewer(
+                      imageUrl: fullUrl,
+                      heroTag: 'admin_doc_$filePath',
+                    ),
+                  ),
+                );
+              } else {
+                _openDocument(context, name, fullUrl, isImage);
+              }
+            },
+            child: Hero(
+              tag: 'admin_doc_$filePath',
+              child: Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  Icons.visibility_outlined,
+                  size: 16,
+                  color: Colors.blue[600],
+                ),
               ),
             ),
           ),

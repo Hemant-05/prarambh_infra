@@ -38,7 +38,7 @@ class _MyIncomeAnalyticsScreenState extends State<MyIncomeAnalyticsScreen> {
         centerTitle: true,
         leading: const BackButton(color: Colors.white),
         title: Text(
-          'My Income Analytics',
+          'My Income',
           style: GoogleFonts.montserrat(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -74,13 +74,13 @@ class _MyIncomeAnalyticsScreenState extends State<MyIncomeAnalyticsScreen> {
                         const SizedBox(height: 32),
 
                         // Earnings by Project
-                        _buildSectionHeader(context, "Earnings by Project", showViewAll: false),
+                        _buildSectionHeader(context, "Earning by Project", showViewAll: false),
                         const SizedBox(height: 16),
                         _buildProjectTable(context, incomeProvider),
                         const SizedBox(height: 32),
 
                         // Earnings by Property (Filtered Transactions)
-                        _buildSectionHeader(context, "Earnings by Property", showViewAll: false),
+                        _buildSectionHeader(context, "Earning by Property", showViewAll: false),
                         const SizedBox(height: 16),
                         _buildTransactionTabs(),
                         const SizedBox(height: 16),

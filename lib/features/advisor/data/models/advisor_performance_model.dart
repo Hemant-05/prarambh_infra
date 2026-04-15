@@ -4,12 +4,14 @@ class AdvisorPerformanceModel {
   final LeaderInfo leaderInfo;
   final CareerProgress careerProgress;
   final RecruitmentStats recruitmentStats;
+  final SalesDetails salesDetails;
   final List<AdvisorTeamNode> teamMembers;
 
   AdvisorPerformanceModel({
     required this.leaderInfo,
     required this.careerProgress,
     required this.recruitmentStats,
+    required this.salesDetails,
     required this.teamMembers,
   });
 
@@ -18,6 +20,7 @@ class AdvisorPerformanceModel {
       leaderInfo: LeaderInfo.fromJson(json['leader_info'] ?? {}),
       careerProgress: CareerProgress.fromJson(json['career_progress'] ?? {}),
       recruitmentStats: RecruitmentStats.fromJson(json['recruitment_stats'] ?? {}),
+      salesDetails: SalesDetails.fromJson(json['sales_details'] ?? {}),
       teamMembers: (json['team_members'] as List? ?? [])
           .map((e) => AdvisorTeamNode.fromJson(e))
           .toList(),
@@ -121,6 +124,87 @@ class RecruitmentStats {
       activeRecruits: json['active_recruits'] ?? 0,
       pendingRecruits: json['pending_recruits'] ?? 0,
       inactiveRecruits: json['inactive_recruits'] ?? 0,
+    );
+  }
+}
+
+// ─── Sales Models ────────────────────────────────────────────────────────────
+
+class PersonalSale {
+  final int sr;
+  final String colony;
+  final String plotNo;
+  final String size;
+  final double gross;
+  final double net;
+
+  PersonalSale({
+    required this.sr,
+    required this.colony,
+    required this.plotNo,
+    required this.size,
+    required this.gross,
+    required this.net,
+  });
+
+  factory PersonalSale.fromJson(Map<String, dynamic> json) {
+    return PersonalSale(
+      sr: json['sr'] ?? 0,
+      colony: json['colony']?.toString() ?? '',
+      plotNo: json['plot_no']?.toString() ?? '',
+      size: json['size']?.toString() ?? '',
+      gross: double.tryParse(json['gross']?.toString() ?? '0') ?? 0,
+      net: double.tryParse(json['net']?.toString() ?? '0') ?? 0,
+    );
+  }
+}
+
+class TeamSale {
+  final int sr;
+  final String advisorName;
+  final String colony;
+  final String plotNo;
+  final String size;
+  final double gross;
+  final double net;
+
+  TeamSale({
+    required this.sr,
+    required this.advisorName,
+    required this.colony,
+    required this.plotNo,
+    required this.size,
+    required this.gross,
+    required this.net,
+  });
+
+  factory TeamSale.fromJson(Map<String, dynamic> json) {
+    return TeamSale(
+      sr: json['sr'] ?? 0,
+      advisorName: json['advisor_name']?.toString() ?? '',
+      colony: json['colony']?.toString() ?? '',
+      plotNo: json['plot_no']?.toString() ?? '',
+      size: json['size']?.toString() ?? '',
+      gross: double.tryParse(json['gross']?.toString() ?? '0') ?? 0,
+      net: double.tryParse(json['net']?.toString() ?? '0') ?? 0,
+    );
+  }
+}
+
+class SalesDetails {
+  final List<PersonalSale> personalSales;
+  final List<TeamSale> teamSales;
+
+  SalesDetails({required this.personalSales, required this.teamSales});
+
+  factory SalesDetails.fromJson(Map<String, dynamic> json) {
+    return SalesDetails(
+      personalSales: (json['personal_sales'] as List? ?? [])
+          .map((e) => PersonalSale.fromJson(e))
+          .toList(),
+      teamSales: (json['team_sales'] as List? ?? [])
+          .map((e) => TeamSale.fromJson(e))
+          .toList(),
     );
   }
 }

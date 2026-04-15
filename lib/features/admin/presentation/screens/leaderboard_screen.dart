@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/full_screen_image_viewer.dart';
 import '../providers/admin_leaderboard_provider.dart';
 import '../../data/models/advisor_rank_model.dart';
 
@@ -39,7 +40,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'ADVISOR LEADERBOARD',
+          'ADVISOR STARWALL',
           style: GoogleFonts.montserrat(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -284,11 +285,29 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   )
                 ],
               ),
-              child: CircleAvatar(
-                radius: avatarSize,
-                backgroundColor: Colors.white,
-                backgroundImage: advisor.profilePhoto != null ? NetworkImage(advisor.avatarUrl) : null,
-                child: advisor.profilePhoto == null ? Text(advisor.fullName[0].toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)) : null,
+              child: InkWell(
+                onTap: () {
+                  if (advisor.profilePhoto != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FullScreenImageViewer(
+                          imageUrl: advisor.avatarUrl,
+                          heroTag: 'admin_leaderboard_podium_${advisor.id}',
+                        ),
+                      ),
+                    );
+                  }
+                },
+                child: Hero(
+                  tag: 'admin_leaderboard_podium_${advisor.id}',
+                  child: CircleAvatar(
+                    radius: avatarSize,
+                    backgroundColor: Colors.white,
+                    backgroundImage: advisor.profilePhoto != null ? NetworkImage(advisor.avatarUrl) : null,
+                    child: advisor.profilePhoto == null ? Text(advisor.fullName[0].toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)) : null,
+                  ),
+                ),
               ),
             ),
             Positioned(
@@ -403,11 +422,29 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: Colors.grey[200],
-            backgroundImage: advisor.profilePhoto != null ? NetworkImage(advisor.avatarUrl) : null,
-            child: advisor.profilePhoto == null ? Text(advisor.fullName[0].toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold)) : null,
+          InkWell(
+            onTap: () {
+              if (advisor.profilePhoto != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FullScreenImageViewer(
+                      imageUrl: advisor.avatarUrl,
+                      heroTag: 'admin_leaderboard_list_${advisor.id}',
+                    ),
+                  ),
+                );
+              }
+            },
+            child: Hero(
+              tag: 'admin_leaderboard_list_${advisor.id}',
+              child: CircleAvatar(
+                radius: 20,
+                backgroundColor: Colors.grey[200],
+                backgroundImage: advisor.profilePhoto != null ? NetworkImage(advisor.avatarUrl) : null,
+                child: advisor.profilePhoto == null ? Text(advisor.fullName[0].toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold)) : null,
+              ),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(

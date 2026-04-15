@@ -452,12 +452,12 @@ class _AdvisorMeetingScheduleScreenState
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '⏱ ${meeting.startTime} - ${meeting.endTime}',
+                      '⏱ ${_formatTime(meeting.startTime)} - ${_formatTime(meeting.endTime)}',
                       style: GoogleFonts.montserrat(color: secondaryTextColor, fontSize: 11),
                     ),
                     if (meeting.checkInTime != null)
                       Text(
-                        '✓ Checked in at ${meeting.checkInTime}',
+                        '✓ Checked in at ${_formatTime(meeting.checkInTime!)}',
                         style: GoogleFonts.montserrat(color: Colors.green, fontSize: 10, fontWeight: FontWeight.w600),
                       ),
                   ],
@@ -596,5 +596,22 @@ class _AdvisorMeetingScheduleScreenState
         ],
       ),
     );
+  }
+
+  /// Converts a 24-hour time string (e.g. "14:30" or "14:30:00") to
+  /// a 12-hour display string (e.g. "2:30 PM"). Returns the original
+  /// string unchanged if parsing fails (e.g. "--:--").
+  String _formatTime(String time24) {
+    if (time24.isEmpty || time24 == '--:--') return time24;
+    try {
+      final parts = time24.split(':');
+      if (parts.length < 2) return time24;
+      final hour = int.parse(parts[0]);
+      final minute = int.parse(parts[1]);
+      final dt = DateTime(2000, 1, 1, hour, minute);
+      return DateFormat('h:mm a').format(dt);
+    } catch (_) {
+      return time24;
+    }
   }
 }

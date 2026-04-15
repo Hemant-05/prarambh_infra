@@ -242,6 +242,9 @@ abstract class ApiClient {
   @GET("/units")
   Future<dynamic> getUnits(@Query("project_id") String? projectId);
 
+  @GET("/units/filter")
+  Future<dynamic> filterUnits(@Query("sale_category") String? saleCategory);
+
   @GET("/units/{id}")
   Future<dynamic> getSingleUnit(@Path("id") String id);
 
@@ -502,6 +505,9 @@ abstract class ApiClient {
 
   @POST("/promotions/evaluate-company")
   Future<dynamic> evaluateCompanyPromotions();
+
+  @POST("/promotions/evaluate-all")
+  Future<dynamic> evaluateAllPromotions();
 
   // ==========================================
   // 13. Dashboards & Analytics

@@ -9,6 +9,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/file_download_helper.dart';
 import '../../../../core/utils/ui_helper.dart';
 import '../../data/models/project_model.dart';
+import 'package:prarambh_infra/core/widgets/pdf_viewer_screen.dart';
 import 'project_inventory_screen.dart';
 
 class ProjectDetailsAdminScreen extends StatefulWidget {
@@ -261,7 +262,7 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                             fontSize: 12,
                             decoration: TextDecoration.underline,
                           ),
-                          maxLines: 1,
+                          maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -274,68 +275,105 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        _buildStatusBadge(Icons.category, project.projectType, Colors.orange),
+                        _buildStatusBadge(
+                          Icons.category,
+                          project.projectType,
+                          Colors.orange,
+                        ),
                         const SizedBox(width: 8),
-                        _buildStatusBadge(Icons.construction, project.constructionStatus, Colors.blue),
+                        _buildStatusBadge(
+                          Icons.construction,
+                          project.constructionStatus,
+                          Colors.blue,
+                        ),
                         const SizedBox(width: 8),
-                        _buildStatusBadge(Icons.check_circle, project.status, Colors.green),
+                        _buildStatusBadge(
+                          Icons.check_circle,
+                          project.status,
+                          Colors.green,
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 24),
 
                   // Developer Row
-                  Row(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.business, color: Colors.grey),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'DEVELOPER',
-                              style: GoogleFonts.montserrat(
-                                fontSize: 10,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            Text(
-                              project.developerName,
-                              style: GoogleFonts.montserrat(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                      Row(
                         children: [
-                          Text(
-                            'RERA NO.',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 10,
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.business,
                               color: Colors.grey,
                             ),
                           ),
-                          Text(
-                            project.reraNumber.isNotEmpty
-                                ? project.reraNumber
-                                : 'N/A',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: primaryBlue,
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'DEVELOPER',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 10,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                project.developerName,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              shape: BoxShape.circle,
                             ),
+                            child: const Icon(
+                              Icons.verified,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'RERA NO.',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 10,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                project.reraNumber.isNotEmpty
+                                    ? project.reraNumber
+                                    : 'N/A',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryBlue,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -359,13 +397,6 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                           project.totalPlots.toString(),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildStatBox(
-                          'Start Rate',
-                          '₹${project.ratePerSqft}/sq.ft',
-                        ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -374,8 +405,8 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                     children: [
                       Expanded(
                         child: _buildStatBox(
-                          'Market Value',
-                          '₹${NumberFormat.compact().format(project.marketValue)}',
+                          'Start Rate',
+                          '₹${project.ratePerSqft}/sq.ft',
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -383,6 +414,17 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                         child: _buildStatBox(
                           'Budget Range',
                           project.budgetRange,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatBox(
+                          'Market Value',
+                          '₹${NumberFormat.compact().format(project.marketValue)}',
                         ),
                       ),
                     ],
@@ -423,7 +465,9 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: project.amenities.map((a) => _buildChip(a, Colors.teal)).toList(),
+                      children: project.amenities
+                          .map((a) => _buildChip(a, Colors.teal))
+                          .toList(),
                     ),
                     const SizedBox(height: 30),
                   ],
@@ -441,7 +485,9 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: project.specialties.map((s) => _buildChip(s, Colors.deepPurple)).toList(),
+                      children: project.specialties
+                          .map((s) => _buildChip(s, Colors.deepPurple))
+                          .toList(),
                     ),
                     const SizedBox(height: 30),
                   ],
@@ -468,38 +514,40 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                       _buildQuickAction(
                         Icons.description,
                         'Brochure',
-                        'Download',
+                        'View & Download',
                         primaryBlue,
                         () {
-                          String path = project.brochureFile;
+                          String path = project.brochureUrl.isNotEmpty 
+                              ? project.brochureUrl 
+                              : project.brochureFile;
+                              
                           if (path.isEmpty) {
-                            UIHelper.showError(context, "Brochure not available");
+                            UIHelper.showError(
+                              context,
+                              "Brochure not available",
+                            );
                             return;
                           }
+                          
                           String fullUrl = path.startsWith('http')
                               ? path
                               : 'https://workiees.com/${path.startsWith('/') ? path.substring(1) : path}';
-                          
-                          FileDownloadHelper().downloadFile(
-                            context: context,
-                            url: fullUrl,
-                            fileName: "${project.projectName.replaceAll(' ', '_')}_Brochure.pdf",
+
+                          // Encode URL to handle spaces/special chars
+                          fullUrl = Uri.encodeFull(fullUrl);
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PdfViewerScreen(
+                                url: fullUrl,
+                                title: '${project.projectName} Brochure',
+                                fileName:
+                                    "${project.projectName.replaceAll(' ', '_')}_Brochure.pdf",
+                              ),
+                            ),
                           );
                         },
-                      ),
-                      // Removed Video Action as requested
-                      _buildQuickAction(
-                        Icons.grid_view,
-                        'Inventory',
-                        'Manage',
-                        primaryBlue,
-                        () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                ProjectInventoryScreen(project: project),
-                          ),
-                        ),
                       ),
                     ],
                   ),

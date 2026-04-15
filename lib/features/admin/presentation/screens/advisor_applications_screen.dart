@@ -6,6 +6,7 @@ import 'package:prarambh_infra/features/admin/data/models/advisor_application_mo
 import 'package:prarambh_infra/features/admin/presentation/screens/review_application_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/full_screen_image_viewer.dart';
 import '../providers/admin_advisor_provider.dart';
 import 'package:prarambh_infra/features/admin/data/models/enquiry_model.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_enquiry_provider.dart';
@@ -261,7 +262,7 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
           elevation: 0,
           leading: backButton(isDark: !isDark),
           title: Text(
-            'Advisor Applications',
+            'Advisor Application',
             style: GoogleFonts.montserrat(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -390,8 +391,8 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                   fontSize: 13,
                 ),
                 tabs: const [
-                  Tab(text: 'Advisors'),
-                  Tab(text: 'App/Web'),
+                  Tab(text: 'Pending Verification'),
+                  Tab(text: 'Career Inquirey'),
                 ],
               ),
 
@@ -562,22 +563,46 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Stack(
-                children: [
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: Colors.blue[100],
-                    child: Text(
-                      app.name.isNotEmpty && app.name.length >= 2
-                          ? app.name.substring(0, 2).toUpperCase()
-                          : 'U',
-                      style: GoogleFonts.montserrat(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue[900],
+              Builder(
+                builder: (context) {
+                  final profileDoc = app.documents.where((d) => d.id == 'profile_photo').toList();
+                  final profileUrl = profileDoc.isNotEmpty ? profileDoc.first.url : null;
+                  
+                  return InkWell(
+                    onTap: () {
+                      if (profileUrl != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => FullScreenImageViewer(
+                              imageUrl: profileUrl,
+                              heroTag: 'admin_app_photo_${app.id}',
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    child: Hero(
+                      tag: 'admin_app_photo_${app.id}',
+                      child: CircleAvatar(
+                        radius: 24,
+                        backgroundColor: Colors.blue[100],
+                        backgroundImage: profileUrl != null ? NetworkImage(profileUrl) : null,
+                        child: profileUrl == null
+                            ? Text(
+                                app.name.isNotEmpty && app.name.length >= 2
+                                    ? app.name.substring(0, 2).toUpperCase()
+                                    : 'U',
+                                style: GoogleFonts.montserrat(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue[900],
+                                ),
+                              )
+                            : null,
                       ),
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
               const SizedBox(width: 16),
               Expanded(

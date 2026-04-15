@@ -40,7 +40,7 @@ class _AdvisorContestsListScreenState extends State<AdvisorContestsListScreen> {
         backgroundColor: isDark ? Theme.of(context).cardColor : primaryBlue,
         elevation: 0,
         centerTitle: true,
-        leading: backButton(isDark: isDark),
+        leading: backButton(isDark: !isDark),
         title: Text(
           'Running Contests',
           style: GoogleFonts.montserrat(
@@ -48,13 +48,7 @@ class _AdvisorContestsListScreenState extends State<AdvisorContestsListScreen> {
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list, color: Colors.white),
-            onPressed: () {},
-          ),
-        ],
+        )
       ),
       body: Column(
         children: [

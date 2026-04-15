@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:graphview/GraphView.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/admin_team_provider.dart';
+import '../../../../core/widgets/full_screen_image_viewer.dart';
 import '../../data/models/team_models.dart';
 import 'advisor_profile_screen.dart';
 
@@ -739,24 +740,42 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
                   width: 1.5,
                 ),
               ),
-              child: CircleAvatar(
-                radius: 20,
-                backgroundColor: isMatch
-                    ? Colors.orange.withOpacity(0.1)
-                    : blue.withOpacity(0.1),
-                backgroundImage: node.avatarUrl.isNotEmpty
-                    ? NetworkImage(node.avatarUrl)
-                    : null,
-                child: node.avatarUrl.isEmpty
-                    ? Text(
-                        initials,
-                        style: GoogleFonts.montserrat(
-                          fontWeight: FontWeight.bold,
-                          color: isMatch ? Colors.orange : blue,
-                          fontSize: 13,
+              child: InkWell(
+                onTap: () {
+                  if (node.avatarUrl.isNotEmpty) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FullScreenImageViewer(
+                          imageUrl: node.avatarUrl,
+                          heroTag: 'admin_team_tree_${node.code}',
                         ),
-                      )
-                    : null,
+                      ),
+                    );
+                  }
+                },
+                child: Hero(
+                  tag: 'admin_team_tree_${node.code}',
+                  child: CircleAvatar(
+                    radius: 20,
+                    backgroundColor: isMatch
+                        ? Colors.orange.withOpacity(0.1)
+                        : blue.withOpacity(0.1),
+                    backgroundImage: node.avatarUrl.isNotEmpty
+                        ? NetworkImage(node.avatarUrl)
+                        : null,
+                    child: node.avatarUrl.isEmpty
+                        ? Text(
+                            initials,
+                            style: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.bold,
+                              color: isMatch ? Colors.orange : blue,
+                              fontSize: 13,
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 7),
@@ -868,22 +887,40 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
         ),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 22,
-              backgroundColor: blue.withOpacity(0.1),
-              backgroundImage: node.avatarUrl.isNotEmpty
-                  ? NetworkImage(node.avatarUrl)
-                  : null,
-              child: node.avatarUrl.isEmpty
-                  ? Text(
-                      initials,
-                      style: GoogleFonts.montserrat(
-                        fontWeight: FontWeight.bold,
-                        color: blue,
-                        fontSize: 14,
+            InkWell(
+              onTap: () {
+                if (node.avatarUrl.isNotEmpty) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FullScreenImageViewer(
+                        imageUrl: node.avatarUrl,
+                        heroTag: 'admin_team_list_${node.code}',
                       ),
-                    )
-                  : null,
+                    ),
+                  );
+                }
+              },
+              child: Hero(
+                tag: 'admin_team_list_${node.code}',
+                child: CircleAvatar(
+                  radius: 22,
+                  backgroundColor: blue.withOpacity(0.1),
+                  backgroundImage: node.avatarUrl.isNotEmpty
+                      ? NetworkImage(node.avatarUrl)
+                      : null,
+                  child: node.avatarUrl.isEmpty
+                      ? Text(
+                          initials,
+                          style: GoogleFonts.montserrat(
+                            fontWeight: FontWeight.bold,
+                            color: blue,
+                            fontSize: 14,
+                          ),
+                        )
+                      : null,
+                ),
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(

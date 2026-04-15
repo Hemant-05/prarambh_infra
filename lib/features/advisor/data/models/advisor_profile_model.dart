@@ -24,6 +24,7 @@ class AdvisorProfileModel {
   final String nomineePhone;
   final String relationship;
   final String joinedDate;
+  final String leaderId;
   final String advisorType;
   final String slab;
 
@@ -36,7 +37,7 @@ class AdvisorProfileModel {
     required this.aadhaar, required this.pan, required this.occupation,
     required this.bankName, required this.accNumber, required this.ifsc,
     required this.nomineeName, required this.nomineePhone, required this.relationship,
-    required this.joinedDate, required this.advisorType, required this.slab,
+    required this.joinedDate, required this.advisorType, required this.slab, required this.leaderId
   });
 
   factory AdvisorProfileModel.fromJson(Map<String, dynamic> json) {
@@ -77,6 +78,7 @@ class AdvisorProfileModel {
       joinedDate: data['created_at']?.toString().split(' ')[0] ?? 'N/A',
       advisorType: data['advisor_type']?.toString() ?? 'Full-time',
       slab: data['slab']?.toString() ?? '0',
+      leaderId: data['leader_id']?.toString() ?? '14',
     );
   }
 }

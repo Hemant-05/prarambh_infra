@@ -928,49 +928,52 @@ Please feel free to contact us for more information.""";
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          GestureDetector(
-                            onTap: _togglePriority,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _isPriorityToggle
-                                    ? Colors.amber.withOpacity(0.15)
-                                    : Colors.grey.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20),
-                                border: _isPriorityToggle
-                                    ? Border.all(color: Colors.amber.shade300)
-                                    : Border.all(color: Colors.grey.shade300),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    _isPriorityToggle
-                                        ? Icons.star
-                                        : Icons.star_border,
-                                    color: _isPriorityToggle
-                                        ? Colors.amber
-                                        : Colors.grey.shade600,
-                                    size: 14,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    "Priority",
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
+                          if (['booking', 'pending_verification', 'site visit']
+                              .contains(currentStage)) ...[
+                            GestureDetector(
+                              onTap: _togglePriority,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _isPriorityToggle
+                                      ? Colors.amber.withOpacity(0.15)
+                                      : Colors.grey.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: _isPriorityToggle
+                                      ? Border.all(color: Colors.amber.shade300)
+                                      : Border.all(color: Colors.grey.shade300),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      _isPriorityToggle
+                                          ? Icons.star
+                                          : Icons.star_border,
                                       color: _isPriorityToggle
-                                          ? Colors.amber.shade700
-                                          : Colors.grey.shade700,
+                                          ? Colors.amber
+                                          : Colors.grey.shade600,
+                                      size: 14,
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      "Priority",
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: _isPriorityToggle
+                                            ? Colors.amber.shade700
+                                            : Colors.grey.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 10),
+                            const SizedBox(width: 10),
+                          ],
                           GestureDetector(
                             onTap: _showEditLeadSheet,
                             child: Container(
@@ -1584,7 +1587,7 @@ Please feel free to contact us for more information.""";
             ),
             const SizedBox(width: 10),
             Text(
-              'Broker Notes',
+              'Advisor Notes',
               style: GoogleFonts.montserrat(
                 fontWeight: FontWeight.bold,
                 fontSize: 15,
@@ -3908,7 +3911,7 @@ Please feel free to contact us for more information.""";
                 maxLines: 2,
                 style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                 decoration: InputDecoration(
-                  hintText: "Add Broker Note...",
+                  hintText: "Add Advisor Note...",
                   hintStyle: TextStyle(
                     color: isDark ? Colors.white38 : Colors.grey,
                   ),

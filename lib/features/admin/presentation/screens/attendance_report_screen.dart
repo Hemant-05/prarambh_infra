@@ -120,7 +120,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen>
         centerTitle: true,
         leading: backButton(isDark: !isDark),
         title: Text(
-          'Daily Attendance',
+          'Attendance Report',
           style: GoogleFonts.montserrat(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -144,35 +144,6 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen>
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             child: Column(
               children: [
-                Text(
-                  meeting?.title ?? widget.meetingTitle,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.montserrat(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.calendar_today_outlined,
-                      size: 12,
-                      color: Colors.grey[500],
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      widget.meetingDate,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 12,
-                        color: Colors.grey[500],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
                 Row(
                   children: [
                     _summaryChip(

@@ -370,7 +370,7 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
     if (!facingOptions.contains(widget.unit.facing) && widget.unit.facing.isNotEmpty) facingOptions.add(widget.unit.facing);
     _facing = widget.unit.facing.isNotEmpty ? widget.unit.facing : 'East';
 
-    statusOptions = ['Available', 'Booked', 'Sold Out', 'Reselling'];
+    statusOptions = ['Available', 'Booked', 'Sold'];
     if (!statusOptions.contains(widget.unit.availabilityStatus) && widget.unit.availabilityStatus.isNotEmpty) statusOptions.add(widget.unit.availabilityStatus);
     _status = widget.unit.availabilityStatus.isNotEmpty ? widget.unit.availabilityStatus : 'Available';
   }
@@ -561,7 +561,7 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
                       );
                     },
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 50),
                 ],
               ),
             ),

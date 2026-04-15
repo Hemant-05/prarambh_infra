@@ -18,6 +18,7 @@ import '../../../advisor/data/models/advisor_profile_model.dart';
 import '../../../advisor/presentation/providers/advisor_profile_provider.dart';
 import 'advisor_profile_screen.dart' as admin;
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/widgets/full_screen_image_viewer.dart';
 
 class DealManagementScreen extends StatefulWidget {
   final DealModel deal;
@@ -598,16 +599,32 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                         Icons.image_outlined,
                         primaryBlue,
                       ),
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 24),
-                        width: double.infinity,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade200),
-                          image: DecorationImage(
-                            image: NetworkImage(matched.first.siteVisitPhoto),
-                            fit: BoxFit.cover,
+                      InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => FullScreenImageViewer(
+                                imageUrl: matched.first.siteVisitPhoto,
+                                heroTag: 'admin_deal_site_visit_${activeDeal.id}',
+                              ),
+                            ),
+                          );
+                        },
+                        child: Hero(
+                          tag: 'admin_deal_site_visit_${activeDeal.id}',
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 24),
+                            width: double.infinity,
+                            height: 200,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.grey.shade200),
+                              image: DecorationImage(
+                                image: NetworkImage(matched.first.siteVisitPhoto),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -1586,15 +1603,33 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: primaryBlue.withOpacity(0.1),
-                    backgroundImage: profile.profilePhoto.isNotEmpty
-                        ? NetworkImage(profile.profilePhoto)
-                        : null,
-                    child: profile.profilePhoto.isEmpty
-                        ? Icon(Icons.person, color: primaryBlue, size: 28)
-                        : null,
+                  InkWell(
+                    onTap: () {
+                      if (profile.profilePhoto.isNotEmpty) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => FullScreenImageViewer(
+                              imageUrl: profile.profilePhoto,
+                              heroTag: 'admin_deal_advisor_${profile.advisorCode}',
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    child: Hero(
+                      tag: 'admin_deal_advisor_${profile.advisorCode}',
+                      child: CircleAvatar(
+                        radius: 28,
+                        backgroundColor: primaryBlue.withOpacity(0.1),
+                        backgroundImage: profile.profilePhoto.isNotEmpty
+                            ? NetworkImage(profile.profilePhoto)
+                            : null,
+                        child: profile.profilePhoto.isEmpty
+                            ? Icon(Icons.person, color: primaryBlue, size: 28)
+                            : null,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -2060,7 +2095,19 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
   Widget _buildDocumentThumbnail(String title, String url) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
-      onTap: () => url.isNotEmpty ? _showFullScreenImage(title, url) : null,
+      onTap: () {
+        if (url.isNotEmpty) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => FullScreenImageViewer(
+                imageUrl: url,
+                heroTag: 'admin_deal_doc_${url.hashCode}_${title}',
+              ),
+            ),
+          );
+        }
+      },
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? Colors.grey[800] : Colors.grey[50],
@@ -2072,11 +2119,14 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
           fit: StackFit.expand,
           children: [
             if (url.isNotEmpty)
-              Image.network(
-                url,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
-                    const Icon(Icons.broken_image, size: 20),
+              Hero(
+                tag: 'admin_deal_doc_${url.hashCode}_${title}',
+                child: Image.network(
+                  url,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) =>
+                      const Icon(Icons.broken_image, size: 20),
+                ),
               )
             else
               const Icon(

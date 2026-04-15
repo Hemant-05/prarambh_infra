@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/constant/cons_strings.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/full_screen_image_viewer.dart';
+import '../../../../data/datasources/remote/api_client.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/admin_profile_provider.dart';
 import 'edit_admin_profile_screen.dart';
@@ -15,6 +18,73 @@ class AdminProfileScreen extends StatefulWidget {
 }
 
 class _AdminProfileScreenState extends State<AdminProfileScreen> {
+  bool _isEvaluating = false;
+
+  Future<void> _evaluateAllPromotions() async {
+    setState(() => _isEvaluating = true);
+    try {
+      final apiClient = GetIt.instance<ApiClient>();
+      final response = await apiClient.evaluateAllPromotions();
+      if (!mounted) return;
+      if (response['status'] == true) {
+        final totalEvaluated = response['data']?['total_evaluated'] ?? 0;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Evaluation complete! $totalEvaluated advisor(s) evaluated.',
+                    style: GoogleFonts.montserrat(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.green.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              response['message'] ?? 'Evaluation failed. Please try again.',
+              style: GoogleFonts.montserrat(color: Colors.white),
+            ),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Error: ${e.toString()}',
+            style: GoogleFonts.montserrat(color: Colors.white),
+          ),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isEvaluating = false);
+    }
+  }
   @override
   void initState() {
     super.initState();
@@ -111,15 +181,33 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                               )
                             ],
                           ),
-                          child: CircleAvatar(
-                            radius: 45,
-                            backgroundColor: Colors.white,
-                            child: CircleAvatar(
-                              radius: 42,
-                              backgroundImage: provider.profile?.avatarUrl != null
-                                  ? NetworkImage(provider.profile!.avatarUrl)
-                                  : const AssetImage(logo),
-                              backgroundColor: Colors.grey[200],
+                          child: InkWell(
+                            onTap: () {
+                              if (provider.profile?.avatarUrl != null) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => FullScreenImageViewer(
+                                      imageUrl: "https://workiees.com/${provider.profile!.avatarUrl}",
+                                      heroTag: 'admin_profile_avatar',
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                            child: Hero(
+                              tag: 'admin_profile_avatar',
+                              child: CircleAvatar(
+                                radius: 45,
+                                backgroundColor: Colors.white,
+                                child: CircleAvatar(
+                                  radius: 42,
+                                  backgroundImage: provider.profile?.avatarUrl != null
+                                      ? NetworkImage( "https://workiees.com/${provider.profile!.avatarUrl}")
+                                      : const AssetImage(logo),
+                                  backgroundColor: Colors.grey[200],
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -200,7 +288,67 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 40),
-                  
+
+                  // Evaluate All Promotions Button
+                  _buildSectionHeader('ADMIN ACTIONS'),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      gradient: LinearGradient(
+                        colors: [const Color(0xFF0D47A1), const Color(0xFF1565C0)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF064f8e).withOpacity(0.35),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _isEvaluating ? null : _evaluateAllPromotions,
+                        borderRadius: BorderRadius.circular(20),
+                        child: Center(
+                          child: _isEvaluating
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.workspace_premium_rounded,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'EVALUATE ALL PROMOTIONS',
+                                      style: GoogleFonts.montserrat(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                        letterSpacing: 1.0,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
                   // Logout Button (Professional redesign)
                   Container(
                     width: double.infinity,

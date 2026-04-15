@@ -14,7 +14,7 @@ class AdvisorLeaderboardRepository {
         final List data = response['data'] ?? [];
         return data.map((json) => AdvisorLeaderboardModel.fromJson(json)).toList();
       }
-      throw Exception(response['message'] ?? 'Failed to load leaderboard');
+      throw Exception(response['message'] ?? 'Failed to load StarWall');
     } catch (e) {
       rethrow;
     }
