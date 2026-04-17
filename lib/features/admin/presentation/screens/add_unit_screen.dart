@@ -91,12 +91,14 @@ class _AddUnitScreenState extends State<AddUnitScreen>
   Future<void> _pickCSV() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.any,
+      withData: true,
     );
 
     if (result != null && result.files.single.path != null) {
       String filePath = result.files.single.path!;
+      String fileName = result.files.single.name;
 
-      if (filePath.toLowerCase().endsWith('.csv')) {
+      if (filePath.toLowerCase().endsWith('.csv') || fileName.toLowerCase().endsWith('.csv')) {
         setState(() {
           _selectedCsvFile = File(filePath);
         });

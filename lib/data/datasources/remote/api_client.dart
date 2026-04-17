@@ -50,7 +50,7 @@ abstract class ApiClient {
     @Part(name: "date_of_birth") String dob,
     @Part(name: "gender") String gender,
     @Part(name: "nomineename") String nomineeName,
-    @Part(name: "nomineephone") String nomineePhone,
+    @Part(name: "nomineephone") String nomineeDob,
     @Part(name: "relationship") String relationship,
     @Part(name: "occupation") String occupation,
     @Part(name: "aadhaar_number") String aadhaar,
@@ -236,7 +236,7 @@ abstract class ApiClient {
   @POST("/units/bulk-upload")
   Future<dynamic> bulkUploadUnits(
     @Part(name: "project_id") String projectId,
-    @Part(name: "file") File csvFile,
+    @Part(name: "csv_file") MultipartFile csvFile,
   );
 
   @GET("/units")

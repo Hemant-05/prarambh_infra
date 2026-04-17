@@ -1631,7 +1631,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
   void _showPendingTasksBottomSheet(BuildContext context) {
     final provider = context.read<AdvisorDashboardProvider>();
     final tasks = provider.data?.pendingActions ?? [];
-    final resaleUnits = provider.resaleUnits;
+    final resaleUnits = provider.resaleUnits.where((u) => u.isAvailable).toList();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryBlue = Theme.of(context).primaryColor;
 

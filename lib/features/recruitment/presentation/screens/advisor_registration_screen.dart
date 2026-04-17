@@ -491,17 +491,12 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                     textColor: textColor,
                     validator: (v) => Validators.validateRequired(v, 'Nominee Name'),
                   ),
-                  _buildTextField(
-                    'Nominee Phone',
-                    'Enter Phone number',
-                    provider.nomineePhoneCtrl,
-                    isNumber: true,
+                  _buildDatePicker(
+                    'Nominee Date of Birth',
+                    'YYYY-MM-DD',
+                    provider.nomineeDobCtrl,
+                    provider,
                     textColor: textColor,
-                    validator: Validators.validatePhone,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(10),
-                    ],
                   ),
                   _buildDropdown(
                     'Relationship',

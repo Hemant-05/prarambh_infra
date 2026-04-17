@@ -137,6 +137,8 @@ class PersonalSale {
   final String size;
   final double gross;
   final double net;
+  final int slab;
+  final int emiPercentage;
 
   PersonalSale({
     required this.sr,
@@ -145,6 +147,8 @@ class PersonalSale {
     required this.size,
     required this.gross,
     required this.net,
+    required this.slab,
+    required this.emiPercentage,
   });
 
   factory PersonalSale.fromJson(Map<String, dynamic> json) {
@@ -155,6 +159,8 @@ class PersonalSale {
       size: json['size']?.toString() ?? '',
       gross: double.tryParse(json['gross']?.toString() ?? '0') ?? 0,
       net: double.tryParse(json['net']?.toString() ?? '0') ?? 0,
+      slab: int.tryParse(json['slab']?.toString() ?? '0') ?? 0,
+      emiPercentage: int.tryParse(json['emi_percentage']?.toString() ?? '0') ?? 0,
     );
   }
 }
@@ -167,6 +173,8 @@ class TeamSale {
   final String size;
   final double gross;
   final double net;
+  final int slab;
+  final int emiPercentage;
 
   TeamSale({
     required this.sr,
@@ -176,6 +184,8 @@ class TeamSale {
     required this.size,
     required this.gross,
     required this.net,
+    required this.slab,
+    required this.emiPercentage,
   });
 
   factory TeamSale.fromJson(Map<String, dynamic> json) {
@@ -187,6 +197,8 @@ class TeamSale {
       size: json['size']?.toString() ?? '',
       gross: double.tryParse(json['gross']?.toString() ?? '0') ?? 0,
       net: double.tryParse(json['net']?.toString() ?? '0') ?? 0,
+      slab: int.tryParse(json['slab']?.toString() ?? '0') ?? 0,
+      emiPercentage: int.tryParse(json['emi_percentage']?.toString() ?? '0') ?? 0,
     );
   }
 }

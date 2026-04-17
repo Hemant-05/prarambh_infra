@@ -277,9 +277,11 @@ class _AdvisorPromotionScreenState extends State<AdvisorPromotionScreen> {
           _headerCell('ADVISOR', 130, style, TextAlign.left),
           _headerCell('COLONY', 140, style, TextAlign.left),
           _headerCell('PLOT', 60, style, TextAlign.center),
-          _headerCell('SIZE (sq.ft)', 90, style, TextAlign.right),
+          _headerCell('SIZE (sq.ft)', 80, style, TextAlign.right),
           _headerCell('GROSS', 90, style, TextAlign.right),
           _headerCell('NET', 90, style, TextAlign.right),
+          _headerCell('SLAB', 60, style, TextAlign.center),
+          _headerCell('EMI %', 60, style, TextAlign.center),
         ],
       ),
     );
@@ -405,6 +407,26 @@ class _AdvisorPromotionScreenState extends State<AdvisorPromotionScreen> {
                 color: Colors.green.shade600,
               ),
               textAlign: TextAlign.right,
+            ),
+          ),
+          // Slab
+          Container(
+            width: 60,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              s.slab.toString(),
+              style: valueStyle,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          // EMI %
+          Container(
+            width: 60,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              '${s.emiPercentage}%',
+              style: valueStyle,
+              textAlign: TextAlign.center,
             ),
           ),
         ],

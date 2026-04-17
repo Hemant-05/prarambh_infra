@@ -137,7 +137,7 @@ class _AdminRecruitmentDashboardScreenState
                         fontWeight: FontWeight.bold,
                         color: primaryBlue,
                       ),
-                      items: ['All', 'Active', 'Pending', 'Suspended'].map((
+                      items: ['All', 'Active', 'Pending', 'Terminated'].map((
                         String value,
                       ) {
                         return DropdownMenuItem<String>(
@@ -173,7 +173,9 @@ class _AdminRecruitmentDashboardScreenState
                     .where((applicant) {
                       if (selectedStatus == 'All') return true;
                       return applicant.status.toLowerCase() ==
-                          selectedStatus.toLowerCase();
+                          (selectedStatus.toLowerCase() == 'terminated'
+                              ? 'suspended'
+                              : selectedStatus.toLowerCase());
                     })
                     .map((applicant) {
                       bool isActive =

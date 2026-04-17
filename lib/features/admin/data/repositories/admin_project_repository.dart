@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:dio/dio.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:path/path.dart' as p;
 import '../../../../data/datasources/remote/api_client.dart';
 import '../models/project_model.dart';
 import '../models/unit_model.dart';
@@ -240,7 +243,24 @@ class AdminProjectRepository {
   // NEW: Bulk Upload CSV
   Future<bool> bulkUploadUnits(String projectId, File csvFile) async {
     try {
-      var response = await apiClient.bulkUploadUnits(projectId, csvFile);
+      final bytes = await csvFile.readAsBytes();
+      String fileName = p.basename(csvFile.path);
+      if (!fileName.toLowerCase().endsWith('.csv')) {
+        fileName += '.csv';
+      }
+
+      print('--- BULK UPLOAD DEBUG ---');
+      print('Path: ${csvFile.path}');
+      print('FileName: $fileName');
+      print('Bytes Length: ${bytes.length}');
+      print('-------------------------');
+
+      final multipartFile = MultipartFile.fromBytes(
+        bytes,
+        filename: fileName,
+        contentType: MediaType('text', 'csv'),
+      );
+      var response = await apiClient.bulkUploadUnits(projectId, multipartFile);
       response = _parseResponse(response);
       return response['status'];
     } catch (e) {

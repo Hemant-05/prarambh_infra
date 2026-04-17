@@ -9,7 +9,7 @@ class RecruitmentRepository {
   Future<bool> registerAdvisorDetailed({
     required String fullName, required String email, required String phone,
     required String designation, required String fatherName, required String dob,
-    required String gender, required String nomineeName, required String nomineePhone,
+    required String gender, required String nomineeName, required String nomineeDob,
     required String relationship, required String occupation, required String aadhaar,
     required String pan, required String bankName, required String accNumber,
     required String ifsc, required String address, required String city,
@@ -21,7 +21,7 @@ class RecruitmentRepository {
     try {
       final response = await apiClient.registerAdvisor(
         fullName, email, phone, designation, fatherName, dob, gender,
-        nomineeName, nomineePhone, relationship, occupation, aadhaar, pan,
+        nomineeName, nomineeDob, relationship, occupation, aadhaar, pan,
         bankName, accNumber, ifsc, address, city, state, pincode, leaderCode,
         advisorType,
         aadharFront, aadharBack, panPhoto, panBackPhoto, profilePhoto,

@@ -44,7 +44,7 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
 
   // --- Step 2 Controllers ---
   final nomineeNameCtrl = TextEditingController();
-  final nomineePhoneCtrl = TextEditingController();
+  final nomineeDobCtrl = TextEditingController();
   final bankNameCtrl = TextEditingController();
   final accNumberCtrl = TextEditingController();
   final ifscCtrl = TextEditingController();
@@ -97,7 +97,7 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
       final success = await repository.registerAdvisorDetailed(
           fullName: nameCtrl.text, email: emailCtrl.text, phone: phoneCtrl.text, designation: designation,
           fatherName: fatherNameCtrl.text, dob: dobCtrl.text, gender: gender,
-          nomineeName: nomineeNameCtrl.text, nomineePhone: nomineePhoneCtrl.text, relationship: relationship,
+          nomineeName: nomineeNameCtrl.text, nomineeDob: nomineeDobCtrl.text, relationship: relationship,
           occupation: occupationCtrl.text, aadhaar: aadharCtrl.text, pan: panCtrl.text,
           bankName: bankNameCtrl.text, accNumber: accNumberCtrl.text, ifsc: ifscCtrl.text,
           address: addressCtrl.text, city: cityCtrl.text, state: stateCtrl.text, pincode: pincodeCtrl.text, leaderCode: leaderCodeCtrl.text,
@@ -110,7 +110,7 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
       if(success){
         nameCtrl.clear(); fatherNameCtrl.clear(); dobCtrl.clear(); aadharCtrl.clear(); panCtrl.clear();
         phoneCtrl.clear(); emailCtrl.clear(); addressCtrl.clear(); occupationCtrl.clear(); pincodeCtrl.clear();
-        nomineeNameCtrl.clear(); nomineePhoneCtrl.clear(); bankNameCtrl.clear(); accNumberCtrl.clear(); ifscCtrl.clear();
+        nomineeNameCtrl.clear(); nomineeDobCtrl.clear(); bankNameCtrl.clear(); accNumberCtrl.clear(); ifscCtrl.clear();
         branchCtrl.clear(); leaderCodeCtrl.clear(); designation = 'Advisor';
         aadharFront = null; aadharBack = null; panPhoto = null; panBackPhoto = null; profilePhoto = null;
       }

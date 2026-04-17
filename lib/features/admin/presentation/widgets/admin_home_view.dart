@@ -99,6 +99,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
       data.siteVisitingLeads,
       data.bookingLeads,
       data.referralLeads,
+      data.completedLeads,
     ].reduce(max);
 
     double getPercent(int leads) {
@@ -422,7 +423,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                     secondaryTextColor,
                     isDark,
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 10),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -452,7 +453,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 10),
                   data.priorityLeads.isEmpty
                       ? Center(
                           child: Padding(
@@ -466,7 +467,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                           ),
                         )
                       : SizedBox(
-                          height: 170,
+                          height: 100,
                           child: ListView.builder(
                             scrollDirection: Axis.horizontal,
                             clipBehavior: Clip.none,
@@ -484,7 +485,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                           ),
                         ),
 
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 20),
 
                   // Sales Overview
                   Text(
@@ -553,6 +554,16 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                           const Color(0xFF90CAF9),
                           null,
                           4,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildSalesRow(
+                          context,
+                          'Completed',
+                          data.completedLeads.toString(),
+                          getPercent(data.completedLeads),
+                          Colors.green,
+                          Icons.check_circle_outline,
+                          5,
                         ),
                       ],
                     ),
@@ -1028,7 +1039,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
       child: Container(
         width: 200, // Reduced width
         margin: const EdgeInsets.only(right: 16),
-        padding: const EdgeInsets.all(12), // Reduced padding
+        padding: const EdgeInsets.all(10), // Reduced from 12
         decoration: BoxDecoration(
           color: cardColor,
           borderRadius: BorderRadius.circular(12),
@@ -1082,7 +1093,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Text(
               lead['client_name']?.toString() ?? 'Unknown',
               style: GoogleFonts.montserrat(
@@ -1093,7 +1104,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               lead['client_number']?.toString() ?? '',
               style: GoogleFonts.montserrat(

@@ -155,7 +155,7 @@ class _ApiClient implements ApiClient {
     String dob,
     String gender,
     String nomineeName,
-    String nomineePhone,
+    String nomineeDob,
     String relationship,
     String occupation,
     String aadhaar,
@@ -187,7 +187,7 @@ class _ApiClient implements ApiClient {
     _data.fields.add(MapEntry('date_of_birth', dob));
     _data.fields.add(MapEntry('gender', gender));
     _data.fields.add(MapEntry('nomineename', nomineeName));
-    _data.fields.add(MapEntry('nomineephone', nomineePhone));
+    _data.fields.add(MapEntry('nomineephone', nomineeDob));
     _data.fields.add(MapEntry('relationship', relationship));
     _data.fields.add(MapEntry('occupation', occupation));
     _data.fields.add(MapEntry('aadhaar_number', aadhaar));
@@ -1030,21 +1030,16 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> bulkUploadUnits(String projectId, File csvFile) async {
+  Future<dynamic> bulkUploadUnits(
+    String projectId,
+    MultipartFile csvFile,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = FormData();
     _data.fields.add(MapEntry('project_id', projectId));
-    _data.files.add(
-      MapEntry(
-        'file',
-        MultipartFile.fromFileSync(
-          csvFile.path,
-          filename: csvFile.path.split(Platform.pathSeparator).last,
-        ),
-      ),
-    );
+    _data.files.add(MapEntry('csv_file', csvFile));
     final _options = _setStreamType<dynamic>(
       Options(
             method: 'POST',
