@@ -476,13 +476,8 @@ class _AdminProjectsScreenState extends State<AdminProjectsScreen> {
                   primaryBlue,
                 ),
                 _buildStatColumn(
-                  'Units',
-                  project.totalPlots.toString(),
-                  primaryBlue,
-                ),
-                _buildStatColumn(
                   'Rate',
-                  '${project.ratePerSqft.toString()}/sqft',
+                  '${project.ratePerSqft.toStringAsFixed(0)}/sqft',
                   primaryBlue,
                 ),
               ],

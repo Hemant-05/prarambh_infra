@@ -17,6 +17,7 @@ class AdminRecruitmentDashboardScreen extends StatefulWidget {
 
 class _AdminRecruitmentDashboardScreenState
     extends State<AdminRecruitmentDashboardScreen> {
+  String selectedStatus = 'All';
   @override
   void initState() {
     super.initState();
@@ -123,6 +124,34 @@ class _AdminRecruitmentDashboardScreenState
                       color: textColor,
                     ),
                   ),
+                  DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: selectedStatus,
+                      icon: Icon(
+                        Icons.filter_list,
+                        size: 18,
+                        color: primaryBlue,
+                      ),
+                      style: GoogleFonts.montserrat(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: primaryBlue,
+                      ),
+                      items: ['All', 'Active', 'Pending', 'Suspended'].map((
+                        String value,
+                      ) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          setState(() => selectedStatus = newValue);
+                        }
+                      },
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
@@ -140,154 +169,166 @@ class _AdminRecruitmentDashboardScreenState
                   ),
                 )
               else
-                ...data.recentApplications.map((applicant) {
-                  bool isActive = applicant.status.toLowerCase() == 'active';
-                  Color statusColor = isActive ? Colors.green : Colors.orange;
+                ...data.recentApplications
+                    .where((applicant) {
+                      if (selectedStatus == 'All') return true;
+                      return applicant.status.toLowerCase() ==
+                          selectedStatus.toLowerCase();
+                    })
+                    .map((applicant) {
+                      bool isActive =
+                          applicant.status.toLowerCase() == 'active';
+                      Color statusColor = isActive
+                          ? Colors.green
+                          : Colors.orange;
 
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              AdvisorProfileScreen(advisorId: applicant.id),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.getBorderColor(context),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: isDark
-                                ? Colors.black.withOpacity(0.2)
-                                : Colors.black.withOpacity(0.02),
-                            blurRadius: 5,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 22,
-                            backgroundColor: primaryBlue.withOpacity(0.1),
-                            child: Text(
-                              applicant.initials,
-                              style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.bold,
-                                color: primaryBlue,
-                                fontSize: 14,
-                              ),
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  AdvisorProfileScreen(advisorId: applicant.id),
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  applicant.name,
-                                  style: GoogleFonts.montserrat(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    color: textColor,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  applicant.designation,
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 12,
-                                    color: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.color
-                                        ?.withOpacity(0.7),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.phone,
-                                      size: 10,
-                                      color: secondaryTextColor,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      applicant.phone,
-                                      style: GoogleFonts.montserrat(
-                                        fontSize: 10,
-                                        color: secondaryTextColor,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Icon(
-                                      Icons.email,
-                                      size: 10,
-                                      color: secondaryTextColor,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Expanded(
-                                      child: Text(
-                                        applicant.email,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: GoogleFonts.montserrat(
-                                          fontSize: 10,
-                                          color: secondaryTextColor,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                          );
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: cardColor,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.getBorderColor(context),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: statusColor.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  applicant.status.toLowerCase() == 'suspended' ? "Terminated" : applicant.status,
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: statusColor,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                applicant.joinedDate,
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 9,
-                                  color: secondaryTextColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: isDark
+                                    ? Colors.black.withOpacity(0.2)
+                                    : Colors.black.withOpacity(0.02),
+                                blurRadius: 5,
+                                offset: const Offset(0, 2),
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 22,
+                                backgroundColor: primaryBlue.withOpacity(0.1),
+                                child: Text(
+                                  applicant.initials,
+                                  style: GoogleFonts.montserrat(
+                                    fontWeight: FontWeight.bold,
+                                    color: primaryBlue,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      applicant.name,
+                                      style: GoogleFonts.montserrat(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: textColor,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      applicant.designation,
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 12,
+                                        color: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.color
+                                            ?.withOpacity(0.7),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.phone,
+                                          size: 10,
+                                          color: secondaryTextColor,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          applicant.phone,
+                                          style: GoogleFonts.montserrat(
+                                            fontSize: 10,
+                                            color: secondaryTextColor,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Icon(
+                                          Icons.email,
+                                          size: 10,
+                                          color: secondaryTextColor,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            applicant.email,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: GoogleFonts.montserrat(
+                                              fontSize: 10,
+                                              color: secondaryTextColor,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Column(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: statusColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      applicant.status.toLowerCase() ==
+                                              'suspended'
+                                          ? "Terminated"
+                                          : applicant.status,
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: statusColor,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    applicant.joinedDate,
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 9,
+                                      color: secondaryTextColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
               const SizedBox(height: 80),
             ],
           ),

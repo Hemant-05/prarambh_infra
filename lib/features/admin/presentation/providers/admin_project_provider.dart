@@ -18,10 +18,12 @@ class AdminProjectProvider extends ChangeNotifier {
 
   List<UnitModel> _inventory = [];
   bool _isLoadingInventory = false;
+  String _bulkProgress = '';
 
   List<ProjectModel> get projects => _projects;
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
+  String get bulkProgress => _bulkProgress;
 
   String get searchQuery => _searchQuery;
   String get filterType => _filterType;
@@ -370,6 +372,36 @@ class AdminProjectProvider extends ChangeNotifier {
       return false;
     } finally {
       _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> bulkRemoveUnits(List<String> unitIds, String projectId) async {
+    _isSaving = true;
+    _bulkProgress = 'Starting deletion...';
+    notifyListeners();
+    bool allSuccess = true;
+    int count = 0;
+    try {
+      for (String id in unitIds) {
+        count++;
+        _bulkProgress = 'Deleting unit $count of ${unitIds.length}...';
+        notifyListeners();
+        
+        final success = await repository.deleteUnit(id);
+        if (success) {
+          _inventory.removeWhere((u) => u.id.toString() == id);
+        } else {
+          allSuccess = false;
+        }
+      }
+      return allSuccess;
+    } catch (e) {
+      debugPrint('Bulk Delete Unit Error: $e');
+      return false;
+    } finally {
+      _isSaving = false;
+      _bulkProgress = '';
       notifyListeners();
     }
   }

@@ -433,6 +433,9 @@ abstract class ApiClient {
   @GET("/attendance/daily")
   Future<dynamic> getDailyAttendance(@Query("date") String date);
 
+  @GET("/advisor/attendance/{advisorId}")
+  Future<dynamic> getAdvisorAttendance(@Path("advisorId") String advisorId);
+
   @MultiPart()
   @POST("/attendance/check-in")
   Future<dynamic> checkInAttendance(
@@ -523,6 +526,7 @@ abstract class ApiClient {
   @GET("/advisor/app-dashboard")
   Future<dynamic> getAdvisorDashboard(
     @Query("advisor_code") String advisorCode,
+    @Query("timeframe") String? timeframe,
   );
 
   @GET("/inventory/dashboard")

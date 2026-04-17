@@ -21,6 +21,9 @@ class _MeetingManagementScreenState extends State<MeetingManagementScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String _search = '';
+  String _locationFilter = '';
+  String _dateFilter = '';
+  String _timeFilter = '';
 
   @override
   void initState() {
@@ -45,7 +48,19 @@ class _MeetingManagementScreenState extends State<MeetingManagementScreen>
           _search.isEmpty ||
           m.title.toLowerCase().contains(_search.toLowerCase()) ||
           m.location.toLowerCase().contains(_search.toLowerCase());
-      return matchesStatus && matchesSearch;
+      final matchesLocation =
+          _locationFilter.isEmpty ||
+          m.location.toLowerCase().contains(_locationFilter.toLowerCase());
+      final matchesDate =
+          _dateFilter.isEmpty || m.date.contains(_dateFilter);
+      final matchesTime =
+          _timeFilter.isEmpty || m.time.contains(_timeFilter);
+
+      return matchesStatus &&
+          matchesSearch &&
+          matchesLocation &&
+          matchesDate &&
+          matchesTime;
     }).toList();
   }
 
@@ -142,6 +157,38 @@ class _MeetingManagementScreenState extends State<MeetingManagementScreen>
                     vertical: 12,
                   ),
                 ),
+              ),
+            ),
+          ),
+
+          // Filters Row
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildSmallFilterField(
+                    hint: 'Date (YYYY-MM-DD)',
+                    icon: Icons.calendar_today,
+                    onChanged: (v) => setState(() => _dateFilter = v),
+                    isDark: isDark,
+                  ),
+                  const SizedBox(width: 8),
+                  _buildSmallFilterField(
+                    hint: 'Time',
+                    icon: Icons.access_time,
+                    onChanged: (v) => setState(() => _timeFilter = v),
+                    isDark: isDark,
+                  ),
+                  const SizedBox(width: 8),
+                  _buildSmallFilterField(
+                    hint: 'Location',
+                    icon: Icons.location_on,
+                    onChanged: (v) => setState(() => _locationFilter = v),
+                    isDark: isDark,
+                  ),
+                ],
               ),
             ),
           ),
@@ -587,6 +634,43 @@ class _MeetingManagementScreenState extends State<MeetingManagementScreen>
         const SizedBox(width: 4),
         Text(label, style: GoogleFonts.montserrat(fontSize: 12, color: color)),
       ],
+    );
+  }
+
+  Widget _buildSmallFilterField({
+    required String hint,
+    required IconData icon,
+    required Function(String) onChanged,
+    required bool isDark,
+  }) {
+    return Container(
+      width: 140,
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey[900] : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+      ),
+      child: TextField(
+        onChanged: onChanged,
+        style: GoogleFonts.montserrat(fontSize: 11),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: GoogleFonts.montserrat(
+            color: Colors.grey[400],
+            fontSize: 10,
+          ),
+          prefixIcon: Icon(
+            icon,
+            color: Colors.grey[400],
+            size: 14,
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: 10,
+          ),
+        ),
+      ),
     );
   }
 

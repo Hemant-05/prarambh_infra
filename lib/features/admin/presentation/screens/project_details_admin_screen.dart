@@ -392,8 +392,8 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _buildStatBox(
-                          'Total Units',
-                          project.totalPlots.toString(),
+                          'Market Value',
+                          '₹${NumberFormat.compact().format(project.marketValue)}',
                         ),
                       ),
                     ],
@@ -413,17 +413,6 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                         child: _buildStatBox(
                           'Budget Range',
                           project.budgetRange,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildStatBox(
-                          'Market Value',
-                          '₹${NumberFormat.compact().format(project.marketValue)}',
                         ),
                       ),
                     ],

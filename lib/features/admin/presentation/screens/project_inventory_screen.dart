@@ -18,6 +18,73 @@ class ProjectInventoryScreen extends StatefulWidget {
 
 class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
   String selectedFilter = 'All';
+  bool isSelectionMode = false;
+  final Set<int> selectedUnitIds = {};
+
+  void _toggleSelection(int unitId) {
+    setState(() {
+      if (selectedUnitIds.contains(unitId)) {
+        selectedUnitIds.remove(unitId);
+        if (selectedUnitIds.isEmpty) isSelectionMode = false;
+      } else {
+        selectedUnitIds.add(unitId);
+      }
+    });
+  }
+
+  void _enterSelectionMode(int unitId) {
+    setState(() {
+      isSelectionMode = true;
+      selectedUnitIds.add(unitId);
+    });
+  }
+
+  void _exitSelectionMode() {
+    setState(() {
+      isSelectionMode = false;
+      selectedUnitIds.clear();
+    });
+  }
+
+  void _selectAll(List<UnitModel> units) {
+    setState(() {
+      if (selectedUnitIds.length == units.length) {
+        selectedUnitIds.clear();
+        isSelectionMode = false;
+      } else {
+        selectedUnitIds.addAll(units.map((u) => u.id));
+        isSelectionMode = true;
+      }
+    });
+  }
+
+  void _showProgressDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Consumer<AdminProjectProvider>(
+        builder: (context, provider, child) {
+          return AlertDialog(
+            title: Text(
+              'Deleting Units',
+              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const LinearProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(
+                  provider.bulkProgress,
+                  style: GoogleFonts.montserrat(fontSize: 14),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -55,19 +122,92 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
       appBar: AppBar(
         backgroundColor: primaryBlue,
         elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Project Inventory',
-          style: GoogleFonts.montserrat(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
+        centerTitle: !isSelectionMode,
+        leading: isSelectionMode
+            ? IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: _exitSelectionMode,
+              )
+            : IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+        title: isSelectionMode
+            ? Text(
+                '${selectedUnitIds.length} Selected',
+                style: GoogleFonts.montserrat(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              )
+            : Text(
+                'Project Inventory',
+                style: GoogleFonts.montserrat(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+        actions: [
+          if (isSelectionMode) ...[
+            IconButton(
+              icon: Icon(
+                selectedUnitIds.length == filteredInventory.length
+                    ? Icons.check_box
+                    : Icons.check_box_outline_blank,
+                color: Colors.white,
+              ),
+              onPressed: () => _selectAll(filteredInventory),
+              tooltip: 'Select All',
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.white),
+              onPressed: () async {
+                bool confirm = await showDialog(
+                      context: context,
+                      builder: (c) => AlertDialog(
+                        title: const Text('Delete Selected Units?'),
+                        content: Text(
+                            'Are you sure you want to delete ${selectedUnitIds.length} units? This cannot be undone.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(c, false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(c, true),
+                            child: const Text(
+                              'Delete',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ) ??
+                    false;
+
+                if (confirm && context.mounted) {
+                  _showProgressDialog();
+                  final success = await provider.bulkRemoveUnits(
+                    selectedUnitIds.map((id) => id.toString()).toList(),
+                    widget.project.id.toString(),
+                  );
+                  if (context.mounted) Navigator.pop(context); // Close progress dialog
+                  if (success) {
+                    _exitSelectionMode();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Units deleted successfully')),
+                      );
+                    }
+                  }
+                }
+              },
+              tooltip: 'Delete Selected',
+            ),
+          ]
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.push(
@@ -251,54 +391,87 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
       textColor = Colors.grey[700]!;
     }
 
+    final isSelected = selectedUnitIds.contains(unit.id);
+
     return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => UnitDetailsScreen(unit: unit)),
-      ),
+      onLongPress: () {
+        if (!isSelectionMode) {
+          _enterSelectionMode(unit.id);
+        }
+      },
+      onTap: () {
+        if (isSelectionMode) {
+          _toggleSelection(unit.id);
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => UnitDetailsScreen(unit: unit)),
+          );
+        }
+      },
       child: Container(
         decoration: BoxDecoration(
-          color: bgColor,
+          color: isSelected ? Colors.blue.withOpacity(0.2) : bgColor,
           borderRadius: BorderRadius.circular(12),
+          border: isSelected
+              ? Border.all(color: Colors.blue, width: 2)
+              : Border.all(color: Colors.transparent),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
           children: [
-            Text(
-              unit.saleCategory.toLowerCase() == 'resale'
-                  ? 'RESALE (${unit.availabilityStatus})'
-                  : unit.availabilityStatus,
-              style: GoogleFonts.montserrat(
-                fontSize: 9,
-                fontWeight: FontWeight.bold,
-                color: textColor,
-              ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Center(
+                  child: Text(
+                    unit.saleCategory.toLowerCase() == 'resale'
+                        ? 'RESALE (${unit.availabilityStatus})'
+                        : unit.availabilityStatus,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '${unit.towerName}-${unit.unitNumber.isNotEmpty ? unit.unitNumber : unit.plotNumber.isNotEmpty ? unit.plotNumber : 'N/A'}',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                Text(
+                  unit.propertyType,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 10,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '₹${unit.calculatedPrice.toStringAsFixed(0)}',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[900],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            Text(
-              '${unit.towerName}-${unit.unitNumber.isNotEmpty? unit.unitNumber : unit.plotNumber.isNotEmpty ? unit.plotNumber : 'N/A'}',
-              style: GoogleFonts.montserrat(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+            if (isSelected)
+              const Positioned(
+                top: 8,
+                right: 8,
+                child: Icon(
+                  Icons.check_circle,
+                  color: Colors.blue,
+                  size: 20,
+                ),
               ),
-            ),
-            Text(
-              unit.propertyType,
-              style: GoogleFonts.montserrat(
-                fontSize: 10,
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '₹${unit.calculatedPrice.toStringAsFixed(0)}',
-              style: GoogleFonts.montserrat(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue[900],
-              ),
-            ),
           ],
         ),
       ),

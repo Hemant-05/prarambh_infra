@@ -250,6 +250,7 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
                       _buildSpecBox(Icons.map, 'Plot No.', widget.unit.unitNumber.isNotEmpty? widget.unit.unitNumber : widget.unit.plotNumber.isNotEmpty ? widget.unit.plotNumber : 'N/A', cardColor),
                       _buildSpecBox(Icons.layers, 'Floor', widget.unit.floorNumber, cardColor),
                       _buildSpecBox(Icons.location_on, 'Location', widget.unit.location.isNotEmpty ? widget.unit.location : 'N/A', cardColor),
+                      _buildSpecBox(Icons.category, 'Sale Category', widget.unit.saleCategory, cardColor),
                     ],
                   ),
                   const SizedBox(height: 40),

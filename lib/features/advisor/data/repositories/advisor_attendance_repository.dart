@@ -1,6 +1,7 @@
 import 'dart:io';
 import '../../../../data/datasources/remote/api_client.dart';
 import '../models/advisor_meeting_model.dart';
+import '../models/advisor_attendance_history_model.dart';
 
 class AdvisorAttendanceRepository {
   final ApiClient apiClient;
@@ -72,6 +73,18 @@ class AdvisorAttendanceRepository {
       return null;
     } catch (e) {
       return null;
+    }
+  }
+
+  Future<AdvisorAttendanceHistoryModel?> getAttendanceHistory(String advisorId) async {
+    try {
+      final response = await apiClient.getAdvisorAttendance(advisorId);
+      if (response['status'] == true || response['status'] == 'success') {
+        return AdvisorAttendanceHistoryModel.fromJson(response['data']);
+      }
+      return null;
+    } catch (e) {
+      rethrow;
     }
   }
 }

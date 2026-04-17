@@ -6,9 +6,9 @@ class AdvisorRepository {
   final ApiClient apiClient;
   AdvisorRepository({required this.apiClient});
 
-  Future<AdvisorDashboardModel> getDashboardData(String advisorCode) async {
+  Future<AdvisorDashboardModel> getDashboardData(String advisorCode, {String? timeframe}) async {
     try {
-      final response = await apiClient.getAdvisorDashboard(advisorCode);
+      final response = await apiClient.getAdvisorDashboard(advisorCode, timeframe);
       if (response['status'] == true || response['status'] == 'success') {
         return AdvisorDashboardModel.fromJson(response['data']);
       }

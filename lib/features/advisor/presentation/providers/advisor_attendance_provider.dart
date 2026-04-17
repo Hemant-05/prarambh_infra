@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/models/advisor_meeting_model.dart';
+import '../../data/models/advisor_attendance_history_model.dart';
 import '../../data/repositories/advisor_attendance_repository.dart';
 
 class AdvisorAttendanceProvider extends ChangeNotifier {
@@ -10,11 +11,15 @@ class AdvisorAttendanceProvider extends ChangeNotifier {
   AdvisorAttendanceProvider({required this.repository});
 
   List<AdvisorMeetingModel> _meetings = [];
+  AdvisorAttendanceHistoryModel? _history;
   bool _isLoading = false;
+  bool _isLoadingHistory = false;
   bool _isSaving = false;
 
   List<AdvisorMeetingModel> get meetings => _meetings;
+  AdvisorAttendanceHistoryModel? get history => _history;
   bool get isLoading => _isLoading;
+  bool get isLoadingHistory => _isLoadingHistory;
   bool get isSaving => _isSaving;
 
   // Filter meetings by specific date
@@ -45,6 +50,20 @@ class AdvisorAttendanceProvider extends ChangeNotifier {
       _meetings = [];
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchAttendanceHistory(String advisorId) async {
+    _isLoadingHistory = true;
+    notifyListeners();
+    try {
+      _history = await repository.getAttendanceHistory(advisorId);
+    } catch (e) {
+      debugPrint('Fetch History Error: $e');
+      _history = null;
+    } finally {
+      _isLoadingHistory = false;
       notifyListeners();
     }
   }

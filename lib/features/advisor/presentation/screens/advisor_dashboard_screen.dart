@@ -85,8 +85,10 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
 
     switch (_selectedIndex) {
       case 0:
+        final timeframe = context.read<AdvisorDashboardProvider>().selectedTimeframe;
         await context.read<AdvisorDashboardProvider>().fetchDashboardData(
           advisorCode,
+          timeframe: timeframe,
         );
         break;
       case 1:
@@ -331,7 +333,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                   _buildCareerProgress(context, data),
                   const SizedBox(height: 24),
 
-                  _buildSalesConversionHeader(context),
+                  _buildSalesConversionHeader(context, provider, advisor?.advisorCode ?? ''),
                   _buildSalesConversionCards(context, data.sales),
                   const SizedBox(height: 24),
 
@@ -540,6 +542,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     );
   }
 
+
   Widget _buildCareerProgress(
     BuildContext context,
     AdvisorDashboardModel data,
@@ -653,8 +656,60 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     );
   }
 
-  Widget _buildSalesConversionHeader(BuildContext context) {
-    return _buildSectionTitle(context, 'Sales Conversion');
+  Widget _buildSalesConversionHeader(
+    BuildContext context,
+    AdvisorDashboardProvider provider,
+    String advisorCode,
+  ) {
+    final primaryBlue = Theme.of(context).primaryColor;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final timeframes = [
+      {'label': 'All Time', 'value': ''},
+      {'label': 'Weekly', 'value': 'weekly'},
+      {'label': 'Monthly', 'value': 'monthly'},
+      {'label': 'Quarterly', 'value': 'quarterly'},
+      {'label': 'Yearly', 'value': 'yearly'},
+    ];
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _buildSectionTitle(context, 'Sales Conversion'),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: primaryBlue.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: primaryBlue.withOpacity(0.2)),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: provider.selectedTimeframe,
+              icon: Icon(Icons.keyboard_arrow_down, size: 18, color: primaryBlue),
+              elevation: 16,
+              style: GoogleFonts.montserrat(
+                color: primaryBlue,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+              dropdownColor: Theme.of(context).cardColor,
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  provider.updateTimeframe(advisorCode, newValue);
+                }
+              },
+              items: timeframes.map<DropdownMenuItem<String>>((Map<String, String> tf) {
+                return DropdownMenuItem<String>(
+                  value: tf['value'],
+                  child: Text(tf['label']!),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildSalesConversionCards(
