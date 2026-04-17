@@ -144,7 +144,7 @@ class ReviewApplicationScreen extends StatelessWidget {
                                       context,
                                       MaterialPageRoute(
                                         builder: (_) => FullScreenImageViewer(
-                                          imageUrl: profileUrl!,
+                                          imageUrl: profileUrl,
                                           heroTag: 'admin_review_main_${advisor.id}',
                                         ),
                                       ),
@@ -153,7 +153,7 @@ class ReviewApplicationScreen extends StatelessWidget {
                                   child: Hero(
                                     tag: 'admin_review_main_${advisor.id}',
                                     child: Image.network(
-                                      profileUrl!,
+                                      profileUrl,
                                       height: 100,
                                       width: 100,
                                       fit: BoxFit.cover,
@@ -403,13 +403,13 @@ class ReviewApplicationScreen extends StatelessWidget {
                                                   MaterialPageRoute(
                                                     builder: (_) => FullScreenImageViewer(
                                                       imageUrl: doc.url,
-                                                      heroTag: 'admin_review_doc_${doc.id}_${index}',
+                                                      heroTag: 'admin_review_doc_${doc.id}_$index',
                                                     ),
                                                   ),
                                                 );
                                               },
                                               child: Hero(
-                                                tag: 'admin_review_doc_${doc.id}_${index}',
+                                                tag: 'admin_review_doc_${doc.id}_$index',
                                                 child: Image.network(
                                                   doc.url,
                                                   fit: BoxFit.cover,

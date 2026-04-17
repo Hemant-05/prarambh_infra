@@ -292,8 +292,11 @@ class _AdminUpcomingInstallmentsScreenState extends State<AdminUpcomingInstallme
                   const Spacer(),
                   InkWell(
                     onTap: () => setState(() {
-                      if (label == 'START DATE') _startDate = null;
-                      else _endDate = null;
+                      if (label == 'START DATE') {
+                        _startDate = null;
+                      } else {
+                        _endDate = null;
+                      }
                     }),
                     child: const Icon(Icons.close, size: 12, color: Colors.red),
                   ),

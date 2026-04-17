@@ -123,14 +123,6 @@ class _AdminRecruitmentDashboardScreenState
                       color: textColor,
                     ),
                   ),
-                  Text(
-                    'View All',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: primaryBlue,
-                    ),
-                  ),
                 ],
               ),
               const SizedBox(height: 16),

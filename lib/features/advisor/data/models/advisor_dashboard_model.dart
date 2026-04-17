@@ -14,6 +14,10 @@ class AdvisorDashboardModel {
   final List<PendingAction> pendingActions;
   final List<PromotionMetric> promotionStatus;
   final List<ActiveContest> activeContests;
+  
+  String get initials => name.isNotEmpty 
+      ? name.trim().split(' ').map((e) => e.isNotEmpty ? e[0] : '').join().toUpperCase()
+      : '?';
 
   AdvisorDashboardModel({
     required this.name, required this.role, required this.advisorId,

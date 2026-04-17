@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_lead_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/widgets/profile_image.dart';
 import '../../data/models/lead_models.dart';
 
 class AssignLeadScreen extends StatefulWidget {
@@ -212,21 +213,13 @@ class _AssignLeadScreenState extends State<AssignLeadScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           child: Row(
                             children: [
-                              CircleAvatar(
+                              ProfileImage(
+                                imageUrl: _isValidImage(advisor.profile) ? _getImageUrl(advisor.profile) : null,
+                                initials: advisor.name.isNotEmpty 
+                                    ? advisor.name.trim().split(' ').map((e) => e[0]).take(2).join().toUpperCase()
+                                    : '?',
+                                heroTag: 'assign_lead_advisor_${advisor.advisorCode}',
                                 radius: 22,
-                                backgroundColor: primaryBlue.withOpacity(0.1),
-                                backgroundImage: _isValidImage(advisor.profile)
-                                    ? NetworkImage(
-                                        _getImageUrl(advisor.profile),
-                                      )
-                                    : null,
-                                child: !_isValidImage(advisor.profile)
-                                    ? Icon(
-                                        Icons.person,
-                                        color: primaryBlue,
-                                        size: 24,
-                                      )
-                                    : null,
                               ),
                               const SizedBox(width: 12),
                               Expanded(

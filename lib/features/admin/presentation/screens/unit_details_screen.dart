@@ -33,7 +33,7 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
       barrierDismissible: true,
       barrierLabel: 'Close',
       barrierColor: Colors.black.withOpacity(0.9),
-      pageBuilder: (context, _, __) {
+      pageBuilder: (context, _, _) {
         return Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(

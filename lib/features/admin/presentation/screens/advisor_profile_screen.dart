@@ -5,6 +5,7 @@ import 'package:prarambh_infra/features/admin/presentation/screens/assign_docume
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/widgets/full_screen_image_viewer.dart';
+import '../../../../core/widgets/profile_image.dart';
 import 'package:prarambh_infra/core/utils/ui_helper.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/admin_team_provider.dart';
@@ -142,45 +143,13 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                               ),
                             ],
                           ),
-                          child: InkWell(
-                            onTap: () {
-                              if (p.profilePhoto != null && p.profilePhoto!.isNotEmpty) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => FullScreenImageViewer(
-                                      imageUrl: '$_baseUrl${p.profilePhoto}',
-                                      heroTag: 'admin_advisor_profile_${p.advisorCode}',
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
-                            child: Hero(
-                              tag: 'admin_advisor_profile_${p.advisorCode}',
-                              child: CircleAvatar(
-                                radius: 36,
-                                backgroundColor: Colors.grey[200],
-                                backgroundImage:
-                                    (p.profilePhoto != null &&
-                                        p.profilePhoto!.isNotEmpty)
-                                    ? NetworkImage('$_baseUrl${p.profilePhoto}')
-                                          as ImageProvider
-                                    : null,
-                                child:
-                                    (p.profilePhoto == null ||
-                                        p.profilePhoto!.isEmpty)
-                                    ? Text(
-                                        p.initials,
-                                        style: GoogleFonts.montserrat(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                          color: primaryBlue,
-                                        ),
-                                      )
-                                    : null,
-                              ),
-                            ),
+                          child: ProfileImage(
+                            imageUrl: (p.profilePhoto != null && p.profilePhoto!.isNotEmpty)
+                                ? '$_baseUrl${p.profilePhoto}'
+                                : null,
+                            initials: p.initials,
+                            heroTag: 'admin_advisor_profile_${p.advisorCode}',
+                            radius: 36,
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -405,49 +374,13 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                                 padding: const EdgeInsets.only(right: 16),
                                 child: Column(
                                   children: [
-                                    InkWell(
-                                      onTap: () {
-                                        if (member.profilePhoto != null && member.profilePhoto!.isNotEmpty) {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) => FullScreenImageViewer(
-                                                imageUrl: '$_baseUrl${member.profilePhoto}',
-                                                heroTag: 'admin_advisor_team_${member.advisorCode}',
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                      child: Hero(
-                                        tag: 'admin_advisor_team_${member.advisorCode}',
-                                        child: CircleAvatar(
-                                          radius: 28,
-                                          backgroundColor: primaryBlue.withOpacity(
-                                            0.1,
-                                          ),
-                                          backgroundImage:
-                                              (member.profilePhoto != null &&
-                                                  member.profilePhoto!.isNotEmpty)
-                                              ? NetworkImage(
-                                                      '$_baseUrl${member.profilePhoto}',
-                                                    )
-                                                    as ImageProvider
-                                              : null,
-                                          child:
-                                              (member.profilePhoto == null ||
-                                                  member.profilePhoto!.isEmpty)
-                                              ? Text(
-                                                  member.initials,
-                                                  style: GoogleFonts.montserrat(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: primaryBlue,
-                                                    fontSize: 14,
-                                                  ),
-                                                )
-                                              : null,
-                                        ),
-                                      ),
+                                    ProfileImage(
+                                      imageUrl: (member.profilePhoto != null && member.profilePhoto!.isNotEmpty)
+                                          ? '$_baseUrl${member.profilePhoto}'
+                                          : null,
+                                      initials: member.initials,
+                                      heroTag: 'admin_advisor_team_${member.advisorCode}',
+                                      radius: 28,
                                     ),
                                     const SizedBox(height: 6),
                                     SizedBox(
@@ -1201,7 +1134,7 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                   ],
                 ),
               ),
-              if (trailing != null) trailing,
+              ?trailing,
             ],
           ),
         ),
@@ -1780,7 +1713,7 @@ class _ImageViewerScreenState extends State<_ImageViewerScreen> {
                     ),
                   );
                 },
-                errorBuilder: (_, __, ___) {
+                errorBuilder: (_, _, _) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (mounted) {
                       setState(() {

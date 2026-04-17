@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:provider/provider.dart';
+import 'package:prarambh_infra/core/widgets/profile_image.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/recruitment_provider.dart';
@@ -88,7 +89,14 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
       ),
       child: Row(
         children: [
-          _buildAvatar(context, leader.fullName, leader.imageUrl, radius: 30),
+          ProfileImage(
+            imageUrl: leader.imageUrl.isNotEmpty ? leader.imageUrl : null,
+            initials: leader.fullName.isNotEmpty 
+                ? leader.fullName.trim().split(' ').map((l) => l.isNotEmpty ? l[0] : '').take(2).join().toUpperCase() 
+                : '?',
+            heroTag: 'recruiter_leader_${leader.advisorCode}',
+            radius: 30,
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -174,7 +182,14 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
           ),
           child: Row(
             children: [
-              _buildAvatar(context, recruit.name, recruit.imageUrl, radius: 22),
+              ProfileImage(
+                imageUrl: recruit.imageUrl.isNotEmpty ? recruit.imageUrl : null,
+                initials: recruit.name.isNotEmpty 
+                    ? recruit.name.trim().split(' ').map((l) => l.isNotEmpty ? l[0] : '').take(2).join().toUpperCase() 
+                    : '?',
+                heroTag: 'recruiter_team_${recruit.advisorCode}',
+                radius: 22,
+              ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -207,31 +222,6 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
     );
   }
 
-  Widget _buildAvatar(BuildContext context, String name, String imageUrl, {required double radius}) {
-    final primaryBlue = Theme.of(context).primaryColor;
-
-    // Avoid crashing on broken PDF/XLSX image uploads from backend testing
-    bool isInvalidImage = imageUrl.toLowerCase().endsWith('.xlsx') || imageUrl.toLowerCase().endsWith('.pdf');
-
-    if (imageUrl.isNotEmpty && !isInvalidImage) {
-      return CircleAvatar(
-        radius: radius,
-        backgroundImage: NetworkImage(imageUrl),
-        backgroundColor: primaryBlue.withOpacity(0.1),
-      );
-    }
-
-    String initials = name.isNotEmpty ? name.trim().split(' ').map((l) => l.isNotEmpty ? l[0] : '').take(2).join().toUpperCase() : '?';
-
-    return CircleAvatar(
-      radius: radius,
-      backgroundColor: primaryBlue.withOpacity(0.1),
-      child: Text(
-        initials,
-        style: GoogleFonts.montserrat(color: primaryBlue, fontWeight: FontWeight.bold, fontSize: radius * 0.6),
-      ),
-    );
-  }
 
   Widget _buildStatusPill(BuildContext context, String status) {
     Color bgColor;

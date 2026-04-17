@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:prarambh_infra/core/constant/cons_strings.dart';
 import 'package:provider/provider.dart';
+import 'package:prarambh_infra/core/widgets/profile_image.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/full_screen_image_viewer.dart';
 import '../../../../data/datasources/remote/api_client.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/admin_profile_provider.dart';
@@ -181,34 +180,15 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                               )
                             ],
                           ),
-                          child: InkWell(
-                            onTap: () {
-                              if (provider.profile?.avatarUrl != null) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => FullScreenImageViewer(
-                                      imageUrl: "https://workiees.com/${provider.profile!.avatarUrl}",
-                                      heroTag: 'admin_profile_avatar',
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
-                            child: Hero(
-                              tag: 'admin_profile_avatar',
-                              child: CircleAvatar(
-                                radius: 45,
-                                backgroundColor: Colors.white,
-                                child: CircleAvatar(
-                                  radius: 42,
-                                  backgroundImage: provider.profile?.avatarUrl != null
-                                      ? NetworkImage( "https://workiees.com/${provider.profile!.avatarUrl}")
-                                      : const AssetImage(logo),
-                                  backgroundColor: Colors.grey[200],
-                                ),
-                              ),
-                            ),
+                          child: ProfileImage(
+                            imageUrl: provider.profile?.avatarUrl != null 
+                                ? "https://workiees.com/${provider.profile!.avatarUrl}"
+                                : null,
+                            initials: profile.name.isNotEmpty 
+                                ? profile.name.trim().split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase()
+                                : 'A',
+                            heroTag: 'admin_profile_avatar',
+                            radius: 45,
                           ),
                         ),
                         Positioned(

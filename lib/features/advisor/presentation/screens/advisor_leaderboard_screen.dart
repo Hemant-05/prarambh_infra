@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:prarambh_infra/core/constant/cons_strings.dart';
+import 'package:prarambh_infra/core/widgets/profile_image.dart';
 import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -301,26 +302,15 @@ class _AdvisorLeaderboardScreenState extends State<AdvisorLeaderboardScreen> {
                     ? Border.all(color: primaryBlue, width: 2)
                     : null,
               ),
-              child: CircleAvatar(
+              child: ProfileImage(
+                imageUrl: (advisor.profilePhoto != null && advisor.profilePhoto!.isNotEmpty)
+                    ? advisor.avatarUrl
+                    : null,
+                initials: advisor.fullName.isNotEmpty 
+                    ? advisor.fullName.trim().split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase()
+                    : 'A',
+                heroTag: 'leaderboard_podium_${advisor.id}',
                 radius: avatarSize,
-                backgroundColor: primaryBlue.withOpacity(0.1),
-                backgroundImage: (advisor.profilePhoto != null && advisor.profilePhoto!.isNotEmpty)
-                    ? NetworkImage(advisor.avatarUrl)
-                    : null,
-                child:
-                    advisor.profilePhoto == null ||
-                        advisor.profilePhoto!.isEmpty
-                    ? Text(
-                        advisor.fullName.isNotEmpty
-                            ? advisor.fullName.substring(0, 1).toUpperCase()
-                            : 'A',
-                        style: GoogleFonts.montserrat(
-                          fontWeight: FontWeight.bold,
-                          color: primaryBlue,
-                          fontSize: isCenter ? 24 : 18,
-                        ),
-                      )
-                    : null,
               ),
             ),
             Positioned(
@@ -449,24 +439,15 @@ class _AdvisorLeaderboardScreenState extends State<AdvisorLeaderboardScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          CircleAvatar(
+          ProfileImage(
+            imageUrl: (advisor.profilePhoto != null && advisor.profilePhoto!.isNotEmpty)
+                ? advisor.avatarUrl
+                : null,
+            initials: advisor.fullName.isNotEmpty 
+                ? advisor.fullName.trim().split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase()
+                : 'A',
+            heroTag: 'leaderboard_list_${advisor.id}',
             radius: 20,
-            backgroundColor: primaryBlue.withOpacity(0.1),
-            backgroundImage: (advisor.profilePhoto != null && advisor.profilePhoto!.isNotEmpty)
-                ? NetworkImage(advisor.avatarUrl)
-                : null,
-            child: advisor.profilePhoto == null || advisor.profilePhoto!.isEmpty
-                ? Text(
-                    advisor.fullName.isNotEmpty
-                        ? advisor.fullName.substring(0, 1).toUpperCase()
-                        : 'A',
-                    style: GoogleFonts.montserrat(
-                      fontWeight: FontWeight.bold,
-                      color: primaryBlue,
-                      fontSize: 16,
-                    ),
-                  )
-                : null,
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -620,7 +601,7 @@ class _AdvisorLeaderboardScreenState extends State<AdvisorLeaderboardScreen> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<int>(
-                      value: provider.selectedMonth,
+                      initialValue: provider.selectedMonth,
                       decoration: const InputDecoration(
                         labelText: "Month",
                         border: OutlineInputBorder(),
@@ -641,7 +622,7 @@ class _AdvisorLeaderboardScreenState extends State<AdvisorLeaderboardScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: DropdownButtonFormField<int>(
-                      value: provider.selectedYear,
+                      initialValue: provider.selectedYear,
                       decoration: const InputDecoration(
                         labelText: "Year",
                         border: OutlineInputBorder(),

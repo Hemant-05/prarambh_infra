@@ -6,7 +6,6 @@ import '../../../../core/widgets/full_screen_image_viewer.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/advisor_profile_provider.dart';
 import '../../data/models/advisor_profile_model.dart';
-import 'advisor_edit_profile_screen.dart';
 
 class AdvisorProfileScreen extends StatefulWidget {
   const AdvisorProfileScreen({super.key});

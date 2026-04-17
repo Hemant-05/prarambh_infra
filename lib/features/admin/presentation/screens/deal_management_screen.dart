@@ -425,8 +425,9 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
               ),
               Consumer<AdvisorProfileProvider>(
                 builder: (context, profileProvider, _) {
-                  if (profileProvider.isLoading)
+                  if (profileProvider.isLoading) {
                     return _buildAdvisorSkeleton(cardColor);
+                  }
                   if (profileProvider.profile != null) {
                     return _buildAdvisorInfoCard(
                       profileProvider.profile!,
@@ -712,7 +713,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                             ),
                             const SizedBox(height: 4),
                             DropdownButtonFormField<String>(
-                              value: _tokenPaymentMode,
+                              initialValue: _tokenPaymentMode,
                               decoration: InputDecoration(
                                 filled: true,
                                 fillColor: Colors.grey.withOpacity(0.05),
@@ -873,7 +874,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
-                      value: _selectedPlan,
+                      initialValue: _selectedPlan,
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: Colors.grey.withOpacity(0.05),
@@ -1020,7 +1021,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                             scale: 0.8,
                             child: Switch(
                               value: isPaid,
-                              activeColor: Colors.green,
+                              activeThumbColor: Colors.green,
                               onChanged: isPaid
                                   ? null
                                   : (val) {
@@ -1220,7 +1221,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
   }
 
   void _showAddNoteDialog(Color primaryBlue, Color textColor, Color cardColor) {
-    final TextEditingController _noteCtrl = TextEditingController();
+    final TextEditingController noteCtrl = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1237,7 +1238,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              controller: _noteCtrl,
+              controller: noteCtrl,
               maxLines: 3,
               style: GoogleFonts.montserrat(fontSize: 13),
               decoration: InputDecoration(
@@ -1256,12 +1257,12 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
-                  if (_noteCtrl.text.isEmpty) return;
+                  if (noteCtrl.text.isEmpty) return;
                   final success = await context
                       .read<AdminDealProvider>()
                       .addDealNote(
                         widget.deal.id.toString(),
-                        _noteCtrl.text,
+                        noteCtrl.text,
                         DateTime.now().toString(),
                       );
                   if (success && mounted) {
@@ -2102,7 +2103,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
             MaterialPageRoute(
               builder: (_) => FullScreenImageViewer(
                 imageUrl: url,
-                heroTag: 'admin_deal_doc_${url.hashCode}_${title}',
+                heroTag: 'admin_deal_doc_${url.hashCode}_$title',
               ),
             ),
           );
@@ -2120,11 +2121,11 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
           children: [
             if (url.isNotEmpty)
               Hero(
-                tag: 'admin_deal_doc_${url.hashCode}_${title}',
+                tag: 'admin_deal_doc_${url.hashCode}_$title',
                 child: Image.network(
                   url,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) =>
+                  errorBuilder: (_, _, _) =>
                       const Icon(Icons.broken_image, size: 20),
                 ),
               )

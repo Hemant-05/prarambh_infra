@@ -255,7 +255,7 @@ class _AttendanceReviewScreenState extends State<AttendanceReviewScreen> {
                       child: Image.network(
                         photoUrl,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
+                        errorBuilder: (_, _, _) =>
                             const Icon(Icons.image_not_supported, size: 40),
                       ),
                     ),

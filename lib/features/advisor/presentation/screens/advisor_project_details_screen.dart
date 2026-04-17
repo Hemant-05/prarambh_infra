@@ -83,7 +83,7 @@ class _AdvisorProjectDetailsScreenState
                         ? Image.network(
                             displayImage,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Icon(
+                            errorBuilder: (_, _, _) => const Icon(
                               Icons.image,
                               size: 50,
                               color: Colors.white54,

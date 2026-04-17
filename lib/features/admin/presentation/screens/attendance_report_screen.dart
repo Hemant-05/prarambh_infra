@@ -552,7 +552,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen>
                     child: Image.network(
                       photoUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Icon(
+                      errorBuilder: (_, _, _) => Icon(
                         Icons.image_not_supported,
                         size: 16,
                         color: Colors.grey[400],
@@ -604,7 +604,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen>
               child: Image.network(
                 url,
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const Padding(
+                errorBuilder: (_, _, _) => const Padding(
                   padding: EdgeInsets.all(40),
                   child: Icon(Icons.broken_image, size: 80, color: Colors.grey),
                 ),

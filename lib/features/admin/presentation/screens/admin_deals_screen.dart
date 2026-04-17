@@ -59,15 +59,17 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
       // 2. Payment Status Filter
       if (_selectedPaymentStatus != null) {
         if (deal.paymentStatus.toLowerCase() !=
-            _selectedPaymentStatus!.toLowerCase())
+            _selectedPaymentStatus!.toLowerCase()) {
           return false;
+        }
       }
 
       // 3. Verification Status Filter
       if (_selectedVerificationStatus != null) {
         if (deal.dealStatus.toLowerCase() !=
-            _selectedVerificationStatus!.toLowerCase())
+            _selectedVerificationStatus!.toLowerCase()) {
           return false;
+        }
       }
 
       // 4. Project Filter
@@ -325,7 +327,7 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                     _buildFilterSection(
                       'Payment Status',
                       DropdownButtonFormField<String>(
-                        value: _selectedPaymentStatus,
+                        initialValue: _selectedPaymentStatus,
                         dropdownColor: sheetBg,
                         style: GoogleFonts.montserrat(
                           color: textColor,
@@ -348,7 +350,7 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                     _buildFilterSection(
                       'Verification Status',
                       DropdownButtonFormField<String>(
-                        value: _selectedVerificationStatus,
+                        initialValue: _selectedVerificationStatus,
                         dropdownColor: sheetBg,
                         style: GoogleFonts.montserrat(
                           color: textColor,
@@ -373,7 +375,7 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                     _buildFilterSection(
                       'Project',
                       DropdownButtonFormField<int>(
-                        value: _selectedProjectId,
+                        initialValue: _selectedProjectId,
                         dropdownColor: sheetBg,
                         isExpanded: true,
                         style: GoogleFonts.montserrat(

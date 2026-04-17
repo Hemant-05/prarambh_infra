@@ -180,8 +180,9 @@ class _TopPerformersDialogState extends State<TopPerformersDialog> {
                       TopPerformerModel performer = entry.value;
 
                       Color badgeColor;
-                      if (rank == 1) badgeColor = Colors.amber;
-                      else if (rank == 2) badgeColor = Colors.blueGrey.shade400;
+                      if (rank == 1) {
+                        badgeColor = Colors.amber;
+                      } else if (rank == 2) badgeColor = Colors.blueGrey.shade400;
                       else if (rank == 3) badgeColor = Colors.deepOrange.shade600;
                       else badgeColor = Colors.grey;
 
@@ -261,7 +262,7 @@ class _TopPerformersDialogState extends State<TopPerformersDialog> {
                           ],
                         ),
                       );
-                    }).toList(),
+                    }),
 
                     const SizedBox(height: 12),
                     SizedBox(

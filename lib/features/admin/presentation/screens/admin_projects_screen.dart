@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/constant/cons_strings.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_project_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/project_details_admin_screen.dart';
-import 'package:prarambh_infra/features/admin/presentation/screens/project_inventory_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../data/models/project_model.dart';

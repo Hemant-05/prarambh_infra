@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
+import 'package:prarambh_infra/core/widgets/profile_image.dart';
 import '../../../../core/widgets/full_screen_image_viewer.dart';
 import '../../../../core/utils/ui_helper.dart';
 import '../providers/advisor_profile_provider.dart';
@@ -152,45 +153,15 @@ class _AdvisorEditProfileScreenState extends State<AdvisorEditProfileScreen> {
               // Profile Photo Section
               Stack(
                 children: [
-                  GestureDetector(
-                    onTap: () {
-                      if (_profileImage != null) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => FullScreenImageViewer(
-                              imageUrl: _profileImage!.path,
-                              heroTag: 'edit_profile_photo',
-                            ),
-                          ),
-                        );
-                      } else if (widget.profile.profilePhoto.isNotEmpty) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => FullScreenImageViewer(
-                              imageUrl: widget.profile.profilePhoto,
-                              heroTag: 'edit_profile_photo',
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                    child: Hero(
-                      tag: 'edit_profile_photo',
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundColor: primaryBlue.withOpacity(0.1),
-                        backgroundImage: _profileImage != null
-                            ? FileImage(_profileImage!)
-                            : (widget.profile.profilePhoto.isNotEmpty
-                                ? NetworkImage(widget.profile.profilePhoto)
-                                : null) as ImageProvider?,
-                        child: (_profileImage == null && widget.profile.profilePhoto.isEmpty)
-                            ? Icon(Icons.person, size: 50, color: primaryBlue)
-                            : null,
-                      ),
-                    ),
+                  ProfileImage(
+                    imageUrl: _profileImage != null 
+                        ? _profileImage!.path 
+                        : (widget.profile.profilePhoto.isNotEmpty ? widget.profile.profilePhoto : null),
+                    initials: widget.profile.fullName.isNotEmpty 
+                        ? widget.profile.fullName.trim().split(' ').map((l) => l.isNotEmpty ? l[0] : '').take(2).join().toUpperCase() 
+                        : '?',
+                    heroTag: 'edit_profile_photo',
+                    radius: 50,
                   ),
                   Positioned(
                     bottom: 0,
@@ -319,7 +290,7 @@ class _AdvisorEditProfileScreenState extends State<AdvisorEditProfileScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: DropdownButtonFormField<String>(
-        value: _selectedGender,
+        initialValue: _selectedGender,
         decoration: InputDecoration(
           labelText: "Gender",
           prefixIcon: const Icon(Icons.wc, size: 20),

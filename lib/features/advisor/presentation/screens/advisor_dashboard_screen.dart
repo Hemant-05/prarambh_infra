@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
+import 'package:prarambh_infra/core/widgets/profile_image.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_profile_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_profile_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_team_screen.dart';
 import 'package:provider/provider.dart';
@@ -158,8 +160,9 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           if (_selectedIndex == 1)
             Consumer<AdvisorProfileProvider>(
               builder: (context, profileProvider, _) {
-                if (profileProvider.profile == null)
+                if (profileProvider.profile == null) {
                   return const SizedBox.shrink();
+                }
                 return IconButton(
                   icon: const Icon(Icons.edit_note, size: 28),
                   onPressed: () => Navigator.push(
@@ -416,33 +419,11 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    InkWell(
-                      onTap: () {
-                        if (data.profilePhoto.isNotEmpty) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => FullScreenImageViewer(
-                                imageUrl: data.profilePhoto,
-                                heroTag: 'top_profile_photo',
-                              ),
-                            ),
-                          );
-                        }
-                      },
-                      child: Hero(
-                        tag: 'top_profile_photo',
-                        child: CircleAvatar(
-                          radius: 35,
-                          backgroundColor: primaryBlue.withOpacity(0.1),
-                          backgroundImage: data.profilePhoto.isNotEmpty
-                              ? NetworkImage(data.profilePhoto)
-                              : null,
-                          child: data.profilePhoto.isEmpty
-                              ? Icon(Icons.person, size: 30, color: primaryBlue)
-                              : null,
-                        ),
-                      ),
+                    ProfileImage(
+                      imageUrl: data.profilePhoto.isNotEmpty ? data.profilePhoto : null,
+                      initials: data.initials,
+                      heroTag: 'top_profile_photo',
+                      radius: 35,
                     ),
                     Positioned(
                       bottom: -8,
@@ -681,7 +662,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     SalesConversion sales,
   ) {
     return SizedBox(
-      height: 100, // Increased height for better design
+      height: 70,
       child: ListView(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -690,36 +671,31 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             context,
             sales.suspecting.toString(),
             'SUSPECTING',
-            const Color(0xFF6366F1), // Indigo
-            Icons.search,
+            const Color(0xFF6366F1),
           ),
           _buildSalesCard(
             context,
             sales.prospecting.toString(),
             'PROSPECTING',
             const Color(0xFF3B82F6), // Blue
-            Icons.lightbulb_outline,
           ),
           _buildSalesCard(
             context,
             sales.siteVisit.toString(),
             'SITE VISIT',
             const Color(0xFFF59E0B), // Amber
-            Icons.location_on_outlined,
           ),
           _buildSalesCard(
             context,
             sales.booking.toString(),
             'BOOKING',
             const Color(0xFF10B981), // Emerald
-            Icons.book_outlined,
           ),
           _buildSalesCard(
             context,
             sales.completed.toString(),
             'COMPLETED',
             const Color(0xFF059669), // Green
-            Icons.task_alt,
           ),
         ],
       ),
@@ -731,16 +707,14 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     String value,
     String label,
     Color accentColor,
-    IconData icon,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = Theme.of(context).cardColor;
 
     return Container(
       width: 100,
       margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
-        color: cardColor,
+        color: accentColor.withOpacity(0.12),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDark ? Colors.white10 : accentColor.withOpacity(0.12),
@@ -756,42 +730,25 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: accentColor.withOpacity(0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                size: 16,
-                color: accentColor,
+            Text(
+              value,
+              style: GoogleFonts.montserrat(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
               ),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
-                ),
-                Text(
-                  label,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                    color: accentColor,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
+            Text(
+              label,
+              style: GoogleFonts.montserrat(
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+                color: accentColor,
+                letterSpacing: 0.5,
+              ),
             ),
           ],
         ),
@@ -1055,12 +1012,15 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           if (progress < 0) progress = 0;
 
           IconData metricIcon = Icons.auto_graph;
-          if (m.metric.contains('Booking'))
+          if (m.metric.contains('Booking')) {
             metricIcon = Icons.shopping_bag_outlined;
-          if (m.metric.contains('Team Size'))
+          }
+          if (m.metric.contains('Team Size')) {
             metricIcon = Icons.groups_outlined;
-          if (m.metric.contains('Attendance'))
+          }
+          if (m.metric.contains('Attendance')) {
             metricIcon = Icons.event_available_outlined;
+          }
 
           return Column(
             children: [
@@ -1310,33 +1270,11 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             color: Theme.of(context).cardColor,
             child: Column(
               children: [
-                GestureDetector(
-                  onTap: () {
-                    if (data != null && data.profilePhoto.isNotEmpty) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => FullScreenImageViewer(
-                            imageUrl: data.profilePhoto,
-                            heroTag: 'drawer_profile_photo',
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                  child: Hero(
-                    tag: 'drawer_profile_photo',
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundColor: primaryBlue.withOpacity(0.1),
-                      backgroundImage: data != null && data.profilePhoto.isNotEmpty
-                          ? NetworkImage(data.profilePhoto)
-                          : null,
-                      child: data == null || data.profilePhoto.isEmpty
-                          ? Icon(Icons.person, size: 35, color: primaryBlue)
-                          : null,
-                    ),
-                  ),
+                ProfileImage(
+                  imageUrl: (data != null && data.profilePhoto.isNotEmpty) ? data.profilePhoto : null,
+                  initials: data?.initials ?? '?',
+                  heroTag: 'drawer_profile_photo',
+                  radius: 40,
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -1443,7 +1381,10 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             Icons.groups_outlined,
             'BUSINESS PLAN', // Shortened label
             () {
-              if (AdvisorAccessHelper.check(context, feature: 'business_plan')) {
+              if (AdvisorAccessHelper.check(
+                context,
+                feature: 'business_plan',
+              )) {
                 Navigator.pushNamed(context, '/business_plan');
               }
             },

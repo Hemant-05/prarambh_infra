@@ -42,10 +42,12 @@ class _AssignDocumentsScreenState extends State<AssignDocumentsScreen> {
 
     if (result != null) {
       setState(() {
-        if (type == 'Welcome Letter')
+        if (type == 'Welcome Letter') {
           welcomeLetter = File(result.files.single.path!);
-        if (type == 'Application Form')
+        }
+        if (type == 'Application Form') {
           applicationForm = File(result.files.single.path!);
+        }
         if (type == 'ID Card') idCard = File(result.files.single.path!);
       });
     }

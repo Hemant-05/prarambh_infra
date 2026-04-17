@@ -300,7 +300,7 @@ class CareerGrowthScreen extends StatelessWidget {
   Widget _buildCircularProgress(BuildContext context, double percentage, bool isDark) {
     final primaryBlue = AppColors.getPrimaryBlue(context);
     
-    return Container(
+    return SizedBox(
       width: 85,
       height: 85,
       child: Stack(

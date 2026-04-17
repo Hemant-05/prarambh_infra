@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:prarambh_infra/core/constant/cons_strings.dart';
+import 'package:prarambh_infra/core/widgets/profile_image.dart';
 import 'package:prarambh_infra/core/helper/helper_function.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_advisor_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_project_provider.dart';
@@ -161,17 +161,15 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                             Stack(
                               clipBehavior: Clip.none,
                               children: [
-                                CircleAvatar(
+                                ProfileImage(
+                                  imageUrl: currentUser?.profilePhoto != null 
+                                      ? "https://workiees.com/${currentUser?.profilePhoto}"
+                                      : null,
+                                  initials: currentUser?.name.isNotEmpty ?? false
+                                      ? currentUser!.name.trim().split(' ').map((e) => e[0]).take(2).join().toUpperCase()
+                                      : 'A',
+                                  heroTag: 'admin_home_profile',
                                   radius: 32,
-                                  backgroundColor: AppColors.getBorderColor(
-                                    context,
-                                  ),
-                                  backgroundImage:
-                                      currentUser?.profilePhoto != null
-                                      ? NetworkImage(
-                                          "https://workiees.com/${currentUser?.profilePhoto}",
-                                        )
-                                      : const AssetImage(logo) as ImageProvider,
                                 ),
                                 Positioned(
                                   bottom: -2,
@@ -917,14 +915,13 @@ class _AdminHomeViewState extends State<AdminHomeView> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundColor: AppColors.getBorderColor(context),
-            backgroundImage: profilePhoto != null
-                ? NetworkImage("https://workiees.com/$profilePhoto")
-                : null,
-            child: profilePhoto == null
-                ? const Icon(Icons.person, color: Colors.white)
-                : null,
+          ProfileImage(
+            imageUrl: profilePhoto != null ? "https://workiees.com/$profilePhoto" : null,
+            initials: name.isNotEmpty 
+                ? name.trim().split(' ').map((e) => e[0]).take(2).join().toUpperCase()
+                : '?',
+            heroTag: 'admin_verify_$id',
+            radius: 20,
           ),
           const SizedBox(width: 16),
           Expanded(

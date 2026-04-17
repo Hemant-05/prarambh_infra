@@ -201,7 +201,7 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
     final enquiryProvider = context.watch<AdminEnquiryProvider>();
 
     // Common filter logic for advisors
-    List<AdvisorApplicationModel> _filterAdvisors(
+    List<AdvisorApplicationModel> filterAdvisors(
       List<AdvisorApplicationModel> advisors,
     ) {
       return advisors.where((advisor) {
@@ -242,7 +242,7 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
     }
 
     final allAdvisors = advisorProvider.advisors;
-    final filteredAdvisors = _filterAdvisors(allAdvisors);
+    final filteredAdvisors = filterAdvisors(allAdvisors);
 
     final filteredEnquiries = enquiryProvider.careerEnquiries.where((enquiry) {
       if (_searchQuery.isEmpty) return true;

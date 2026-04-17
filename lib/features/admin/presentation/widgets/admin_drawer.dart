@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:prarambh_infra/core/constant/cons_strings.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
+import 'package:prarambh_infra/core/widgets/profile_image.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/widgets/full_screen_image_viewer.dart';
 
@@ -31,35 +32,19 @@ class AdminDrawer extends StatelessWidget {
 
               return Column(
                 children: [
-                  InkWell(
-                    onTap: () {
-                      if (hasAvatar) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => FullScreenImageViewer(
-                              imageUrl: "https://workiees.com/$avatarUrl",
-                              heroTag: 'admin_drawer_photo',
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                    child: Hero(
-                      tag: 'admin_drawer_photo',
-                      child: CircleAvatar(
-                        radius: 40,
-                        backgroundImage: hasAvatar
-                            ? NetworkImage("https://workiees.com/$avatarUrl")
-                            : const AssetImage(logo) as ImageProvider,
-                      ),
-                    ),
+                  ProfileImage(
+                    imageUrl: hasAvatar ? "https://workiees.com/$avatarUrl" : null,
+                    initials: profile?.name.isNotEmpty ?? false
+                        ? profile!.name.trim().split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase()
+                        : 'A',
+                    heroTag: 'admin_drawer_photo',
+                    radius: 40,
                   ),
                   const SizedBox(height: 12),
                   Text(
                     isLoading
                         ? 'Loading...'
-                        : (profile?.name?.toUpperCase() ?? 'ADMIN'),
+                        : (profile?.name.toUpperCase() ?? 'ADMIN'),
                     style: GoogleFonts.montserrat(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -67,7 +52,7 @@ class AdminDrawer extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    profile?.role?.toUpperCase() ?? 'ADMIN',
+                    profile?.role.toUpperCase() ?? 'ADMIN',
                     style: GoogleFonts.montserrat(
                       fontSize: 14,
                       color: primaryBlue,

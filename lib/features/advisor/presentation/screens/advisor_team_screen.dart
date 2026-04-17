@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:graphview/GraphView.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/full_screen_image_viewer.dart';
+import '../../../../core/widgets/profile_image.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/advisor_team_provider.dart';
 import '../../data/models/advisor_team_model.dart';
@@ -359,48 +359,21 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          InkWell(
-            onTap: () {
-              if (node.profilePhoto.isNotEmpty) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => FullScreenImageViewer(
-                      imageUrl: node.profilePhoto,
-                      heroTag: 'team_tree_${node.advisorCode}',
-                    ),
-                  ),
-                );
-              }
-            },
-            child: Hero(
-              tag: 'team_tree_${node.advisorCode}',
-              child: Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isMatch ? Colors.orange : blue.withOpacity(0.4),
-                    width: 1.5,
-                  ),
-                ),
-                child: CircleAvatar(
-                  radius: 20,
-                  backgroundColor: isMatch ? Colors.orange.withOpacity(0.1) : blue.withOpacity(0.1),
-                  backgroundImage: node.profilePhoto.isNotEmpty ? NetworkImage(node.profilePhoto) : null,
-                  child: node.profilePhoto.isEmpty
-                      ? Text(
-                          initials,
-                          style: GoogleFonts.montserrat(
-                            fontWeight: FontWeight.bold,
-                            color: isMatch ? Colors.orange : blue,
-                            fontSize: 13,
-                          ),
-                        )
-                      : null,
-                ),
+          Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: isMatch ? Colors.orange : blue.withOpacity(0.4),
+                width: 1.5,
               ),
+            ),
+            child: ProfileImage(
+              imageUrl: node.profilePhoto.isNotEmpty ? node.profilePhoto : null,
+              initials: initials,
+              heroTag: 'team_tree_${node.advisorCode}',
+              radius: 20,
             ),
           ),
           const SizedBox(height: 8),
@@ -561,29 +534,11 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          InkWell(
-            onTap: () {
-              if (node.profilePhoto.isNotEmpty) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => FullScreenImageViewer(
-                      imageUrl: node.profilePhoto,
-                      heroTag: 'team_list_${node.advisorCode}',
-                    ),
-                  ),
-                );
-              }
-            },
-            child: Hero(
-              tag: 'team_list_${node.advisorCode}',
-              child: CircleAvatar(
-                radius: 24,
-                backgroundColor: blue.withOpacity(0.1),
-                backgroundImage: node.profilePhoto.isNotEmpty ? NetworkImage(node.profilePhoto) : null,
-                child: node.profilePhoto.isEmpty ? Text(initials, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: blue, fontSize: 16)) : null,
-              ),
-            ),
+          ProfileImage(
+            imageUrl: node.profilePhoto.isNotEmpty ? node.profilePhoto : null,
+            initials: initials,
+            heroTag: 'team_list_${node.advisorCode}',
+            radius: 24,
           ),
           const SizedBox(width: 16),
           Expanded(
