@@ -85,7 +85,9 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
 
     switch (_selectedIndex) {
       case 0:
-        final timeframe = context.read<AdvisorDashboardProvider>().selectedTimeframe;
+        final timeframe = context
+            .read<AdvisorDashboardProvider>()
+            .selectedTimeframe;
         await context.read<AdvisorDashboardProvider>().fetchDashboardData(
           advisorCode,
           timeframe: timeframe,
@@ -333,7 +335,12 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                   _buildCareerProgress(context, data),
                   const SizedBox(height: 24),
 
-                  _buildSalesConversionHeader(context, provider, advisor?.advisorCode ?? ''),
+                  _buildSalesConversionHeader(
+                    context,
+                    provider,
+                    advisor?.advisorCode ?? '',
+                  ),
+                  const SizedBox(height: 12),
                   _buildSalesConversionCards(context, data.sales),
                   const SizedBox(height: 24),
 
@@ -422,7 +429,9 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                   clipBehavior: Clip.none,
                   children: [
                     ProfileImage(
-                      imageUrl: data.profilePhoto.isNotEmpty ? data.profilePhoto : null,
+                      imageUrl: data.profilePhoto.isNotEmpty
+                          ? data.profilePhoto
+                          : null,
                       initials: data.initials,
                       heroTag: 'top_profile_photo',
                       radius: 35,
@@ -541,7 +550,6 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
       ],
     );
   }
-
 
   Widget _buildCareerProgress(
     BuildContext context,
@@ -686,7 +694,11 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: provider.selectedTimeframe,
-              icon: Icon(Icons.keyboard_arrow_down, size: 18, color: primaryBlue),
+              icon: Icon(
+                Icons.keyboard_arrow_down,
+                size: 18,
+                color: primaryBlue,
+              ),
               elevation: 16,
               style: GoogleFonts.montserrat(
                 color: primaryBlue,
@@ -699,7 +711,9 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                   provider.updateTimeframe(advisorCode, newValue);
                 }
               },
-              items: timeframes.map<DropdownMenuItem<String>>((Map<String, String> tf) {
+              items: timeframes.map<DropdownMenuItem<String>>((
+                Map<String, String> tf,
+              ) {
                 return DropdownMenuItem<String>(
                   value: tf['value'],
                   child: Text(tf['label']!),
@@ -1326,7 +1340,9 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             child: Column(
               children: [
                 ProfileImage(
-                  imageUrl: (data != null && data.profilePhoto.isNotEmpty) ? data.profilePhoto : null,
+                  imageUrl: (data != null && data.profilePhoto.isNotEmpty)
+                      ? data.profilePhoto
+                      : null,
                   initials: data?.initials ?? '?',
                   heroTag: 'drawer_profile_photo',
                   radius: 40,
