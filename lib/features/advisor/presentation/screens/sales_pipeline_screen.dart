@@ -28,6 +28,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
   String _selectedAttempts = 'All';
   DateTime? _startDate;
   DateTime? _endDate;
+  bool _onlyPriority = false;
 
   @override
   void initState() {
@@ -162,6 +163,17 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final provider = context.watch<AdvisorLeadProvider>();
 
+    // Handle redirection from dashboard if the screen is already alive in IndexedStack
+    if (provider.initialPipelineTabIndex != null) {
+      final targetIndex = provider.initialPipelineTabIndex!;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_tabController.index != targetIndex) {
+          _tabController.animateTo(targetIndex);
+        }
+        provider.clearInitialPipelineTab();
+      });
+    }
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -188,8 +200,8 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
             Tab(text: 'Prospecting'),
             Tab(text: 'Site Visit'),
             Tab(text: 'Booking'),
-            Tab(text: 'Dead Lead'),
             Tab(text: 'Completed'),
+            Tab(text: 'Dead Lead'),
           ],
         ),
         shape: Border(
@@ -232,6 +244,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                               startDate: _startDate,
                               endDate: _endDate,
                               attempts: _selectedAttempts,
+                              isPriority: _onlyPriority,
                             )
                             .where((l) => l.stage.toLowerCase() == 'suspecting')
                             .toList(),
@@ -248,6 +261,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                               startDate: _startDate,
                               endDate: _endDate,
                               attempts: _selectedAttempts,
+                              isPriority: _onlyPriority,
                             )
                             .where(
                               (l) => l.stage.toLowerCase() == 'prospecting',
@@ -266,6 +280,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                               startDate: _startDate,
                               endDate: _endDate,
                               attempts: _selectedAttempts,
+                              isPriority: _onlyPriority,
                             )
                             .where((l) => l.stage.toLowerCase() == 'site visit')
                             .toList(),
@@ -282,6 +297,7 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                               startDate: _startDate,
                               endDate: _endDate,
                               attempts: _selectedAttempts,
+                              isPriority: _onlyPriority,
                             )
                             .where(
                               (l) =>
@@ -303,8 +319,9 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                               startDate: _startDate,
                               endDate: _endDate,
                               attempts: _selectedAttempts,
+                              isPriority: _onlyPriority,
                             )
-                            .where((l) => l.stage.toLowerCase() == 'dead')
+                            .where((l) => l.stage.toLowerCase() == 'completed')
                             .toList(),
                         cardColor,
                         primaryBlue,
@@ -319,8 +336,9 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                               startDate: _startDate,
                               endDate: _endDate,
                               attempts: _selectedAttempts,
+                              isPriority: _onlyPriority,
                             )
-                            .where((l) => l.stage.toLowerCase() == 'completed')
+                            .where((l) => l.stage.toLowerCase() == 'dead')
                             .toList(),
                         cardColor,
                         primaryBlue,
@@ -391,6 +409,55 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
+                GestureDetector(
+                  onTap: () => setState(() => _onlyPriority = !_onlyPriority),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _onlyPriority
+                          ? Colors.amber.withOpacity(0.1)
+                          : (isDark ? Colors.grey[900] : Colors.grey[100]),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: _onlyPriority
+                            ? Colors.amber
+                            : Colors.transparent,
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.star_rounded,
+                          size: 14,
+                          color: _onlyPriority
+                              ? Colors.amber[700]
+                              : Colors.grey,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Priority',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 10,
+                            fontWeight: _onlyPriority
+                                ? FontWeight.bold
+                                : FontWeight.w500,
+                            color: _onlyPriority
+                                ? (isDark
+                                      ? Colors.amberAccent
+                                      : Colors.amber[900])
+                                : (isDark ? Colors.white70 : Colors.black87),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 _buildFilterChip(
                   'Category',
                   ['All', 'A', 'B', 'C'],
@@ -441,10 +508,9 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color:
-              isActive
-                  ? primaryBlue.withOpacity(0.1)
-                  : (isDark ? Colors.grey[900] : Colors.grey[100]),
+          color: isActive
+              ? primaryBlue.withOpacity(0.1)
+              : (isDark ? Colors.grey[900] : Colors.grey[100]),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isActive ? primaryBlue.withOpacity(0.5) : Colors.transparent,
@@ -459,10 +525,9 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
               style: GoogleFonts.montserrat(
                 fontSize: 10,
                 fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                color:
-                    isActive
-                        ? primaryBlue
-                        : (isDark ? Colors.white70 : Colors.black87),
+                color: isActive
+                    ? primaryBlue
+                    : (isDark ? Colors.white70 : Colors.black87),
               ),
             ),
             const SizedBox(width: 4),
@@ -494,10 +559,9 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color:
-              isActive
-                  ? primaryBlue.withOpacity(0.1)
-                  : (isDark ? Colors.grey[900] : Colors.grey[100]),
+          color: isActive
+              ? primaryBlue.withOpacity(0.1)
+              : (isDark ? Colors.grey[900] : Colors.grey[100]),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isActive ? primaryBlue.withOpacity(0.5) : Colors.transparent,
@@ -512,10 +576,9 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
               style: GoogleFonts.montserrat(
                 fontSize: 10,
                 fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                color:
-                    isActive
-                        ? primaryBlue
-                        : (isDark ? Colors.white70 : Colors.black87),
+                color: isActive
+                    ? primaryBlue
+                    : (isDark ? Colors.white70 : Colors.black87),
               ),
             ),
             const SizedBox(width: 4),
@@ -585,47 +648,49 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                         onSelect(item);
                         Navigator.pop(context);
                       },
-                      leading:
-                          isSelected
-                              ? Icon(Icons.check_circle, color: primaryBlue, size: 20)
-                              : const Icon(
-                                Icons.circle_outlined,
-                                color: Colors.grey,
-                                size: 20,
-                              ),
+                      leading: isSelected
+                          ? Icon(
+                              Icons.check_circle,
+                              color: primaryBlue,
+                              size: 20,
+                            )
+                          : const Icon(
+                              Icons.circle_outlined,
+                              color: Colors.grey,
+                              size: 20,
+                            ),
                       title: Text(
                         item,
                         style: GoogleFonts.montserrat(
-                          color:
-                              isSelected
-                                  ? primaryBlue
-                                  : (isDark ? Colors.white70 : Colors.black87),
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.w500,
+                          color: isSelected
+                              ? primaryBlue
+                              : (isDark ? Colors.white70 : Colors.black87),
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.w500,
                           fontSize: 14,
                         ),
                       ),
-                      trailing:
-                          isSelected
-                              ? Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
+                      trailing: isSelected
+                          ? Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: primaryBlue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'Active',
+                                style: GoogleFonts.montserrat(
+                                  color: primaryBlue,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                decoration: BoxDecoration(
-                                  color: primaryBlue.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  'Active',
-                                  style: GoogleFonts.montserrat(
-                                    color: primaryBlue,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              )
-                              : null,
+                              ),
+                            )
+                          : null,
                     );
                   },
                 ),
@@ -643,10 +708,9 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
       context: context,
       firstDate: DateTime(2023),
       lastDate: DateTime.now().add(const Duration(days: 1)),
-      initialDateRange:
-          _startDate != null && _endDate != null
-              ? DateTimeRange(start: _startDate!, end: _endDate!)
-              : null,
+      initialDateRange: _startDate != null && _endDate != null
+          ? DateTimeRange(start: _startDate!, end: _endDate!)
+          : null,
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -760,29 +824,27 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                     : cardColor));
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(16),
+        color: cardColor,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isBooking || isDead || isCompleted
-              ? accentColor.withOpacity(isDark ? 0.4 : 0.2)
+          color: lead.isPriority
+              ? Colors.amber.withOpacity(0.3)
               : AppColors.getBorderColor(context),
         ),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? Colors.black.withOpacity(0.2)
-                : Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(isDark ? 0.1 : 0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           onTap: () {
             Navigator.push(
               context,
@@ -792,145 +854,93 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
             );
           },
           child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: accentColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            lead.source.toUpperCase(),
-                            style: GoogleFonts.montserrat(
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              color: accentColor,
-                            ),
+                // Client Name & Priority Indicator
+                Expanded(
+                  flex: 3,
+                  child: Row(
+                    children: [
+                      if (lead.isPriority)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: Icon(
+                            Icons.star_rounded,
+                            color: Colors.amber[700],
+                            size: 16,
                           ),
                         ),
-                        if (lead.isPriority) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: Colors.amber.withOpacity(0.3),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.star,
-                                  color: isDark
-                                      ? Colors.amberAccent
-                                      : Colors.amber[700],
-                                  size: 10,
-                                ),
-                                const SizedBox(width: 3),
-                                Text(
-                                  "PRIORITY",
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 7,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark
-                                        ? Colors.amberAccent
-                                        : Colors.amber[700],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    if (isDead)
-                      Icon(
-                        Icons.do_disturb_alt_rounded,
-                        color: isDark ? Colors.redAccent : Colors.red,
-                        size: 18,
-                      ),
-                    if (isCompleted)
-                      Icon(
-                        Icons.verified_rounded,
-                        color: isDark ? Colors.greenAccent : Colors.green,
-                        size: 18,
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                Text(
-                  lead.clientName,
-                  style: GoogleFonts.montserrat(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: textColor,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.phone, size: 14, color: secondaryTextColor),
-                    const SizedBox(width: 6),
-                    Text(
-                      lead.clientNumber,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 12,
-                        color: secondaryTextColor,
-                      ),
-                    ),
-                  ],
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Divider(
-                    height: 1,
-                    color: AppColors.getBorderColor(context),
-                  ),
-                ),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.history_edu, size: 14, color: accentColor),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${lead.communicationAttempt} Attempts',
+                      Expanded(
+                        child: Text(
+                          lead.clientName,
+                          overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.montserrat(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: textColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Data Details
+                Expanded(
+                  flex: 4,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      // Attempts
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: accentColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '${lead.communicationAttempt} At.',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
                             color: accentColor,
                           ),
                         ),
-                      ],
-                    ),
-                    Text(
-                      lead.createdAt,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 10,
-                        color: secondaryTextColor,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      // Date
+                      Text(
+                        lead.createdAt.split(' ')[0],
+                        style: GoogleFonts.montserrat(
+                          fontSize: 10,
+                          color: secondaryTextColor,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Call Icon
+                      GestureDetector(
+                        onTap: () {
+                          // Note: lead.clientNumber is the phone
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: primaryBlue.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.call,
+                            size: 16,
+                            color: primaryBlue,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

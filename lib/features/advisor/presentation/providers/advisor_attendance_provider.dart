@@ -22,6 +22,18 @@ class AdvisorAttendanceProvider extends ChangeNotifier {
   bool get isLoadingHistory => _isLoadingHistory;
   bool get isSaving => _isSaving;
 
+  int? _initialMeetingTabIndex;
+  int? get initialMeetingTabIndex => _initialMeetingTabIndex;
+
+  void setMeetingTab(int index) {
+    _initialMeetingTabIndex = index;
+    notifyListeners();
+  }
+
+  void clearInitialMeetingTab() {
+    _initialMeetingTabIndex = null;
+  }
+
   // Filter meetings by specific date
   List<AdvisorMeetingModel> getMeetingsForDate(DateTime date) {
     final dateStr = DateFormat('yyyy-MM-dd').format(date);

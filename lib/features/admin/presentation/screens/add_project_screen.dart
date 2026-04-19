@@ -27,7 +27,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
 
   // State Variables
   String _projectType = 'Residential';
-  String _constructionStatus = 'New Launch';
+  String _constructionStatus = 'Under Construction';
   String _projectStatus = 'Ongoing';
   bool _reraApproved = true;
 
@@ -78,10 +78,10 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       _reraApproved = p.reraNumber.isNotEmpty;
 
       // Safe assignment for dropdowns to prevent crashes if DB has legacy data
-      final validTypes = ['Residential', 'Commercial', 'Mixed Use'];
+      final validTypes = ['Residential', 'Commercial'];
       if (validTypes.contains(p.projectType)) _projectType = p.projectType;
 
-      final validStatus = ['New Launch', 'Under Construction', 'Ready to Move'];
+      final validStatus = ['Under Construction', 'Ready to Move'];
       if (validStatus.contains(p.constructionStatus)) {
         _constructionStatus = p.constructionStatus;
       }
@@ -414,7 +414,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                 child: _buildDropdown(
                   'Project Type',
                   _projectType,
-                  ['Residential', 'Commercial', 'Mixed Use'],
+                  ['Residential', 'Commercial'],
                   (val) {
                     if (val != null) setState(() => _projectType = val);
                   },
@@ -425,7 +425,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                 child: _buildDropdown(
                   'Construction Status',
                   _constructionStatus,
-                  ['New Launch', 'Under Construction', 'Ready to Move'],
+                  ['Under Construction', 'Ready to Move'],
                   (val) {
                     if (val != null) setState(() => _constructionStatus = val);
                   },

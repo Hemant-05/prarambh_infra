@@ -57,7 +57,7 @@ class AdminAdvisorProvider extends ChangeNotifier with ErrorHandlerMixin {
     isSaving = true;
     try {
       final success = await repository.updateAdvisor(advisorId, data);
-      if (success) await fetchAdvisors();
+      if (success) await fetchAdvisors(status: 'pending');
       return success;
     } catch (e) {
       debugPrint('Update Advisor Error: $e');
@@ -80,7 +80,7 @@ class AdminAdvisorProvider extends ChangeNotifier with ErrorHandlerMixin {
         status,
         reason: reason,
       );
-      if (success) await fetchAdvisors();
+      if (success) await fetchAdvisors(status: 'pending');
       return success;
     } catch (e) {
       debugPrint('Change Status Error: $e');

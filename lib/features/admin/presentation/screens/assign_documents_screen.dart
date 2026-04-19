@@ -8,7 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/full_screen_image_viewer.dart';
 import '../providers/admin_document_provider.dart';
 
-const String _baseUrl = 'https://workiees.com/';
+import 'package:prarambh_infra/core/widgets/profile_image.dart';
 
 class AssignDocumentsScreen extends StatefulWidget {
   final String advisorId;
@@ -165,49 +165,17 @@ class _AssignDocumentsScreenState extends State<AssignDocumentsScreen> {
               ),
               child: Row(
                 children: [
-                  InkWell(
-                    onTap: () {
-                      if (widget.advisorProfile.isNotEmpty) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => FullScreenImageViewer(
-                              imageUrl: Uri.encodeFull(
-                                  "$_baseUrl${widget.advisorProfile}"),
-                              heroTag:
-                                  'admin_assign_profile_${widget.advisorId}',
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                    child: Hero(
-                      tag: 'admin_assign_profile_${widget.advisorId}',
-                      child: CircleAvatar(
-                        radius: 30,
-                        backgroundColor: Colors.grey[300],
-                        backgroundImage: widget.advisorProfile.isNotEmpty
-                            ? NetworkImage(
-                                Uri.encodeFull(
-                                    "$_baseUrl${widget.advisorProfile}"),
-                              )
-                            : null,
-                        child: widget.advisorProfile.isEmpty
-                            ? Text(
-                                widget.advisorName
-                                    .substring(
-                                      0,
-                                      widget.advisorName.length > 1 ? 2 : 1,
-                                    )
-                                    .toUpperCase(),
-                                style: GoogleFonts.montserrat(
-                                  fontWeight: FontWeight.bold,
-                                  color: primaryBlue,
-                                ),
-                              )
-                            : null,
-                      ),
-                    ),
+                  ProfileImage(
+                    imageUrl: widget.advisorProfile,
+                    initials: widget.advisorName
+                        .substring(
+                          0,
+                          widget.advisorName.length > 1 ? 2 : 1,
+                        )
+                        .toUpperCase(),
+                    heroTag: 'admin_assign_profile_${widget.advisorId}',
+                    radius: 30,
+                    border: Border.all(color: primaryBlue.withOpacity(0.3)),
                   ),
                   const SizedBox(width: 16),
                   Column(

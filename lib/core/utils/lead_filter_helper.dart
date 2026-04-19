@@ -10,6 +10,7 @@ class LeadFilterHelper {
     DateTime? startDate,
     DateTime? endDate,
     String? attempts, // '0', '1', '2', '3', '4', '5', '5+', or 'All'
+    bool? isPriority,
   }) {
     return leads.where((lead) {
       // 1. Search Query (Name, Stage, Address)
@@ -51,6 +52,11 @@ class LeadFilterHelper {
         }
       }
 
+      // 6. Priority Filter
+      if (isPriority == true) {
+        if (!lead.isPriority) return false;
+      }
+
       return true;
     }).toList();
   }
@@ -64,17 +70,18 @@ class LeadFilterHelper {
     DateTime? startDate,
     DateTime? endDate,
     String? attempts,
+    bool? isPriority,
   }) {
     return leads.where((leadMap) {
       final lead = Map<String, dynamic>.from(leadMap);
-      
+
       // 1. Search Query
       if (query != null && query.isNotEmpty) {
         final q = query.toLowerCase();
         final name = (lead['client_name'] ?? '').toString().toLowerCase();
         final stage = (lead['stage'] ?? '').toString().toLowerCase();
         final address = (lead['client_address'] ?? '').toString().toLowerCase();
-        
+
         if (!name.contains(q) && !stage.contains(q) && !address.contains(q)) return false;
       }
 
@@ -113,11 +120,17 @@ class LeadFilterHelper {
         }
       }
 
+      // 6. Priority Filter
+      if (isPriority == true) {
+        final prio = lead['is_priority'] == 1 ||
+            lead['is_priority'] == true ||
+            lead['is_priority'] == '1';
+        if (!prio) return false;
+      }
+
       return true;
     }).toList();
   }
-  
-  static List<String> get attemptOptions => [
-    'All', '0', '1', '2', '3', '4', '5', '5+'
-  ];
+
+  static List<String> get attemptOptions => ['All', '0', '1', '2', '3', '4', '5', '5+'];
 }

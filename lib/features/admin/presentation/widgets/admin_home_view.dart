@@ -563,7 +563,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                           getPercent(data.completedLeads),
                           Colors.green,
                           Icons.check_circle_outline,
-                          5,
+                          6,
                         ),
                       ],
                     ),

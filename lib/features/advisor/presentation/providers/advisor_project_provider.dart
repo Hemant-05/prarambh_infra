@@ -65,6 +65,26 @@ class AdvisorProjectProvider extends ChangeNotifier {
   List<UnitModel> get units => _units;
   bool get isLoadingUnits => _isLoadingUnits;
 
+  // --- Inventory Stats ---
+  int get totalUnitsCount => _units.length;
+
+  int get availableUnitsCount =>
+      _units.where((u) => u.availabilityStatus.toLowerCase() == 'available').length;
+
+  int get bookedUnitsCount =>
+      _units.where((u) => u.availabilityStatus.toLowerCase() == 'booked').length;
+
+  int get soldUnitsCount => _units
+      .where(
+        (u) =>
+            u.availabilityStatus.toLowerCase() == 'sold' ||
+            u.availabilityStatus.toLowerCase() == 'sold out',
+      )
+      .length;
+
+  int get resaleUnitsCount =>
+      _units.where((u) => u.saleCategory.toLowerCase() == 'resale').length;
+
   Future<void> fetchProjects() async {
     _isLoadingProjects = true;
     notifyListeners();

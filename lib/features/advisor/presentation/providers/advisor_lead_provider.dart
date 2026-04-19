@@ -14,6 +14,18 @@ class AdvisorLeadProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
 
+  int? _initialPipelineTabIndex;
+  int? get initialPipelineTabIndex => _initialPipelineTabIndex;
+
+  void setPipelineTab(int index) {
+    _initialPipelineTabIndex = index;
+    notifyListeners();
+  }
+
+  void clearInitialPipelineTab() {
+    _initialPipelineTabIndex = null;
+  }
+
   Future<void> fetchLeads({required String advisorCode, String? stage}) async {
     _isLoading = true; notifyListeners();
     try {

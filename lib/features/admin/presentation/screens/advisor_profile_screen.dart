@@ -313,7 +313,7 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                       _divider(),
                       _infoRow(
                         Icons.phone_android,
-                        'Nominee Phone',
+                        'Nominee Date of birth',
                         p.nomineePhone.isEmpty ? 'N/A' : p.nomineePhone,
                         primaryBlue,
                       ),

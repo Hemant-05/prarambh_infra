@@ -928,8 +928,11 @@ Please feel free to contact us for more information.""";
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          if (['booking', 'pending_verification', 'site visit']
-                              .contains(currentStage)) ...[
+                          if ([
+                            'booking',
+                            'pending_verification',
+                            'site visit',
+                          ].contains(currentStage)) ...[
                             GestureDetector(
                               onTap: _togglePriority,
                               child: Container(
@@ -3012,33 +3015,6 @@ Please feel free to contact us for more information.""";
               ),
               if (_selectedUnit != null) ...[
                 const SizedBox(height: 10),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [
-                    _unitChip(
-                      Icons.apartment,
-                      _selectedUnit!.configuration,
-                      Colors.blue,
-                    ),
-                    _unitChip(
-                      Icons.layers,
-                      _selectedUnit!.floorNumber,
-                      Colors.purple,
-                    ),
-                    _unitChip(
-                      Icons.explore,
-                      _selectedUnit!.facing,
-                      Colors.teal,
-                    ),
-                    _unitChip(
-                      Icons.square_foot,
-                      '${_selectedUnit!.areaSqft.toStringAsFixed(0)} sqft',
-                      Colors.orange,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -4498,7 +4474,7 @@ class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
 
   final List<String> _configs = ['1BHK', '2BHK', '3BHK', '4BHK'];
   final List<String> _types = ['Apartment', 'Plot', 'Villa', 'Flat'];
-  final List<String> _categories = ['Buy', 'Rent', 'Resell'];
+  final List<String> _categories = ['Buy', 'Rent', 'Resale'];
   final List<String> _facings = ['East', 'West', 'North', 'South'];
 
   @override
@@ -5051,6 +5027,7 @@ class _ProjectCardState extends State<_ProjectCard> {
                 }
 
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: units.map((unit) {
                     final isAvailable =
                         unit.availabilityStatus.toLowerCase() == 'available';
@@ -5095,32 +5072,11 @@ class _ProjectCardState extends State<_ProjectCard> {
                                               : Colors.grey,
                                         ),
                                       ),
-                                      const SizedBox(width: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 6,
-                                          vertical: 2,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.blue.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          unit.configuration,
-                                          style: TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: FontWeight.bold,
-                                            color: widget.primaryBlue,
-                                          ),
-                                        ),
-                                      ),
                                     ],
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Floor: ${unit.floorNumber} \u2022 ${unit.facing} \u2022 ${unit.areaSqft.toStringAsFixed(0)} sqft',
+                                    '${unit.plotDimensions} \u2022 ${unit.areaSqft.toStringAsFixed(0)} sqft',
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: Colors.grey.shade500,

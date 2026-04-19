@@ -76,8 +76,17 @@ class _AdvisorMeetingScheduleScreenState
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     final selectedDateMeetings = provider.getMeetingsForDate(_selectedDate);
+    final initialTab = provider.initialMeetingTabIndex ?? 0;
+    
+    // Clear the initial tab after reading it to prevent persistent redirection
+    if (provider.initialMeetingTabIndex != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        provider.clearInitialMeetingTab();
+      });
+    }
 
     return DefaultTabController(
+      initialIndex: initialTab,
       length: 2,
       child: Scaffold(
         backgroundColor: scaffoldBg,

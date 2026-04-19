@@ -16,72 +16,162 @@ class ReviewApplicationScreen extends StatelessWidget {
 
   void _showRejectionDialog(BuildContext context, Color primaryBlue) {
     final controller = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Reason for rejection',
-          style: GoogleFonts.montserrat(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        content: TextField(
-          controller: controller,
-          maxLines: 3,
-          decoration: InputDecoration(
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: primaryBlue),
-            ),
-          ),
-        ),
-        actionsAlignment: MainAxisAlignment.spaceEvenly,
-        actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[300],
-              foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: isDark ? Colors.grey[900] : Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header Icon
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.red,
+                  size: 32,
+                ),
               ),
-            ),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (controller.text.isEmpty) return;
-              Navigator.pop(context);
+              const SizedBox(height: 16),
 
-              final success = await context
-                  .read<AdminAdvisorProvider>()
-                  .changeAdvisorStatus(
-                    advisor.id,
-                    'Rejected',
-                    reason: controller.text,
+              // Title & Subtitle
+              Text(
+                'Inactivate Application',
+                style: GoogleFonts.montserrat(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Please provide a reason for inactivating this application. This helps with tracking.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.montserrat(
+                  fontSize: 12,
+                  color: Colors.grey[500],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Reason Input
+              TextField(
+                controller: controller,
+                maxLines: 3,
+                style: GoogleFonts.montserrat(fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'e.g. Incomplete documentation',
+                  hintStyle: GoogleFonts.montserrat(fontSize: 13, color: Colors.grey),
+                  filled: true,
+                  fillColor: isDark ? Colors.black26 : Colors.grey[50],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: Colors.red.withOpacity(0.5)),
+                  ),
+                  contentPadding: const EdgeInsets.all(16),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Actions
+              Consumer<AdminAdvisorProvider>(
+                builder: (context, provider, child) {
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: provider.isSaving ? null : () => Navigator.pop(context),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            'Cancel',
+                            style: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: provider.isSaving
+                              ? null
+                              : () async {
+                                  if (controller.text.trim().isEmpty) {
+                                    UIHelper.showError(context, 'Please enter a reason');
+                                    return;
+                                  }
+
+                                  final success = await provider.changeAdvisorStatus(
+                                    advisor.id,
+                                    'Inactive',
+                                    reason: controller.text.trim(),
+                                  );
+
+                                  if (success) {
+                                    if (context.mounted) {
+                                      Navigator.pop(context); // Close dialog
+                                      UIHelper.showSuccess(context, 'Application Inactivated');
+                                      Navigator.pop(context); // Back to list
+                                    }
+                                  } else {
+                                    if (context.mounted) {
+                                      UIHelper.showError(context, 'Inactivation Failed');
+                                    }
+                                  }
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: provider.isSaving
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  'Inactivate',
+                                  style: GoogleFonts.montserrat(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
                   );
-
-              if (success) {
-                UIHelper.showSuccess(context, 'Application Rejected');
-                Navigator.pop(context);
-              } else {
-                UIHelper.showError(context, 'Rejection Failed');
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade100,
-              foregroundColor: Colors.red,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                },
               ),
-            ),
-            child: const Text('Reject'),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -145,7 +235,8 @@ class ReviewApplicationScreen extends StatelessWidget {
                                       MaterialPageRoute(
                                         builder: (_) => FullScreenImageViewer(
                                           imageUrl: profileUrl,
-                                          heroTag: 'admin_review_main_${advisor.id}',
+                                          heroTag:
+                                              'admin_review_main_${advisor.id}',
                                         ),
                                       ),
                                     );
@@ -157,9 +248,9 @@ class ReviewApplicationScreen extends StatelessWidget {
                                       height: 100,
                                       width: 100,
                                       fit: BoxFit.cover,
-                                      loadingBuilder:
-                                          (context, child, loadingProgress) {
-                                        if (loadingProgress == null) return child;
+                                      loadingBuilder: (context, child, loadingProgress) {
+                                        if (loadingProgress == null)
+                                          return child;
                                         return Container(
                                           height: 100,
                                           width: 100,
@@ -167,13 +258,14 @@ class ReviewApplicationScreen extends StatelessWidget {
                                           child: Center(
                                             child: CircularProgressIndicator(
                                               color: primaryBlue,
-                                              value: loadingProgress
+                                              value:
+                                                  loadingProgress
                                                           .expectedTotalBytes !=
                                                       null
                                                   ? loadingProgress
-                                                          .cumulativeBytesLoaded /
-                                                      loadingProgress
-                                                          .expectedTotalBytes!
+                                                            .cumulativeBytesLoaded /
+                                                        loadingProgress
+                                                            .expectedTotalBytes!
                                                   : null,
                                             ),
                                           ),
@@ -182,15 +274,15 @@ class ReviewApplicationScreen extends StatelessWidget {
                                       errorBuilder:
                                           (context, error, stackTrace) =>
                                               Container(
-                                        height: 100,
-                                        width: 100,
-                                        color: Colors.grey[300],
-                                        child: const Icon(
-                                          Icons.person,
-                                          size: 60,
-                                          color: Colors.white,
-                                        ),
-                                      ),
+                                                height: 100,
+                                                width: 100,
+                                                color: Colors.grey[300],
+                                                child: const Icon(
+                                                  Icons.person,
+                                                  size: 60,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
                                     ),
                                   ),
                                 )
@@ -313,7 +405,7 @@ class ReviewApplicationScreen extends StatelessWidget {
             // Card 3: Nominee Info
             _buildInfoCard(cardColor, 'NOMINEE DETAILS', [
               _buildDetailRow('Name', advisor.nomineeName),
-              _buildDetailRow('Phone', advisor.nomineePhone),
+              _buildDetailRow('DOB', advisor.nomineePhone),
               _buildDetailRow('Relationship', advisor.relationship),
             ]),
             const SizedBox(height: 20),
@@ -390,7 +482,9 @@ class ReviewApplicationScreen extends StatelessWidget {
                                       color: Colors.grey[100],
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
-                                        color: Colors.grey.withValues(alpha: 0.2),
+                                        color: Colors.grey.withValues(
+                                          alpha: 0.2,
+                                        ),
                                       ),
                                     ),
                                     child: ClipRRect(
@@ -401,20 +495,24 @@ class ReviewApplicationScreen extends StatelessWidget {
                                                 Navigator.push(
                                                   context,
                                                   MaterialPageRoute(
-                                                    builder: (_) => FullScreenImageViewer(
-                                                      imageUrl: doc.url,
-                                                      heroTag: 'admin_review_doc_${doc.id}_$index',
-                                                    ),
+                                                    builder: (_) =>
+                                                        FullScreenImageViewer(
+                                                          imageUrl: doc.url,
+                                                          heroTag:
+                                                              'admin_review_doc_${doc.id}_$index',
+                                                        ),
                                                   ),
                                                 );
                                               },
                                               child: Hero(
-                                                tag: 'admin_review_doc_${doc.id}_$index',
+                                                tag:
+                                                    'admin_review_doc_${doc.id}_$index',
                                                 child: Image.network(
                                                   doc.url,
                                                   fit: BoxFit.cover,
                                                   loadingBuilder: (context, child, loadingProgress) {
-                                                    if (loadingProgress == null) return child;
+                                                    if (loadingProgress == null)
+                                                      return child;
                                                     return Center(
                                                       child: SizedBox(
                                                         width: 24,
@@ -422,16 +520,24 @@ class ReviewApplicationScreen extends StatelessWidget {
                                                         child: CircularProgressIndicator(
                                                           color: primaryBlue,
                                                           strokeWidth: 2.5,
-                                                          value: loadingProgress.expectedTotalBytes != null
-                                                              ? loadingProgress.cumulativeBytesLoaded /
-                                                                  loadingProgress.expectedTotalBytes!
+                                                          value:
+                                                              loadingProgress
+                                                                      .expectedTotalBytes !=
+                                                                  null
+                                                              ? loadingProgress
+                                                                        .cumulativeBytesLoaded /
+                                                                    loadingProgress
+                                                                        .expectedTotalBytes!
                                                               : null,
                                                         ),
                                                       ),
                                                     );
                                                   },
                                                   errorBuilder: (c, o, s) =>
-                                                      const Icon(Icons.broken_image, color: Colors.grey),
+                                                      const Icon(
+                                                        Icons.broken_image,
+                                                        color: Colors.grey,
+                                                      ),
                                                 ),
                                               ),
                                             )

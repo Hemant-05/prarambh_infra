@@ -25,6 +25,12 @@ class VerificationSuccessScreen extends StatelessWidget {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
+                final profileDoc = advisor.documents
+                    .where((d) => d.id == 'profile_photo')
+                    .toList();
+                final profileUrl =
+                    profileDoc.isNotEmpty ? profileDoc.first.url : '';
+
                 // Navigate to the Assign Documents screen, replacing this success screen
                 Navigator.pushReplacement(
                   context,
@@ -32,7 +38,7 @@ class VerificationSuccessScreen extends StatelessWidget {
                     builder: (context) => AssignDocumentsScreen(
                       advisorId: advisor.id,
                       advisorName: advisor.name,
-                      advisorProfile : advisor.documents.last.url,
+                      advisorProfile: profileUrl,
                       advisorCode: advisor.displayId,
                     ),
                   ),

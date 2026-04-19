@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/add_project_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart'; // NEW
@@ -82,38 +83,46 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
       backgroundColor: isDark
           ? const Color(0xFF121212)
           : const Color(0xFFF5F7FA),
+      appBar: AppBar(
+        title: Text(
+          project.projectName,
+          style: GoogleFonts.montserrat(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: primaryBlue,
+        centerTitle: true,
+        leading: backButton(isDark: !isDark),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit, color: Colors.white, size: 24),
+            tooltip: 'Edit Project',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      AddProjectScreen(existingProject: project),
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          SliverAppBar(
-            expandedHeight: 300,
-            pinned: true,
-            backgroundColor: primaryBlue,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () => Navigator.pop(context),
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.edit, color: Colors.white),
-                tooltip: 'Edit Project',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          AddProjectScreen(existingProject: project),
-                    ),
-                  );
-                },
-              ),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // MEDIA CAROUSEL
-                  _mediaItems.isNotEmpty
+          // MEDIA CAROUSEL moved to top of body
+          SliverToBoxAdapter(
+            child: Stack(
+              children: [
+                Container(
+                  height: MediaQuery.of(context).size.width * 9 / 16,
+                  width: double.infinity,
+                  child: _mediaItems.isNotEmpty
                       ? PageView.builder(
                           itemCount: _mediaItems.length,
                           onPageChanged: (index) =>
@@ -150,52 +159,39 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                             ),
                           ),
                         ),
-
-                  // THE FIX: IgnorePointer prevents the gradient from blocking your swipes!
-                  IgnorePointer(
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.black54,
-                            Colors.transparent,
-                            Colors.transparent,
-                            Colors.black87,
-                          ],
-                          stops: [0.0, 0.2, 0.8, 1.0],
-                        ),
-                      ),
+                ),
+                // Dot Indicators
+                if (_mediaItems.length > 1)
+                  Positioned(
+                    bottom: 12,
+                    left: 0,
+                    right: 0,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(_mediaItems.length, (index) {
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          width: _currentMediaIndex == index ? 10 : 6,
+                          height: _currentMediaIndex == index ? 10 : 6,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _currentMediaIndex == index
+                                ? Colors.white
+                                : Colors.white.withOpacity(0.5),
+                            boxShadow: [
+                              if (_currentMediaIndex == index)
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 4,
+                                ),
+                            ],
+                          ),
+                        );
+                      }),
                     ),
                   ),
-
-                  // Dot Indicators
-                  if (_mediaItems.length > 1)
-                    Positioned(
-                      bottom: 40,
-                      left: 0,
-                      right: 0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(_mediaItems.length, (index) {
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
-                            width: _currentMediaIndex == index ? 12 : 8,
-                            height: _currentMediaIndex == index ? 12 : 8,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: _currentMediaIndex == index
-                                  ? primaryBlue
-                                  : Colors.white.withOpacity(0.5),
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
-                ],
-              ),
+              ],
             ),
           ),
           SliverToBoxAdapter(
@@ -207,7 +203,6 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                   top: Radius.circular(24),
                 ),
               ),
-              transform: Matrix4.translationValues(0, -20, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -777,6 +772,9 @@ class _InlineVideoPlayerState extends State<_InlineVideoPlayer> {
       looping: false,
       aspectRatio: _videoPlayerController.value.aspectRatio,
       showControlsOnInitialize: false,
+      // Ensure the video covers the container to remove empty space while maintaining ratio (cropping instead of stretching)
+      fullScreenByDefault: false,
+      allowFullScreen: true,
       materialProgressColors: ChewieProgressColors(
         playedColor: Colors.blue,
         handleColor: Colors.blueAccent,

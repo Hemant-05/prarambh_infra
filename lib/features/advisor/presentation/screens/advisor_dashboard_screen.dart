@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_attendance_provider.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/team_activity_attendance_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:prarambh_infra/core/widgets/profile_image.dart';
@@ -669,6 +671,63 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     AdvisorDashboardProvider provider,
     String advisorCode,
   ) {
+    final timeframes = [
+      {'label': 'All Time', 'value': ''},
+      {'label': 'Weekly', 'value': 'weekly'},
+      {'label': 'Monthly', 'value': 'monthly'},
+      {'label': 'Quarterly', 'value': 'quarterly'},
+      {'label': 'Yearly', 'value': 'yearly'},
+    ];
+
+    final currentLabel = timeframes.firstWhere(
+      (tf) => tf['value'] == provider.selectedTimeframe,
+      orElse: () => timeframes[0],
+    )['label'];
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _buildSectionTitle(context, 'Sales Conversion'),
+        InkWell(
+          onTap: () => _showTimeframePicker(context, provider, advisorCode),
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.primaryBlueLight.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.primaryBlueLight.withOpacity(0.2)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  currentLabel!,
+                  style: GoogleFonts.montserrat(
+                    color: AppColors.primaryBlueLight,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 18,
+                  color: AppColors.primaryBlueLight,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showTimeframePicker(
+    BuildContext context,
+    AdvisorDashboardProvider provider,
+    String advisorCode,
+  ) {
     final primaryBlue = Theme.of(context).primaryColor;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -680,49 +739,74 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
       {'label': 'Yearly', 'value': 'yearly'},
     ];
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _buildSectionTitle(context, 'Sales Conversion'),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
           decoration: BoxDecoration(
-            color: primaryBlue.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: primaryBlue.withOpacity(0.2)),
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: provider.selectedTimeframe,
-              icon: Icon(
-                Icons.keyboard_arrow_down,
-                size: 18,
-                color: primaryBlue,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-              elevation: 16,
-              style: GoogleFonts.montserrat(
-                color: primaryBlue,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
+              const SizedBox(height: 20),
+              Text(
+                'Select Timeframe',
+                style: GoogleFonts.montserrat(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              dropdownColor: Theme.of(context).cardColor,
-              onChanged: (String? newValue) {
-                if (newValue != null) {
-                  provider.updateTimeframe(advisorCode, newValue);
-                }
-              },
-              items: timeframes.map<DropdownMenuItem<String>>((
-                Map<String, String> tf,
-              ) {
-                return DropdownMenuItem<String>(
-                  value: tf['value'],
-                  child: Text(tf['label']!),
-                );
-              }).toList(),
-            ),
+              const SizedBox(height: 24),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                alignment: WrapAlignment.center,
+                children: timeframes.map((tf) {
+                  final isSelected = tf['value'] == provider.selectedTimeframe;
+                  return ChoiceChip(
+                    label: Text(tf['label']!),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      if (selected) {
+                        provider.updateTimeframe(advisorCode, tf['value']!);
+                        Navigator.pop(context);
+                      }
+                    },
+                    selectedColor: primaryBlue.withOpacity(0.2),
+                    checkmarkColor: primaryBlue,
+                    labelStyle: GoogleFonts.montserrat(
+                      fontSize: 13,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      color: isSelected
+                          ? primaryBlue
+                          : (isDark ? Colors.white70 : Colors.black87),
+                    ),
+                    backgroundColor: isDark ? Colors.grey[900] : Colors.grey[100],
+                    side: BorderSide(
+                      color: isSelected ? primaryBlue : Colors.transparent,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -741,85 +825,102 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             sales.suspecting.toString(),
             'SUSPECTING',
             const Color(0xFF6366F1),
+            onTap: () => _navigateToSalesPipeline(0),
           ),
           _buildSalesCard(
             context,
             sales.prospecting.toString(),
             'PROSPECTING',
             const Color(0xFF3B82F6), // Blue
+            onTap: () => _navigateToSalesPipeline(1),
           ),
           _buildSalesCard(
             context,
             sales.siteVisit.toString(),
             'SITE VISIT',
             const Color(0xFFF59E0B), // Amber
+            onTap: () => _navigateToSalesPipeline(2),
           ),
           _buildSalesCard(
             context,
             sales.booking.toString(),
             'BOOKING',
             const Color(0xFF10B981), // Emerald
+            onTap: () => _navigateToSalesPipeline(3),
           ),
           _buildSalesCard(
             context,
             sales.completed.toString(),
             'COMPLETED',
             const Color(0xFF059669), // Green
+            onTap: () => _navigateToSalesPipeline(4),
           ),
         ],
       ),
     );
   }
 
+  void _navigateToSalesPipeline(int tabIndex) {
+    context.read<AdvisorLeadProvider>().setPipelineTab(tabIndex);
+    setState(() {
+      _selectedIndex = 3; // Sales Pipeline tab is at index 3
+    });
+  }
+
   Widget _buildSalesCard(
     BuildContext context,
     String value,
     String label,
-    Color accentColor,
-  ) {
+    Color accentColor, {
+    VoidCallback? onTap,
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
-      width: 100,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        color: accentColor.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? Colors.white10 : accentColor.withOpacity(0.12),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: accentColor.withOpacity(isDark ? 0.05 : 0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: 100,
+        margin: const EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+          color: accentColor.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? Colors.white10 : accentColor.withOpacity(0.12),
           ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              value,
-              style: GoogleFonts.montserrat(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
-            Text(
-              label,
-              style: GoogleFonts.montserrat(
-                fontSize: 9,
-                fontWeight: FontWeight.bold,
-                color: accentColor,
-                letterSpacing: 0.5,
-              ),
+          boxShadow: [
+            BoxShadow(
+              color: accentColor.withOpacity(isDark ? 0.05 : 0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                value,
+                style: GoogleFonts.montserrat(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              Text(
+                label,
+                style: GoogleFonts.montserrat(
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                  color: accentColor,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -923,7 +1024,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
       children: [
         _buildSectionTitle(context, 'Pending Actions'),
         Text(
-          '$count Tasks',
+          count > 5 ? '$count Tasks (See Alerts)' : '$count Tasks',
           style: GoogleFonts.montserrat(
             fontSize: 12,
             fontWeight: FontWeight.bold,
@@ -981,7 +1082,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        itemCount: actions.length,
+        itemCount: actions.length > 5 ? 5 : actions.length,
         separatorBuilder: (context, index) =>
             Divider(height: 1, color: AppColors.getBorderColor(context)),
         itemBuilder: (context, index) {
@@ -1091,114 +1192,147 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             metricIcon = Icons.event_available_outlined;
           }
 
-          return Column(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(metricIcon, size: 18, color: primaryBlue),
-                          const SizedBox(width: 8),
-                          Text(
-                            m.metric,
-                            style: GoogleFonts.montserrat(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(
-                                context,
-                              ).textTheme.bodyMedium?.color,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: primaryBlue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          '${m.achieved}%',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: primaryBlue,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 8,
-                      backgroundColor: primaryBlue.withOpacity(0.1),
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        progress >= 1.0 ? Colors.green : primaryBlue,
-                      ),
+          return InkWell(
+            onTap: () {
+              final metricName = m.metric.toLowerCase();
+              if (metricName.contains('personal booking')) {
+                context.read<AdvisorLeadProvider>().setPipelineTab(3); // Booking
+                setState(() => _selectedIndex = 3); // Main Sales Tab
+              } else if (metricName.contains('team size')) {
+                Navigator.pushNamed(context, '/recruiter_dashboard');
+              } else if (metricName.contains('team booking')) {
+                final auth = context.read<AuthProvider>();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TeamActivityAttendanceScreen(
+                      advisorCode: auth.currentUser?.advisorCode ?? '',
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                );
+              } else if (metricName.contains('attendance')) {
+                context.read<AdvisorAttendanceProvider>().setMeetingTab(1); // History & Stats
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AdvisorMeetingScheduleScreen(),
+                  ),
+                );
+              }
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Achieved: ',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 11,
-                              color: Colors.grey,
-                            ),
+                          Row(
+                            children: [
+                              Icon(metricIcon, size: 18, color: primaryBlue),
+                              const SizedBox(width: 8),
+                              Text(
+                                m.metric,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(
+                                    context,
+                                  ).textTheme.bodyMedium?.color,
+                                ),
+                              ),
+                            ],
                           ),
-                          Text(
-                            m.metric.contains('Attendance')
-                                ? '${m.achievedNumber}%'
-                                : m.achievedNumber.toString(),
-                            style: GoogleFonts.montserrat(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: primaryBlue,
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: primaryBlue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '${m.achieved}%',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: primaryBlue,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      Row(
-                        children: [
-                          Text(
-                            'Target: ',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 11,
-                              color: Colors.grey,
-                            ),
+                      const SizedBox(height: 12),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 8,
+                          backgroundColor: primaryBlue.withOpacity(0.1),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            progress >= 1.0 ? Colors.green : primaryBlue,
                           ),
-                          Text(
-                            m.metric.contains('Attendance')
-                                ? '${m.targetNumber}%'
-                                : m.targetNumber.toString(),
-                            style: GoogleFonts.montserrat(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                'Achieved: ',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              Text(
+                                m.metric.contains('Attendance')
+                                    ? '${m.achievedNumber}%'
+                                    : m.achievedNumber.toString(),
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryBlue,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Text(
+                                'Target: ',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              Text(
+                                m.metric.contains('Attendance')
+                                    ? '${m.targetNumber}%'
+                                    : m.targetNumber.toString(),
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ],
                   ),
-                ],
-              ),
-              if (index < metrics.length - 1)
-                Divider(height: 32, color: AppColors.getBorderColor(context)),
-            ],
+                ),
+                if (index < metrics.length - 1)
+                  Divider(height: 24, color: AppColors.getBorderColor(context)),
+              ],
+            ),
           );
         }).toList(),
       ),
@@ -1303,7 +1437,14 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                 : null,
             trailing: Icon(Icons.chevron_right, color: secondaryTextColor),
             onTap: () {
-              // Navigator to contest details
+              if (AdvisorAccessHelper.check(context, feature: 'contests')) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AdvisorContestsListScreen(),
+                  ),
+                );
+              }
             },
           ),
         );
@@ -1540,7 +1681,10 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     return Consumer<AdvisorDashboardProvider>(
       builder: (context, provider, _) {
         final tasks = provider.data?.pendingActions ?? [];
-        if (tasks.isEmpty) return const SizedBox.shrink();
+        final resaleUnits =
+            provider.resaleUnits.where((u) => u.isAvailable).toList();
+
+        if (tasks.isEmpty && resaleUnits.isEmpty) return const SizedBox.shrink();
 
         final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -1597,7 +1741,11 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                         ),
                       ),
                       Text(
-                        "${tasks.length} tasks · Resale properties available",
+                        tasks.isNotEmpty && resaleUnits.isNotEmpty
+                            ? "${tasks.length} tasks · Resale properties available"
+                            : tasks.isNotEmpty
+                                ? "${tasks.length} tasks pending"
+                                : "Resale properties available",
                         style: GoogleFonts.montserrat(
                           fontSize: 10,
                           color: isDark ? Colors.white70 : Colors.black87,

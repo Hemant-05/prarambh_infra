@@ -217,7 +217,11 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
         // Work Type Filter
         bool matchesType = true;
         if (_selectedWorkType != 'All') {
-          matchesType = advisor.advisorType == _selectedWorkType;
+          final normalizedAdvisorType =
+              advisor.advisorType.toLowerCase().replaceAll('-', ' ');
+          final normalizedSelectedType =
+              _selectedWorkType.toLowerCase().replaceAll('-', ' ');
+          matchesType = normalizedAdvisorType == normalizedSelectedType;
         }
 
         // Date Filter
@@ -245,11 +249,35 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
     final filteredAdvisors = filterAdvisors(allAdvisors);
 
     final filteredEnquiries = enquiryProvider.careerEnquiries.where((enquiry) {
-      if (_searchQuery.isEmpty) return true;
-      final query = _searchQuery.toLowerCase();
-      return enquiry.name.toLowerCase().contains(query) ||
-          enquiry.email.toLowerCase().contains(query) ||
-          enquiry.city.toLowerCase().contains(query);
+      // Status Filter: Hide enquiries that are already handled/approved
+      if (enquiry.status.toLowerCase() != 'pending') return false;
+
+      // Search Filter
+      bool matchesSearch = true;
+      if (_searchQuery.isNotEmpty) {
+        final query = _searchQuery.toLowerCase();
+        matchesSearch = enquiry.name.toLowerCase().contains(query) ||
+            enquiry.email.toLowerCase().contains(query) ||
+            enquiry.city.toLowerCase().contains(query);
+      }
+
+      // Date Range Filter
+      bool matchesDate = true;
+      if (_selectedDateRange != null) {
+        try {
+          final createdAt = DateTime.parse(enquiry.createdAt);
+          matchesDate = createdAt.isAfter(
+                _selectedDateRange!.start.subtract(const Duration(days: 1)),
+              ) &&
+              createdAt.isBefore(
+                _selectedDateRange!.end.add(const Duration(days: 1)),
+              );
+        } catch (_) {
+          matchesDate = false;
+        }
+      }
+
+      return matchesSearch && matchesDate;
     }).toList();
 
     return DefaultTabController(
@@ -726,6 +754,90 @@ class _ExpandableCareerInquiryCardState
     }
   }
 
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.warning_amber_rounded,
+                  color: Colors.red, size: 32),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Remove Enquiry?',
+              style: GoogleFonts.montserrat(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to remove this enquiry? This action cannot be undone.',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.montserrat(
+            fontSize: 14,
+            color: Colors.grey[600],
+          ),
+        ),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    'Cancel',
+                    style: GoogleFonts.montserrat(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    context
+                        .read<AdminEnquiryProvider>()
+                        .deleteCareerEnquiry(widget.enquiry.id.toString());
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Enquiry removed successfully')),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Remove',
+                    style: GoogleFonts.montserrat(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
@@ -843,11 +955,7 @@ class _ExpandableCareerInquiryCardState
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () => context
-                              .read<AdminEnquiryProvider>()
-                              .deleteCareerEnquiry(
-                                widget.enquiry.id.toString(),
-                              ),
+                          onPressed: () => _showDeleteConfirmation(context),
                           icon: const Icon(Icons.delete_outline, size: 18),
                           label: const Text('Remove'),
                           style: OutlinedButton.styleFrom(

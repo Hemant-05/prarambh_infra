@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:prarambh_infra/core/helper/helper_function.dart';
-import 'package:url_launcher/url_launcher.dart'; // NEW
-import 'package:intl/intl.dart'; // NEW
-import 'package:provider/provider.dart';
+import 'package:prarambh_infra/core/widgets/back_button.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/project_inventory_advisor_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:video_player/video_player.dart';
+import 'package:chewie/chewie.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/file_download_helper.dart';
 import '../../../../core/utils/ui_helper.dart';
-import '../../../../core/widgets/pdf_viewer_screen.dart';
 import '../../../admin/data/models/project_model.dart';
-import '../providers/advisor_project_provider.dart';
-import 'advisor_unit_details_screen.dart';
+import 'package:prarambh_infra/core/widgets/pdf_viewer_screen.dart';
 
 class AdvisorProjectDetailsScreen extends StatefulWidget {
   final ProjectModel project;
@@ -21,394 +20,591 @@ class AdvisorProjectDetailsScreen extends StatefulWidget {
       _AdvisorProjectDetailsScreenState();
 }
 
-class _AdvisorProjectDetailsScreenState
-    extends State<AdvisorProjectDetailsScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _AdvisorProjectDetailsScreenState extends State<AdvisorProjectDetailsScreen> {
+  int _currentMediaIndex = 0;
+  final List<Map<String, String>> _mediaItems = []; // Combines video and images
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AdvisorProjectProvider>().fetchUnitsForProject(
-        widget.project.id.toString(),
-      );
-    });
+    _setupMediaList();
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
+  void _setupMediaList() {
+    // 1. Add Video if it exists (Show it as the first item)
+    if (widget.project.videoUrl.isNotEmpty) {
+      String vidUrl = widget.project.videoUrl.startsWith('http')
+          ? widget.project.videoUrl
+          : 'https://workiees.com/${widget.project.videoUrl.startsWith('/') ? widget.project.videoUrl.substring(1) : widget.project.videoUrl}';
+      _mediaItems.add({'type': 'video', 'url': vidUrl});
+    }
+
+    // 2. Add all Images
+    for (String imgUrl in widget.project.images) {
+      _mediaItems.add({'type': 'image', 'url': imgUrl});
+    }
+  }
+
+  Future<void> _launchUrl(String path) async {
+    if (path.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Link not available')));
+      return;
+    }
+
+    String fullUrl = path.startsWith('http')
+        ? path
+        : 'https://workiees.com/${path.startsWith('/') ? path.substring(1) : path}';
+
+    final Uri url = Uri.parse(fullUrl);
+
+    try {
+      await launchUrl(url);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Could not open link')));
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final primaryBlue = AppColors.getPrimaryBlue(context);
+    final cardColor = AppColors.getCardColor(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? Colors.grey[900]! : Colors.white;
-    String displayImage = widget.project.images.isNotEmpty
-        ? widget.project.images.first
-        : '';
+    final project = widget.project;
 
     return Scaffold(
       backgroundColor: isDark
           ? const Color(0xFF121212)
           : const Color(0xFFF5F7FA),
-      body: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            SliverAppBar(
-              expandedHeight: 300,
-              pinned: true,
-              backgroundColor: primaryBlue,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () => Navigator.pop(context),
-              ),
-              flexibleSpace: FlexibleSpaceBar(
-                title: Text(
-                  widget.project.projectName,
-                  style: GoogleFonts.montserrat(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
-                background: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    displayImage.isNotEmpty
-                        ? Image.network(
-                            displayImage,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => const Icon(
-                              Icons.image,
-                              size: 50,
-                              color: Colors.white54,
-                            ),
-                          )
-                        : Container(
-                            color: Colors.blueGrey,
-                            child: const Icon(
-                              Icons.image,
-                              size: 50,
-                              color: Colors.white54,
+      appBar: AppBar(
+        title: Text(
+          project.projectName,
+          style: GoogleFonts.montserrat(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: primaryBlue,
+        centerTitle: true,
+        leading: backButton(isDark: !isDark),
+      ),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          // MEDIA CAROUSEL moved to top of body
+          SliverToBoxAdapter(
+            child: Stack(
+              children: [
+                Container(
+                  height: MediaQuery.of(context).size.width * 9 / 16,
+                  width: double.infinity,
+                  child: _mediaItems.isNotEmpty
+                      ? PageView.builder(
+                          itemCount: _mediaItems.length,
+                          onPageChanged: (index) =>
+                              setState(() => _currentMediaIndex = index),
+                          itemBuilder: (context, index) {
+                            final media = _mediaItems[index];
+                            if (media['type'] == 'video') {
+                              return _InlineVideoPlayer(
+                                videoUrl: media['url']!,
+                              );
+                            } else {
+                              return Image.network(
+                                media['url']!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (c, e, s) => Container(
+                                  color: Colors.grey[300],
+                                  child: const Icon(
+                                    Icons.broken_image,
+                                    size: 50,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                        )
+                      : Container(
+                          color: Colors.grey[300],
+                          child: const Center(
+                            child: Icon(
+                              Icons.domain,
+                              size: 60,
+                              color: Colors.grey,
                             ),
                           ),
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.8),
-                          ],
                         ),
-                      ),
-                    ),
-                  ],
                 ),
-              ),
-            ),
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _SliverAppBarDelegate(
-                TabBar(
-                  controller: _tabController,
-                  labelColor: primaryBlue,
-                  unselectedLabelColor: Colors.grey[600],
-                  indicatorColor: primaryBlue,
-                  indicatorWeight: 3,
-                  labelStyle: GoogleFonts.montserrat(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                // Dot Indicators
+                if (_mediaItems.length > 1)
+                  Positioned(
+                    bottom: 12,
+                    left: 0,
+                    right: 0,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(_mediaItems.length, (index) {
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          width: _currentMediaIndex == index ? 10 : 6,
+                          height: _currentMediaIndex == index ? 10 : 6,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _currentMediaIndex == index
+                                ? Colors.white
+                                : Colors.white.withOpacity(0.5),
+                            boxShadow: [
+                              if (_currentMediaIndex == index)
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 4,
+                                ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ),
                   ),
-                  tabs: const [
-                    Tab(text: 'Overview'),
-                    Tab(text: 'Unit Inventory'),
-                  ],
-                ),
-                cardColor,
-              ),
-            ),
-          ];
-        },
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildOverviewTab(cardColor, primaryBlue, isDark),
-            _buildInventoryTab(primaryBlue, isDark),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // --- OVERVIEW TAB ---
-  Widget _buildOverviewTab(Color cardColor, Color primaryBlue, bool isDark) {
-    final project = widget.project;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Developer & City Header
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: primaryBlue.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.business, color: primaryBlue, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      project.developerName.toUpperCase(),
-                      style: GoogleFonts.montserrat(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    Text(
-                      '${project.city} • ${project.projectName}',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // Project Status Badges
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildStatusBadge(Icons.category, project.projectType, Colors.orange),
-                const SizedBox(width: 8),
-                _buildStatusBadge(Icons.construction, project.constructionStatus, Colors.blue),
-                const SizedBox(width: 8),
-                _buildStatusBadge(Icons.check_circle, project.status, Colors.green),
               ],
             ),
           ),
-          const SizedBox(height: 24),
-
-          // Pricing & Financial Stats
-          Text(
-            'Financial Overview',
-            style: GoogleFonts.montserrat(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatBox(
-                  'Market Value',
-                  '₹${NumberFormat.compact().format(project.marketValue)}',
-                  primaryBlue,
+          SliverToBoxAdapter(
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF121212) : Colors.white,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatBox(
-                  'Budget Range',
-                  project.budgetRange,
-                  primaryBlue,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatBox(
-                  'Start Rate',
-                  '₹${project.ratePerSqft}/sq.ft',
-                  primaryBlue,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatBox(
-                  'Total Units',
-                  project.totalPlots.toString(),
-                  primaryBlue,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatBox(
-                  'Build Area',
-                  '${project.buildArea} sq.ft',
-                  primaryBlue,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 30),
-
-          // Project Description
-          if (project.description.isNotEmpty) ...[
-            Text(
-              'Description',
-              style: GoogleFonts.montserrat(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              project.description,
-              style: GoogleFonts.montserrat(
-                fontSize: 13,
-                color: Colors.grey[600],
-                height: 1.6,
-              ),
-            ),
-            const SizedBox(height: 30),
-          ],
-
-          // Quick Actions Row
-          Text(
-            'Resources',
-            style: GoogleFonts.montserrat(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildActionButton(
-                  Icons.map,
-                  'View Map',
-                  Colors.green,
-                  () => _launchUrl(project.locationMapUrl),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildActionButton(
-                  Icons.description,
-                  'Brochure',
-                  Colors.orange,
-                  () {
-                    String path = project.brochureFile;
-                    if (path.isEmpty) {
-                      UIHelper.showError(context, "Brochure not available");
-                      return;
-                    }
-                    String fullUrl = path.startsWith('http')
-                        ? path
-                        : 'https://workiees.com/${path.startsWith('/') ? path.substring(1) : path}';
-                    
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PdfViewerScreen(
-                          url: fullUrl,
-                          title: '${project.projectName} Brochure',
-                          fileName:
-                              "${project.projectName.replaceAll(' ', '_')}_Brochure.pdf",
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          project.projectName,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    );
-                  },
-                ),
+                      if (project.reraNumber.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[50],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'RERA Approved',
+                            style: GoogleFonts.montserrat(
+                              color: primaryBlue,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on,
+                        size: 14,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          '${project.city} • ${project.fullAddress.isNotEmpty ? project.fullAddress : project.locationMapUrl}',
+                          style: GoogleFonts.montserrat(
+                            color: primaryBlue,
+                            fontSize: 12,
+                            decoration: TextDecoration.underline,
+                          ),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Project Status & Type Row
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildStatusBadge(
+                          Icons.category,
+                          project.projectType,
+                          Colors.orange,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildStatusBadge(
+                          Icons.construction,
+                          project.constructionStatus,
+                          Colors.blue,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildStatusBadge(
+                          Icons.check_circle,
+                          project.status,
+                          Colors.green,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Developer Row
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.business,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'DEVELOPER',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 10,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                project.developerName,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.verified,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'RERA NO.',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 10,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                project.reraNumber.isNotEmpty
+                                    ? project.reraNumber
+                                    : 'N/A',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryBlue,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Stats Row 1: Size & Rate
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatBox(
+                          'Total Area',
+                          '${project.buildArea} sq.ft',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildStatBox(
+                          'Market Value',
+                          '₹${NumberFormat.compact().format(project.marketValue)}',
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Stats Row 2: Financials
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatBox(
+                          'Start Rate',
+                          '₹${project.ratePerSqft}/sq.ft',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildStatBox(
+                          'Budget Range',
+                          project.budgetRange,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 30),
+
+                  // Description
+                  if (project.description.isNotEmpty) ...[
+                    Text(
+                      'Project Description',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      project.description,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 13,
+                        color: Colors.grey[700],
+                        height: 1.6,
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                  ],
+
+                  // Amenities
+                  if (project.amenities.isNotEmpty) ...[
+                    Text(
+                      'Amenities',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: project.amenities
+                          .map((a) => _buildChip(a, Colors.teal))
+                          .toList(),
+                    ),
+                    const SizedBox(height: 30),
+                  ],
+
+                  // Specialties
+                  if (project.specialties.isNotEmpty) ...[
+                    Text(
+                      'Features & Specialties',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: project.specialties
+                          .map((s) => _buildChip(s, Colors.deepPurple))
+                          .toList(),
+                    ),
+                    const SizedBox(height: 30),
+                  ],
+
+                  // Quick Actions
+                  Text(
+                    'Quick Actions',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildQuickAction(
+                        Icons.map,
+                        'Map',
+                        'View',
+                        primaryBlue,
+                        () => _launchUrl(project.locationMapUrl),
+                      ),
+                      _buildQuickAction(
+                        Icons.description,
+                        'Brochure',
+                        'View & Download',
+                        primaryBlue,
+                        () {
+                          String path = project.brochureUrl.isNotEmpty 
+                              ? project.brochureUrl 
+                              : project.brochureFile;
+                              
+                          if (path.isEmpty) {
+                            UIHelper.showError(
+                              context,
+                              "Brochure not available",
+                            );
+                            return;
+                          }
+                          
+                          String fullUrl = path.startsWith('http')
+                              ? path
+                              : 'https://workiees.com/${path.startsWith('/') ? path.substring(1) : path}';
+
+                          fullUrl = Uri.encodeFull(fullUrl);
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PdfViewerScreen(
+                                url: fullUrl,
+                                title: '${project.projectName} Brochure',
+                                fileName:
+                                    "${project.projectName.replaceAll(' ', '_')}_Brochure.pdf",
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 30),
+
+                  // Availability Card: Links to dedicated inventory screen
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.02),
+                          blurRadius: 10,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Plot Availability',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      ProjectInventoryAdvisorScreen(project: project),
+                                ),
+                              ),
+                              child: Text(
+                                'View All',
+                                style: GoogleFonts.montserrat(
+                                  color: primaryBlue,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildLegendItem(Colors.green, 'Available'),
+                            _buildLegendItem(Colors.orange, 'Booked'),
+                            _buildLegendItem(Colors.red, 'Sold Out'),
+                            _buildLegendItem(Colors.amber, 'Resale'),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+
+                  // Metadata Footer
+                  Center(
+                    child: Text(
+                      'Listed on: ${DateFormat('dd MMM yyyy').format(project.createdAt)}',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 11,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
               ),
-            ],
+            ),
           ),
-          const SizedBox(height: 30),
-
-          // Features Section (Amenities & Specialties)
-          if (project.amenities.isNotEmpty) ...[
-            Text(
-              'Project Amenities',
-              style: GoogleFonts.montserrat(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: project.amenities.map((a) => _buildChip(a, Colors.teal)).toList(),
-            ),
-            const SizedBox(height: 30),
-          ],
-
-          if (project.specialties.isNotEmpty) ...[
-            Text(
-              'Features & Specialties',
-              style: GoogleFonts.montserrat(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: project.specialties.map((s) => _buildChip(s, Colors.deepPurple)).toList(),
-            ),
-            const SizedBox(height: 30),
-          ],
-
-          // Metadata Footer
-          Center(
-            child: Text(
-              'Listed on: ${DateFormat('dd MMM yyyy').format(project.createdAt)}',
-              style: GoogleFonts.montserrat(
-                fontSize: 11,
-                color: Colors.grey,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  // --- NEW: Helper Methods for Unified UI ---
-
-  Widget _buildStatBox(String title, String value, Color primaryBlue) {
+  Widget _buildStatBox(String title, String value) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.05),
+        color: Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: Column(
         children: [
@@ -420,15 +616,61 @@ class _AdvisorProjectDetailsScreenState
           Text(
             value,
             style: GoogleFonts.montserrat(
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: primaryBlue,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildQuickAction(
+    IconData icon,
+    String title,
+    String subtitle,
+    Color primaryBlue,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: primaryBlue),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: GoogleFonts.montserrat(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            subtitle,
+            style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(Color color, String label) {
+    return Row(
+      children: [
+        Icon(Icons.circle, size: 10, color: color),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey[700]),
+        ),
+      ],
     );
   }
 
@@ -458,35 +700,6 @@ class _AdvisorProjectDetailsScreenState
     );
   }
 
-  Widget _buildActionButton(IconData icon, String label, Color color, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.2)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: GoogleFonts.montserrat(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildChip(String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -505,193 +718,63 @@ class _AdvisorProjectDetailsScreenState
       ),
     );
   }
-
-  Future<void> _launchUrl(String urlString) async {
-    if (urlString.isEmpty) return;
-    String fullUrl = urlString.startsWith('http')
-        ? urlString
-        : 'https://workiees.com/${urlString.startsWith('/') ? urlString.substring(1) : urlString}';
-    final Uri url = Uri.parse(fullUrl);
-    try {
-      await launchUrl(url);
-    } catch (e) {
-      debugPrint('Launch Error: $e');
-    }
-  }
-
-  // --- INVENTORY TAB ---
-  Widget _buildInventoryTab(Color primaryBlue, bool isDark) {
-    return Consumer<AdvisorProjectProvider>(
-      builder: (context, provider, child) {
-        if (provider.isLoadingUnits) {
-          return Center(child: CircularProgressIndicator(color: primaryBlue));
-        }
-        if (provider.units.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.home_work_outlined,
-                  size: 64,
-                  color: Colors.grey.shade300,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  "No inventory available for this project.",
-                  style: GoogleFonts.montserrat(
-                    color: Colors.grey.shade600,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(20),
-          physics: const BouncingScrollPhysics(),
-          itemCount: provider.units.length,
-          itemBuilder: (context, index) {
-            final unit = provider.units[index];
-            final bool isAvailable =
-                unit.availabilityStatus.toLowerCase() == 'available';
-
-            return GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => AdvisorUnitDetailsScreen(
-                      unit: unit,
-                      project: widget.project,
-                    ),
-                  ),
-                );
-              },
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[900] : Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey.withOpacity(0.1)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      height: 60,
-                      width: 60,
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.apartment,
-                        color: primaryBlue,
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '${unit.towerName} - ${unit.unitNumber}',
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      (isAvailable ? Colors.green : Colors.red)
-                                          .withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  unit.availabilityStatus.toUpperCase(),
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.bold,
-                                    color: isAvailable
-                                        ? Colors.green
-                                        : Colors.red,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            '${unit.configuration} • ${unit.areaSqft} SqFt',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '₹${formatPrice(unit.calculatedPrice)}',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: primaryBlue,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
 }
 
-// Helper for SliverAppBar TabBar persistence
-class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar _tabBar;
-  final Color _color;
-
-  _SliverAppBarDelegate(this._tabBar, this._color);
+class _InlineVideoPlayer extends StatefulWidget {
+  final String videoUrl;
+  const _InlineVideoPlayer({required this.videoUrl});
 
   @override
-  double get minExtent => _tabBar.preferredSize.height;
-  @override
-  double get maxExtent => _tabBar.preferredSize.height;
+  State<_InlineVideoPlayer> createState() => _InlineVideoPlayerState();
+}
+
+class _InlineVideoPlayerState extends State<_InlineVideoPlayer> {
+  late VideoPlayerController _videoPlayerController;
+  ChewieController? _chewieController;
 
   @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(color: _color, child: _tabBar);
+  void initState() {
+    super.initState();
+    _initPlayer();
+  }
+
+  Future<void> _initPlayer() async {
+    _videoPlayerController = VideoPlayerController.networkUrl(
+      Uri.parse(widget.videoUrl),
+    );
+    await _videoPlayerController.initialize();
+
+    _chewieController = ChewieController(
+      videoPlayerController: _videoPlayerController,
+      autoPlay: false,
+      looping: false,
+      aspectRatio: _videoPlayerController.value.aspectRatio,
+      showControlsOnInitialize: false,
+      // Ensure the video covers the container to remove empty space while maintaining ratio (cropping instead of stretching)
+      fullScreenByDefault: false,
+      allowFullScreen: true,
+      materialProgressColors: ChewieProgressColors(
+        playedColor: Colors.blue,
+        handleColor: Colors.blueAccent,
+        backgroundColor: Colors.grey,
+        bufferedColor: Colors.white,
+      ),
+    );
+    setState(() {});
   }
 
   @override
-  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) => false;
+  void dispose() {
+    _videoPlayerController.dispose();
+    _chewieController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _chewieController != null &&
+            _chewieController!.videoPlayerController.value.isInitialized
+        ? Chewie(controller: _chewieController!)
+        : const Center(child: CircularProgressIndicator());
+  }
 }
