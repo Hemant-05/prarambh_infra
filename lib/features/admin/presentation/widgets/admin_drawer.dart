@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:prarambh_infra/core/constant/cons_strings.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'package:prarambh_infra/core/widgets/profile_image.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../../core/widgets/full_screen_image_viewer.dart';
 
 
 class AdminDrawer extends StatelessWidget {

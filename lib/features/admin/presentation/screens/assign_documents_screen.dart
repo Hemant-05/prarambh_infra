@@ -5,7 +5,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/full_screen_image_viewer.dart';
 import '../providers/admin_document_provider.dart';
 
 import 'package:prarambh_infra/core/widgets/profile_image.dart';

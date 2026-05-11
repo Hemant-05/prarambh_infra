@@ -18,22 +18,22 @@ import '../../data/models/resale_unit_model.dart';
 import '../providers/advisor_lead_provider.dart';
 import '../providers/advisor_project_provider.dart';
 import '../providers/advisor_team_provider.dart';
-import '../providers/advisor_profile_provider.dart';
 
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_contests_list_screen.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_alerts_reminders_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_projects_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_meeting_schedule_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/document_center_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/sales_pipeline_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_edit_profile_screen.dart';
-import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_promotion_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_achievement_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/career_growth_screen.dart';
-import '../../../../core/widgets/full_screen_image_viewer.dart';
 import '../../../../core/utils/access_helper.dart';
 import '../../../../core/utils/ui_helper.dart';
-import '../../../../core/globals.dart';
 import '../../../../core/widgets/top_performers_dialog.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_unit_details_screen.dart';
+import 'package:prarambh_infra/features/admin/data/models/unit_model.dart';
+import 'package:prarambh_infra/features/admin/data/models/project_model.dart';
 
 class AdvisorDashboardScreen extends StatefulWidget {
   const AdvisorDashboardScreen({super.key});
@@ -696,7 +696,9 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             decoration: BoxDecoration(
               color: AppColors.primaryBlueLight.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.primaryBlueLight.withOpacity(0.2)),
+              border: Border.all(
+                color: AppColors.primaryBlueLight.withOpacity(0.2),
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -788,12 +790,16 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                     checkmarkColor: primaryBlue,
                     labelStyle: GoogleFonts.montserrat(
                       fontSize: 13,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.w500,
                       color: isSelected
                           ? primaryBlue
                           : (isDark ? Colors.white70 : Colors.black87),
                     ),
-                    backgroundColor: isDark ? Colors.grey[900] : Colors.grey[100],
+                    backgroundColor: isDark
+                        ? Colors.grey[900]
+                        : Colors.grey[100],
                     side: BorderSide(
                       color: isSelected ? primaryBlue : Colors.transparent,
                     ),
@@ -1023,14 +1029,24 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _buildSectionTitle(context, 'Pending Actions'),
-        Text(
-          count > 5 ? '$count Tasks (See Alerts)' : '$count Tasks',
-          style: GoogleFonts.montserrat(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: primaryBlue,
+        if (count > 0)
+          TextButton(
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdvisorAlertsRemindersScreen())),
+            child: Row(
+              children: [
+                Text(
+                  'See All',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: primaryBlue,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(Icons.arrow_forward, size: 14, color: primaryBlue),
+              ],
+            ),
           ),
-        ),
       ],
     );
   }
@@ -1082,7 +1098,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        itemCount: actions.length > 5 ? 5 : actions.length,
+        itemCount: actions.length > 3 ? 3 : actions.length,
         separatorBuilder: (context, index) =>
             Divider(height: 1, color: AppColors.getBorderColor(context)),
         itemBuilder: (context, index) {
@@ -1196,7 +1212,9 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             onTap: () {
               final metricName = m.metric.toLowerCase();
               if (metricName.contains('personal booking')) {
-                context.read<AdvisorLeadProvider>().setPipelineTab(3); // Booking
+                context.read<AdvisorLeadProvider>().setPipelineTab(
+                  3,
+                ); // Booking
                 setState(() => _selectedIndex = 3); // Main Sales Tab
               } else if (metricName.contains('team size')) {
                 Navigator.pushNamed(context, '/recruiter_dashboard');
@@ -1211,7 +1229,9 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                   ),
                 );
               } else if (metricName.contains('attendance')) {
-                context.read<AdvisorAttendanceProvider>().setMeetingTab(1); // History & Stats
+                context.read<AdvisorAttendanceProvider>().setMeetingTab(
+                  1,
+                ); // History & Stats
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -1224,7 +1244,10 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8.0,
+                    horizontal: 4.0,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1681,15 +1704,18 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     return Consumer<AdvisorDashboardProvider>(
       builder: (context, provider, _) {
         final tasks = provider.data?.pendingActions ?? [];
-        final resaleUnits =
-            provider.resaleUnits.where((u) => u.isAvailable).toList();
+        final resaleUnits = provider.resaleUnits
+            .where((u) => u.isAvailable)
+            .toList();
 
-        if (tasks.isEmpty && resaleUnits.isEmpty) return const SizedBox.shrink();
+        if (tasks.isEmpty && resaleUnits.isEmpty) {
+          return const SizedBox.shrink();
+        }
 
         final isDark = Theme.of(context).brightness == Brightness.dark;
 
         return GestureDetector(
-          onTap: () => _showPendingTasksBottomSheet(context),
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdvisorAlertsRemindersScreen())),
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -1744,8 +1770,8 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                         tasks.isNotEmpty && resaleUnits.isNotEmpty
                             ? "${tasks.length} tasks · Resale properties available"
                             : tasks.isNotEmpty
-                                ? "${tasks.length} tasks pending"
-                                : "Resale properties available",
+                            ? "${tasks.length} tasks pending"
+                            : "Resale properties available",
                         style: GoogleFonts.montserrat(
                           fontSize: 10,
                           color: isDark ? Colors.white70 : Colors.black87,
@@ -1776,10 +1802,74 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     );
   }
 
-  void _showPendingTasksBottomSheet(BuildContext context) {
+  void _handleResaleTap(BuildContext context, ResaleUnitModel resale) {
+    final projectProvider = context.read<AdvisorProjectProvider>();
+
+    // 1. Find the project in the local projects list
+    ProjectModel? project = projectProvider.projects.firstWhere(
+      (p) => p.id == resale.projectId,
+      orElse: () => ProjectModel(
+        id: resale.projectId,
+        projectName: resale.colonyName,
+        description: 'Project details for ${resale.colonyName}',
+        developerName: 'N/A',
+        reraNumber: 'N/A',
+        projectType: resale.propertyType,
+        constructionStatus: 'Ready to Move',
+        status: 'Active',
+        fullAddress: resale.colonyName,
+        locationMapUrl: '',
+        city: 'N/A',
+        marketValue: resale.totalValue,
+        totalPlots: 0,
+        buildArea: '',
+        budgetRange: '',
+        ratePerSqft: double.tryParse(resale.ratePerSqft) ?? 0,
+        videoUrl: '',
+        brochureUrl: '',
+        brochureFile: '',
+        images: resale.unitImages,
+        amenities: [],
+        specialties: [],
+        createdAt: DateTime.now(),
+      ),
+    );
+
+    // 2. Map ResaleUnitModel to UnitModel
+    final unit = UnitModel(
+      id: resale.id,
+      projectId: resale.projectId,
+      towerName: resale.towerName,
+      floorNumber: resale.floorNumber,
+      unitNumber: resale.unitNumber,
+      configuration: resale.configuration,
+      propertyType: resale.propertyType,
+      saleCategory: resale.saleCategory,
+      facing: resale.facing,
+      location: 'N/A',
+      plotNumber: resale.plotNumber,
+      plotDimensions: resale.plotDimensions,
+      areaSqft: double.tryParse(resale.areaSqft) ?? 0,
+      ratePerSqft: double.tryParse(resale.ratePerSqft) ?? 0,
+      size: resale.areaSqft,
+      availabilityStatus: resale.availabilityStatus,
+      unitImages: resale.unitImages,
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AdvisorUnitDetailsScreen(unit: unit, project: project),
+      ),
+    );
+  }
+
+  void _buildPendingTasksBottomSheet(BuildContext context) {
     final provider = context.read<AdvisorDashboardProvider>();
     final tasks = provider.data?.pendingActions ?? [];
-    final resaleUnits = provider.resaleUnits.where((u) => u.isAvailable).toList();
+    final resaleUnits = provider.resaleUnits
+        .where((u) => u.isAvailable)
+        .toList();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryBlue = Theme.of(context).primaryColor;
 
@@ -2150,139 +2240,144 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
         ? '₹${(totalVal / 100000).toStringAsFixed(1)}L'
         : '₹${NumberFormat('#,##0', 'en_IN').format(totalVal)}';
 
-    return Container(
-      width: 210,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isDark ? Colors.white12 : Colors.grey.shade200,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
+    return InkWell(
+      onTap: () => _handleResaleTap(context, unit),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        width: 210,
+        margin: const EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isDark ? Colors.white12 : Colors.grey.shade200,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header strip
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.amber.withOpacity(0.1),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header strip
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.amber.withOpacity(0.1),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(14),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.home_work_outlined,
+                    size: 14,
+                    color: Colors.amber,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      unit.colonyName.trim(),
+                      style: GoogleFonts.montserrat(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF1A2340),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
             ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.home_work_outlined,
-                  size: 14,
-                  color: Colors.amber,
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    unit.colonyName.trim(),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          unit.configuration,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: blue,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          isAvailable ? 'Available' : 'Sold Out',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: statusColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Unit : ${unit.plotNumber.isEmpty ? unit.unitNumber : unit.plotNumber}  ·  ${unit.plotDimensions}',
                     style: GoogleFonts.montserrat(
                       fontSize: 11,
+                      color: isDark ? Colors.white70 : Colors.grey.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${double.parse(unit.areaSqft).toStringAsFixed(0)} sq.ft  ·  ${unit.propertyType}',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 11,
+                      color: isDark ? Colors.white54 : Colors.grey.shade500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '₹${unit.ratePerSqft}/sq.ft',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 9,
+                      color: isDark ? Colors.white54 : Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    formatted,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF1A2340),
+                      color: blue,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: blue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        unit.configuration,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          color: blue,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        isAvailable ? 'Available' : 'Sold Out',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          color: statusColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Plot ${unit.plotNumber}  ·  ${unit.plotDimensions}',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 11,
-                    color: isDark ? Colors.white70 : Colors.grey.shade700,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${unit.areaSqft} sq.ft  ·  ${unit.propertyType}',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 11,
-                    color: isDark ? Colors.white54 : Colors.grey.shade500,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  formatted,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: blue,
-                  ),
-                ),
-                Text(
-                  '₹${unit.ratePerSqft}/sq.ft',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 9,
-                    color: isDark ? Colors.white38 : Colors.grey.shade400,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

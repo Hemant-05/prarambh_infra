@@ -5,6 +5,9 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/admin_analytics_provider.dart';
 import '../../data/models/sales_analytics_model.dart';
+import 'admin_deals_screen.dart';
+import 'advisor_profile_screen.dart';
+import 'lead_management_screen.dart';
 
 class AdminSalesAnalyticsScreen extends StatefulWidget {
   const AdminSalesAnalyticsScreen({super.key});
@@ -138,14 +141,22 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
             summary.totalDeals.toString(),
             Icons.handshake,
             Colors.orange,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AdminDealsScreen()),
+              );
+            },
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
-    return Container(
+  Widget _buildSummaryCard(String title, String value, IconData icon, Color color, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.getCardColor(context),
@@ -190,8 +201,9 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildMonthlyBarChart(List<MonthlyChartData> data) {
     if (data.isEmpty) return const Center(child: Text("No monthly data"));
@@ -397,9 +409,29 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
       child: Column(
         children: data.map((item) {
           double widthFactor = (item.count / data.map((e) => e.count).reduce((a, b) => a > b ? a : b));
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Column(
+          
+          return GestureDetector(
+            onTap: () {
+              int tabIndex = 0;
+              final stageLabel = item.stage.toLowerCase();
+              if (stageLabel == 'suspecting' || stageLabel.contains('suspect')) {
+                tabIndex = 1;
+              } else if (stageLabel == 'prospecting' || stageLabel.contains('prospect')) tabIndex = 2;
+              else if (stageLabel == 'site visit' || stageLabel.contains('site')) tabIndex = 3;
+              else if (stageLabel == 'booking' || stageLabel.contains('book')) tabIndex = 4;
+              else if (stageLabel == 'dead') tabIndex = 5;
+              else if (stageLabel == 'completed') tabIndex = 6;
+              
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => LeadManagementScreen(initialIndex: tabIndex),
+                ),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -442,6 +474,7 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
                 ),
               ],
             ),
+            )
           );
         }).toList(),
       ),
@@ -464,7 +497,16 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
         separatorBuilder: (context, index) => Divider(height: 1, color: AppColors.getBorderColor(context)),
         itemBuilder: (context, index) {
           final advisor = advisors[index];
-          return ListTile(
+          return InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AdvisorProfileScreen(advisorId: advisor.advisorCode),
+                ),
+              );
+            },
+            child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             leading: CircleAvatar(
               radius: 25,
@@ -500,6 +542,7 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
                 ),
               ],
             ),
+            )
           );
         },
       ),

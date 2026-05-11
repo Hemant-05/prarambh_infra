@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:prarambh_infra/core/utils/validators.dart';
 import 'package:flutter/services.dart';
 import 'package:prarambh_infra/features/admin/data/models/lead_models.dart';
@@ -923,8 +924,11 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                       const SizedBox(width: 12),
                       // Call Icon
                       GestureDetector(
-                        onTap: () {
-                          // Note: lead.clientNumber is the phone
+                        onTap: () async {
+                          final Uri url = Uri.parse('tel:${lead.clientNumber}');
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url);
+                          }
                         },
                         child: Container(
                           padding: const EdgeInsets.all(8),

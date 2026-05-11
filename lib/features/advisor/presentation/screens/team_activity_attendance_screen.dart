@@ -138,9 +138,15 @@ class _TeamActivityAttendanceScreenState
               ),
             )
           else
-            ...bookings.recentActivity
-                .map<Widget>((act) => _buildBookingItem(act, isDark))
-                .toList(),
+            Column(
+              children: [
+                _buildTableHeader(isDark),
+                const SizedBox(height: 8),
+                ...bookings.recentActivity.asMap().entries.map<Widget>((entry) {
+                  return _buildBookingItem(entry.value, isDark, entry.key);
+                }).toList(),
+              ],
+            ),
           const Divider(height: 32),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -168,57 +174,119 @@ class _TeamActivityAttendanceScreenState
     );
   }
 
-  Widget _buildBookingItem(activity, bool isDark) {
+  Widget _buildTableHeader(bool isDark) {
+    final headerColor = isDark ? Colors.white.withOpacity(0.05) : Colors.grey[50];
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: headerColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: isDark ? Colors.white10 : Colors.grey[200]!),
+      ),
+      child: Row(
+        children: [
+          Expanded(flex: 2, child: _headerText('ADVISOR')),
+          Expanded(flex: 2, child: _headerText('INFO / PROJECT')),
+          Expanded(
+            flex: 1,
+            child: _headerText('DATE', textAlign: TextAlign.center),
+          ),
+          Expanded(
+            flex: 1,
+            child: _headerText('STATUS', textAlign: TextAlign.right),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _headerText(String text, {TextAlign textAlign = TextAlign.left}) {
+    return Text(
+      text,
+      textAlign: textAlign,
+      style: GoogleFonts.montserrat(
+        fontSize: 10,
+        fontWeight: FontWeight.w800,
+        color: Colors.blueGrey[300],
+        letterSpacing: 0.8,
+      ),
+    );
+  }
+
+  Widget _buildBookingItem(activity, bool isDark, int index) {
+    final isEven = index % 2 == 0;
+    final rowColor = isEven
+        ? (isDark ? Colors.white.withOpacity(0.02) : Colors.grey[50]?.withOpacity(0.5))
+        : Colors.transparent;
+
     final statusColor = activity.status.toLowerCase() == 'confirmed'
         ? Colors.green
         : Colors.orange;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      decoration: BoxDecoration(
+        color: rowColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Row(
         children: [
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  activity.advisorName,
-                  style: GoogleFonts.montserrat(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  activity.projectDetails,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 11,
-                    color: Colors.grey,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+            flex: 2,
+            child: Text(
+              activity.advisorName,
+              style: GoogleFonts.montserrat(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: isDark ? Colors.white.withOpacity(0.9) : Colors.black87,
+              ),
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                activity.date,
-                style: GoogleFonts.montserrat(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+          Expanded(
+            flex: 2,
+            child: Text(
+              activity.projectDetails,
+              style: GoogleFonts.montserrat(
+                fontSize: 11,
+                color: isDark ? Colors.white54 : Colors.grey[600],
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Text(
+              activity.date,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.montserrat(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white70 : Colors.black54,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  activity.status.toUpperCase(),
+                  style: GoogleFonts.montserrat(
+                    color: statusColor,
+                    fontSize: 8,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
-              Text(
-                activity.status,
-                style: GoogleFonts.montserrat(
-                  color: statusColor,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),

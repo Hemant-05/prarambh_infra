@@ -249,8 +249,9 @@ class ReviewApplicationScreen extends StatelessWidget {
                                       width: 100,
                                       fit: BoxFit.cover,
                                       loadingBuilder: (context, child, loadingProgress) {
-                                        if (loadingProgress == null)
+                                        if (loadingProgress == null) {
                                           return child;
+                                        }
                                         return Container(
                                           height: 100,
                                           width: 100,
@@ -511,8 +512,9 @@ class ReviewApplicationScreen extends StatelessWidget {
                                                   doc.url,
                                                   fit: BoxFit.cover,
                                                   loadingBuilder: (context, child, loadingProgress) {
-                                                    if (loadingProgress == null)
+                                                    if (loadingProgress == null) {
                                                       return child;
+                                                    }
                                                     return Center(
                                                       child: SizedBox(
                                                         width: 24,

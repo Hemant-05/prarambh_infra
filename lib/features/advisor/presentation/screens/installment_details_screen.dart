@@ -9,6 +9,7 @@ import 'package:prarambh_infra/features/auth/presentation/providers/auth_provide
 import 'package:prarambh_infra/features/admin/data/models/installment_model.dart';
 import 'package:prarambh_infra/features/admin/data/models/unit_model.dart';
 import 'package:prarambh_infra/features/admin/data/models/deal_model.dart';
+import 'package:prarambh_infra/features/admin/presentation/screens/advisor_profile_screen.dart';
 
 class InstallmentDetailsScreen extends StatefulWidget {
   final UpcomingInstallmentModel installment;
@@ -90,7 +91,7 @@ class _InstallmentDetailsScreenState extends State<InstallmentDetailsScreen> {
             const SizedBox(height: 16),
             _buildAdvisorCommissionCard(context),
             const SizedBox(height: 16),
-            _buildAdvisorDetailsCard(context),
+            _buildAdvisorDetailsCard(context, isAdmin),
             if (isAdmin) ...[
               const SizedBox(height: 16),
               _buildClientDetailsCard(context),
@@ -262,11 +263,11 @@ class _InstallmentDetailsScreenState extends State<InstallmentDetailsScreen> {
     );
   }
 
-  Widget _buildAdvisorDetailsCard(BuildContext context) {
+  Widget _buildAdvisorDetailsCard(BuildContext context, bool isAdmin) {
     final primaryBlue = Theme.of(context).primaryColor;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return _buildBaseCard(
+    final card = _buildBaseCard(
       context,
       title: 'Advisor Details',
       icon: Icons.badge_outlined,
@@ -290,6 +291,20 @@ class _InstallmentDetailsScreenState extends State<InstallmentDetailsScreen> {
           ),
         ],
       ),
+    );
+
+    if (!isAdmin) return card;
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AdvisorProfileScreen(advisorId: widget.installment.advisorCode),
+          ),
+        );
+      },
+      child: card,
     );
   }
 

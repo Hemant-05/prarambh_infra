@@ -16,6 +16,8 @@ class RecruiterDashboardScreen extends StatefulWidget {
 }
 
 class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
+  String _filterStatus = 'All';
+
   @override
   void initState() {
     super.initState();
@@ -34,6 +36,18 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
     final primaryBlue = Theme.of(context).primaryColor;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+
+    List<RecruitedAdvisorModel> filteredMembers = [];
+    if (provider.data != null) {
+      filteredMembers = provider.data!.teamMembers.where((m) {
+        if (_filterStatus == 'All') return true;
+        if (_filterStatus == 'Terminated') {
+          return m.status.toLowerCase() == 'suspended' || m.status.toLowerCase() == 'inactive';
+        }
+        return m.status.toLowerCase() == _filterStatus.toLowerCase();
+      }).toList();
+    }
+
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -66,15 +80,48 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
               const SizedBox(height: 24),
               _buildStatsGrid(context, provider.data!.stats),
               const SizedBox(height: 32),
-              Text('Team Members (${provider.data!.teamMembers.length})', style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+              Text('Team Members (${filteredMembers.length})', style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
               const SizedBox(height: 16),
-              provider.data!.teamMembers.isEmpty
-                  ? Center(child: Padding(padding: const EdgeInsets.all(30.0), child: Text("No team members yet.", style: GoogleFonts.montserrat(color: Colors.grey))))
-                  : _buildRecentRecruitmentsList(context, provider.data!.teamMembers, isDark),
+              _buildFilterChips(primaryBlue, isDark),
+              const SizedBox(height: 16),
+              filteredMembers.isEmpty
+                  ? Center(child: Padding(padding: const EdgeInsets.all(30.0), child: Text("No team members found.", style: GoogleFonts.montserrat(color: Colors.grey))))
+                  : _buildRecentRecruitmentsList(context, filteredMembers, isDark),
               const SizedBox(height: 80),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChips(Color primaryBlue, bool isDark) {
+    final filters = ['All', 'Active', 'Pending', 'Terminated'];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: filters.map((filter) {
+          final isSelected = filter == _filterStatus;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: ChoiceChip(
+              label: Text(filter),
+              selected: isSelected,
+              onSelected: (selected) {
+                if (selected) setState(() => _filterStatus = filter);
+              },
+              selectedColor: primaryBlue.withOpacity(0.2),
+              checkmarkColor: primaryBlue,
+              labelStyle: GoogleFonts.montserrat(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected ? primaryBlue : (isDark ? Colors.white70 : Colors.black87),
+              ),
+              backgroundColor: isDark ? Colors.grey[900] : Colors.grey[100],
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -227,6 +274,7 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
     Color bgColor;
     Color textColor;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    String displayStatus = status.toUpperCase();
 
     switch (status.toLowerCase()) {
       case 'active':
@@ -241,6 +289,7 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
       case 'suspended':
         bgColor = Colors.red;
         textColor = Colors.red;
+        displayStatus = 'TERMINATED';
         break;
       default:
         bgColor = Colors.grey;
@@ -255,7 +304,7 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
           border: Border.all(color: textColor.withOpacity(0.3))
       ),
       child: Text(
-        status.toUpperCase(),
+        displayStatus,
         style: GoogleFonts.montserrat(color: isDark ? textColor.withOpacity(0.9) : textColor, fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.5),
       ),
     );

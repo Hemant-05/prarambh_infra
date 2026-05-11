@@ -34,7 +34,7 @@ class AdminTeamProvider extends ChangeNotifier with ErrorHandlerMixin {
           createdAt: '',
           children: dataResponse
               .whereType<Map<String, dynamic>>()
-              .map((e) => AdvisorNode.fromJson(e as Map<String, dynamic>))
+              .map((e) => AdvisorNode.fromJson(e))
               .toList(),
         );
       } else if (dataResponse is Map<String, dynamic>) {

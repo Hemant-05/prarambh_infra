@@ -10,7 +10,6 @@ import 'package:prarambh_infra/core/utils/file_download_helper.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../data/models/deal_model.dart';
 import '../../data/models/unit_model.dart';
-import '../../data/models/project_model.dart';
 import '../providers/admin_deal_provider.dart';
 import '../providers/admin_project_provider.dart';
 import '../providers/admin_lead_provider.dart';

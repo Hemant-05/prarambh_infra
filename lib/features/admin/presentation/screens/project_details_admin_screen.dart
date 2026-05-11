@@ -119,7 +119,7 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
           SliverToBoxAdapter(
             child: Stack(
               children: [
-                Container(
+                SizedBox(
                   height: MediaQuery.of(context).size.width * 9 / 16,
                   width: double.infinity,
                   child: _mediaItems.isNotEmpty

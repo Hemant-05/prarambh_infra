@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'package:prarambh_infra/core/widgets/profile_image.dart';
-import '../../../../core/widgets/full_screen_image_viewer.dart';
 import '../../../../core/utils/ui_helper.dart';
 import '../providers/advisor_profile_provider.dart';
 import '../../data/models/advisor_profile_model.dart';

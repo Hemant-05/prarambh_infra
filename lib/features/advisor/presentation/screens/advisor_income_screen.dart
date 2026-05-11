@@ -475,7 +475,7 @@ class _MyIncomeAnalyticsScreenState extends State<MyIncomeAnalyticsScreen> {
             dividerColor: AppColors.getBorderColor(context),
           ),
           child: DataTable(
-            headingRowColor: MaterialStateProperty.all(
+            headingRowColor: WidgetStateProperty.all(
               AppColors.getBorderColor(context).withOpacity(0.3),
             ),
             columnSpacing: 24,
@@ -508,7 +508,7 @@ class _MyIncomeAnalyticsScreenState extends State<MyIncomeAnalyticsScreen> {
                   DataCell(_tableCell(tx.clientName ?? 'N/A')),
                   DataCell(_tableCell("₹${tx.gross.toStringAsFixed(0)}",
                       isNumeric: true)),
-                  DataCell(_tableCell("${tx.slab.toStringAsFixed(0)}",
+                  DataCell(_tableCell(tx.slab.toStringAsFixed(0),
                       isNumeric: true)),
                   DataCell(_tableCell(
                       "₹${tx.installmentCommission.toStringAsFixed(0)}",

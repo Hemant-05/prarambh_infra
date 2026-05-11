@@ -201,6 +201,20 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                       'Mobile',
                       p.phone,
                       primaryBlue,
+                      trailing: IconButton(
+                        icon: Icon(Icons.call, color: primaryBlue, size: 20),
+                        onPressed: () async {
+                          final Uri launchUri = Uri(
+                            scheme: 'tel',
+                            path: p.phone,
+                          );
+                          if (await canLaunchUrl(launchUri)) {
+                            await launchUrl(launchUri);
+                          }
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
                     ),
                     _divider(),
                     _infoRow(
