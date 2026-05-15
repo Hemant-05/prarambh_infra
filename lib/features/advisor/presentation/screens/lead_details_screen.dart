@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/widgets/back_button.dart';
@@ -99,6 +100,8 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
     }
   }
 
+  bool _isFetchingPropertyDetails = false;
+
   @override
   void initState() {
     super.initState();
@@ -130,6 +133,7 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (selectedUnitId != null && selectedUnitId! > 0) {
+        _isFetchingPropertyDetails = true;
         try {
           final provider = context.read<AdminProjectProvider>();
           final unit = await provider.getUnitDetails(selectedUnitId.toString());
@@ -163,6 +167,8 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
           }
         } catch (e) {
           debugPrint('Error fetching property data: $e');
+        } finally {
+          _isFetchingPropertyDetails = false;
         }
       }
 
@@ -189,6 +195,18 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
   // ACTIONS & CORE LOGIC
   // ======================================================================
   Future<void> _launchWhatsApp() async {
+    if (_isFetchingPropertyDetails) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (c) => const Center(child: CircularProgressIndicator()),
+      );
+      while (_isFetchingPropertyDetails) {
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+      if (mounted) Navigator.pop(context); // Close dialog
+    }
+
     String message;
     if (_selectedUnit != null && _selectedProject != null) {
       final unit = _selectedUnit!;
@@ -203,7 +221,11 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
           """🏠 *Property Detail from Prarambh Infra*
 
 Project: ${project.projectName}
-Unit: ${unit.towerName} - ${unit.unitNumber}
+Unit: ${unit.towerName} - ${unit.unitNumber.isNotEmpty
+              ? unit.unitNumber
+              : unit.plotNumber.isNotEmpty
+              ? unit.plotNumber
+              : 'NA'}
 Configuration: ${unit.configuration}
 Floor: ${unit.floorNumber}
 Facing: ${unit.facing}
@@ -216,7 +238,7 @@ Please feel free to contact us for more information.""";
           "Hello! Here are the details for $selectedProperty as discussed.";
     } else {
       message =
-          "Hello! Greetings from Prarambh Infra. How can we help you today?";
+          "Hello! Greetings from Prarambh Infra. How can we help you today?\n\nWe have a great proposal for you. Please let us know when is a good time to discuss.";
     }
 
     final Uri url = Uri.parse(
@@ -367,13 +389,36 @@ Please feel free to contact us for more information.""";
     String? note,
     String? reason,
   }) async {
-    if (note != null) {
+    if (note != null && note.isNotEmpty) {
       setState(() {
         _noteHistory.insert(0, {
           "date": DateTime.now().toString().split('.')[0],
           "note": note,
         });
       });
+
+      // Explicitly call the API to save the note persistently
+      try {
+        if (widget.isAdmin) {
+          await context.read<AdminLeadProvider>().addLeadNote(
+            _currentLead.id,
+            note,
+            DateTime.now().toString(),
+          );
+        } else {
+          final advisorCode =
+              context.read<AuthProvider>().currentUser?.advisorCode ?? '';
+          await context.read<AdvisorLeadProvider>().addLeadNote(
+            _currentLead.id,
+            note,
+            DateTime.now().toString(),
+            advisorCode,
+            currentStage,
+          );
+        }
+      } catch (e) {
+        debugPrint('Failed to sync note: $e');
+      }
     }
 
     final extraData = {
@@ -395,7 +440,7 @@ Please feel free to contact us for more information.""";
 
     bool success = false;
 
-    // THE FIX: Switch between Admin and Advisor provider based on role
+    // Switch between Admin and Advisor provider based on role
     if (widget.isAdmin) {
       final provider = context.read<AdminLeadProvider>();
       success = await provider.updateLeadStage(
@@ -433,14 +478,17 @@ Please feel free to contact us for more information.""";
         'closed',
         reason:
             "System Auto-Closed: Max attempts reached ($maxAttempts). Last Reason: $reason",
-        note: "System Auto-Closed: Max attempts reached.",
+        note: "System Auto-Closed\nReason : Max attempts reached.",
       );
       _triggerLocalNotification(
         "Lead Closed Automatically",
         "Maximum communication attempts ($maxAttempts) reached.",
       );
     } else {
-      _updateStageInDb(currentStage, note: "Call not connected: $reason");
+      _updateStageInDb(
+        currentStage,
+        note: "Call not connected\nReason : $reason",
+      );
     }
   }
 
@@ -644,9 +692,17 @@ Please feel free to contact us for more information.""";
 
     // Clean up basic string artifacts if any
     String cleaned = raw.trim();
+    if (cleaned.endsWith(',')) {
+      cleaned = cleaned.substring(0, cleaned.length - 1).trim();
+    }
     if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
       cleaned = cleaned.substring(1, cleaned.length - 1).replaceAll(r'\"', '"');
     }
+
+    // Fix trailing commas before closing brackets which breaks jsonDecode
+    cleaned = cleaned.replaceAll(RegExp(r',\s*\]'), ']');
+    // Fix unescaped literal newlines inside strings which breaks jsonDecode
+    cleaned = cleaned.replaceAll('\n', '\\n').replaceAll('\r', '\\r');
 
     try {
       // 1. Try Standard JSON Decoding
@@ -657,11 +713,7 @@ Please feel free to contact us for more information.""";
             String note = (item['note'] ?? item['title'] ?? '').toString();
             String date = (item['date'] ?? item['time'] ?? '').toString();
 
-            // If the note itself looks like trapped JSON, parse it recursively
-            if (note.contains('{') &&
-                (note.contains('note:') || note.contains('title:'))) {
-              _parseLeadNotes(note);
-            } else if (note.isNotEmpty) {
+            if (note.isNotEmpty) {
               _addUniqueNote(note, date);
             }
           }
@@ -669,9 +721,9 @@ Please feel free to contact us for more information.""";
         return;
       }
     } catch (_) {
-      // 2. Fallback to Regex for malformed unquoted strings
+      // 2. Fallback to Regex for malformed strings (handles both quoted and unquoted)
       final regex = RegExp(
-        r'\{(?:note|title|date|time):\s*(.*?)\s*,\s*(?:note|title|date|time):\s*(.*?)\s*\}',
+        r'\{"?\s*(?:note|title|date|time)\s*"?\s*:\s*"?([\s\S]*?)"?\s*,\s*"?\s*(?:note|title|date|time)\s*"?\s*:\s*"?([\s\S]*?)"?\s*\}',
       );
       final matches = regex.allMatches(cleaned);
 
@@ -684,16 +736,23 @@ Please feel free to contact us for more information.""";
           String note = '';
           String date = '';
 
-          if (matchText.contains('note:')) {
-            if (matchText.indexOf('note:') < matchText.indexOf('date:')) {
+          if (matchText.contains('note:') || matchText.contains('"note"')) {
+            bool isNoteFirst =
+                matchText.indexOf(RegExp(r'note|title')) <
+                matchText.indexOf(RegExp(r'date|time'));
+            if (isNoteFirst) {
               note = val1;
               date = val2;
             } else {
               note = val2;
               date = val1;
             }
-          } else if (matchText.contains('title:')) {
-            if (matchText.indexOf('title:') < matchText.indexOf('time:')) {
+          } else if (matchText.contains('title:') ||
+              matchText.contains('"title"')) {
+            bool isTitleFirst =
+                matchText.indexOf(RegExp(r'title')) <
+                matchText.indexOf(RegExp(r'time|date'));
+            if (isTitleFirst) {
               note = val1;
               date = val2;
             } else {
@@ -702,9 +761,9 @@ Please feel free to contact us for more information.""";
             }
           }
 
-          if (note.contains('{')) {
-            _parseLeadNotes(note);
-          } else if (note.isNotEmpty) {
+          if (note.isNotEmpty) {
+            // Unescape newline characters from the regex extraction
+            note = note.replaceAll('\\n', '\n').replaceAll('\\r', '\r');
             _addUniqueNote(note, date);
           }
         }
@@ -1577,23 +1636,23 @@ Please feel free to contact us for more information.""";
         Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: primaryBlue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: Icon(
-                Icons.sticky_note_2_outlined,
+                Icons.speaker_notes_outlined,
                 color: primaryBlue,
                 size: 16,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Text(
               'Advisor Notes',
               style: GoogleFonts.montserrat(
                 fontWeight: FontWeight.bold,
-                fontSize: 15,
+                fontSize: 14,
               ),
             ),
             const Spacer(),
@@ -1610,7 +1669,7 @@ Please feel free to contact us for more information.""";
                 ),
                 child: Text(
                   'View All (${_noteHistory.length})',
-                  style: TextStyle(
+                  style: GoogleFonts.montserrat(
                     fontSize: 12,
                     color: primaryBlue,
                     fontWeight: FontWeight.bold,
@@ -1628,107 +1687,83 @@ Please feel free to contact us for more information.""";
             decoration: BoxDecoration(
               color: isDark ? Colors.grey[850] : Colors.grey.shade50,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(
+                color: isDark ? Colors.white10 : Colors.grey.shade200,
+              ),
             ),
             child: Column(
               children: [
-                Icon(Icons.notes, color: Colors.grey.shade400, size: 28),
+                Icon(
+                  Icons.notes_rounded,
+                  color: Colors.grey.shade400,
+                  size: 28,
+                ),
                 const SizedBox(height: 8),
                 Text(
                   'No notes yet. Add your first note below.',
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                  style: GoogleFonts.montserrat(
+                    color: Colors.grey.shade500,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
           )
         else
           ...notesToShow.map((note) {
-            final index = _noteHistory.indexOf(note);
-            final noteColors = [
-              Colors.blue,
-              Colors.purple,
-              Colors.teal,
-              Colors.orange,
-              Colors.green,
-            ];
-            final accent = noteColors[index % noteColors.length];
-
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: isDark ? Colors.grey[850] : Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: isDark ? Colors.grey[800]! : Colors.grey.shade100,
+                  color: isDark ? Colors.grey[800]! : Colors.grey.shade200,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(14),
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: accent.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.edit_note, color: accent, size: 20),
-                ),
-                title: Text(
-                  note['note'] ?? '',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white : Colors.black87,
-                    height: 1.5,
-                  ),
-                ),
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          _formatNoteDate(note['date'] ?? ''),
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade600,
-                          ),
+                      Icon(
+                        Icons.access_time,
+                        size: 14,
+                        color: Colors.grey.shade400,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _formatNoteDate(note['date'] ?? ''),
+                        style: GoogleFonts.montserrat(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade500,
                         ),
                       ),
                     ],
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    note['note'] ?? '',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white : Colors.black87,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
               ),
             );
           }),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: isDark ? Colors.grey[850] : Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: primaryBlue.withOpacity(0.3)),
-            boxShadow: [
-              BoxShadow(
-                color: primaryBlue.withOpacity(0.06),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            color: isDark ? Colors.grey[900] : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isDark ? Colors.grey[800]! : Colors.grey.shade300,
+            ),
           ),
           child: Row(
             children: [
@@ -1737,33 +1772,33 @@ Please feel free to contact us for more information.""";
                   controller: noteController,
                   style: GoogleFonts.montserrat(fontSize: 13),
                   decoration: InputDecoration(
-                    hintText: 'Write a note...',
-                    hintStyle: TextStyle(
-                      color: Colors.grey.shade400,
-                      fontSize: 12,
+                    hintText: 'Add a professional note...',
+                    hintStyle: GoogleFonts.montserrat(
+                      color: Colors.grey.shade500,
+                      fontSize: 13,
                     ),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
+                      horizontal: 20,
                       vertical: 14,
                     ),
                   ),
                 ),
               ),
               Container(
-                margin: const EdgeInsets.all(6),
+                margin: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   color: primaryBlue,
-                  borderRadius: BorderRadius.circular(10),
+                  shape: BoxShape.circle,
                 ),
                 child: IconButton(
                   onPressed: _addNoteToHistory,
                   icon: const Icon(
-                    Icons.send_rounded,
+                    Icons.arrow_upward_rounded,
                     color: Colors.white,
-                    size: 18,
+                    size: 20,
                   ),
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(8),
                   constraints: const BoxConstraints(),
                 ),
               ),
@@ -3101,24 +3136,136 @@ Please feel free to contact us for more information.""";
   }
 
   Widget _buildReminderBanner() {
+    if (visitDate == null) return const SizedBox.shrink();
+
+    String dateStr = visitDate!;
+    String timeStr = '';
+
+    try {
+      final parsedDate = DateTime.parse(visitDate!);
+      dateStr = DateFormat('MMM dd, yyyy').format(parsedDate);
+      timeStr = DateFormat('hh:mm a').format(parsedDate);
+    } catch (e) {
+      final parts = visitDate!.split(' ');
+      if (parts.length >= 2) {
+        dateStr = parts[0];
+        timeStr = parts.sublist(1).join(' ');
+      }
+    }
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
-      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.amber.shade50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.amber.shade200),
+        color: isDark ? Colors.blue.withOpacity(0.1) : Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.blue.withOpacity(0.3) : Colors.blue.shade200,
+        ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.alarm, size: 16, color: Colors.amber),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              "Follow-up: $visitDate",
-              style: const TextStyle(fontSize: 12, color: Colors.brown),
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.notifications_active,
+                  size: 16,
+                  color: Colors.blue,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                "Upcoming Follow-up",
+                style: GoogleFonts.montserrat(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.withOpacity(0.15)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today,
+                        size: 16,
+                        color: Colors.grey.shade600,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          dateStr,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (timeStr.isNotEmpty) ...[
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.withOpacity(0.15)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          size: 16,
+                          color: Colors.grey.shade600,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            timeStr,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),
@@ -3626,9 +3773,11 @@ Please feel free to contact us for more information.""";
                       setState(() => attemptCounter = 0);
                     }
 
-                    String noteText = isReschedule
-                        ? "Rescheduled visit for $visitDate at $selectedProperty. Meeting point: $meetingPoint"
-                        : "Scheduled visit for $visitDate at $selectedProperty. Meeting point: $meetingPoint";
+                    String title = isReschedule
+                        ? "Rescheduled visit"
+                        : "Scheduled visit";
+                    String noteText =
+                        "$title\ndate : $visitDate\nlocation:   $selectedProperty.\n Meeting point: $meetingPoint";
 
                     _updateStageInDb("site visit", note: noteText);
                     Navigator.pop(ctx);
@@ -3767,7 +3916,8 @@ Please feel free to contact us for more information.""";
                     _updateStageInDb(
                       "dead",
                       reason: rejectionReason,
-                      note: "Not Interested: $rejectionReason",
+                      note:
+                          "Not Interested\nReason : $selectedReason\nNote : ${notesCtrl.text}",
                     );
                     Navigator.pop(ctx);
                   },
@@ -3949,7 +4099,7 @@ Please feel free to contact us for more information.""";
                     _updateStageInDb(
                       "prospecting",
                       note:
-                          "Marked Interested for $localProp. Note: ${localNoteCtrl.text}",
+                          "Marked Interested\nProject : $localProp\nNote : ${localNoteCtrl.text}",
                     );
                     Navigator.pop(ctx);
                   },

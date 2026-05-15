@@ -1094,51 +1094,83 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
         color: cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.getBorderColor(context)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: ListView.separated(
         shrinkWrap: true,
+        padding: EdgeInsets.zero,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: actions.length > 3 ? 3 : actions.length,
         separatorBuilder: (context, index) =>
             Divider(height: 1, color: AppColors.getBorderColor(context)),
         itemBuilder: (context, index) {
           final action = actions[index];
-          return ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: iconColors[index % iconColors.length].withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icons[index % icons.length],
-                color: iconColors[index % iconColors.length],
-              ),
-            ),
-            title: Text(
-              action.title,
-              style: GoogleFonts.montserrat(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).textTheme.bodyMedium?.color,
-              ),
-            ),
-            subtitle: Text(
-              action.subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.montserrat(
-                fontSize: 11,
-                color: secondaryTextColor,
-              ),
-            ),
-            trailing: Text(
-              action.time,
-              style: GoogleFonts.montserrat(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: secondaryTextColor,
-              ),
+          final color = iconColors[index % iconColors.length];
+          final icon = icons[index % icons.length];
+
+          return Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: color,
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        action.title,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                          height: 1.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        action.subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 11,
+                          color: secondaryTextColor,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        action.time,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           );
         },
@@ -1703,19 +1735,18 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
   Widget _buildGlobalTaskReminderBar(BuildContext context) {
     return Consumer<AdvisorDashboardProvider>(
       builder: (context, provider, _) {
-        final tasks = provider.data?.pendingActions ?? [];
         final resaleUnits = provider.resaleUnits
             .where((u) => u.isAvailable)
             .toList();
 
-        if (tasks.isEmpty && resaleUnits.isEmpty) {
+        if (resaleUnits.isEmpty) {
           return const SizedBox.shrink();
         }
 
         final isDark = Theme.of(context).brightness == Brightness.dark;
 
         return GestureDetector(
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdvisorAlertsRemindersScreen())),
+          onTap: () => _buildResalePropertiesBottomSheet(context, resaleUnits),
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -1723,16 +1754,16 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
               gradient: LinearGradient(
                 colors: isDark
                     ? [
-                        Colors.orange.withOpacity(0.2),
-                        Colors.orange.withOpacity(0.1),
+                        Colors.amber.withOpacity(0.2),
+                        Colors.amber.withOpacity(0.1),
                       ]
-                    : [Colors.orange.shade50, Colors.white],
+                    : [Colors.amber.shade50, Colors.white],
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),
               border: Border(
                 bottom: BorderSide(
-                  color: Colors.orange.withOpacity(isDark ? 0.3 : 0.2),
+                  color: Colors.amber.withOpacity(isDark ? 0.3 : 0.2),
                   width: 1,
                 ),
               ),
@@ -1742,13 +1773,13 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.2),
+                    color: Colors.amber.withOpacity(0.2),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.notification_important,
+                    Icons.home_work_outlined,
                     size: 16,
-                    color: Colors.orange,
+                    color: Colors.amber,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -1757,21 +1788,17 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Alerts",
+                        "Resale Properties",
                         style: GoogleFonts.montserrat(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                           color: isDark
-                              ? Colors.orange
-                              : Colors.orange.shade900,
+                              ? Colors.amber
+                              : Colors.amber.shade900,
                         ),
                       ),
                       Text(
-                        tasks.isNotEmpty && resaleUnits.isNotEmpty
-                            ? "${tasks.length} tasks · Resale properties available"
-                            : tasks.isNotEmpty
-                            ? "${tasks.length} tasks pending"
-                            : "Resale properties available",
+                        "${resaleUnits.length} Resale properties available",
                         style: GoogleFonts.montserrat(
                           fontSize: 10,
                           color: isDark ? Colors.white70 : Colors.black87,
@@ -1864,12 +1891,10 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
     );
   }
 
-  void _buildPendingTasksBottomSheet(BuildContext context) {
-    final provider = context.read<AdvisorDashboardProvider>();
-    final tasks = provider.data?.pendingActions ?? [];
-    final resaleUnits = provider.resaleUnits
-        .where((u) => u.isAvailable)
-        .toList();
+  void _buildResalePropertiesBottomSheet(
+    BuildContext context,
+    List<ResaleUnitModel> resaleUnits,
+  ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryBlue = Theme.of(context).primaryColor;
 
@@ -1879,7 +1904,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
-          height: MediaQuery.of(context).size.height * 0.82,
+          height: MediaQuery.of(context).size.height * 0.5,
           decoration: BoxDecoration(
             color: Theme.of(context).scaffoldBackgroundColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -1903,18 +1928,18 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.12),
+                        color: Colors.amber.withOpacity(0.12),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.notifications_active,
-                        color: Colors.orange,
+                        Icons.home_work_outlined,
+                        color: Colors.amber,
                         size: 20,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      "Alerts & Reminders",
+                      "Resale Properties",
                       style: GoogleFonts.montserrat(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -1931,7 +1956,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        "${tasks.length} Tasks",
+                        "${resaleUnits.length} Listed",
                         style: GoogleFonts.montserrat(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -1947,58 +1972,6 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(0, 12, 0, 8),
                   children: [
-                    // ── Resale Properties Section ──────────────────────
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Icon(
-                              Icons.home_work_outlined,
-                              color: Colors.amber,
-                              size: 14,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'RESALE PROPERTIES',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.8,
-                              color: isDark ? Colors.white70 : Colors.black54,
-                            ),
-                          ),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: Colors.amber.withOpacity(0.3),
-                              ),
-                            ),
-                            child: Text(
-                              '${resaleUnits.length} Listed',
-                              style: GoogleFonts.montserrat(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.amber.shade700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                     resaleUnits.isEmpty
                         ? Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -2043,159 +2016,6 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                               ),
                             ),
                           ),
-
-                    const SizedBox(height: 16),
-                    Divider(
-                      height: 1,
-                      color: isDark ? Colors.white12 : Colors.grey.shade200,
-                    ),
-                    const SizedBox(height: 8),
-
-                    // ── Pending Tasks Section ──────────────────────────
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: primaryBlue.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Icon(
-                              Icons.task_alt_outlined,
-                              color: primaryBlue,
-                              size: 14,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'PENDING TASKS',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.8,
-                              color: isDark ? Colors.white70 : Colors.black54,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (tasks.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.white.withOpacity(0.04)
-                                : Colors.grey.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.check_circle_outline,
-                                size: 40,
-                                color: Colors.grey.withOpacity(0.4),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'All caught up!',
-                                style: GoogleFonts.montserrat(
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                    else
-                      ...tasks.map(
-                        (task) => Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? Colors.grey.withOpacity(0.1)
-                                  : Colors.grey.shade50,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: isDark
-                                    ? Colors.white10
-                                    : Colors.grey.shade200,
-                              ),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: primaryBlue.withOpacity(0.1),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    task.iconType == 'bell'
-                                        ? Icons.notifications
-                                        : Icons.event,
-                                    color: primaryBlue,
-                                    size: 20,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        task.title,
-                                        style: GoogleFonts.montserrat(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        task.subtitle,
-                                        style: GoogleFonts.montserrat(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.access_time,
-                                            size: 12,
-                                            color: Colors.grey,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            task.time,
-                                            style: GoogleFonts.montserrat(
-                                              fontSize: 10,
-                                              color: Colors.grey,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: 8),
                   ],
                 ),
               ),
@@ -2222,7 +2042,7 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: 40),
+              const SizedBox(height: 10),
             ],
           ),
         );

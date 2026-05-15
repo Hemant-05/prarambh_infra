@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prarambh_infra/core/helper/helper_function.dart';
 import 'package:prarambh_infra/features/admin/data/models/inventory_filter_state.dart';
 import 'package:prarambh_infra/features/advisor/presentation/providers/advisor_project_provider.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_unit_details_screen.dart';
@@ -540,7 +541,7 @@ class _ProjectInventoryAdvisorScreenState
             ),
             const SizedBox(height: 8),
             Text(
-              '₹${unit.calculatedPrice.toStringAsFixed(0)}',
+              '₹${formatPrice(unit.calculatedPrice)}',
               style: GoogleFonts.montserrat(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,

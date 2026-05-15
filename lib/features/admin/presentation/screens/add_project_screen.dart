@@ -509,7 +509,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildTextField('Built-up Area', _buildAreaCtrl),
+                  child: _buildTextField('Total Area (e.g. 6-8 acres)', _buildAreaCtrl),
                 ),
               ],
             ),
@@ -518,7 +518,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
               children: [
                 Expanded(
                   child: _buildTextField(
-                    'Market Value',
+                    'Market Value(e.g. 4-5 Cr)',
                     _marketValueCtrl,
                     isNumber: true,
                     validator: (v) => Validators.validateInteger(v, 'Market Value'),

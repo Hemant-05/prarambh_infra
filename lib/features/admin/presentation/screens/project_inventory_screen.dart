@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prarambh_infra/core/helper/helper_function.dart';
 import 'package:prarambh_infra/features/admin/data/models/inventory_filter_state.dart';
 import 'package:prarambh_infra/features/admin/presentation/providers/admin_project_provider.dart';
 import 'package:prarambh_infra/features/admin/presentation/screens/add_unit_screen.dart';
@@ -27,18 +28,21 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context
-          .read<AdminProjectProvider>()
-          .fetchInventory(widget.project.id.toString());
+      context.read<AdminProjectProvider>().fetchInventory(
+        widget.project.id.toString(),
+      );
     });
   }
 
   void _showFilterBottomSheet(List<UnitModel> units) {
     final types = ['All', ...units.map((u) => u.propertyType).toSet()];
-    final configurations = ['All', ...units.map((u) => u.configuration).toSet()];
+    final configurations = [
+      'All',
+      ...units.map((u) => u.configuration).toSet(),
+    ];
     final checkCategories = [
       'All',
-      ...units.map((u) => u.saleCategory).toSet()
+      ...units.map((u) => u.saleCategory).toSet(),
     ];
     final facings = ['All', ...units.map((u) => u.facing).toSet()];
     final locations = ['All', ...units.map((u) => u.location).toSet()];
@@ -72,8 +76,9 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
             height: MediaQuery.of(context).size.height * 0.85,
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(25)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(25),
+              ),
             ),
             child: Column(
               children: [
@@ -117,26 +122,47 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
                   child: ListView(
                     padding: const EdgeInsets.all(24),
                     children: [
-                      _buildDropdownFilter(
-                          'Type', types, _filterState.type, (v) {
+                      _buildDropdownFilter('Type', types, _filterState.type, (
+                        v,
+                      ) {
                         setInternalState(() => _filterState.type = v!);
                       }),
-                      _buildDropdownFilter('Configuration', configurations,
-                          _filterState.configuration, (v) {
-                        setInternalState(() => _filterState.configuration = v!);
-                      }),
-                      _buildDropdownFilter('Sale Category', checkCategories,
-                          _filterState.saleCategory, (v) {
-                        setInternalState(() => _filterState.saleCategory = v!);
-                      }),
-                      _buildDropdownFilter('Facing', facings,
-                          _filterState.facing, (v) {
-                        setInternalState(() => _filterState.facing = v!);
-                      }),
-                      _buildDropdownFilter('Location', locations,
-                          _filterState.location, (v) {
-                        setInternalState(() => _filterState.location = v!);
-                      }),
+                      _buildDropdownFilter(
+                        'Configuration',
+                        configurations,
+                        _filterState.configuration,
+                        (v) {
+                          setInternalState(
+                            () => _filterState.configuration = v!,
+                          );
+                        },
+                      ),
+                      _buildDropdownFilter(
+                        'Sale Category',
+                        checkCategories,
+                        _filterState.saleCategory,
+                        (v) {
+                          setInternalState(
+                            () => _filterState.saleCategory = v!,
+                          );
+                        },
+                      ),
+                      _buildDropdownFilter(
+                        'Facing',
+                        facings,
+                        _filterState.facing,
+                        (v) {
+                          setInternalState(() => _filterState.facing = v!);
+                        },
+                      ),
+                      _buildDropdownFilter(
+                        'Location',
+                        locations,
+                        _filterState.location,
+                        (v) {
+                          setInternalState(() => _filterState.location = v!);
+                        },
+                      ),
                       const SizedBox(height: 20),
                       Text(
                         'Area Sqft: ${_filterState.minArea?.toInt() ?? minArea.toInt()} - ${_filterState.maxArea?.toInt() ?? maxArea.toInt()}',
@@ -222,8 +248,12 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
     );
   }
 
-  Widget _buildDropdownFilter(String label, List<String> options,
-      String currentValue, ValueChanged<String?> onChanged) {
+  Widget _buildDropdownFilter(
+    String label,
+    List<String> options,
+    String currentValue,
+    ValueChanged<String?> onChanged,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
@@ -249,13 +279,15 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
                 value: currentValue,
                 isExpanded: true,
                 items: options
-                    .map((opt) => DropdownMenuItem(
-                          value: opt,
-                          child: Text(
-                            opt,
-                            style: GoogleFonts.montserrat(fontSize: 14),
-                          ),
-                        ))
+                    .map(
+                      (opt) => DropdownMenuItem(
+                        value: opt,
+                        child: Text(
+                          opt,
+                          style: GoogleFonts.montserrat(fontSize: 14),
+                        ),
+                      ),
+                    )
                     .toList(),
                 onChanged: onChanged,
               ),
@@ -422,12 +454,14 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
             IconButton(
               icon: const Icon(Icons.delete, color: Colors.white),
               onPressed: () async {
-                bool confirm = await showDialog(
+                bool confirm =
+                    await showDialog(
                       context: context,
                       builder: (c) => AlertDialog(
                         title: const Text('Delete Selected Units?'),
                         content: Text(
-                            'Are you sure you want to delete ${selectedUnitIds.length} units? This cannot be undone.'),
+                          'Are you sure you want to delete ${selectedUnitIds.length} units? This cannot be undone.',
+                        ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(c, false),
@@ -451,12 +485,16 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
                     selectedUnitIds.map((id) => id.toString()).toList(),
                     widget.project.id.toString(),
                   );
-                  if (context.mounted) Navigator.pop(context); // Close progress dialog
+                  if (context.mounted) {
+                    Navigator.pop(context); // Close progress dialog
+                  }
                   if (success) {
                     _exitSelectionMode();
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Units deleted successfully')),
+                        const SnackBar(
+                          content: Text('Units deleted successfully'),
+                        ),
                       );
                     }
                   }
@@ -464,7 +502,7 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
               },
               tooltip: 'Delete Selected',
             ),
-          ]
+          ],
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -695,7 +733,11 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '${unit.towerName}-${unit.unitNumber.isNotEmpty ? unit.unitNumber : unit.plotNumber.isNotEmpty ? unit.plotNumber : 'N/A'}',
+                  '${unit.towerName}-${unit.unitNumber.isNotEmpty
+                      ? unit.unitNumber
+                      : unit.plotNumber.isNotEmpty
+                      ? unit.plotNumber
+                      : 'N/A'}',
                   style: GoogleFonts.montserrat(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -711,7 +753,7 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '₹${unit.calculatedPrice.toStringAsFixed(0)}',
+                  '₹${formatPrice(unit.calculatedPrice)}',
                   style: GoogleFonts.montserrat(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -724,11 +766,7 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
               const Positioned(
                 top: 8,
                 right: 8,
-                child: Icon(
-                  Icons.check_circle,
-                  color: Colors.blue,
-                  size: 20,
-                ),
+                child: Icon(Icons.check_circle, color: Colors.blue, size: 20),
               ),
           ],
         ),

@@ -138,14 +138,22 @@ class _TeamActivityAttendanceScreenState
               ),
             )
           else
-            Column(
-              children: [
-                _buildTableHeader(isDark),
-                const SizedBox(height: 8),
-                ...bookings.recentActivity.asMap().entries.map<Widget>((entry) {
-                  return _buildBookingItem(entry.value, isDark, entry.key);
-                }).toList(),
-              ],
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 600),
+                child: Column(
+                  children: [
+                    _buildTableHeader(isDark),
+                    const SizedBox(height: 8),
+                    ...bookings.recentActivity.asMap().entries.map<Widget>((
+                      entry,
+                    ) {
+                      return _buildBookingItem(entry.value, isDark, entry.key);
+                    }).toList(),
+                  ],
+                ),
+              ),
             ),
           const Divider(height: 32),
           Row(
@@ -175,9 +183,11 @@ class _TeamActivityAttendanceScreenState
   }
 
   Widget _buildTableHeader(bool isDark) {
-    final headerColor = isDark ? Colors.white.withOpacity(0.05) : Colors.grey[50];
+    final headerColor = isDark
+        ? Colors.white.withOpacity(0.05)
+        : Colors.grey[50];
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 10),
       decoration: BoxDecoration(
         color: headerColor,
         borderRadius: BorderRadius.circular(8),
@@ -185,14 +195,14 @@ class _TeamActivityAttendanceScreenState
       ),
       child: Row(
         children: [
-          Expanded(flex: 2, child: _headerText('ADVISOR')),
-          Expanded(flex: 2, child: _headerText('INFO / PROJECT')),
-          Expanded(
-            flex: 1,
+          SizedBox(width: 140, child: _headerText('ADVISOR')),
+          SizedBox(width: 160, child: _headerText('INFO')),
+          SizedBox(
+            width: 90,
             child: _headerText('DATE', textAlign: TextAlign.center),
           ),
-          Expanded(
-            flex: 1,
+          SizedBox(
+            width: 110,
             child: _headerText('STATUS', textAlign: TextAlign.right),
           ),
         ],
@@ -208,15 +218,18 @@ class _TeamActivityAttendanceScreenState
         fontSize: 10,
         fontWeight: FontWeight.w800,
         color: Colors.blueGrey[300],
-        letterSpacing: 0.8,
+        letterSpacing: 0.5,
       ),
+      maxLines: 1,
     );
   }
 
   Widget _buildBookingItem(activity, bool isDark, int index) {
     final isEven = index % 2 == 0;
     final rowColor = isEven
-        ? (isDark ? Colors.white.withOpacity(0.02) : Colors.grey[50]?.withOpacity(0.5))
+        ? (isDark
+              ? Colors.white.withOpacity(0.02)
+              : Colors.grey[50]?.withOpacity(0.5))
         : Colors.transparent;
 
     final statusColor = activity.status.toLowerCase() == 'confirmed'
@@ -224,38 +237,41 @@ class _TeamActivityAttendanceScreenState
         : Colors.orange;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
       decoration: BoxDecoration(
         color: rowColor,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          Expanded(
-            flex: 2,
+          SizedBox(
+            width: 140,
             child: Text(
               activity.advisorName,
               style: GoogleFonts.montserrat(
                 fontWeight: FontWeight.bold,
-                fontSize: 12,
+                fontSize: 11,
                 color: isDark ? Colors.white.withOpacity(0.9) : Colors.black87,
               ),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              activity.projectDetails,
-              style: GoogleFonts.montserrat(
-                fontSize: 11,
-                color: isDark ? Colors.white54 : Colors.grey[600],
-              ),
               maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ),
-          Expanded(
-            flex: 1,
+          SizedBox(
+            width: 160,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 4.0),
+              child: Text(
+                activity.projectDetails,
+                style: GoogleFonts.montserrat(
+                  fontSize: 11,
+                  color: isDark ? Colors.white54 : Colors.grey[600],
+                ),
+                maxLines: 1,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 90,
             child: Text(
               activity.date,
               textAlign: TextAlign.center,
@@ -264,14 +280,15 @@ class _TeamActivityAttendanceScreenState
                 fontWeight: FontWeight.w600,
                 color: isDark ? Colors.white70 : Colors.black54,
               ),
+              maxLines: 1,
             ),
           ),
-          Expanded(
-            flex: 1,
+          SizedBox(
+            width: 110,
             child: Align(
               alignment: Alignment.centerRight,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 decoration: BoxDecoration(
                   color: statusColor.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(6),
@@ -282,8 +299,9 @@ class _TeamActivityAttendanceScreenState
                     color: statusColor,
                     fontSize: 8,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
+                    letterSpacing: 0.2,
                   ),
+                  maxLines: 1,
                 ),
               ),
             ),

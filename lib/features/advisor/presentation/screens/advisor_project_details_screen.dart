@@ -363,14 +363,14 @@ class _AdvisorProjectDetailsScreenState extends State<AdvisorProjectDetailsScree
                       Expanded(
                         child: _buildStatBox(
                           'Total Area',
-                          '${project.buildArea} sq.ft',
+                          project.buildArea,
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: _buildStatBox(
                           'Market Value',
-                          '₹${NumberFormat.compact().format(project.marketValue)}',
+                          '₹${project.marketValue}',
                         ),
                       ),
                     ],

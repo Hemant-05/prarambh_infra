@@ -263,7 +263,7 @@ class _AdminProjectsScreenState extends State<AdminProjectsScreen> {
                   const SizedBox(height: 20),
                   _buildFilterSection(
                     'Project Status',
-                    ['All', 'Completed', 'Ongoing', 'Upcoming'],
+                    ['All', 'Completed', 'Active', 'Upcoming'],
                     provider.filterStatus,
                     (val) => provider.setFilters(status: val),
                   ),
@@ -455,7 +455,7 @@ class _AdminProjectsScreenState extends State<AdminProjectsScreen> {
               children: [
                 _buildStatColumn(
                   'Area',
-                  '${project.buildArea} sqft',
+                  '${project.buildArea} ',
                   primaryBlue,
                 ),
                 _buildStatColumn(

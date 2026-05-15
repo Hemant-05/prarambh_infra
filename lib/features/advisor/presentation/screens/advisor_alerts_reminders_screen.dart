@@ -180,64 +180,6 @@ class _AdvisorAlertsRemindersScreenState extends State<AdvisorAlertsRemindersScr
       ),
       body: Column(
         children: [
-          // Resale Properties at the top
-          Container(
-             padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-             child: Row(
-               children: [
-                 Container(
-                   padding: const EdgeInsets.all(6),
-                   decoration: BoxDecoration(color: Colors.amber.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
-                   child: const Icon(Icons.home_work_outlined, color: Colors.amber, size: 14),
-                 ),
-                 const SizedBox(width: 8),
-                 Text(
-                   'RESALE PROPERTIES',
-                   style: GoogleFonts.montserrat(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8, color: isDark ? Colors.white70 : Colors.black54),
-                 ),
-                 const Spacer(),
-                 Container(
-                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                   decoration: BoxDecoration(
-                     color: Colors.amber.withOpacity(0.12),
-                     borderRadius: BorderRadius.circular(10),
-                     border: Border.all(color: Colors.amber.withOpacity(0.3)),
-                   ),
-                   child: Text('${resaleUnits.length} Listed', style: GoogleFonts.montserrat(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.amber.shade700)),
-                 ),
-               ],
-             ),
-          ),
-          if (resaleUnits.isEmpty)
-             Padding(
-               padding: const EdgeInsets.symmetric(horizontal: 20),
-               child: Container(
-                 width: double.infinity,
-                 padding: const EdgeInsets.all(16),
-                 decoration: BoxDecoration(
-                   color: isDark ? Colors.white.withOpacity(0.04) : Colors.grey.shade50,
-                   borderRadius: BorderRadius.circular(12),
-                   border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade200),
-                 ),
-                 child: Center(
-                   child: Text('No resale properties available', style: GoogleFonts.montserrat(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey)),
-                 ),
-               ),
-             )
-          else
-             SizedBox(
-               height: 170,
-               child: ListView.builder(
-                 scrollDirection: Axis.horizontal,
-                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                 itemCount: resaleUnits.length,
-                 itemBuilder: (ctx, i) => _buildResaleCard(resaleUnits[i], primaryBlue, isDark),
-               ),
-             ),
-          
-          const SizedBox(height: 16),
-          Divider(height: 1, color: isDark ? Colors.white12 : Colors.grey.shade200),
-          
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
             child: Row(

@@ -63,75 +63,45 @@ class LeadNotesFullScreen extends StatelessWidget {
               itemCount: noteHistory.length,
               itemBuilder: (context, index) {
                 final note = noteHistory[index];
-                final noteColors = [
-                  Colors.blue,
-                  Colors.purple,
-                  Colors.teal,
-                  Colors.orange,
-                  Colors.green,
-                ];
-                final accent = noteColors[index % noteColors.length];
 
                 return Container(
-                  margin: const EdgeInsets.only(bottom: 16),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: isDark ? Colors.grey[850] : Colors.white,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isDark ? Colors.grey[800]! : Colors.grey.shade100,
+                      color: isDark ? Colors.grey[800]! : Colors.grey.shade200,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
                   ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(18),
-                    leading: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: accent.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.edit_note, color: accent, size: 24),
-                    ),
-                    title: Text(
-                      note['note'] ?? '',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.white : Colors.black87,
-                        height: 1.5,
-                      ),
-                    ),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              _formatNoteDate(note['date'] ?? ''),
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey.shade600,
-                              ),
+                          Icon(Icons.access_time, size: 14, color: Colors.grey.shade400),
+                          const SizedBox(width: 6),
+                          Text(
+                            _formatNoteDate(note['date'] ?? ''),
+                            style: GoogleFonts.montserrat(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade500,
                             ),
                           ),
                         ],
                       ),
-                    ),
+                      const SizedBox(height: 8),
+                      Text(
+                        note['note'] ?? '',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.white : Colors.black87,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
                   ),
                 );
               },

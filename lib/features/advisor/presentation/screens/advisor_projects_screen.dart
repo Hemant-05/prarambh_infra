@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:prarambh_infra/core/helper/helper_function.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../admin/data/models/project_model.dart';
@@ -478,7 +477,7 @@ class _AdvisorProjectsScreenState extends State<AdvisorProjectsScreen> {
                       ),
                     ],
                   ),
-                   const Padding(
+                  const Padding(
                     padding: EdgeInsets.symmetric(vertical: 12),
                     child: Divider(height: 1),
                   ),
@@ -520,7 +519,7 @@ class _AdvisorProjectsScreenState extends State<AdvisorProjectsScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '₹${formatPrice(project.marketValue)}',
+                            '₹${project.marketValue}',
                             style: GoogleFonts.montserrat(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,

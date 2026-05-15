@@ -381,14 +381,14 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                       Expanded(
                         child: _buildStatBox(
                           'Total Area',
-                          '${project.buildArea} sq.ft',
+                          project.buildArea,
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: _buildStatBox(
                           'Market Value',
-                          '₹${NumberFormat.compact().format(project.marketValue)}',
+                          '₹${project.marketValue}',
                         ),
                       ),
                     ],

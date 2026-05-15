@@ -15,8 +15,12 @@ class FullScreenImageViewer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? Colors.black : Colors.white;
+    final iconColor = isDark ? Colors.white : Colors.black;
+
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: bgColor,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -24,9 +28,11 @@ class FullScreenImageViewer extends StatelessWidget {
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: CircleAvatar(
-            backgroundColor: Colors.black.withOpacity(0.4),
+            backgroundColor: isDark
+                ? Colors.black.withValues(alpha: 0.4)
+                : Colors.white.withValues(alpha: 0.4),
             child: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white, size: 20),
+              icon: Icon(Icons.close, color: iconColor, size: 20),
               onPressed: () => Navigator.pop(context),
             ),
           ),
@@ -35,7 +41,7 @@ class FullScreenImageViewer extends StatelessWidget {
             ? Text(
                 title!,
                 style: GoogleFonts.montserrat(
-                  color: Colors.white,
+                  color: iconColor,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -51,7 +57,7 @@ class FullScreenImageViewer extends StatelessWidget {
               child: InteractiveViewer(
                 minScale: 1.0,
                 maxScale: 5.0,
-                child: _buildImage(),
+                child: _buildImage(isDark),
               ),
             ),
           ),
@@ -60,7 +66,9 @@ class FullScreenImageViewer extends StatelessWidget {
     );
   }
 
-  Widget _buildImage() {
+  Widget _buildImage(bool isDark) {
+    final loadingColor = isDark ? Colors.white : Colors.black;
+
     if (imageUrl.startsWith('http')) {
       return Image.network(
         imageUrl,
@@ -73,18 +81,18 @@ class FullScreenImageViewer extends StatelessWidget {
                   ? loadingProgress.cumulativeBytesLoaded /
                       loadingProgress.expectedTotalBytes!
                   : null,
-              color: Colors.white,
+              color: loadingColor,
             ),
           );
         },
-        errorBuilder: (context, error, stackTrace) => const Column(
+        errorBuilder: (context, error, stackTrace) => Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.broken_image, color: Colors.white, size: 64),
-            SizedBox(height: 16),
+            Icon(Icons.broken_image, color: loadingColor, size: 64),
+            const SizedBox(height: 16),
             Text(
               'Failed to load image',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: loadingColor),
             ),
           ],
         ),
@@ -93,9 +101,9 @@ class FullScreenImageViewer extends StatelessWidget {
       return Image.asset(
         imageUrl,
         fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) => const Icon(
+        errorBuilder: (context, error, stackTrace) => Icon(
           Icons.broken_image,
-          color: Colors.white,
+          color: loadingColor,
           size: 64,
         ),
       );

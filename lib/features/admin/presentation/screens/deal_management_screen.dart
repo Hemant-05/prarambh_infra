@@ -523,13 +523,34 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                         spacing: 8,
                         runSpacing: 8,
                         children: [
-                          _buildCompactDetail(
-                            constraints,
-                            Icons.tag,
-                            "Unit",
-                            activeDeal.unitNumber ??
-                                _unit?.unitNumber ??
-                                "N/A",
+                          Builder(
+                            builder: (context) {
+                              final unitVal = activeDeal.unitNumber?.trim().isNotEmpty == true 
+                                  ? activeDeal.unitNumber 
+                                  : (_unit?.unitNumber.trim().isNotEmpty == true ? _unit?.unitNumber : null);
+                              final plotVal = _unit?.plotNumber.trim().isNotEmpty == true ? _unit?.plotNumber : null;
+                              
+                              String label = "Unit/Plot";
+                              String value = "N/A";
+                              IconData icon = Icons.tag;
+                              
+                              if (unitVal != null && unitVal != "null") {
+                                label = "Unit";
+                                value = unitVal;
+                                icon = Icons.tag;
+                              } else if (plotVal != null && plotVal != "null") {
+                                label = "Plot No";
+                                value = plotVal;
+                                icon = Icons.grid_3x3;
+                              }
+                              
+                              return _buildCompactDetail(
+                                constraints,
+                                icon,
+                                label,
+                                value,
+                              );
+                            },
                           ),
                           _buildCompactDetail(
                             constraints,
@@ -542,12 +563,6 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                             Icons.explore_outlined,
                             "Facing",
                             _unit?.facing ?? "N/A",
-                          ),
-                          _buildCompactDetail(
-                            constraints,
-                            Icons.grid_3x3,
-                            "Plot No",
-                            _unit?.plotNumber ?? "N/A",
                           ),
                           _buildCompactDetail(
                             constraints,
@@ -1095,30 +1110,81 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                     )
                   else
                     ...activeDeal.notes.reversed.map((n) {
+                      String rawTime = n['time'] ?? '';
+                      String dateStr = '';
+                      String timeStr = '';
+                      
+                      try {
+                        if (rawTime.isNotEmpty) {
+                          final parsedDate = DateTime.parse(rawTime);
+                          dateStr = DateFormat('MMM dd, yyyy').format(parsedDate);
+                          timeStr = DateFormat('hh:mm a').format(parsedDate);
+                        }
+                      } catch (e) {
+                         final parts = rawTime.split(' ');
+                         if (parts.length >= 2) {
+                            dateStr = parts[0];
+                            timeStr = parts.sublist(1).join(' ');
+                         } else {
+                            dateStr = rawTime;
+                         }
+                      }
+
                       return Container(
                         margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.05),
+                          color: cardColor,
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey.shade200,
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.calendar_today, size: 12, color: Colors.grey.shade500),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      dateStr,
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey.shade500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (timeStr.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      Icon(Icons.access_time, size: 12, color: Colors.grey.shade500),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        timeStr,
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.grey.shade500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
                             Text(
                               n['title'] ?? '',
                               style: GoogleFonts.montserrat(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
                                 color: textColor,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              n['time'] ?? '',
-                              style: GoogleFonts.montserrat(
-                                fontSize: 10,
-                                color: Colors.grey,
+                                height: 1.5,
                               ),
                             ),
                           ],
@@ -1221,75 +1287,89 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
 
   void _showAddNoteDialog(Color primaryBlue, Color textColor, Color cardColor) {
     final TextEditingController noteCtrl = TextEditingController();
+    bool isSaving = false;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: cardColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          "Add Status Note",
-          style: GoogleFonts.montserrat(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: noteCtrl,
-              maxLines: 3,
-              style: GoogleFonts.montserrat(fontSize: 13),
-              decoration: InputDecoration(
-                hintText: "Enter operational details...",
-                hintStyle: GoogleFonts.montserrat(fontSize: 12),
-                filled: true,
-                fillColor: Colors.grey.withOpacity(0.05),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            backgroundColor: cardColor,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Text(
+              "Add Status Note",
+              style: GoogleFonts.montserrat(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
               ),
             ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  if (noteCtrl.text.isEmpty) return;
-                  final success = await context
-                      .read<AdminDealProvider>()
-                      .addDealNote(
-                        widget.deal.id.toString(),
-                        noteCtrl.text,
-                        DateTime.now().toString(),
-                      );
-                  if (success && mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Note added successfully.")),
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryBlue,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: noteCtrl,
+                  maxLines: 3,
+                  style: GoogleFonts.montserrat(fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: "Enter operational details...",
+                    hintStyle: GoogleFonts.montserrat(fontSize: 12),
+                    filled: true,
+                    fillColor: Colors.grey.withOpacity(0.05),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-                child: Text(
-                  "Save Note",
-                  style: GoogleFonts.montserrat(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontSize: 14,
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: isSaving ? null : () async {
+                      if (noteCtrl.text.isEmpty) return;
+                      setState(() => isSaving = true);
+                      final success = await context
+                          .read<AdminDealProvider>()
+                          .addDealNote(
+                            widget.deal.id.toString(),
+                            noteCtrl.text,
+                            DateTime.now().toString(),
+                          );
+                      setState(() => isSaving = false);
+                      if (success && mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Note added successfully.")),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryBlue,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: isSaving 
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : Text(
+                            "Save Note",
+                            style: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
+                          ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          );
+        }
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:excel/excel.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
+import '../../features/admin/data/models/lead_models.dart';
 
 class ExcelHelper {
   static Future<bool> exportLeadsToExcel(List<dynamic> leads) async {
@@ -54,34 +55,65 @@ class ExcelHelper {
 
       // 3. Fill Data
       for (int i = 0; i < leads.length; i++) {
-        final lead = Map<String, dynamic>.from(leads[i]);
-        
-        List<CellValue> row = [
-          TextCellValue(lead['id']?.toString() ?? ''),
-          TextCellValue(lead['client_name']?.toString() ?? ''),
-          TextCellValue(lead['client_number']?.toString() ?? ''),
-          TextCellValue(lead['advisor_code']?.toString() ?? ''),
-          TextCellValue(lead['source']?.toString() ?? ''),
-          TextCellValue(lead['client_age']?.toString() ?? ''),
-          TextCellValue(lead['client_occupation']?.toString() ?? ''),
-          TextCellValue(lead['lead_category']?.toString() ?? ''),
-          TextCellValue(lead['lead_potential']?.toString() ?? ''),
-          TextCellValue(lead['client_address']?.toString() ?? ''),
-          TextCellValue(lead['owns_house']?.toString() ?? ''),
-          TextCellValue(lead['annual_income']?.toString() ?? ''),
-          TextCellValue(lead['key_decision_maker']?.toString() == '1' ? 'Yes' : 'No'),
-          TextCellValue(lead['is_priority']?.toString() == '1' ? 'Yes' : 'No'),
-          TextCellValue(lead['stage']?.toString() ?? ''),
-          TextCellValue(lead['property_id']?.toString() ?? ''),
-          TextCellValue(lead['call_outcome']?.toString() ?? ''),
-          TextCellValue(lead['reason']?.toString() ?? ''),
-          TextCellValue(lead['notes']?.toString() ?? ''),
-          TextCellValue(lead['reminder']?.toString() ?? ''),
-          TextCellValue(lead['meeting_point']?.toString() ?? ''),
-          TextCellValue(lead['communication_attempt']?.toString() ?? '0'),
-          TextCellValue(lead['created_at']?.toString() ?? ''),
-          TextCellValue(lead['updated_at']?.toString() ?? ''),
-        ];
+        final item = leads[i];
+        List<CellValue> row;
+
+        if (item is LeadModel) {
+          row = [
+            TextCellValue(item.id),
+            TextCellValue(item.clientName),
+            TextCellValue(item.clientNumber),
+            TextCellValue(item.advisorCode),
+            TextCellValue(item.source),
+            TextCellValue(item.clientAge),
+            TextCellValue(item.clientOccupation),
+            TextCellValue(item.leadCategory),
+            TextCellValue(item.leadPotential),
+            TextCellValue(item.clientAddress),
+            TextCellValue(item.ownsHouse),
+            TextCellValue(item.annualIncome),
+            TextCellValue(item.keyDecisionMaker ? 'Yes' : 'No'),
+            TextCellValue(item.isPriority ? 'Yes' : 'No'),
+            TextCellValue(item.stage),
+            TextCellValue(item.propertyId == 0 ? '' : item.propertyId.toString()),
+            TextCellValue(item.callOutCome),
+            TextCellValue(item.reason),
+            TextCellValue(item.notes),
+            TextCellValue(item.reminder),
+            TextCellValue(item.meetingPoint),
+            TextCellValue(item.communicationAttempt.toString()),
+            TextCellValue(item.createdAt),
+            TextCellValue(item.updatedAt),
+          ];
+        } else {
+          final lead = Map<String, dynamic>.from(item);
+          row = [
+            TextCellValue(lead['id']?.toString() ?? ''),
+            TextCellValue(lead['client_name']?.toString() ?? ''),
+            TextCellValue(lead['client_number']?.toString() ?? ''),
+            TextCellValue(lead['advisor_code']?.toString() ?? ''),
+            TextCellValue(lead['source']?.toString() ?? ''),
+            TextCellValue(lead['client_age']?.toString() ?? ''),
+            TextCellValue(lead['client_occupation']?.toString() ?? ''),
+            TextCellValue(lead['lead_category']?.toString() ?? ''),
+            TextCellValue(lead['lead_potential']?.toString() ?? ''),
+            TextCellValue(lead['client_address']?.toString() ?? ''),
+            TextCellValue(lead['owns_house']?.toString() ?? ''),
+            TextCellValue(lead['annual_income']?.toString() ?? ''),
+            TextCellValue(lead['key_decision_maker']?.toString() == '1' || lead['key_decision_maker'] == true ? 'Yes' : 'No'),
+            TextCellValue(lead['is_priority']?.toString() == '1' || lead['is_priority'] == true ? 'Yes' : 'No'),
+            TextCellValue(lead['stage']?.toString() ?? ''),
+            TextCellValue(lead['property_id']?.toString() == '0' ? '' : lead['property_id']?.toString() ?? ''),
+            TextCellValue(lead['call_outcome']?.toString() ?? ''),
+            TextCellValue(lead['reason']?.toString() ?? ''),
+            TextCellValue(lead['notes']?.toString() ?? ''),
+            TextCellValue(lead['reminder']?.toString() ?? ''),
+            TextCellValue(lead['meeting_point']?.toString() ?? ''),
+            TextCellValue(lead['communication_attempt']?.toString() ?? '0'),
+            TextCellValue(lead['created_at']?.toString() ?? ''),
+            TextCellValue(lead['updated_at']?.toString() ?? ''),
+          ];
+        }
 
         for (int j = 0; j < row.length; j++) {
           sheetObject.cell(CellIndex.indexByColumnRow(columnIndex: j, rowIndex: i + 1)).value = row[j];

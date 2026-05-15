@@ -31,7 +31,6 @@ class _AddUnitScreenState extends State<AddUnitScreen>
   final _locationCtrl = TextEditingController();
   final _plotNumCtrl = TextEditingController();
   final _plotDimCtrl = TextEditingController();
-  final _sizeCtrl = TextEditingController();
 
   // Dropdown States
   String _config = '3BHK';
@@ -82,7 +81,6 @@ class _AddUnitScreenState extends State<AddUnitScreen>
     _locationCtrl.dispose();
     _plotNumCtrl.dispose();
     _plotDimCtrl.dispose();
-    _sizeCtrl.dispose();
     super.dispose();
   }
 
@@ -203,7 +201,7 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                 const SizedBox(width: 16),
                 Expanded(
                   child: _buildDropdown('Property Type', _type, [
-                    'Apartment', 'Villa', 'Plot', 'Commercial',
+                    'Apartment', 'Villa', 'Plot'
                   ], (v) => setState(() => _type = v!)),
                 ),
               ],
@@ -254,8 +252,6 @@ class _AddUnitScreenState extends State<AddUnitScreen>
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: _buildTextField('Size (e.g. Large)', _sizeCtrl)),
-                const SizedBox(width: 16),
                 Expanded(
                   child: _buildDropdown('Status', _status, [
                     'Available', 'Booked', 'Sold',
@@ -338,7 +334,6 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                         "plot_dimensions": _plotDimCtrl.text,
                         "area_sqft": double.tryParse(_areaCtrl.text) ?? 0,
                         "rate_per_sqft": double.tryParse(_rateCtrl.text) ?? 0,
-                        "size": _sizeCtrl.text,
                         "availability_status": _status,
                       };
                       final success = await provider.createUnit(

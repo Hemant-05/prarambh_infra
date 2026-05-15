@@ -673,7 +673,10 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [primaryBlue, primaryBlue.withOpacity(0.7)],
@@ -689,19 +692,13 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      "L-${deal.leadId}",
-                      style: GoogleFonts.montserrat(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade500,
-                      ),
-                    ),
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -709,15 +706,23 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                   child: Row(
                     children: [
                       Icon(
-                        deal.stage == 'close' || deal.dealStatus.toLowerCase() == 'verified'
+                        deal.stage == 'close' ||
+                                deal.dealStatus.toLowerCase() == 'verified'
                             ? Icons.check_circle
-                            : (deal.stage == 'ongoing' ? Icons.play_circle_fill : Icons.pending),
+                            : (deal.stage == 'ongoing'
+                                  ? Icons.play_circle_fill
+                                  : Icons.pending),
                         size: 9,
                         color: statusColor,
                       ),
                       const SizedBox(width: 3),
                       Text(
-                        (deal.stage == 'close' ? 'CLOSED' : (deal.stage == 'ongoing' ? 'ONGOING' : deal.dealStatus)).toUpperCase(),
+                        (deal.stage == 'close'
+                                ? 'CLOSED'
+                                : (deal.stage == 'ongoing'
+                                      ? 'ONGOING'
+                                      : deal.dealStatus))
+                            .toUpperCase(),
                         style: GoogleFonts.montserrat(
                           fontSize: 8,
                           fontWeight: FontWeight.bold,
@@ -769,7 +774,10 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.amber.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
@@ -788,7 +796,11 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                       const SizedBox(height: 2),
                       Row(
                         children: [
-                          Icon(Icons.person_outline, size: 10, color: Colors.amber.shade800),
+                          Icon(
+                            Icons.person_outline,
+                            size: 10,
+                            color: Colors.amber.shade800,
+                          ),
                           const SizedBox(width: 2),
                           Text(
                             deal.advisorCode,
@@ -814,15 +826,21 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildInfoItem("Property", "PROP-${deal.propertyId}", Icons.domain),
+                // _buildInfoItem("Property", "PROP-${deal.propertyId}", Icons.domain),
                 _buildInfoItem(
                   "Token",
-                  (deal.tokenAmount != null && deal.tokenAmount != '0' && deal.tokenAmount != '')
+                  (deal.tokenAmount != null &&
+                          deal.tokenAmount != '0' &&
+                          deal.tokenAmount != '')
                       ? "₹${deal.tokenAmount}"
                       : "Pending",
                   Icons.monetization_on,
                 ),
-                _buildInfoItem("Date", deal.createdAt.split(' ')[0], Icons.calendar_today),
+                _buildInfoItem(
+                  "Date",
+                  deal.createdAt.split(' ')[0],
+                  Icons.calendar_today,
+                ),
               ],
             ),
           ],
