@@ -12,6 +12,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../advisor/presentation/screens/lead_details_screen.dart';
 import '../../../../core/utils/access_helper.dart';
 import '../../../../core/utils/lead_filter_helper.dart'; // NEW
+import '../../../../core/utils/excel_helper.dart';
 
 class SalesPipelineScreen extends StatefulWidget {
   const SalesPipelineScreen({super.key});
@@ -48,6 +49,57 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
     _tabController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _exportLeads() async {
+    final provider = context.read<AdvisorLeadProvider>();
+    final filteredLeads = LeadFilterHelper.filterLeads(
+      leads: provider.leads,
+      query: _searchController.text,
+      category: _selectedCategory,
+      potential: _selectedPotential,
+      startDate: _startDate,
+      endDate: _endDate,
+      attempts: _selectedAttempts,
+      isPriority: _onlyPriority,
+    );
+    
+    List<LeadModel> leadsToExport = [];
+    switch (_tabController.index) {
+      case 0:
+        leadsToExport = filteredLeads.where((l) => l.stage.toLowerCase() == 'suspecting').toList();
+        break;
+      case 1:
+        leadsToExport = filteredLeads.where((l) => l.stage.toLowerCase() == 'prospecting').toList();
+        break;
+      case 2:
+        leadsToExport = filteredLeads.where((l) => l.stage.toLowerCase() == 'site visit').toList();
+        break;
+      case 3:
+        leadsToExport = filteredLeads.where((l) => l.stage.toLowerCase() == 'booking' || l.stage.toLowerCase() == 'pending_verification').toList();
+        break;
+      case 4:
+        leadsToExport = filteredLeads.where((l) => l.stage.toLowerCase() == 'completed').toList();
+        break;
+      case 5:
+        leadsToExport = filteredLeads.where((l) => l.stage.toLowerCase() == 'dead').toList();
+        break;
+    }
+    
+    if (leadsToExport.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No leads in current stage to export.')));
+      return;
+    }
+    
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Generating Excel file...')));
+    
+    final stageNames = ['Suspecting', 'Prospecting', 'Site_Visit', 'Booking', 'Completed', 'Dead'];
+    final prefix = 'Pipeline_${stageNames[_tabController.index]}';
+    
+    final success = await ExcelHelper.exportLeadsToExcel(leadsToExport, prefix: prefix);
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to export leads.')));
+    }
   }
 
   void _showAddLeadDialog() {
@@ -400,6 +452,19 @@ class _SalesPipelineScreenState extends State<SalesPipelineScreen>
                       contentPadding: const EdgeInsets.symmetric(vertical: 10),
                     ),
                   ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey[900] : Colors.grey[100],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.download, size: 20, color: Colors.grey),
+                  tooltip: 'Export Filtered Leads',
+                  onPressed: _exportLeads,
                 ),
               ),
             ],

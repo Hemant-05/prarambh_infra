@@ -19,7 +19,7 @@ class AdvisorTeamScreen extends StatefulWidget {
   State<AdvisorTeamScreen> createState() => _AdvisorTeamScreenState();
 }
 
-class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTickerProviderStateMixin {
+class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with TickerProviderStateMixin {
   late TabController _tabController;
   final Graph graph = Graph()..isTree = true;
   BuchheimWalkerConfiguration algorithmConfig = BuchheimWalkerConfiguration();
@@ -27,6 +27,10 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
   final TransformationController _transformController = TransformationController();
   final GlobalKey _rootNodeKey = GlobalKey();
   final GlobalKey _viewerKey = GlobalKey();
+  final Map<String, GlobalKey> _nodeKeys = {};
+
+  late AnimationController _animationController;
+  Animation<Matrix4>? _panAnimation;
 
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -34,16 +38,24 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
   int _currentLayoutType = 0;
   bool _graphInitialized = false;
   bool _showTreeFab = true;
+  bool _isControlsExpanded = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    
+    _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+    _animationController.addListener(() {
+      if (_panAnimation != null) {
+        _transformController.value = _panAnimation!.value;
+      }
+    });
 
     algorithmConfig
-      ..siblingSeparation = 40
-      ..levelSeparation = 100
-      ..subtreeSeparation = 40
+      ..siblingSeparation = 80
+      ..levelSeparation = 150
+      ..subtreeSeparation = 80
       ..orientation = BuchheimWalkerConfiguration.ORIENTATION_TOP_BOTTOM;
 
     _tabController.addListener(() {
@@ -51,7 +63,13 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
     });
 
     _searchController.addListener(() {
-      setState(() => _searchQuery = _searchController.text.trim().toLowerCase());
+      final newQuery = _searchController.text.trim().toLowerCase();
+      if (_searchQuery != newQuery) {
+        setState(() => _searchQuery = newQuery);
+        if (_searchQuery.isNotEmpty) {
+          _panToFirstMatch();
+        }
+      }
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -65,6 +83,7 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
   @override
   void dispose() {
     _tabController.dispose();
+    _animationController.dispose();
     _transformController.dispose();
     _searchController.dispose();
     super.dispose();
@@ -92,25 +111,89 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
 
   void _centerOnRoot() {
     if (!mounted) return;
-    _transformController.value = Matrix4.identity();
+    final provider = context.read<AdvisorTeamProvider>();
+    if (provider.teamTree != null) {
+      _panToNode(provider.teamTree!, isRoot: true);
+    }
+  }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final rootBox = _rootNodeKey.currentContext?.findRenderObject() as RenderBox?;
-      final viewerBox = _viewerKey.currentContext?.findRenderObject() as RenderBox?;
+  void _panToFirstMatch() {
+    if (!mounted || _searchQuery.isEmpty) return;
+    final provider = context.read<AdvisorTeamProvider>();
+    if (provider.teamTree == null) return;
 
-      if (rootBox == null || viewerBox == null) return;
+    final flatList = _flattenTree(provider.teamTree!);
+    AdvisorTeamNode? firstMatch;
+    for (final n in flatList) {
+      if (n.fullName.toLowerCase().contains(_searchQuery) ||
+          n.advisorCode.toLowerCase().contains(_searchQuery) ||
+          n.designation.toLowerCase().contains(_searchQuery)) {
+        firstMatch = n;
+        break;
+      }
+    }
 
-      final Offset rootPosInViewer = rootBox.localToGlobal(Offset.zero, ancestor: viewerBox);
-      final Size rootSize = rootBox.size;
-      final Size viewerSize = viewerBox.size;
+    if (firstMatch != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _panToNode(firstMatch!);
+      });
+    }
+  }
 
-      const double topPadding = 40.0;
-      final double dx = viewerSize.width / 2 - rootPosInViewer.dx - rootSize.width / 2;
-      final double dy = topPadding - rootPosInViewer.dy;
+  void _panToNode(AdvisorTeamNode node, {bool isRoot = false}) {
+    if (!mounted) return;
+    final nodeKey = _nodeKeys[node.advisorCode];
+    if (nodeKey == null) return;
 
-      _transformController.value = Matrix4.identity()..translate(dx, dy);
-    });
+    final nodeBox = nodeKey.currentContext?.findRenderObject() as RenderBox?;
+    final viewerBox = _viewerKey.currentContext?.findRenderObject() as RenderBox?;
+    if (nodeBox == null || viewerBox == null) return;
+
+    _animationController.stop();
+
+    final Matrix4 currentMatrix = _transformController.value;
+    
+    final Offset nodeCenterLocal = Offset(nodeBox.size.width / 2, nodeBox.size.height / 2);
+    final Offset currentCenterInViewer = nodeBox.localToGlobal(nodeCenterLocal, ancestor: viewerBox);
+    final Size viewerSize = viewerBox.size;
+    
+    Matrix4 endMatrix;
+    
+    if (isRoot) {
+      final double currentScale = currentMatrix.entry(0, 0);
+      final double currentTx = currentMatrix.getTranslation().x;
+      final double currentTy = currentMatrix.getTranslation().y;
+      
+      final double localX = (currentCenterInViewer.dx - currentTx) / currentScale;
+      final double localY = (currentCenterInViewer.dy - currentTy) / currentScale;
+      
+      final double targetX = viewerSize.width / 2;
+      final double targetY = 80.0; // Top padding + half node height
+      
+      final double newTx = targetX - localX;
+      final double newTy = targetY - localY;
+      
+      endMatrix = Matrix4.identity()..translate(newTx, newTy);
+    } else {
+      final double targetX = viewerSize.width / 2;
+      final double targetY = viewerSize.height / 2;
+
+      final double dx = targetX - currentCenterInViewer.dx;
+      final double dy = targetY - currentCenterInViewer.dy;
+
+      endMatrix = currentMatrix.clone()
+        ..setTranslationRaw(
+          currentMatrix.getTranslation().x + dx,
+          currentMatrix.getTranslation().y + dy,
+          currentMatrix.getTranslation().z,
+        );
+    }
+
+    _animationController.reset();
+    _panAnimation = Matrix4Tween(begin: currentMatrix, end: endMatrix)
+        .animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
+
+    _animationController.forward();
   }
 
   void _changeLayout(int index) {
@@ -178,49 +261,99 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
           : null,
       body: Column(
         children: [
-          // 1. Search Bar
-          Container(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-            child: TextField(
-              controller: _searchController,
-              style: GoogleFonts.montserrat(color: textColor, fontSize: 14),
-              decoration: InputDecoration(
-                hintText: 'Search member by name, code or role...',
-                hintStyle: GoogleFonts.montserrat(color: Colors.grey, fontSize: 13),
-                prefixIcon: const Icon(Icons.search, color: Colors.grey, size: 20),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(icon: const Icon(Icons.clear, color: Colors.grey, size: 18), onPressed: () { _searchController.clear(); FocusScope.of(context).unfocus(); })
-                    : null,
-                filled: true, 
-                fillColor: cardColor,
-                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.getBorderColor(context))),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.getBorderColor(context))),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: primaryBlue)),
-              ),
-            ),
-          ),
+          // 1. Collapsible Upper Controls
+          AnimatedSize(
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            clipBehavior: Clip.hardEdge,
+            child: !_isControlsExpanded
+                ? const SizedBox(width: double.infinity)
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Search Bar
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                        child: TextField(
+                          controller: _searchController,
+                          style: GoogleFonts.montserrat(color: textColor, fontSize: 14),
+                          decoration: InputDecoration(
+                            hintText: 'Search member by name, code or role...',
+                            hintStyle: GoogleFonts.montserrat(color: Colors.grey, fontSize: 13),
+                            prefixIcon: const Icon(Icons.search, color: Colors.grey, size: 20),
+                            suffixIcon: _searchQuery.isNotEmpty
+                                ? IconButton(icon: const Icon(Icons.clear, color: Colors.grey, size: 18), onPressed: () { _searchController.clear(); FocusScope.of(context).unfocus(); })
+                                : null,
+                            filled: true, 
+                            fillColor: cardColor,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.getBorderColor(context))),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.getBorderColor(context))),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: primaryBlue)),
+                          ),
+                        ),
+                      ),
 
-          // 2. Tab Bar
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.getBorderColor(context))),
-            child: TabBar(
-              controller: _tabController,
-              indicator: BoxDecoration(
-                color: primaryBlue,
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [BoxShadow(color: primaryBlue.withOpacity(0.2), blurRadius: 4, offset: const Offset(0, 2))],
+                      // Tab Bar
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.getBorderColor(context))),
+                        child: TabBar(
+                          controller: _tabController,
+                          indicator: BoxDecoration(
+                            color: primaryBlue,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [BoxShadow(color: primaryBlue.withOpacity(0.2), blurRadius: 4, offset: const Offset(0, 2))],
+                          ),
+                          labelColor: Colors.white,
+                          unselectedLabelColor: Colors.grey[600],
+                          labelStyle: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13),
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          padding: const EdgeInsets.all(4),
+                          tabs: const [
+                            Tab(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.account_tree, size: 16), SizedBox(width: 8), Text('Tree View')])),
+                            Tab(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.list_alt, size: 16), SizedBox(width: 8), Text('List View')])),
+                          ],
+                        ),
+                      ),
+
+                      // Tree Layout Direction Toggles (Only in Tree View)
+                      if (_tabController.index == 0)
+                        Container(
+                          height: 50,
+                          width: double.infinity,
+                          decoration: const BoxDecoration(),
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                            child: Row(
+                              children: [
+                                _chip(context, "Top-Down", Icons.arrow_downward, 0, primaryBlue, isDark), const SizedBox(width: 10),
+                                _chip(context, "Left-Right", Icons.arrow_forward, 1, primaryBlue, isDark), const SizedBox(width: 10),
+                                _chip(context, "Bottom-Up", Icons.arrow_upward, 2, primaryBlue, isDark),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+          ),
+          
+          // 2. Expand/Collapse Toggle Button
+          GestureDetector(
+            onTap: () => setState(() => _isControlsExpanded = !_isControlsExpanded),
+            child: Container(
+              width: 60,
+              height: 24,
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(12), bottomRight: Radius.circular(12)),
+                border: Border.all(color: AppColors.getBorderColor(context)),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
               ),
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.grey[600],
-              labelStyle: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13),
-              indicatorSize: TabBarIndicatorSize.tab,
-              padding: const EdgeInsets.all(4),
-              tabs: const [
-                Tab(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.account_tree, size: 16), SizedBox(width: 8), Text('Tree View')])),
-                Tab(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.list_alt, size: 16), SizedBox(width: 8), Text('List View')])),
-              ],
+              child: Icon(_isControlsExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, size: 18, color: Colors.grey),
             ),
           ),
 
@@ -233,27 +366,9 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
               physics: const NeverScrollableScrollPhysics(),
               children: [
                 // --- TAB 1: TREE VIEW ---
-                Column(
-                  children: [
-                    Container(
-                      height: 50,
-                      width: double.infinity,
-                      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.getBorderColor(context)))),
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                        child: Row(
-                          children: [
-                            _chip(context, "Top-Down", Icons.arrow_downward, 0, primaryBlue, isDark), const SizedBox(width: 10),
-                            _chip(context, "Left-Right", Icons.arrow_forward, 1, primaryBlue, isDark), const SizedBox(width: 10),
-                            _chip(context, "Bottom-Up", Icons.arrow_upward, 2, primaryBlue, isDark),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      key: _viewerKey,
-                      child: InteractiveViewer(
+                Container(
+                  key: _viewerKey,
+                  child: InteractiveViewer(
                         transformationController: _transformController,
                         constrained: false,
                         boundaryMargin: const EdgeInsets.all(1500),
@@ -270,8 +385,6 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
                           builder: (Node node) => _buildNodeWidget(context, node.key!.value as AdvisorTeamNode, primaryBlue, isDark),
                         ),
                       ),
-                    ),
-                  ],
                 ),
 
                 // --- TAB 2: LIST VIEW ---
@@ -334,8 +447,8 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
   }
 
   Widget _buildNodeWidget(BuildContext context, AdvisorTeamNode node, Color blue, bool isDark) {
-    final authProvider = context.read<AuthProvider>();
-    final isRoot = node.advisorCode == authProvider.currentUser?.advisorCode;
+    final provider = context.watch<AdvisorTeamProvider>();
+    final isRoot = provider.teamTree != null && node.advisorCode == provider.teamTree!.advisorCode;
     final cardColor = Theme.of(context).cardColor;
     final textColor = Theme.of(context).textTheme.bodyLarge?.color;
     final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
@@ -386,8 +499,13 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with SingleTicker
       ),
     );
 
-    if (isRoot) return KeyedSubtree(key: _rootNodeKey, child: card);
-    return card;
+    _nodeKeys[node.advisorCode] ??= GlobalKey();
+    final nodeKey = _nodeKeys[node.advisorCode]!;
+    
+    final Widget keyedCard = KeyedSubtree(key: nodeKey, child: card);
+
+    if (isRoot) return KeyedSubtree(key: _rootNodeKey, child: keyedCard);
+    return keyedCard;
   }
 
   Widget _buildQuickActions(BuildContext context, Color blue, bool isDark) {

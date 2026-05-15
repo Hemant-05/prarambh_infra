@@ -6,12 +6,12 @@ import 'package:intl/intl.dart';
 import '../../features/admin/data/models/lead_models.dart';
 
 class ExcelHelper {
-  static Future<bool> exportLeadsToExcel(List<dynamic> leads) async {
+  static Future<bool> exportLeadsToExcel(List<dynamic> leads, {String prefix = 'Priority_Leads'}) async {
     try {
       // 1. Create Excel (No manual permission needed for temp directory + share_plus)
       var excel = Excel.createExcel();
-      Sheet sheetObject = excel['Priority_Leads'];
-      excel.setDefaultSheet('Priority_Leads');
+      Sheet sheetObject = excel[prefix];
+      excel.setDefaultSheet(prefix);
 
       // Define Headers
       List<String> headers = [
@@ -121,7 +121,7 @@ class ExcelHelper {
       }
 
       // 4. Save and Share
-      String fileName = "Priority_Leads_${DateFormat('yyyy-MM-dd_HHmm').format(DateTime.now())}.xlsx";
+      String fileName = "${prefix}_${DateFormat('yyyy-MM-dd_HHmm').format(DateTime.now())}.xlsx";
       
       // We save to a temporary directory for immediate sharing
       final directory = await getTemporaryDirectory();
@@ -133,7 +133,7 @@ class ExcelHelper {
         await file.writeAsBytes(bytes);
         
         // Use Share Plus to let the user save it to their Files / Storage
-        await Share.shareXFiles([XFile(path)], text: 'Priority Leads Export');
+        await Share.shareXFiles([XFile(path)], text: '$prefix Export');
         return true;
       }
       return false;

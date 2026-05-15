@@ -9,9 +9,9 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../data/models/lead_models.dart';
 
-// Import Lead Details from its Advisor location
 import '../../../advisor/presentation/screens/lead_details_screen.dart';
 import '../../../../core/utils/lead_filter_helper.dart'; // NEW
+import '../../../../core/utils/excel_helper.dart';
 
 class LeadManagementScreen extends StatefulWidget {
   final int initialIndex;
@@ -51,6 +51,69 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
     super.dispose();
   }
 
+  Future<void> _exportLeads() async {
+    final provider = context.read<AdminLeadProvider>();
+    List<LeadModel> leadsToExport = [];
+
+    if (_tabController.index == 0) {
+      leadsToExport = LeadFilterHelper.filterLeads(
+        leads: provider.unassignedLeads,
+        query: _searchController.text,
+        category: _selectedCategory,
+        potential: _selectedPotential,
+        startDate: _startDate,
+        endDate: _endDate,
+        attempts: _selectedAttempts,
+      );
+    } else {
+      final filteredPipeline = LeadFilterHelper.filterLeads(
+        leads: provider.leads,
+        query: _searchController.text,
+        category: _selectedCategory,
+        potential: _selectedPotential,
+        startDate: _startDate,
+        endDate: _endDate,
+        attempts: _selectedAttempts,
+      );
+      
+      switch (_tabController.index) {
+        case 1:
+          leadsToExport = filteredPipeline.where((l) => l.stage.toLowerCase() == 'suspecting' && l.advisorCode.isNotEmpty).toList();
+          break;
+        case 2:
+          leadsToExport = filteredPipeline.where((l) => l.stage.toLowerCase() == 'prospecting' && l.advisorCode.isNotEmpty).toList();
+          break;
+        case 3:
+          leadsToExport = filteredPipeline.where((l) => l.stage.toLowerCase() == 'site visit' && l.advisorCode.isNotEmpty).toList();
+          break;
+        case 4:
+          leadsToExport = filteredPipeline.where((l) => l.stage.toLowerCase() == 'booking' && l.advisorCode.isNotEmpty).toList();
+          break;
+        case 5:
+          leadsToExport = filteredPipeline.where((l) => l.stage.toLowerCase() == 'dead' && l.advisorCode.isNotEmpty).toList();
+          break;
+        case 6:
+          leadsToExport = filteredPipeline.where((l) => l.stage.toLowerCase() == 'completed' && l.advisorCode.isNotEmpty).toList();
+          break;
+      }
+    }
+    
+    if (leadsToExport.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No leads in current stage to export.')));
+      return;
+    }
+    
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Generating Excel file...')));
+    
+    final stageNames = ['New', 'Suspecting', 'Prospecting', 'Site_Visit', 'Booking', 'Dead', 'Completed'];
+    final prefix = 'Admin_${stageNames[_tabController.index]}';
+    
+    final success = await ExcelHelper.exportLeadsToExcel(leadsToExport, prefix: prefix);
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to export leads.')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final primaryBlue = AppColors.getPrimaryBlue(context);
@@ -78,6 +141,11 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
           ),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.download, color: Colors.white),
+            onPressed: _exportLeads,
+            tooltip: 'Export Filtered Leads',
+          ),
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: () {
