@@ -8,7 +8,7 @@ class ContestModel {
   final String targetText;
   final String dateRange;
   final String imageUrl;
-  final String? startDate;
+  final String? startDate; 
   final String? endDate;
   final List<TopPerformer>? topPerformers;
   final List<String>? rules;
