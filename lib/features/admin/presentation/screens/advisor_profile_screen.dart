@@ -9,6 +9,8 @@ import '../../../../core/widgets/profile_image.dart';
 import 'package:prarambh_infra/core/utils/ui_helper.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/admin_team_provider.dart';
+import '../widgets/share_profile_sheet.dart';
+import '../../data/models/team_models.dart';
 
 const String _baseUrl = 'https://workiees.com/';
 
@@ -41,6 +43,15 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
   void dispose() {
     _suspendReasonCtrl.dispose();
     super.dispose();
+  }
+
+  void _shareProfile(BrokerProfileModel p) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ShareProfileSheet(profile: p),
+    );
   }
 
   @override
@@ -89,6 +100,14 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
             expandedHeight: 210,
             pinned: true,
             leading: backButton(isDark: true),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.share_outlined, color: Colors.white),
+                onPressed: () => _shareProfile(p),
+                tooltip: 'Share Profile',
+              ),
+              const SizedBox(width: 8),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 children: [
@@ -144,7 +163,9 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                             ],
                           ),
                           child: ProfileImage(
-                            imageUrl: (p.profilePhoto != null && p.profilePhoto!.isNotEmpty)
+                            imageUrl:
+                                (p.profilePhoto != null &&
+                                    p.profilePhoto!.isNotEmpty)
                                 ? '$_baseUrl${p.profilePhoto}'
                                 : null,
                             initials: p.initials,
@@ -243,8 +264,13 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                       'Advisor Type',
                       p.advisorType,
                       primaryBlue,
-                      onTap: () => _showAdvisorTypePicker(context, p.id, p.advisorType),
-                      trailing: Icon(Icons.edit_outlined, size: 16, color: primaryBlue.withOpacity(0.5)),
+                      onTap: () =>
+                          _showAdvisorTypePicker(context, p.id, p.advisorType),
+                      trailing: Icon(
+                        Icons.edit_outlined,
+                        size: 16,
+                        color: primaryBlue.withOpacity(0.5),
+                      ),
                     ),
                   ]),
                   const SizedBox(height: 16),
@@ -389,11 +415,14 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                                 child: Column(
                                   children: [
                                     ProfileImage(
-                                      imageUrl: (member.profilePhoto != null && member.profilePhoto!.isNotEmpty)
+                                      imageUrl:
+                                          (member.profilePhoto != null &&
+                                              member.profilePhoto!.isNotEmpty)
                                           ? '$_baseUrl${member.profilePhoto}'
                                           : null,
                                       initials: member.initials,
-                                      heroTag: 'admin_advisor_team_${member.advisorCode}',
+                                      heroTag:
+                                          'admin_advisor_team_${member.advisorCode}',
                                       radius: 28,
                                     ),
                                     const SizedBox(height: 6),
@@ -677,7 +706,7 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                                 builder: (context) => AssignDocumentsScreen(
                                   advisorId: p.id,
                                   advisorName: p.name,
-                                  advisorProfile: p.profilePhoto??'',
+                                  advisorProfile: p.profilePhoto ?? '',
                                   advisorCode: p.advisorCode,
                                 ),
                               ),
@@ -1109,52 +1138,66 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
     ],
   );
 
-  Widget _infoRow(IconData icon, String label, String value, Color color, {VoidCallback? onTap, Widget? trailing}) =>
-      InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: color, size: 18),
+  Widget _infoRow(
+    IconData icon,
+    String label,
+    String value,
+    Color color, {
+    VoidCallback? onTap,
+    Widget? trailing,
+  }) {
+    final p = context.read<AdminTeamProvider>().selectedProfile;
+    return InkWell(
+      onTap: onTap,
+      onLongPress: p != null ? () => _shareProfile(p) : null,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 11,
-                        color: Colors.grey[500],
-                      ),
+              child: Icon(icon, color: color, size: 18),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 11,
+                      color: Colors.grey[500],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      value,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              ?trailing,
-            ],
-          ),
+            ),
+            ?trailing,
+          ],
         ),
-      );
+      ),
+    );
+  }
 
-  void _showAdvisorTypePicker(BuildContext context, String advisorId, String currentType) {
+  void _showAdvisorTypePicker(
+    BuildContext context,
+    String advisorId,
+    String currentType,
+  ) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -1175,9 +1218,19 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              _typeOption(context, advisorId, 'Full Time', currentType == 'Full Time'),
+              _typeOption(
+                context,
+                advisorId,
+                'Full Time',
+                currentType == 'Full Time',
+              ),
               const SizedBox(height: 12),
-              _typeOption(context, advisorId, 'Part Time', currentType == 'Part Time'),
+              _typeOption(
+                context,
+                advisorId,
+                'Part Time',
+                currentType == 'Part Time',
+              ),
               const SizedBox(height: 16),
             ],
           ),
@@ -1186,21 +1239,35 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
     );
   }
 
-  Widget _typeOption(BuildContext context, String advisorId, String type, bool isSelected) {
+  Widget _typeOption(
+    BuildContext context,
+    String advisorId,
+    String type,
+    bool isSelected,
+  ) {
     final primaryBlue = Theme.of(context).primaryColor;
     return InkWell(
-      onTap: isSelected ? null : () async {
-        Navigator.pop(context);
-        final success = await context.read<AdminTeamProvider>().updateAdvisorType(advisorId, type);
-        if (success && context.mounted) {
-          UIHelper.showSuccess(context, 'Advisor type updated successfully');
-        }
-      },
+      onTap: isSelected
+          ? null
+          : () async {
+              Navigator.pop(context);
+              final success = await context
+                  .read<AdminTeamProvider>()
+                  .updateAdvisorType(advisorId, type);
+              if (success && context.mounted) {
+                UIHelper.showSuccess(
+                  context,
+                  'Advisor type updated successfully',
+                );
+              }
+            },
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? primaryBlue.withOpacity(0.05) : Colors.transparent,
+          color: isSelected
+              ? primaryBlue.withOpacity(0.05)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? primaryBlue : Colors.grey.withOpacity(0.2),
@@ -1216,7 +1283,8 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                 color: isSelected ? primaryBlue : null,
               ),
             ),
-            if (isSelected) Icon(Icons.check_circle, color: primaryBlue, size: 20),
+            if (isSelected)
+              Icon(Icons.check_circle, color: primaryBlue, size: 20),
           ],
         ),
       ),

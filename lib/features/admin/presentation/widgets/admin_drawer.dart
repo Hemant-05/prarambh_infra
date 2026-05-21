@@ -24,25 +24,36 @@ class AdminDrawer extends StatelessWidget {
           Consumer<AuthProvider>(
             builder: (context, authProvider, child) {
               final profile = authProvider.currentUser;
-              final isLoading = authProvider.isLoading;
-              final avatarUrl = profile?.profilePhoto;
-              final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
-
+              
               return Column(
                 children: [
-                  ProfileImage(
-                    imageUrl: hasAvatar ? "https://workiees.com/$avatarUrl" : null,
-                    initials: profile?.name.isNotEmpty ?? false
-                        ? profile!.name.trim().split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase()
-                        : 'A',
-                    heroTag: 'admin_drawer_photo',
-                    radius: 40,
+                  Container(
+                    width: 80,
+                    height: 80,
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      border: Border.all(
+                        color: primaryBlue.withOpacity(0.2),
+                        width: 2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Image.asset(
+                      'assets/logos/logo.png',
+                      fit: BoxFit.contain,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    isLoading
-                        ? 'Loading...'
-                        : (profile?.name.toUpperCase() ?? 'ADMIN'),
+                    'PRARAMBH INFRA',
                     style: GoogleFonts.montserrat(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -73,7 +84,7 @@ class AdminDrawer extends StatelessWidget {
                 _buildDrawerItem(
                   context: context,
                   icon: Icons.people_outline,
-                  title: 'ADVISOR APPLICATION',
+                  title: 'ADVISOR APPROVAL',
                   onTap: () {
                     Navigator.pushNamed(context, '/advisor_applications');
                   },
@@ -90,7 +101,7 @@ class AdminDrawer extends StatelessWidget {
                 _buildDrawerItem(
                   context: context,
                   icon: Icons.description_outlined,
-                  title: 'DOCUMENT MANAGEMENT',
+                  title: 'DOCS MANAGEMENT',
                   onTap: () {
                     Navigator.pushNamed(context, '/docs_management');
                   },

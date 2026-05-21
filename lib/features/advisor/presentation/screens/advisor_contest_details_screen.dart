@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../admin/data/models/contest_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/advisor_contest_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class AdvisorContestDetailsScreen extends StatefulWidget {
   final ContestModel contest;
@@ -51,6 +52,15 @@ class _AdvisorContestDetailsScreenState extends State<AdvisorContestDetailsScree
   void dispose() {
     _timer?.cancel();
     super.dispose();
+  }
+
+  void _shareContest() {
+    final String shareText = '🏆 *Contest: ${widget.contest.title}*\n\n'
+        '🎁 *Reward:* ${widget.contest.rewardText}\n'
+        '📅 *Ends on:* ${widget.contest.endDate ?? "N/A"}\n\n'
+        'Check out this contest on Prarambh Infra app and join now! 🚀';
+
+    Share.share(shareText);
   }
 
   String _formatPad(int value) => value.toString().padLeft(2, '0');
@@ -114,7 +124,7 @@ class _AdvisorContestDetailsScreenState extends State<AdvisorContestDetailsScree
             backgroundColor: primaryBlue,
             leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
             title: Text('Contest Details', style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-            actions: [IconButton(icon: const Icon(Icons.share, color: Colors.white), onPressed: () {})],
+            actions: [IconButton(icon: const Icon(Icons.share, color: Colors.white), onPressed: _shareContest)],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,

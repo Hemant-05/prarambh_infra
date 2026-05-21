@@ -27,7 +27,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
 
   // State Variables
   String _projectType = 'Residential';
-  String _constructionStatus = 'Under Construction';
+  String _constructionStatus = 'Raw House';
   String _projectStatus = 'Ongoing';
   bool _reraApproved = true;
 
@@ -78,11 +78,11 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       _reraApproved = p.reraNumber.isNotEmpty;
 
       // Safe assignment for dropdowns to prevent crashes if DB has legacy data
-      final validTypes = ['Residential', 'Commercial'];
+      final validTypes = ['Residential', 'Commercial', 'Industrial', 'Agriculture'];
       if (validTypes.contains(p.projectType)) _projectType = p.projectType;
 
-      final validStatus = ['Under Construction', 'Ready to Move'];
-      if (validStatus.contains(p.constructionStatus)) {
+      final validPropertyTypes = ['Raw House', 'Flats', 'Plots', 'P+C', 'Shop', 'Office', 'Farming Land', 'Raw Houses', 'Office/Shop', 'Under Construction', 'Ready to Move'];
+      if (validPropertyTypes.contains(p.constructionStatus)) {
         _constructionStatus = p.constructionStatus;
       }
 
@@ -414,7 +414,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                 child: _buildDropdown(
                   'Project Type',
                   _projectType,
-                  ['Residential', 'Commercial'],
+                  ['Residential', 'Commercial', 'Industrial', 'Agriculture'],
                   (val) {
                     if (val != null) setState(() => _projectType = val);
                   },
@@ -423,9 +423,9 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: _buildDropdown(
-                  'Construction Status',
+                  'Property Type',
                   _constructionStatus,
-                  ['Under Construction', 'Ready to Move'],
+                  ['Raw House', 'Flats', 'Plots', 'P+C', 'Shop', 'Office', 'Farming Land'],
                   (val) {
                     if (val != null) setState(() => _constructionStatus = val);
                   },
@@ -509,7 +509,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildTextField('Total Area (e.g. 6-8 acres)', _buildAreaCtrl),
+                  child: _buildTextField('Total Area (e.g. 60000 sqft)', _buildAreaCtrl),
                 ),
               ],
             ),

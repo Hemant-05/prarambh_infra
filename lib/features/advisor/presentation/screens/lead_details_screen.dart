@@ -13,6 +13,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 import 'package:prarambh_infra/core/utils/file_download_helper.dart';
+import 'package:prarambh_infra/core/widgets/property_browser_sheet.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../admin/data/models/lead_models.dart';
@@ -73,32 +74,9 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
   final TextEditingController noteController = TextEditingController();
   final List<Map<String, String>> _noteHistory = [];
 
-  File? _adharFront;
-  File? _adharBack;
-  File? _panFront;
-  File? _panBack;
 
-  final TextEditingController _emailController = TextEditingController();
 
-  Future<void> _pickDocument(String type) async {
-    final picker = ImagePicker();
-    final XFile? image = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 70,
-    );
-    if (image != null) {
-      setState(() {
-        if (type == 'AF') {
-          _adharFront = File(image.path);
-        } else if (type == 'AB')
-          _adharBack = File(image.path);
-        else if (type == 'PF')
-          _panFront = File(image.path);
-        else if (type == 'PB')
-          _panBack = File(image.path);
-      });
-    }
-  }
+
 
   bool _isFetchingPropertyDetails = false;
 
@@ -186,7 +164,6 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
   @override
   void dispose() {
     noteController.dispose();
-    _emailController.dispose();
     _tokenAmountCtrl.dispose();
     super.dispose();
   }
@@ -543,8 +520,8 @@ Please feel free to contact us for more information.""";
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => _PropertyBrowserSheet(onSelect: onSelect),
+      backgroundColor: const Color.from(alpha: 0, red: 0, green: 0, blue: 0),
+      builder: (ctx) => PropertyBrowserSheet(onSelect: onSelect),
     );
   }
 
@@ -2439,14 +2416,14 @@ Please feel free to contact us for more information.""";
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text(
-                      'Please upload a site visit photo before proceeding to booking.',
+                      'Please upload a site visit photo before proceeding to booking verification.',
                     ),
                     backgroundColor: Colors.red,
                   ),
                 );
                 return;
               }
-              _updateStageInDb("booking");
+              _updateStageInDb("pending_verification", note: "Site visit successful. Lead submitted for booking verification.");
             },
             style: ElevatedButton.styleFrom(
               backgroundColor:
@@ -2455,8 +2432,8 @@ Please feel free to contact us for more information.""";
                   : Colors.green,
             ),
             child: const Text(
-              "Visit Successful - Proceed to Booking",
-              style: TextStyle(color: Colors.white),
+              "Visit Successful - Submit for Verification",
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
         ),
@@ -2501,23 +2478,32 @@ Please feel free to contact us for more information.""";
           const Icon(Icons.timer, color: Colors.orange, size: 40),
           const SizedBox(height: 20),
           const Text(
-            "Deal Verification Pending",
+            "Booking Verification Pending",
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           const Text(
-            "Verify deal & review documents and collecting token...",
+            "Verify the site visit and booking details to complete this lead.",
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             height: 50,
-            child: Text(
-              "Go to Deal Section...\nDo the token process",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
+            child: ElevatedButton.icon(
+              onPressed: () => _updateStageInDb("completed", note: "Booking verified by Admin. Lead successfully completed."),
+              icon: const Icon(Icons.check_circle_outline, color: Colors.white),
+              label: const Text(
+                "Verify & Mark as Booking Success",
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
           ),
         ],
@@ -2526,218 +2512,14 @@ Please feel free to contact us for more information.""";
   }
 
   Widget _buildAdvisorDocumentUploadFlow(Color primaryBlue) {
-    if (currentStage == 'pending_verification' || _isPendingVerification) {
+    if (currentStage == 'pending_verification' || currentStage == 'booking') {
       return _buildPendingVerificationView();
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Client Documentation",
-          style: GoogleFonts.montserrat(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        TextField(
-          controller: _emailController,
-          keyboardType: TextInputType.emailAddress,
-          decoration: InputDecoration(
-            labelText: "Client Email",
-            hintText: "Enter client's email address",
-            prefixIcon: const Icon(Icons.email_outlined),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
-        const SizedBox(height: 20),
-        const SizedBox(height: 8),
-        const Text(
-          "Collect documents and submit to the Admin for Token Verification & Deal Creation.",
-          style: TextStyle(color: Colors.grey, fontSize: 12),
-        ),
-        const SizedBox(height: 16),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 1.2,
-          children: [
-            _buildDocPickerTile('Aadhar Front', 'AF', _adharFront, primaryBlue),
-            _buildDocPickerTile('Aadhar Back', 'AB', _adharBack, primaryBlue),
-            _buildDocPickerTile('PAN Front', 'PF', _panFront, primaryBlue),
-            _buildDocPickerTile('PAN Back', 'PB', _panBack, primaryBlue),
-          ],
-        ),
-        const SizedBox(height: 30),
-        Consumer<AdminDealProvider>(
-          builder: (context, dealProvider, child) {
-            return SizedBox(
-              width: double.infinity,
-              height: 54,
-              child: ElevatedButton.icon(
-                onPressed: dealProvider.isSaving
-                    ? null
-                    : () async {
-                        if (_adharFront == null ||
-                            _adharBack == null ||
-                            _panFront == null ||
-                            _panBack == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Please upload all 4 documents'),
-                            ),
-                          );
-                          return;
-                        }
-
-                        // Create the unverified deal with 0 tokens and the 4 docs
-                        bool success = await dealProvider.initiateDeal(
-                          clientName: _currentLead.clientName,
-                          clientNumber: _currentLead.clientNumber,
-                          clientEmail: _emailController.text.trim(),
-                          advisorCode: _currentLead.advisorCode,
-                          leadId: _currentLead.id,
-                          propertyId:
-                              _selectedProject?.id.toString() ??
-                              selectedPropertyId?.toString() ??
-                              '0',
-                          unitId:
-                              _selectedUnit?.id.toString() ??
-                              selectedUnitId?.toString() ??
-                              '0',
-                          tokenAmount: '0',
-                          paymentAmount: '0',
-                          tokenPaymentMode: '',
-                          tokenDate: '',
-                          aadhaarPhotoFront: _adharFront,
-                          aadhaarPhotoBack: _adharBack,
-                          panPhotoFront: _panFront,
-                          panPhotoBack: _panBack,
-                        );
-
-                        if (success) {
-                          await _updateStageInDb(
-                            'pending_verification',
-                            note:
-                                "Documents submitted. Deal created (Not Verified). Pending Admin verification.",
-                          );
-                          if (mounted) {
-                            setState(
-                              () => currentStage = 'pending_verification',
-                            );
-                          }
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Failed to submit documents'),
-                            ),
-                          );
-                        }
-                      },
-                icon: dealProvider.isSaving
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Icon(Icons.send, color: Colors.white),
-                label: Text(
-                  dealProvider.isSaving ? "Uploading..." : "Submit to Admin",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryBlue,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ],
-    );
+    return const SizedBox.shrink();
   }
 
-  Widget _buildDocPickerTile(
-    String title,
-    String type,
-    File? file,
-    Color primaryBlue,
-  ) {
-    return GestureDetector(
-      onTap: () => _pickDocument(type),
-      child: Container(
-        decoration: BoxDecoration(
-          color: file != null
-              ? primaryBlue.withOpacity(0.05)
-              : Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: file != null ? primaryBlue : Colors.grey.shade300,
-            width: file != null ? 2 : 1,
-            style: BorderStyle.solid,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (file != null)
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(10),
-                  ),
-                  child: Image.file(
-                    file,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              )
-            else
-              Expanded(
-                child: Icon(
-                  Icons.upload_file,
-                  color: Colors.grey.shade400,
-                  size: 32,
-                ),
-              ),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(
-                color: file != null ? primaryBlue : Colors.transparent,
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(10),
-                ),
-              ),
-              child: Text(
-                file != null ? 'Selected' : title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: file != null ? Colors.white : Colors.grey.shade600,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildVerifiedDealView() {
     return Container(
@@ -2814,7 +2596,7 @@ Please feel free to contact us for more information.""";
                   clientName: _currentLead.clientName,
                   clientNumber: _currentLead.clientNumber,
                   advisorCode: _currentLead.advisorCode,
-                  clientEmail: _emailController.text,
+                  clientEmail : '',
                   clientAdharFront: '',
                   clientAdharBack: '',
                   clientPanFront: '',
@@ -2876,12 +2658,12 @@ Please feel free to contact us for more information.""";
           Icon(Icons.timer, color: Colors.orange, size: 40),
           SizedBox(height: 20),
           Text(
-            "Pending Verification",
+            "Booking Verification Pending",
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 8),
           Text(
-            "Manager is reviewing documents and collecting token...",
+            "The administration is reviewing the site visit and booking details.",
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey),
           ),
@@ -4598,692 +4380,6 @@ class _EditLeadFormState extends State<_EditLeadForm> {
           ),
         ),
       ],
-    );
-  }
-}
-
-// ======================================================================
-// PROPERTY BROWSER SHEET (Full-featured search & filter property selector)
-// ======================================================================
-class _PropertyBrowserSheet extends StatefulWidget {
-  final Function(String, int, UnitModel, ProjectModel) onSelect;
-  const _PropertyBrowserSheet({required this.onSelect});
-  @override
-  State<_PropertyBrowserSheet> createState() => _PropertyBrowserSheetState();
-}
-
-class _PropertyBrowserSheetState extends State<_PropertyBrowserSheet> {
-  String _searchQuery = '';
-  String? _selectedConfig;
-  String? _selectedType;
-  String? _selectedCategory;
-  String? _selectedFacing;
-  RangeValues _priceRange = const RangeValues(0, 10000000);
-  RangeValues _areaRange = const RangeValues(0, 10000);
-  bool _isHighValueOnly = false;
-
-  final List<String> _configs = ['1BHK', '2BHK', '3BHK', '4BHK'];
-  final List<String> _types = ['Apartment', 'Plot', 'Villa', 'Flat'];
-  final List<String> _categories = ['Buy', 'Rent', 'Resale'];
-  final List<String> _facings = ['East', 'West', 'North', 'South'];
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AdminProjectProvider>().fetchProjects();
-    });
-  }
-
-  bool _unitMatchesFilters(UnitModel u) {
-    if (_selectedConfig != null && u.configuration != _selectedConfig) {
-      return false;
-    }
-    if (_selectedType != null && u.propertyType != _selectedType) return false;
-    if (_selectedCategory != null && u.saleCategory != _selectedCategory) {
-      return false;
-    }
-    if (_selectedFacing != null && u.facing != _selectedFacing) return false;
-
-    if (_isHighValueOnly) {
-      if (u.calculatedPrice < 10000000) return false;
-    } else {
-      if (u.calculatedPrice < _priceRange.start ||
-          u.calculatedPrice > _priceRange.end) {
-        return false;
-      }
-    }
-
-    if (u.areaSqft < _areaRange.start || u.areaSqft > _areaRange.end) {
-      return false;
-    }
-    return true;
-  }
-
-  Widget _buildFilterSection(
-    String title,
-    List<String> options,
-    String? selected,
-    Function(String) onSelect,
-  ) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryBlue = AppColors.getPrimaryBlue(context);
-
-    // Create a list with "Select All" or similar if needed, or just handle null
-    final dropdownOptions = ['Select', ...options];
-    final displayValue = selected ?? 'Select';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade500,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            color: isDark ? Colors.grey[850] : Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: isDark ? Colors.grey[800]! : Colors.grey.shade200,
-            ),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: displayValue,
-              isExpanded: true,
-              icon: Icon(
-                Icons.keyboard_arrow_down,
-                size: 16,
-                color: primaryBlue,
-              ),
-              dropdownColor: isDark ? Colors.grey[900] : Colors.white,
-              style: TextStyle(
-                fontSize: 11,
-                color: isDark ? Colors.white : Colors.black87,
-                fontWeight: FontWeight.w500,
-              ),
-              items: dropdownOptions.map((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                if (newValue != null) {
-                  onSelect(newValue == 'Select' ? 'None' : newValue);
-                }
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final primaryBlue = AppColors.getPrimaryBlue(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    // Determine sidebar width: fixed 280 on wide, 35% on narrow
-    final sidebarWidth = screenWidth > 800 ? 280.0 : screenWidth * 0.38;
-
-    return Consumer<AdminProjectProvider>(
-      builder: (context, provider, _) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.92,
-          decoration: BoxDecoration(
-            color: isDark ? Colors.grey[900] : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Column(
-            children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                child: Column(
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Browse Properties',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-
-              // Main Content (Sidebar + Results)
-              Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Sidebar (Filters) - Persistent on all screen sizes
-                    Container(
-                      width: sidebarWidth,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          right: BorderSide(
-                            color: isDark
-                                ? Colors.grey[800]!
-                                : Colors.grey.shade200,
-                          ),
-                        ),
-                      ),
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(
-                          12,
-                        ), // Reduced padding for compactness
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'FILTERS',
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.grey,
-                                    letterSpacing: 1.2,
-                                  ),
-                                ),
-                                IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      _selectedConfig = null;
-                                      _selectedType = null;
-                                      _selectedCategory = null;
-                                      _selectedFacing = null;
-                                      _priceRange = const RangeValues(
-                                        0,
-                                        10000000,
-                                      );
-                                      _areaRange = const RangeValues(0, 10000);
-                                      _isHighValueOnly = false;
-                                      _searchQuery = '';
-                                    });
-                                  },
-                                  icon: const Icon(Icons.refresh, size: 14),
-                                  tooltip: 'Clear All',
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-
-                            // Search in Sidebar
-                            Container(
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? Colors.grey[850]
-                                    : Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: TextField(
-                                onChanged: (v) => setState(
-                                  () => _searchQuery = v.toLowerCase(),
-                                ),
-                                style: TextStyle(
-                                  color: isDark ? Colors.white : Colors.black87,
-                                  fontSize: 12,
-                                ),
-                                decoration: const InputDecoration(
-                                  hintText: 'Search...',
-                                  prefixIcon: Icon(Icons.search, size: 16),
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
-                                    vertical: 8,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            _buildFilterSection(
-                              'Configuration',
-                              _configs,
-                              _selectedConfig,
-                              (v) => setState(
-                                () => _selectedConfig = v == 'None' ? null : v,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            _buildFilterSection(
-                              'Type',
-                              _types,
-                              _selectedType,
-                              (v) => setState(
-                                () => _selectedType = v == 'None' ? null : v,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            _buildFilterSection(
-                              'Sale',
-                              _categories,
-                              _selectedCategory,
-                              (v) => setState(
-                                () =>
-                                    _selectedCategory = v == 'None' ? null : v,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            _buildFilterSection(
-                              'Facing',
-                              _facings,
-                              _selectedFacing,
-                              (v) => setState(
-                                () => _selectedFacing = v == 'None' ? null : v,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            Text(
-                              'Price Range',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                            Text(
-                              _isHighValueOnly
-                                  ? '1Cr+'
-                                  : '\u20b9${(_priceRange.start / 100000).toStringAsFixed(0)}L-\u20b9${(_priceRange.end / 100000).toStringAsFixed(0)}L',
-                              style: TextStyle(
-                                fontSize: 9,
-                                color: primaryBlue,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            RangeSlider(
-                              values: _priceRange,
-                              min: 0,
-                              max: 10000000,
-                              divisions: 50,
-                              activeColor: primaryBlue,
-                              onChanged: _isHighValueOnly
-                                  ? null
-                                  : (v) => setState(() => _priceRange = v),
-                            ),
-
-                            InkWell(
-                              onTap: () => setState(
-                                () => _isHighValueOnly = !_isHighValueOnly,
-                              ),
-                              child: Row(
-                                children: [
-                                  SizedBox(
-                                    height: 24,
-                                    width: 24,
-                                    child: Checkbox(
-                                      value: _isHighValueOnly,
-                                      onChanged: (v) => setState(
-                                        () => _isHighValueOnly = v ?? false,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  const Text(
-                                    '1Cr+',
-                                    style: TextStyle(fontSize: 10),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            const SizedBox(height: 12),
-                            Text(
-                              'Area (Sqft)',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                            Text(
-                              '${_areaRange.start.toStringAsFixed(0)}-${_areaRange.end.toStringAsFixed(0)}',
-                              style: TextStyle(
-                                fontSize: 9,
-                                color: primaryBlue,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            RangeSlider(
-                              values: _areaRange,
-                              min: 0,
-                              max: 10000,
-                              divisions: 50,
-                              activeColor: primaryBlue,
-                              onChanged: (v) => setState(() => _areaRange = v),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // Results List (Always side-by-side)
-                    Expanded(
-                      child: provider.isLoading
-                          ? const Center(child: CircularProgressIndicator())
-                          : ListView.builder(
-                              padding: const EdgeInsets.all(12),
-                              physics: const BouncingScrollPhysics(),
-                              itemCount: provider.projects.length,
-                              itemBuilder: (context, i) {
-                                final project = provider.projects[i];
-                                if (_searchQuery.isNotEmpty &&
-                                    !project.projectName.toLowerCase().contains(
-                                      _searchQuery,
-                                    ) &&
-                                    !project.city.toLowerCase().contains(
-                                      _searchQuery,
-                                    )) {
-                                  return const SizedBox.shrink();
-                                }
-                                return _ProjectCard(
-                                  project: project,
-                                  primaryBlue: primaryBlue,
-                                  isDark: isDark,
-                                  searchQuery: _searchQuery,
-                                  unitFilter: _unitMatchesFilters,
-                                  onSelectUnit: (unit) async {
-                                    // Navigate to Unit Details first
-                                    final bool? selected =
-                                        await Navigator.push<bool>(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                AdvisorUnitDetailsScreen(
-                                                  unit: unit,
-                                                  project: project,
-                                                  isSelectionMode: true,
-                                                ),
-                                          ),
-                                        );
-
-                                    // If unit was selected from details screen
-                                    if (selected == true) {
-                                      widget.onSelect(
-                                        '${project.projectName} (${unit.towerName}-${unit.unitNumber})',
-                                        unit.id,
-                                        unit,
-                                        project,
-                                      );
-                                      Navigator.pop(context);
-                                    }
-                                  },
-                                );
-                              },
-                            ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _ProjectCard extends StatefulWidget {
-  final ProjectModel project;
-  final Color primaryBlue;
-  final bool isDark;
-  final String searchQuery;
-  final bool Function(UnitModel) unitFilter;
-  final Function(UnitModel) onSelectUnit;
-
-  const _ProjectCard({
-    required this.project,
-    required this.primaryBlue,
-    required this.isDark,
-    required this.searchQuery,
-    required this.unitFilter,
-    required this.onSelectUnit,
-  });
-
-  @override
-  State<_ProjectCard> createState() => _ProjectCardState();
-}
-
-class _ProjectCardState extends State<_ProjectCard> {
-  bool _expanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final project = widget.project;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: widget.isDark ? Colors.grey[850] : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          onExpansionChanged: (val) async {
-            setState(() => _expanded = val);
-            if (val) {
-              await context.read<AdminProjectProvider>().fetchInventory(
-                project.id.toString(),
-              );
-            }
-          },
-          title: Text(
-            project.projectName,
-            style: GoogleFonts.montserrat(
-              fontWeight: FontWeight.bold,
-              fontSize: 16, // Significant increase
-              color: widget.isDark ? Colors.white : Colors.black87,
-            ),
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              '${project.city} \u2022 ${project.projectType}',
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey.shade500,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          trailing: Icon(
-            _expanded ? Icons.expand_less : Icons.expand_more,
-            color: widget.primaryBlue,
-            size: 20,
-          ),
-          children: [
-            Consumer<AdminProjectProvider>(
-              builder: (context, provider, _) {
-                if (provider.isLoading) {
-                  return const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  );
-                }
-                final units = provider.inventory.where((u) {
-                  if (u.projectId != project.id) return false;
-                  if (!widget.unitFilter(u)) return false;
-                  if (widget.searchQuery.isNotEmpty) {
-                    final q = widget.searchQuery;
-                    return u.unitNumber.toLowerCase().contains(q) ||
-                        u.towerName.toLowerCase().contains(q) ||
-                        u.configuration.toLowerCase().contains(q) ||
-                        u.location.toLowerCase().contains(q);
-                  }
-                  return true;
-                }).toList();
-
-                if (units.isEmpty) {
-                  return Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Center(
-                      child: Text(
-                        'No matching units',
-                        style: TextStyle(
-                          color: Colors.grey.shade500,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  );
-                }
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: units.map((unit) {
-                    final isAvailable =
-                        unit.availabilityStatus.toLowerCase() == 'available';
-                    final price = unit.calculatedPrice;
-                    final priceStr = price >= 10000000
-                        ? '\u20b9${(price / 10000000).toStringAsFixed(2)} Cr'
-                        : '\u20b9${(price / 100000).toStringAsFixed(2)} L';
-
-                    return GestureDetector(
-                      onTap: isAvailable
-                          ? () => widget.onSelectUnit(unit)
-                          : null,
-                      child: Container(
-                        margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: isAvailable
-                              ? widget.primaryBlue.withOpacity(0.04)
-                              : Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isAvailable
-                                ? widget.primaryBlue.withOpacity(0.2)
-                                : Colors.grey.shade200,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Text(
-                                        '${unit.towerName} - ${unit.unitNumber}',
-                                        style: GoogleFonts.montserrat(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13,
-                                          color: isAvailable
-                                              ? null
-                                              : Colors.grey,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${unit.plotDimensions} \u2022 ${unit.areaSqft.toStringAsFixed(0)} sqft',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey.shade500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  priceStr,
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    color: isAvailable
-                                        ? widget.primaryBlue
-                                        : Colors.grey,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isAvailable
-                                        ? Colors.green.shade50
-                                        : Colors.red.shade50,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    unit.availabilityStatus,
-                                    style: TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.bold,
-                                      color: isAvailable
-                                          ? Colors.green.shade700
-                                          : Colors.red.shade700,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prarambh_infra/features/admin/presentation/widgets/share_profile_sheet.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/full_screen_image_viewer.dart';
@@ -47,6 +48,15 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
         _leaderFetched = true;
       });
     }
+  }
+
+  void _shareProfile(AdvisorProfileModel p) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ShareProfileSheet(profile: p),
+    );
   }
 
   @override
@@ -361,6 +371,17 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
             ),
           ),
 
+          // Share Button
+          Positioned(
+            top: 10,
+            right: 10,
+            child: IconButton(
+              icon: const Icon(Icons.share, color: Colors.white),
+              onPressed: () => _shareProfile(profile),
+              tooltip: 'Share Profile',
+            ),
+          ),
+
           // Overlapping Profile Card
           Container(
             margin: const EdgeInsets.only(top: 80, left: 20, right: 20),
@@ -592,45 +613,51 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
     final textColor = Theme.of(context).textTheme.bodyLarge?.color;
     final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        border: isLast
-            ? null
-            : Border(
-                bottom: BorderSide(color: AppColors.getBorderColor(context)),
+    return InkWell(
+      onLongPress: () {
+        final p = context.read<AdvisorProfileProvider>().profile;
+        if (p != null) _shareProfile(p);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          border: isLast
+              ? null
+              : Border(
+                  bottom: BorderSide(color: AppColors.getBorderColor(context)),
+                ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 18, color: secondaryTextColor),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 11,
+                      color: secondaryTextColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    value.isNotEmpty ? value : 'Not Provided',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                    ),
+                  ),
+                ],
               ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 18, color: secondaryTextColor),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 11,
-                    color: secondaryTextColor,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value.isNotEmpty ? value : 'Not Provided',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: textColor,
-                  ),
-                ),
-              ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

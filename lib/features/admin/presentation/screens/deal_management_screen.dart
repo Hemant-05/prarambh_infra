@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:prarambh_infra/core/utils/file_download_helper.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../data/models/deal_model.dart';
@@ -18,6 +18,7 @@ import '../../../advisor/presentation/providers/advisor_profile_provider.dart';
 import 'advisor_profile_screen.dart' as admin;
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/widgets/full_screen_image_viewer.dart';
+import '../../../../core/widgets/property_browser_sheet.dart';
 
 class DealManagementScreen extends StatefulWidget {
   final DealModel deal;
@@ -51,6 +52,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
   bool _isTotalAmountLocked = false;
 
   UnitModel? _unit;
+  String? _selectedUnitId;
   bool _isLoadingUnit = false;
 
   final List<String> _plans = [
@@ -111,6 +113,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
   }
 
   void _initData() {
+    _selectedUnitId = widget.deal.unitId.toString();
     // Only lock fields if they have meaningful data AND the deal is somewhat finalized
     // For now, let's keep them editable if the deal is not verified
     bool isVerified = widget.deal.dealStatus.toLowerCase() == 'verified';
@@ -229,6 +232,25 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
     }
   }
 
+  Future<void> _showUnitSelectionDialog() async {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => PropertyBrowserSheet(
+        onSelect: (displayString, unitId, unit, project) {
+          setState(() {
+            _selectedUnitId = unit.id.toString();
+            _unit = unit;
+          });
+        },
+        onUnitTapOverride: (ctx, unit, project) async {
+          return true;
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -305,72 +327,78 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                           return;
                         }
 
-                          bool success = await provider.savePaymentPlan(
-                            dealId: activeDeal.id.toString(),
-                            installmentsJson: jsonEncode(_installments),
-                            totalAmount: _totalAmountCtrl.text,
-                            status: overallStatus,
-                            tokenAmount: _tokenAmountCtrl.text,
-                            tokenPaymentMode: _tokenPaymentMode,
-                            tokenDate: _tokenDate != 'Select Date'
-                                ? _tokenDate
-                                : null,
-                            paymentPlan: _selectedPlan != 'Select Plan'
-                                ? _selectedPlan
-                                : null,
-                            dealStatus: (isTokenTaken || isFullyPaid)
-                                ? 'verified'
-                                : activeDeal.dealStatus,
-                            stage: isFullyPaid
-                                ? 'close'
-                                : (isTokenTaken ? 'ongoing' : activeDeal.stage),
-                            docTitles: _newPropertyDoc != null
-                                ? [
-                                    _docTitleCtrl.text.isEmpty
-                                        ? 'Property Document'
-                                        : _docTitleCtrl.text,
-                                  ]
-                                : null,
-                            docFiles: _newPropertyDoc != null
-                                ? [_newPropertyDoc!]
-                                : null,
-                          );
+                        bool success = await provider.savePaymentPlan(
+                          dealId: activeDeal.id.toString(),
+                          installmentsJson: jsonEncode(_installments),
+                          totalAmount: _totalAmountCtrl.text,
+                          status: overallStatus,
+                          tokenAmount: _tokenAmountCtrl.text,
+                          tokenPaymentMode: _tokenPaymentMode,
+                          tokenDate: _tokenDate != 'Select Date'
+                              ? _tokenDate
+                              : null,
+                          paymentPlan: _selectedPlan != 'Select Plan'
+                              ? _selectedPlan
+                              : null,
+                          dealStatus: (isTokenTaken || isFullyPaid)
+                              ? 'verified'
+                              : activeDeal.dealStatus,
+                          stage: isFullyPaid
+                              ? 'close'
+                              : (isTokenTaken ? 'ongoing' : activeDeal.stage),
+                          unitId: _selectedUnitId,
+                          docTitles: _newPropertyDoc != null
+                              ? [
+                                  _docTitleCtrl.text.isEmpty
+                                      ? 'Property Document'
+                                      : _docTitleCtrl.text,
+                                ]
+                              : null,
+                          docFiles: _newPropertyDoc != null
+                              ? [_newPropertyDoc!]
+                              : null,
+                        );
 
-                          if (success && mounted) {
-                            if (mounted) {
-                              if ((isTokenTaken || isFullyPaid) && activeDeal.dealStatus != 'verified') {
-                                final now = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
-                                context.read<AdminLeadProvider>().addLeadNote(
-                                  activeDeal.leadId.toString(),
-                                  "Deal verified by admin. Token collected: ₹${_tokenAmountCtrl.text} via $_tokenPaymentMode.",
-                                  now,
-                                );
-                                context.read<AdminLeadProvider>().removeLeadFromPriority(
-                                  activeDeal.leadId.toString(),
-                                );
-                              }
-
-                              if (isFullyPaid) {
-                                context.read<AdminLeadProvider>().updateLeadStage(
-                                  activeDeal.leadId.toString(),
-                                  'completed',
-                                );
-                              } else {
-                                context.read<AdminLeadProvider>().updateLeadStage(
-                                  activeDeal.leadId.toString(),
-                                  'completed',
-                                );
-                              }
+                        if (success && mounted) {
+                          if (mounted) {
+                            if ((isTokenTaken || isFullyPaid) &&
+                                activeDeal.dealStatus != 'verified') {
+                              final now = DateFormat(
+                                'yyyy-MM-dd HH:mm',
+                              ).format(DateTime.now());
+                              context.read<AdminLeadProvider>().addLeadNote(
+                                activeDeal.leadId.toString(),
+                                "Deal verified by admin. Token collected: ₹${_tokenAmountCtrl.text} via $_tokenPaymentMode.",
+                                now,
+                              );
+                              context
+                                  .read<AdminLeadProvider>()
+                                  .removeLeadFromPriority(
+                                    activeDeal.leadId.toString(),
+                                  );
                             }
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Deal Configuration Saved Successfully!',
-                                ),
-                              ),
-                            );
+
+                            if (isFullyPaid) {
+                              context.read<AdminLeadProvider>().updateLeadStage(
+                                activeDeal.leadId.toString(),
+                                'completed',
+                              );
+                            } else {
+                              context.read<AdminLeadProvider>().updateLeadStage(
+                                activeDeal.leadId.toString(),
+                                'completed',
+                              );
+                            }
                           }
-                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Deal Configuration Saved Successfully!',
+                              ),
+                            ),
+                          );
+                        }
+                        Navigator.pop(context);
                       },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryBlue,
@@ -412,7 +440,12 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
               Icons.person_outline,
               primaryBlue,
             ),
-            _buildUnifiedClientKYCCard(cardColor, primaryBlue, textColor, activeDeal),
+            _buildUnifiedClientKYCCard(
+              cardColor,
+              primaryBlue,
+              textColor,
+              activeDeal,
+            ),
             const SizedBox(height: 16),
 
             // 3. Advisor & Units Section
@@ -485,10 +518,27 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
             ],
 
             // 5. Property Specification
-            _buildModernSectionHeader(
-              "Property Specification",
-              Icons.apartment_outlined,
-              primaryBlue,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildModernSectionHeader(
+                  "Property Specification",
+                  Icons.apartment_outlined,
+                  primaryBlue,
+                ),
+                TextButton.icon(
+                  onPressed: _showUnitSelectionDialog,
+                  icon: Icon(Icons.swap_horiz, color: primaryBlue, size: 20),
+                  label: Text(
+                    "Change Unit",
+                    style: GoogleFonts.montserrat(
+                      color: primaryBlue,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
             ),
             Container(
               padding: const EdgeInsets.all(16),
@@ -525,15 +575,22 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                         children: [
                           Builder(
                             builder: (context) {
-                              final unitVal = activeDeal.unitNumber?.trim().isNotEmpty == true 
-                                  ? activeDeal.unitNumber 
-                                  : (_unit?.unitNumber.trim().isNotEmpty == true ? _unit?.unitNumber : null);
-                              final plotVal = _unit?.plotNumber.trim().isNotEmpty == true ? _unit?.plotNumber : null;
-                              
+                              final unitVal =
+                                  activeDeal.unitNumber?.trim().isNotEmpty ==
+                                      true
+                                  ? activeDeal.unitNumber
+                                  : (_unit?.unitNumber.trim().isNotEmpty == true
+                                        ? _unit?.unitNumber
+                                        : null);
+                              final plotVal =
+                                  _unit?.plotNumber.trim().isNotEmpty == true
+                                  ? _unit?.plotNumber
+                                  : null;
+
                               String label = "Unit/Plot";
                               String value = "N/A";
                               IconData icon = Icons.tag;
-                              
+
                               if (unitVal != null && unitVal != "null") {
                                 label = "Unit";
                                 value = unitVal;
@@ -543,7 +600,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                                 value = plotVal;
                                 icon = Icons.grid_3x3;
                               }
-                              
+
                               return _buildCompactDetail(
                                 constraints,
                                 icon,
@@ -604,8 +661,11 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
             // Site Visit Photo if available
             Consumer<AdminLeadProvider>(
               builder: (context, leadProvider, _) {
-                final matched = leadProvider.leads.where((l) => l.id == activeDeal.leadId.toString()).toList();
-                if (matched.isNotEmpty && matched.first.siteVisitPhoto.isNotEmpty) {
+                final matched = leadProvider.leads
+                    .where((l) => l.id == activeDeal.leadId.toString())
+                    .toList();
+                if (matched.isNotEmpty &&
+                    matched.first.siteVisitPhoto.isNotEmpty) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -621,7 +681,8 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                             MaterialPageRoute(
                               builder: (_) => FullScreenImageViewer(
                                 imageUrl: matched.first.siteVisitPhoto,
-                                heroTag: 'admin_deal_site_visit_${activeDeal.id}',
+                                heroTag:
+                                    'admin_deal_site_visit_${activeDeal.id}',
                               ),
                             ),
                           );
@@ -636,7 +697,9 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(color: Colors.grey.shade200),
                               image: DecorationImage(
-                                image: NetworkImage(matched.first.siteVisitPhoto),
+                                image: NetworkImage(
+                                  matched.first.siteVisitPhoto,
+                                ),
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -1113,21 +1176,23 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                       String rawTime = n['time'] ?? '';
                       String dateStr = '';
                       String timeStr = '';
-                      
+
                       try {
                         if (rawTime.isNotEmpty) {
                           final parsedDate = DateTime.parse(rawTime);
-                          dateStr = DateFormat('MMM dd, yyyy').format(parsedDate);
+                          dateStr = DateFormat(
+                            'MMM dd, yyyy',
+                          ).format(parsedDate);
                           timeStr = DateFormat('hh:mm a').format(parsedDate);
                         }
                       } catch (e) {
-                         final parts = rawTime.split(' ');
-                         if (parts.length >= 2) {
-                            dateStr = parts[0];
-                            timeStr = parts.sublist(1).join(' ');
-                         } else {
-                            dateStr = rawTime;
-                         }
+                        final parts = rawTime.split(' ');
+                        if (parts.length >= 2) {
+                          dateStr = parts[0];
+                          timeStr = parts.sublist(1).join(' ');
+                        } else {
+                          dateStr = rawTime;
+                        }
                       }
 
                       return Container(
@@ -1136,9 +1201,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                         decoration: BoxDecoration(
                           color: cardColor,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.grey.shade200,
-                          ),
+                          border: Border.all(color: Colors.grey.shade200),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1148,7 +1211,11 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                               children: [
                                 Row(
                                   children: [
-                                    Icon(Icons.calendar_today, size: 12, color: Colors.grey.shade500),
+                                    Icon(
+                                      Icons.calendar_today,
+                                      size: 12,
+                                      color: Colors.grey.shade500,
+                                    ),
                                     const SizedBox(width: 4),
                                     Text(
                                       dateStr,
@@ -1163,7 +1230,11 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                                 if (timeStr.isNotEmpty)
                                   Row(
                                     children: [
-                                      Icon(Icons.access_time, size: 12, color: Colors.grey.shade500),
+                                      Icon(
+                                        Icons.access_time,
+                                        size: 12,
+                                        color: Colors.grey.shade500,
+                                      ),
                                       const SizedBox(width: 4),
                                       Text(
                                         timeStr,
@@ -1295,7 +1366,9 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
         builder: (context, setState) {
           return AlertDialog(
             backgroundColor: cardColor,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             title: Text(
               "Add Status Note",
               style: GoogleFonts.montserrat(
@@ -1325,24 +1398,28 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: isSaving ? null : () async {
-                      if (noteCtrl.text.isEmpty) return;
-                      setState(() => isSaving = true);
-                      final success = await context
-                          .read<AdminDealProvider>()
-                          .addDealNote(
-                            widget.deal.id.toString(),
-                            noteCtrl.text,
-                            DateTime.now().toString(),
-                          );
-                      setState(() => isSaving = false);
-                      if (success && mounted) {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Note added successfully.")),
-                        );
-                      }
-                    },
+                    onPressed: isSaving
+                        ? null
+                        : () async {
+                            if (noteCtrl.text.isEmpty) return;
+                            setState(() => isSaving = true);
+                            final success = await context
+                                .read<AdminDealProvider>()
+                                .addDealNote(
+                                  widget.deal.id.toString(),
+                                  noteCtrl.text,
+                                  DateTime.now().toString(),
+                                );
+                            setState(() => isSaving = false);
+                            if (success && mounted) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Note added successfully."),
+                                ),
+                              );
+                            }
+                          },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryBlue,
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1350,11 +1427,14 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: isSaving 
+                    child: isSaving
                         ? const SizedBox(
                             height: 20,
                             width: 20,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
                           )
                         : Text(
                             "Save Note",
@@ -1369,7 +1449,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
               ],
             ),
           );
-        }
+        },
       ),
     );
   }
@@ -1691,7 +1771,8 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                           MaterialPageRoute(
                             builder: (_) => FullScreenImageViewer(
                               imageUrl: profile.profilePhoto,
-                              heroTag: 'admin_deal_advisor_${profile.advisorCode}',
+                              heroTag:
+                                  'admin_deal_advisor_${profile.advisorCode}',
                             ),
                           ),
                         );
@@ -2123,9 +2204,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                   Icons.call,
                   Colors.green,
                   onTap: () async {
-                    final Uri telUri = Uri.parse(
-                      'tel:${deal.clientNumber}',
-                    );
+                    final Uri telUri = Uri.parse('tel:${deal.clientNumber}');
                     if (await canLaunchUrl(telUri)) {
                       await launchUrl(telUri);
                     }
@@ -2158,8 +2237,14 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                   crossAxisSpacing: 12,
                   childAspectRatio: 1.5,
                   children: [
-                    _buildDocumentThumbnail("Aadhaar Front", deal.clientAdharFront),
-                    _buildDocumentThumbnail("Aadhaar Back", deal.clientAdharBack),
+                    _buildDocumentThumbnail(
+                      "Aadhaar Front",
+                      deal.clientAdharFront,
+                    ),
+                    _buildDocumentThumbnail(
+                      "Aadhaar Back",
+                      deal.clientAdharBack,
+                    ),
                     _buildDocumentThumbnail("PAN Front", deal.clientPanFront),
                     _buildDocumentThumbnail("PAN Back", deal.clientPanBack),
                   ],

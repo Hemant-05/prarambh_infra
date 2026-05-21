@@ -86,6 +86,7 @@ class AdminDealProvider extends ChangeNotifier {
     String? paymentPlan,
     String? dealStatus,
     String? stage,
+    String? unitId,
     List<String>? docTitles,
     List<File>? docFiles,
   }) async {
@@ -96,7 +97,7 @@ class AdminDealProvider extends ChangeNotifier {
         totalAmount: totalAmount, status: status,
         tokenAmount: tokenAmount, tokenPaymentMode: tokenPaymentMode,
         tokenDate: tokenDate, paymentPlan: paymentPlan, dealStatus: dealStatus,
-        stage: stage,
+        stage: stage, unitId: unitId,
         docTitles: docTitles, docFiles: docFiles,
       );
       if (success) await fetchAllDeals();

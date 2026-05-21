@@ -245,7 +245,6 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
     final currentUser = context.read<AuthProvider>().currentUser;
     // Generate Designation Options
     List<String> designationOptions = ['Advisor'];
-    
     final role = currentUser?.role.toLowerCase() ?? '';
     final designationStr = (currentUser?.designation ?? '').toLowerCase();
 
@@ -258,8 +257,18 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
         'Senior Manager',
         'Director'
       ];
-    } else if (role == 'advisor' && designationStr == 'director') {
-      designationOptions = ['Advisor', 'Supervisor'];
+    } else {
+      if (designationStr == 'director') {
+        designationOptions = ['Advisor', 'Supervisor', 'Manager', 'Chief Manager', 'Senior Manager'];
+      } else if (designationStr == 'senior manager') {
+        designationOptions = ['Advisor', 'Supervisor', 'Manager', 'Chief Manager'];
+      } else if (designationStr == 'chief manager') {
+        designationOptions = ['Advisor', 'Supervisor', 'Manager'];
+      } else if (designationStr == 'manager') {
+        designationOptions = ['Advisor', 'Supervisor'];
+      } else if (designationStr == 'supervisor') {
+        designationOptions = ['Advisor'];
+      }
     }
 
     // Ensure state matches valid list initially

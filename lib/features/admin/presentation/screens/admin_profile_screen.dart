@@ -180,15 +180,18 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                               )
                             ],
                           ),
-                          child: ProfileImage(
-                            imageUrl: provider.profile?.avatarUrl != null 
-                                ? "https://workiees.com/${provider.profile!.avatarUrl}"
-                                : null,
-                            initials: profile.name.isNotEmpty 
-                                ? profile.name.trim().split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase()
-                                : 'A',
-                            heroTag: 'admin_profile_avatar',
-                            radius: 45,
+                          child: Container(
+                            width: 90,
+                            height: 90,
+                            padding: const EdgeInsets.all(8),
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                            ),
+                            child: Image.asset(
+                              'assets/logos/logo.png',
+                              fit: BoxFit.contain,
+                            ),
                           ),
                         ),
                         Positioned(
@@ -208,7 +211,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      profile.name,
+                      'PRARAMBH INFRA',
                       style: GoogleFonts.montserrat(
                         color: Colors.white,
                         fontSize: 20,

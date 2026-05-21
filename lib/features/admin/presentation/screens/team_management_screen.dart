@@ -16,7 +16,7 @@ class TeamManagementScreen extends StatefulWidget {
 }
 
 class _TeamManagementScreenState extends State<TeamManagementScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late TabController _tabController;
   final Graph graph = Graph()..isTree = true;
   BuchheimWalkerConfiguration algorithmConfig = BuchheimWalkerConfiguration();
@@ -34,6 +34,11 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
   // --- NEW: Search Implementation ---
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+
+  final Map<String, GlobalKey> _nodeKeys = {};
+  late AnimationController _animationController;
+  Animation<Matrix4>? _panAnimation;
+  bool _isControlsExpanded = true;
 
   int _currentLayoutType = 0;
   bool _graphInitialized = false;
@@ -60,6 +65,14 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
       ..subtreeSeparation = 30
       ..orientation = BuchheimWalkerConfiguration.ORIENTATION_TOP_BOTTOM;
 
+    _animationController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 600));
+    _animationController.addListener(() {
+      if (_panAnimation != null) {
+        _transformController.value = _panAnimation!.value;
+      }
+    });
+
     // Show FAB only on tree tab
     _tabController.addListener(() {
       if (mounted) setState(() => _showTreeFab = _tabController.index == 0);
@@ -67,9 +80,13 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
 
     // --- NEW: Listen to search changes ---
     _searchController.addListener(() {
-      setState(() {
-        _searchQuery = _searchController.text.trim().toLowerCase();
-      });
+      final newQuery = _searchController.text.trim().toLowerCase();
+      if (_searchQuery != newQuery) {
+        setState(() => _searchQuery = newQuery);
+        if (_searchQuery.isNotEmpty) {
+          _panToFirstMatch();
+        }
+      }
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -90,6 +107,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
   void dispose() {
     _tabController.removeListener(() {});
     _tabController.dispose();
+    _animationController.dispose();
     _transformController.dispose();
     _searchController.dispose(); // NEW: Dispose search controller
     super.dispose();
@@ -153,6 +171,85 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
 
       _transformController.value = Matrix4.identity()..translate(dx, dy);
     });
+  }
+
+  void _panToFirstMatch() {
+    if (!mounted || _searchQuery.isEmpty) return;
+    final provider = context.read<AdminTeamProvider>();
+    if (provider.teamTree == null) return;
+
+    final flatList = _flattenTree(provider.teamTree!);
+    AdvisorNode? firstMatch;
+    for (final n in flatList) {
+      if (n.name.toLowerCase().contains(_searchQuery) ||
+          n.code.toLowerCase().contains(_searchQuery) ||
+          n.role.toLowerCase().contains(_searchQuery)) {
+        firstMatch = n;
+        break;
+      }
+    }
+
+    if (firstMatch != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _panToNode(firstMatch!);
+      });
+    }
+  }
+
+  void _panToNode(AdvisorNode node, {bool isRoot = false}) {
+    if (!mounted) return;
+    final nodeKey = _nodeKeys[node.code];
+    if (nodeKey == null) return;
+
+    final nodeBox = nodeKey.currentContext?.findRenderObject() as RenderBox?;
+    final viewerBox = _viewerKey.currentContext?.findRenderObject() as RenderBox?;
+    if (nodeBox == null || viewerBox == null) return;
+
+    _animationController.stop();
+
+    final Matrix4 currentMatrix = _transformController.value;
+    
+    final Offset nodeCenterLocal = Offset(nodeBox.size.width / 2, nodeBox.size.height / 2);
+    final Offset currentCenterInViewer = nodeBox.localToGlobal(nodeCenterLocal, ancestor: viewerBox);
+    final Size viewerSize = viewerBox.size;
+    
+    Matrix4 endMatrix;
+    
+    if (isRoot) {
+      final double currentScale = currentMatrix.entry(0, 0);
+      final double currentTx = currentMatrix.getTranslation().x;
+      final double currentTy = currentMatrix.getTranslation().y;
+      
+      final double localX = (currentCenterInViewer.dx - currentTx) / currentScale;
+      final double localY = (currentCenterInViewer.dy - currentTy) / currentScale;
+      
+      final double targetX = viewerSize.width / 2;
+      final double targetY = 80.0;
+      
+      final double newTx = targetX - localX;
+      final double newTy = targetY - localY;
+      
+      endMatrix = Matrix4.identity()..translate(newTx, newTy);
+    } else {
+      final double targetX = viewerSize.width / 2;
+      final double targetY = viewerSize.height / 2;
+
+      final double dx = targetX - currentCenterInViewer.dx;
+      final double dy = targetY - currentCenterInViewer.dy;
+
+      endMatrix = currentMatrix.clone()
+        ..setTranslationRaw(
+          currentMatrix.getTranslation().x + dx,
+          currentMatrix.getTranslation().y + dy,
+          currentMatrix.getTranslation().z,
+        );
+    }
+
+    _animationController.reset();
+    _panAnimation = Matrix4Tween(begin: currentMatrix, end: endMatrix)
+        .animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
+
+    _animationController.forward();
   }
 
   void _changeLayout(int index) {
@@ -231,6 +328,8 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
       backgroundColor: isDark
           ? const Color(0xFF121212)
           : const Color(0xFFF5F7FA),
+      // THE FIX: Bottom-Left root button
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: _showTreeFab && _graphInitialized
           ? FloatingActionButton(
               onPressed: _centerOnRoot,
@@ -296,183 +395,265 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
       ),
       body: Column(
         children: [
-          // --- NEW: Unified Search Bar ---
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-            child: TextField(
-              controller: _searchController,
-              style: GoogleFonts.montserrat(
-                color: isDark ? Colors.white : Colors.black87,
-                fontSize: 14,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Search by name, code or role...',
-                hintStyle: GoogleFonts.montserrat(
-                  color: Colors.grey,
-                  fontSize: 13,
-                ),
-                prefixIcon: const Icon(
-                  Icons.search,
-                  color: Colors.grey,
-                  size: 20,
-                ),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(
-                          Icons.clear,
-                          color: Colors.grey,
-                          size: 18,
+          // 1. Collapsible Upper Controls
+          AnimatedSize(
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            clipBehavior: Clip.hardEdge,
+            child: !_isControlsExpanded
+                ? const SizedBox(width: double.infinity)
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // --- NEW: Unified Search Bar ---
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                        child: TextField(
+                          controller: _searchController,
+                          style: GoogleFonts.montserrat(
+                            color: isDark ? Colors.white : Colors.black87,
+                            fontSize: 14,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Search by name, code or role...',
+                            hintStyle: GoogleFonts.montserrat(
+                              color: Colors.grey,
+                              fontSize: 13,
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.search,
+                              color: Colors.grey,
+                              size: 20,
+                            ),
+                            suffixIcon: _searchQuery.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(
+                                      Icons.clear,
+                                      color: Colors.grey,
+                                      size: 18,
+                                    ),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      FocusScope.of(context).unfocus();
+                                    },
+                                  )
+                                : null,
+                            filled: true,
+                            fillColor: isDark ? Colors.grey[900] : Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 0,
+                              horizontal: 16,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: primaryBlue),
+                            ),
+                          ),
                         ),
-                        onPressed: () {
-                          _searchController.clear();
-                          FocusScope.of(context).unfocus();
-                        },
-                      )
-                    : null,
-                filled: true,
-                fillColor: isDark ? Colors.grey[900] : Colors.white,
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 0,
-                  horizontal: 16,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: primaryBlue),
-                ),
+                      ),
+
+                      // --- NEW: Dynamic Filter Controls (Only for List View) ---
+                      if (_tabController.index == 1)
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Column(
+                            children: [
+                              // Filter Chips
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: Row(
+                                  children: [
+                                    FilterChip(
+                                      selected: _selectedDesignation == null,
+                                      label: const Text('All Levels'),
+                                      onSelected: (_) =>
+                                          setState(() => _selectedDesignation = null),
+                                      selectedColor: primaryBlue.withOpacity(0.15),
+                                      checkmarkColor: primaryBlue,
+                                      labelStyle: GoogleFonts.montserrat(
+                                        fontSize: 11,
+                                        fontWeight: _selectedDesignation == null
+                                            ? FontWeight.bold
+                                            : FontWeight.w500,
+                                        color: _selectedDesignation == null
+                                            ? primaryBlue
+                                            : Colors.grey,
+                                      ),
+                                      backgroundColor: Colors.transparent,
+                                      shape: StadiumBorder(
+                                        side: BorderSide(
+                                          color: _selectedDesignation == null
+                                              ? primaryBlue
+                                              : Colors.grey.withOpacity(0.3),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    ..._designationLevels.map((level) {
+                                      final isSelected = _selectedDesignation == level;
+                                      return Padding(
+                                        padding: const EdgeInsets.only(right: 8),
+                                        child: FilterChip(
+                                          selected: isSelected,
+                                          label: Text(level),
+                                          onSelected: (_) => setState(
+                                            () => _selectedDesignation = isSelected
+                                                ? null
+                                                : level,
+                                          ),
+                                          selectedColor: primaryBlue.withOpacity(0.15),
+                                          checkmarkColor: primaryBlue,
+                                          labelStyle: GoogleFonts.montserrat(
+                                            fontSize: 11,
+                                            fontWeight: isSelected
+                                                ? FontWeight.bold
+                                                : FontWeight.w500,
+                                            color: isSelected ? primaryBlue : Colors.grey,
+                                          ),
+                                          backgroundColor: Colors.transparent,
+                                          shape: StadiumBorder(
+                                            side: BorderSide(
+                                              color: isSelected
+                                                  ? primaryBlue
+                                                  : Colors.grey.withOpacity(0.3),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }),
+                                  ],
+                                ),
+                              ),
+                              // Sort Indicator
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '${flatList.length} members found',
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 11,
+                                        color: Colors.grey,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    TextButton.icon(
+                                      onPressed: () {
+                                        setState(() {
+                                          _sortBy = (_sortBy == 'Newest'
+                                              ? 'Oldest'
+                                              : 'Newest');
+                                        });
+                                      },
+                                      icon: Icon(
+                                        _sortBy == 'Newest'
+                                            ? Icons.arrow_downward
+                                            : Icons.arrow_upward,
+                                        size: 14,
+                                        color: primaryBlue,
+                                      ),
+                                      label: Text(
+                                        'Joined: $_sortBy First',
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: primaryBlue,
+                                        ),
+                                      ),
+                                      style: TextButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                                        minimumSize: Size.zero,
+                                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                      // Tree Layout Direction Toggles (Only in Tree View)
+                      if (_tabController.index == 0)
+                        Container(
+                          height: 58,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Colors.grey.withOpacity(0.1),
+                              ),
+                            ),
+                          ),
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            child: Row(
+                              children: [
+                                _chip(
+                                  "Top-Down",
+                                  Icons.arrow_downward,
+                                  0,
+                                  primaryBlue,
+                                  isDark,
+                                ),
+                                const SizedBox(width: 10),
+                                _chip(
+                                  "Left-Right",
+                                  Icons.arrow_forward,
+                                  1,
+                                  primaryBlue,
+                                  isDark,
+                                ),
+                                const SizedBox(width: 10),
+                                _chip(
+                                  "Bottom-Up",
+                                  Icons.arrow_upward,
+                                  2,
+                                  primaryBlue,
+                                  isDark,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+          ),
+          
+          // 2. Expand/Collapse Toggle Button
+          GestureDetector(
+            onTap: () => setState(() => _isControlsExpanded = !_isControlsExpanded),
+            child: Container(
+              width: 60,
+              height: 24,
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey[900] : Colors.white,
+                borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(12), bottomRight: Radius.circular(12)),
+                border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
               ),
+              child: Icon(_isControlsExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, size: 18, color: Colors.grey),
             ),
           ),
 
-          // --- NEW: Dynamic Filter Controls (Only for List View) ---
-          if (_tabController.index == 1)
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Column(
-                children: [
-                  // Filter Chips
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        FilterChip(
-                          selected: _selectedDesignation == null,
-                          label: const Text('All Levels'),
-                          onSelected: (_) =>
-                              setState(() => _selectedDesignation = null),
-                          selectedColor: primaryBlue.withOpacity(0.15),
-                          checkmarkColor: primaryBlue,
-                          labelStyle: GoogleFonts.montserrat(
-                            fontSize: 11,
-                            fontWeight: _selectedDesignation == null
-                                ? FontWeight.bold
-                                : FontWeight.w500,
-                            color: _selectedDesignation == null
-                                ? primaryBlue
-                                : Colors.grey,
-                          ),
-                          backgroundColor: Colors.transparent,
-                          shape: StadiumBorder(
-                            side: BorderSide(
-                              color: _selectedDesignation == null
-                                  ? primaryBlue
-                                  : Colors.grey.withOpacity(0.3),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ..._designationLevels.map((level) {
-                          final isSelected = _selectedDesignation == level;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: FilterChip(
-                              selected: isSelected,
-                              label: Text(level),
-                              onSelected: (_) => setState(
-                                () => _selectedDesignation = isSelected
-                                    ? null
-                                    : level,
-                              ),
-                              selectedColor: primaryBlue.withOpacity(0.15),
-                              checkmarkColor: primaryBlue,
-                              labelStyle: GoogleFonts.montserrat(
-                                fontSize: 11,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.w500,
-                                color: isSelected ? primaryBlue : Colors.grey,
-                              ),
-                              backgroundColor: Colors.transparent,
-                              shape: StadiumBorder(
-                                side: BorderSide(
-                                  color: isSelected
-                                      ? primaryBlue
-                                      : Colors.grey.withOpacity(0.3),
-                                ),
-                              ),
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-                  // Sort Indicator
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '${flatList.length} members found',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 11,
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        TextButton.icon(
-                          onPressed: () {
-                            setState(() {
-                              _sortBy = (_sortBy == 'Newest'
-                                  ? 'Oldest'
-                                  : 'Newest');
-                            });
-                          },
-                          icon: Icon(
-                            _sortBy == 'Newest'
-                                ? Icons.arrow_downward
-                                : Icons.arrow_upward,
-                            size: 14,
-                            color: primaryBlue,
-                          ),
-                          label: Text(
-                            'Joined: $_sortBy First',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: primaryBlue,
-                            ),
-                          ),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          // 3. Tab Views
           Expanded(
             child:
                 provider.isLoading ||
@@ -509,89 +690,36 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
                     physics: const NeverScrollableScrollPhysics(),
                     children: [
                       // ── Tab 1: GraphView Tree ─────────────────────────────────
-                      Column(
-                        children: [
-                          // Layout chips
-                          Container(
-                            height: 58,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: Colors.transparent,
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: Colors.grey.withOpacity(0.1),
-                                ),
-                              ),
+                      Container(
+                        key: _viewerKey,
+                        child: InteractiveViewer(
+                          transformationController: _transformController,
+                          constrained: false,
+                          boundaryMargin: const EdgeInsets.all(1500),
+                          minScale: 0.08,
+                          maxScale: 3.5,
+                          child: GraphView(
+                            graph: graph,
+                            algorithm: BuchheimWalkerAlgorithm(
+                              algorithmConfig,
+                              TreeEdgeRenderer(algorithmConfig),
                             ),
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 10,
-                              ),
-                              child: Row(
-                                children: [
-                                  _chip(
-                                    "Top-Down",
-                                    Icons.arrow_downward,
-                                    0,
-                                    primaryBlue,
-                                    isDark,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  _chip(
-                                    "Left-Right",
-                                    Icons.arrow_forward,
-                                    1,
-                                    primaryBlue,
-                                    isDark,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  _chip(
-                                    "Bottom-Up",
-                                    Icons.arrow_upward,
-                                    2,
-                                    primaryBlue,
-                                    isDark,
-                                  ),
-                                ],
-                              ),
-                            ),
+                            paint: Paint()
+                              ..color = primaryBlue.withOpacity(0.4)
+                              ..strokeWidth = 1.8
+                              ..strokeCap = StrokeCap.round
+                              ..style = PaintingStyle.stroke,
+                            builder: (Node node) {
+                              final advisorNode =
+                                  node.key!.value as AdvisorNode;
+                              return _buildNodeWidget(
+                                advisorNode,
+                                primaryBlue,
+                                isDark,
+                              );
+                            },
                           ),
-
-                          // Graph Canvas — key lets us read the viewport size
-                          Expanded(
-                            key: _viewerKey,
-                            child: InteractiveViewer(
-                              transformationController: _transformController,
-                              constrained: false,
-                              boundaryMargin: const EdgeInsets.all(800),
-                              minScale: 0.08,
-                              maxScale: 3.5,
-                              child: GraphView(
-                                graph: graph,
-                                algorithm: BuchheimWalkerAlgorithm(
-                                  algorithmConfig,
-                                  TreeEdgeRenderer(algorithmConfig),
-                                ),
-                                paint: Paint()
-                                  ..color = primaryBlue.withOpacity(0.4)
-                                  ..strokeWidth = 1.8
-                                  ..strokeCap = StrokeCap.round
-                                  ..style = PaintingStyle.stroke,
-                                builder: (Node node) {
-                                  final advisorNode =
-                                      node.key!.value as AdvisorNode;
-                                  return _buildNodeWidget(
-                                    advisorNode,
-                                    primaryBlue,
-                                    isDark,
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
 
                       // ── Tab 2: List View ─────────────────────────────────────
@@ -844,9 +972,14 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
       ),
     );
 
+    _nodeKeys[node.code] ??= GlobalKey();
+    final nodeKey = _nodeKeys[node.code]!;
+    
+    final Widget keyedCard = KeyedSubtree(key: nodeKey, child: card);
+
     // Wrap the root node with its GlobalKey so we can read its render position
-    if (node.id == 'root') return KeyedSubtree(key: _rootNodeKey, child: card);
-    return card;
+    if (isRoot) return KeyedSubtree(key: _rootNodeKey, child: keyedCard);
+    return keyedCard;
   }
 
   // ── List card ─────────────────────────────────────────────────────────────

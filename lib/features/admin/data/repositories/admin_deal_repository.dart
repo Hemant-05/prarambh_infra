@@ -41,6 +41,7 @@ class AdminDealRepository {
     String? paymentPlan,
     String? dealStatus,
     String? stage,
+    String? unitId,
     List<String>? docTitles,
     List<File>? docFiles,
   }) async {
@@ -52,6 +53,7 @@ class AdminDealRepository {
       // Skip appending if empty
       if (totalAmount.isNotEmpty) payload["payment_amount"] = totalAmount;
       if (paymentPlan != null && paymentPlan.isNotEmpty) payload["payment_plan"] = paymentPlan;
+      if (unitId != null && unitId.isNotEmpty) payload["unit_id"] = unitId;
       
       if (tokenAmount != null && tokenAmount.isNotEmpty) {
         payload["token_amount"] = tokenAmount;

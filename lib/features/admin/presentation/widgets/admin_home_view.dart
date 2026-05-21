@@ -162,15 +162,22 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                             Stack(
                               clipBehavior: Clip.none,
                               children: [
-                                ProfileImage(
-                                  imageUrl: currentUser?.profilePhoto != null 
-                                      ? "https://workiees.com/${currentUser?.profilePhoto}"
-                                      : null,
-                                  initials: currentUser?.name.isNotEmpty ?? false
-                                      ? currentUser!.name.trim().split(' ').map((e) => e[0]).take(2).join().toUpperCase()
-                                      : 'A',
-                                  heroTag: 'admin_home_profile',
-                                  radius: 32,
+                                Container(
+                                  width: 64,
+                                  height: 64,
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white,
+                                    border: Border.all(
+                                      color: primaryBlue.withOpacity(0.2),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Image.asset(
+                                    'assets/logos/logo.png',
+                                    fit: BoxFit.contain,
+                                  ),
                                 ),
                                 Positioned(
                                   bottom: -2,
@@ -197,7 +204,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    currentUser?.name ?? 'Admin User',
+                                    'PRARAMBH INFRA',
                                     style: GoogleFonts.montserrat(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
