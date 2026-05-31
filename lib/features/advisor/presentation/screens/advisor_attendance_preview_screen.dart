@@ -115,7 +115,7 @@ class AdvisorAttendancePreviewScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  isCheckIn ? meeting.startTime : (meeting.checkInTime ?? '--:--'),
+                  _formatTime(isCheckIn ? meeting.startTime : (meeting.checkInTime ?? '--:--')),
                   style: GoogleFonts.montserrat(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
@@ -227,5 +227,30 @@ class AdvisorAttendancePreviewScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatTime(String timeStr) {
+    if (timeStr.isEmpty || timeStr == '--:--') return timeStr;
+    try {
+      final upper = timeStr.toUpperCase();
+      if (upper.contains('AM') || upper.contains('PM')) return timeStr;
+      
+      String t = timeStr;
+      if (t.contains('T')) {
+        t = t.split('T').last;
+      } else if (t.contains(' ')) {
+        t = t.split(' ').last;
+      }
+      
+      final parts = t.split(':');
+      if (parts.isEmpty) return timeStr;
+      final hour = int.parse(parts[0]);
+      final minute = parts.length > 1 ? int.parse(parts[1]) : 0;
+      final period = hour >= 12 ? 'PM' : 'AM';
+      final hour12 = hour % 12 == 0 ? 12 : hour % 12;
+      return '$hour12:${minute.toString().padLeft(2, '0')} $period';
+    } catch (_) {
+      return timeStr;
+    }
   }
 }

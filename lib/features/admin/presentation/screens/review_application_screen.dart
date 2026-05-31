@@ -375,6 +375,19 @@ class ReviewApplicationScreen extends StatelessWidget {
               _buildDetailRow('Date of Birth', advisor.dob),
               _buildDetailRow('Gender', advisor.gender),
               _buildDetailRow('Occupation', advisor.occupation),
+              _buildDetailRow('Marital Status', advisor.maritalStatus),
+              _buildDetailRow('Nationality', advisor.nationality),
+            ]),
+            const SizedBox(height: 20),
+
+            // Card 1b: Professional Details
+            _buildInfoCard(cardColor, 'PROFESSIONAL DETAILS', [
+              _buildDetailRow('Application No', advisor.applicationNumber),
+              _buildDetailRow('Primary Profession', advisor.primaryProfession),
+              _buildDetailRow('Qualification', advisor.qualification),
+              _buildDetailRow('Branch Code', advisor.branchCode),
+              _buildDetailRow('Branch Location', advisor.branchLocation),
+              _buildDetailRow('Head Office', advisor.headOffice),
             ]),
             const SizedBox(height: 20),
 
@@ -408,6 +421,15 @@ class ReviewApplicationScreen extends StatelessWidget {
               _buildDetailRow('Name', advisor.nomineeName),
               _buildDetailRow('DOB', advisor.nomineePhone),
               _buildDetailRow('Relationship', advisor.relationship),
+            ]),
+            const SizedBox(height: 20),
+
+            // Card 3b: Reference Person
+            _buildInfoCard(cardColor, 'REFERENCE PERSON', [
+              _buildDetailRow('Name', advisor.refName),
+              _buildDetailRow('Relationship', advisor.refRelationship),
+              _buildDetailRow('Contact', advisor.refContact),
+              _buildDetailRow('Address', advisor.refAddress),
             ]),
             const SizedBox(height: 20),
 

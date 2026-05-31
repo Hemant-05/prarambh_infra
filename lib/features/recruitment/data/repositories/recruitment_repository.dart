@@ -9,21 +9,28 @@ class RecruitmentRepository {
   Future<bool> registerAdvisorDetailed({
     required String fullName, required String email, required String phone,
     required String designation, required String fatherName, required String dob,
-    required String gender, required String nomineeName, required String nomineeDob,
+    required String gender, required String nomineeName, required String nomineePhone,
     required String relationship, required String occupation, required String aadhaar,
     required String pan, required String bankName, required String accNumber,
     required String ifsc, required String address, required String city,
     required String state, required String pincode, required String leaderCode,
     required String advisorType,
+    // NEW FIELDS
+    String? applicationNumber, String? maritalStatus, String? branchCode,
+    String? branchLocation, String? headOffice, String? primaryProfession,
+    String? qualification, String? nationality, String? referencePerson,
+    // FILES
     required File aadharFront, required File aadharBack, required File panPhoto,
     required File panBackPhoto, required File profilePhoto,
   }) async {
     try {
       final response = await apiClient.registerAdvisor(
         fullName, email, phone, designation, fatherName, dob, gender,
-        nomineeName, nomineeDob, relationship, occupation, aadhaar, pan,
+        nomineeName, nomineePhone, relationship, occupation, aadhaar, pan,
         bankName, accNumber, ifsc, address, city, state, pincode, leaderCode,
         advisorType,
+        applicationNumber, maritalStatus, branchCode, branchLocation, headOffice,
+        primaryProfession, qualification, nationality, referencePerson,
         aadharFront, aadharBack, panPhoto, panBackPhoto, profilePhoto,
       );
 

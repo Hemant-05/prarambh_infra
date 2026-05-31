@@ -1,9 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:provider/provider.dart';
+import '../../../../../data/datasources/remote/api_client.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/widgets/full_screen_image_viewer.dart';
 
 class AttendanceReviewScreen extends StatefulWidget {
+  final String attendanceId;
+  final String meetingId;
   final String advisorName;
   final String advisorId;
   final String checkInTime;
@@ -13,6 +19,8 @@ class AttendanceReviewScreen extends StatefulWidget {
 
   const AttendanceReviewScreen({
     super.key,
+    required this.attendanceId,
+    required this.meetingId,
     required this.advisorName,
     required this.advisorId,
     required this.checkInTime,
@@ -27,6 +35,33 @@ class AttendanceReviewScreen extends StatefulWidget {
 
 class _AttendanceReviewScreenState extends State<AttendanceReviewScreen> {
   String selectedStatus = 'Present'; // 'Present' or 'Absent'
+  bool _isUploadingVideo = false;
+
+  Future<void> _uploadVideo() async {
+    if (widget.meetingId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid Meeting ID')));
+      return;
+    }
+
+    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.video);
+    if (result != null && result.files.single.path != null) {
+      setState(() => _isUploadingVideo = true);
+      try {
+        final file = File(result.files.single.path!);
+        final api = context.read<ApiClient>();
+        await api.uploadAttendanceVideo(widget.meetingId, file);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Video uploaded successfully!')));
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to upload video: $e')));
+        }
+      } finally {
+        setState(() => _isUploadingVideo = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +182,7 @@ class _AttendanceReviewScreenState extends State<AttendanceReviewScreen> {
                     'Check-In',
                     widget.checkInTime.isNotEmpty &&
                             widget.checkInTime != '--:--'
-                        ? widget.checkInTime
+                        ? _formatTime(widget.checkInTime)
                         : '--:--',
                     Icons.login,
                     Colors.green,
@@ -162,7 +197,7 @@ class _AttendanceReviewScreenState extends State<AttendanceReviewScreen> {
                     'Check-Out',
                     widget.checkOutTime.isNotEmpty &&
                             widget.checkOutTime != '--:--'
-                        ? widget.checkOutTime
+                        ? _formatTime(widget.checkOutTime)
                         : '--:--',
                     Icons.logout,
                     primaryBlue,
@@ -170,6 +205,26 @@ class _AttendanceReviewScreenState extends State<AttendanceReviewScreen> {
                     widget.checkOutPhoto,
                     context,
                   ),
+                  const SizedBox(height: 24),
+                  if (widget.meetingId.isNotEmpty)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _isUploadingVideo ? null : _uploadVideo,
+                        icon: _isUploadingVideo
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : const Icon(Icons.video_call, color: Colors.white),
+                        label: Text(
+                          _isUploadingVideo ? 'Uploading...' : 'Upload Video Evidence',
+                          style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryBlue,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -273,36 +328,30 @@ class _AttendanceReviewScreenState extends State<AttendanceReviewScreen> {
     );
   }
 
-  Widget _buildDecisionToggle(String title, IconData icon, Color color) {
-    bool isSelected = selectedStatus == title;
-    return GestureDetector(
-      onTap: () => setState(() => selectedStatus = title),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.05) : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected ? color : Colors.grey.withOpacity(0.2),
-            width: isSelected ? 1.5 : 1,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 18, color: isSelected ? color : Colors.grey[600]),
-            const SizedBox(width: 8),
-            Text(
-              title,
-              style: GoogleFonts.montserrat(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                color: isSelected ? color : Colors.grey[700],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+
+
+  String _formatTime(String timeStr) {
+    if (timeStr.isEmpty || timeStr == '--:--') return timeStr;
+    try {
+      final upper = timeStr.toUpperCase();
+      if (upper.contains('AM') || upper.contains('PM')) return timeStr;
+      
+      String t = timeStr;
+      if (t.contains('T')) {
+        t = t.split('T').last;
+      } else if (t.contains(' ')) {
+        t = t.split(' ').last;
+      }
+      
+      final parts = t.split(':');
+      if (parts.isEmpty) return timeStr;
+      final hour = int.parse(parts[0]);
+      final minute = parts.length > 1 ? int.parse(parts[1]) : 0;
+      final period = hour >= 12 ? 'PM' : 'AM';
+      final hour12 = hour % 12 == 0 ? 12 : hour % 12;
+      return '$hour12:${minute.toString().padLeft(2, '0')} $period';
+    } catch (_) {
+      return timeStr;
+    }
   }
 }

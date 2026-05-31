@@ -10,6 +10,7 @@ import '../providers/advisor_attendance_provider.dart';
 import '../../data/models/advisor_meeting_model.dart';
 import 'advisor_camera_screen.dart';
 import '../../../../core/utils/access_helper.dart';
+import 'advisor_meeting_details_screen.dart';
 
 class AdvisorMeetingScheduleScreen extends StatefulWidget {
   const AdvisorMeetingScheduleScreen({super.key});
@@ -567,15 +568,27 @@ class _AdvisorMeetingScheduleScreenState
     bool isCompleted = meeting.checkOutTime != null || meeting.status == 'completed';
     bool isOngoing = meeting.checkInTime != null && !isCompleted;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cardColor,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AdvisorMeetingDetailsScreen(meeting: meeting),
+            ),
+          );
+        },
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
-      ),
-      child: Column(
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: borderColor),
+          ),
+          child: Column(
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -725,7 +738,7 @@ class _AdvisorMeetingScheduleScreenState
                         ),
                       
                       // Action Button
-                      if (showCheckIn || showCheckOut)
+                      if (showCheckIn || showCheckOut || isAttending)
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
@@ -746,13 +759,13 @@ class _AdvisorMeetingScheduleScreenState
                                 },
                             icon: provider.isSaving 
                               ? const SizedBox(height: 14, width: 14, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                              : Icon(showCheckOut ? Icons.logout : Icons.login),
+                              : Icon(isAttending ? Icons.exit_to_app : (showCheckOut ? Icons.logout : Icons.login)),
                             label: Text(
-                              showCheckOut ? 'Check Out' : 'Check In', 
+                              isAttending ? 'Exit Meeting' : (showCheckOut ? 'Check Out' : 'Check In'), 
                               style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: showCheckOut ? Colors.blue : primaryBlue,
+                              backgroundColor: isAttending ? Colors.redAccent : (showCheckOut ? Colors.blue : primaryBlue),
                               foregroundColor: Colors.white,
                               elevation: 0,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -769,20 +782,33 @@ class _AdvisorMeetingScheduleScreenState
           ),
         ],
       ),
+    ),
+      ),
     );
   }
 
-  String _formatTime(String time24) {
-    if (time24.isEmpty || time24 == '--:--') return time24;
+  String _formatTime(String timeStr) {
+    if (timeStr.isEmpty || timeStr == '--:--') return timeStr;
     try {
-      final parts = time24.split(':');
-      if (parts.length < 2) return time24;
+      final upper = timeStr.toUpperCase();
+      if (upper.contains('AM') || upper.contains('PM')) return timeStr;
+      
+      String t = timeStr;
+      if (t.contains('T')) {
+        t = t.split('T').last;
+      } else if (t.contains(' ')) {
+        t = t.split(' ').last;
+      }
+      
+      final parts = t.split(':');
+      if (parts.isEmpty) return timeStr;
       final hour = int.parse(parts[0]);
-      final minute = int.parse(parts[1]);
-      final dt = DateTime(2000, 1, 1, hour, minute);
-      return DateFormat('h:mm a').format(dt);
+      final minute = parts.length > 1 ? int.parse(parts[1]) : 0;
+      final period = hour >= 12 ? 'PM' : 'AM';
+      final hour12 = hour % 12 == 0 ? 12 : hour % 12;
+      return '$hour12:${minute.toString().padLeft(2, '0')} $period';
     } catch (_) {
-      return time24;
+      return timeStr;
     }
   }
 }

@@ -7,7 +7,8 @@ class AdvisorMeetingModel {
   final String endTime;
   final String? checkInTime;
   final String? checkOutTime;
-  final String status;
+  final String status; // upcoming | ongoing | completed
+  final String videoUrl;
 
   AdvisorMeetingModel({
     required this.id,
@@ -19,6 +20,7 @@ class AdvisorMeetingModel {
     this.checkInTime,
     this.checkOutTime,
     this.status = 'upcoming',
+    this.videoUrl = '',
   });
 
   factory AdvisorMeetingModel.fromJson(Map<String, dynamic> json) {
@@ -57,6 +59,13 @@ class AdvisorMeetingModel {
     final String? cIn = (att != null ? att['check_in_time'] : json['check_in_time'])?.toString();
     final String? cOut = (att != null ? att['check_out_time'] : json['check_out_time'])?.toString();
 
+    // Parse video URL
+    const String baseUrl = "https://workiees.com/";
+    String rawVideoUrl = json['video_url'] ?? json['video'] ?? '';
+    String finalVideoUrl = rawVideoUrl.startsWith('http')
+        ? rawVideoUrl
+        : (rawVideoUrl.isNotEmpty ? baseUrl + (rawVideoUrl.startsWith('/') ? rawVideoUrl.substring(1) : rawVideoUrl) : '');
+
     return AdvisorMeetingModel(
       id: json['id']?.toString() ?? '',
       title: json['title'] ?? 'Untitled Meeting',
@@ -67,6 +76,7 @@ class AdvisorMeetingModel {
       checkInTime: cIn,
       checkOutTime: cOut,
       status: calculatedStatus,
+      videoUrl: finalVideoUrl,
     );
   }
 
@@ -80,6 +90,7 @@ class AdvisorMeetingModel {
     String? checkInTime,
     String? checkOutTime,
     String? status,
+    String? videoUrl,
   }) {
     return AdvisorMeetingModel(
       id: id ?? this.id,
@@ -91,6 +102,7 @@ class AdvisorMeetingModel {
       checkInTime: checkInTime ?? this.checkInTime,
       checkOutTime: checkOutTime ?? this.checkOutTime,
       status: status ?? this.status,
+      videoUrl: videoUrl ?? this.videoUrl,
     );
   }
 }

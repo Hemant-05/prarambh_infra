@@ -558,7 +558,7 @@ class _PriorityLeadsScreenState extends State<PriorityLeadsScreen> {
             );
             final fetchedLead = await context
                 .read<AdminLeadProvider>()
-                .getSingleLead(lead.id.toString());
+                .getSingleLead(lead.id.toString(), withLoading: false);
             if (context.mounted) {
               Navigator.pop(context);
               if (fetchedLead != null) {

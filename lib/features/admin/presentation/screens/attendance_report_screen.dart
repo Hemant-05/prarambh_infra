@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/features/admin/data/models/meeting_model.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/back_button.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/admin_attendance_provider.dart';
 import 'attendance_review_screen.dart';
+import 'create_meeting_screen.dart';
+import 'package:video_player/video_player.dart';
+import 'package:chewie/chewie.dart';
 
 class AttendanceReportScreen extends StatefulWidget {
   final String meetingId;
@@ -139,6 +143,93 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen>
       ),
       body: Column(
         children: [
+          if (meeting != null)
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey[900] : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.withOpacity(0.15)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          meeting.title,
+                          style: GoogleFonts.montserrat(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.edit_outlined, color: primaryBlue, size: 20),
+                        onPressed: () async {
+                          final updated = await Navigator.push<bool>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => CreateMeetingScreen(existingMeeting: meeting),
+                            ),
+                          );
+                          if (updated == true && context.mounted) {
+                            provider.fetchDailyAttendance(widget.meetingDate);
+                            provider.fetchMeetingById(widget.meetingId);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 6,
+                    children: [
+                      _infoChip(Icons.calendar_today_outlined, _formatDate(meeting.date), Colors.grey[600]!),
+                      _infoChip(Icons.access_time_outlined, "${_formatTime(meeting.time)} - ${_formatTime(meeting.endTime)}", Colors.grey[600]!),
+                      if (meeting.location.isNotEmpty)
+                        _infoChip(Icons.location_on_outlined, meeting.location, Colors.grey[600]!),
+                    ],
+                  ),
+                  if (meeting.videoUrl.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    Text(
+                      'ATTACHED VIDEO',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      height: 180,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: _MeetingVideoPlayer(videoUrl: meeting.videoUrl),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           Container(
             color: isDark ? Colors.grey[900] : Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -346,10 +437,12 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen>
           context,
           MaterialPageRoute(
             builder: (_) => AttendanceReviewScreen(
+              attendanceId: r is AttendanceRecord ? r.id : (r['id']?.toString() ?? ''),
+              meetingId: widget.meetingId,
               advisorName: name,
               advisorId: code,
-              checkInTime: time,
-              checkOutTime: outTime,
+              checkInTime: _formatTime(time),
+              checkOutTime: _formatTime(outTime),
               checkInPhoto: _formatImageUrl(photo),
               checkOutPhoto: _formatImageUrl(outPhoto),
             ),
@@ -372,7 +465,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen>
                 Expanded(
                   child: _timeBlock(
                     'CHECK IN',
-                    time,
+                    _formatTime(time),
                     _formatImageUrl(photo),
                     Colors.green,
                     isDark,
@@ -387,7 +480,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen>
                 Expanded(
                   child: _timeBlock(
                     'CHECK OUT',
-                    outTime,
+                    _formatTime(outTime),
                     _formatImageUrl(outPhoto),
                     Colors.blue,
                     isDark,
@@ -614,5 +707,131 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen>
         ),
       ),
     );
+  }
+
+  Widget _infoChip(IconData icon, String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 13, color: color),
+        const SizedBox(width: 4),
+        Text(label, style: GoogleFonts.montserrat(fontSize: 12, color: color)),
+      ],
+    );
+  }
+
+  String _formatTime(String timeStr) {
+    if (timeStr.isEmpty || timeStr == '--:--') return timeStr;
+    try {
+      final upper = timeStr.toUpperCase();
+      if (upper.contains('AM') || upper.contains('PM')) return timeStr;
+      
+      String t = timeStr;
+      if (t.contains('T')) {
+        t = t.split('T').last;
+      } else if (t.contains(' ')) {
+        t = t.split(' ').last;
+      }
+      
+      final parts = t.split(':');
+      if (parts.isEmpty) return timeStr;
+      final hour = int.parse(parts[0]);
+      final minute = parts.length > 1 ? int.parse(parts[1]) : 0;
+      final period = hour >= 12 ? 'PM' : 'AM';
+      final hour12 = hour % 12 == 0 ? 12 : hour % 12;
+      return '$hour12:${minute.toString().padLeft(2, '0')} $period';
+    } catch (_) {
+      return timeStr;
+    }
+  }
+
+  String _formatDate(String dateStr) {
+    if (dateStr.isEmpty) return '';
+    try {
+      final date = DateTime.parse(dateStr);
+      return DateFormat('EEE, MMM dd, yyyy').format(date);
+    } catch (_) {
+      return dateStr;
+    }
+  }
+}
+
+class _MeetingVideoPlayer extends StatefulWidget {
+  final String videoUrl;
+  const _MeetingVideoPlayer({required this.videoUrl});
+
+  @override
+  State<_MeetingVideoPlayer> createState() => _MeetingVideoPlayerState();
+}
+
+class _MeetingVideoPlayerState extends State<_MeetingVideoPlayer> {
+  late VideoPlayerController _videoPlayerController;
+  ChewieController? _chewieController;
+  bool _hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initPlayer();
+  }
+
+  Future<void> _initPlayer() async {
+    try {
+      _videoPlayerController = VideoPlayerController.networkUrl(
+        Uri.parse(widget.videoUrl),
+      );
+      await _videoPlayerController.initialize();
+
+      _chewieController = ChewieController(
+        videoPlayerController: _videoPlayerController,
+        autoPlay: false,
+        looping: false,
+        aspectRatio: _videoPlayerController.value.aspectRatio,
+        allowFullScreen: true,
+        materialProgressColors: ChewieProgressColors(
+          playedColor: Colors.blue,
+          handleColor: Colors.blueAccent,
+          backgroundColor: Colors.grey,
+          bufferedColor: Colors.white,
+        ),
+      );
+    } catch (e) {
+      debugPrint("Error initializing video player: $e");
+      _hasError = true;
+    }
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _videoPlayerController.dispose();
+    _chewieController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_hasError) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 48, color: Colors.grey[600]),
+          const SizedBox(height: 8),
+          Text(
+            'Failed to load video',
+            style: GoogleFonts.montserrat(
+              color: Colors.grey[500],
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return _chewieController != null &&
+            _chewieController!.videoPlayerController.value.isInitialized
+        ? Chewie(controller: _chewieController!)
+        : const Center(child: CircularProgressIndicator(color: Colors.white));
   }
 }

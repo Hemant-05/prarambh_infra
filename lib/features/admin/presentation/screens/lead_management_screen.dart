@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../data/models/lead_models.dart';
+import 'select_advisor_screen.dart';
 
 import '../../../advisor/presentation/screens/lead_details_screen.dart';
 import '../../../../core/utils/lead_filter_helper.dart'; // NEW
@@ -25,6 +26,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
+  AdvisorAssignModel? _selectedAdvisorFilter;
   String _selectedCategory = 'All';
   String _selectedPotential = 'All';
   String _selectedAttempts = 'All';
@@ -150,7 +152,9 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
             icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: () {
               context.read<AdminLeadProvider>().fetchUnassignedLeads();
-              context.read<AdminLeadProvider>().fetchLeads();
+              context.read<AdminLeadProvider>().fetchLeads(
+                  advisorCode: _selectedAdvisorFilter?.advisorCode,
+              );
             },
             tooltip: 'Refresh Leads',
           ),
@@ -370,6 +374,102 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                     : null,
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          // Advisor Filter Widget
+          GestureDetector(
+            onTap: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SelectAdvisorScreen()),
+              );
+              if (result != null && result is AdvisorAssignModel) {
+                setState(() {
+                  _selectedAdvisorFilter = result;
+                });
+                context.read<AdminLeadProvider>().fetchLeads(advisorCode: result.advisorCode);
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey[900] : Colors.grey[100],
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: _selectedAdvisorFilter != null ? primaryBlue.withOpacity(0.5) : Colors.transparent,
+                ),
+              ),
+              child: Row(
+                children: [
+                  if (_selectedAdvisorFilter == null)
+                    Icon(
+                      Icons.person_search,
+                      size: 18,
+                      color: Colors.grey,
+                    ),
+                  if (_selectedAdvisorFilter != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        color: primaryBlue.withOpacity(0.1),
+                        child: _selectedAdvisorFilter!.profile.isNotEmpty
+                            ? Image.network(
+                                _selectedAdvisorFilter!.profile.startsWith('http')
+                                    ? _selectedAdvisorFilter!.profile
+                                    : "https://workiees.com/${_selectedAdvisorFilter!.profile.startsWith('/') ? _selectedAdvisorFilter!.profile.substring(1) : _selectedAdvisorFilter!.profile}",
+                                fit: BoxFit.cover,
+                                errorBuilder: (c, e, s) => Icon(Icons.person, color: primaryBlue, size: 20),
+                              )
+                            : Icon(Icons.person, color: primaryBlue, size: 20),
+                      ),
+                    ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _selectedAdvisorFilter != null
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _selectedAdvisorFilter!.name,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              ),
+                              Text(
+                                _selectedAdvisorFilter!.advisorCode,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: primaryBlue,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Text(
+                            'Select Advisor to filter leads...',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                  ),
+                  if (_selectedAdvisorFilter != null)
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedAdvisorFilter = null;
+                        });
+                        context.read<AdminLeadProvider>().fetchLeads();
+                      },
+                      child: const Icon(Icons.clear, size: 16, color: Colors.grey),
+                    ),
+                ],
               ),
             ),
           ),

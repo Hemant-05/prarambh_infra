@@ -27,6 +27,7 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with TickerProvid
   final TransformationController _transformController = TransformationController();
   final GlobalKey _rootNodeKey = GlobalKey();
   final GlobalKey _viewerKey = GlobalKey();
+  final GlobalKey _graphKey = GlobalKey();
   final Map<String, GlobalKey> _nodeKeys = {};
 
   late AnimationController _animationController;
@@ -34,6 +35,7 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with TickerProvid
 
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  String? _currentMatchId;
 
   int _currentLayoutType = 0;
   bool _graphInitialized = false;
@@ -59,15 +61,24 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with TickerProvid
       ..orientation = BuchheimWalkerConfiguration.ORIENTATION_TOP_BOTTOM;
 
     _tabController.addListener(() {
-      if (mounted) setState(() => _showTreeFab = _tabController.index == 0);
+      if (mounted) {
+        setState(() => _showTreeFab = _tabController.index == 0);
+        if (_tabController.index == 0 && _searchQuery.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _panToFirstMatch();
+          });
+        }
+      }
     });
 
     _searchController.addListener(() {
-      final newQuery = _searchController.text.trim().toLowerCase();
+      final newQuery = _searchController.text.trim().toLowerCase().replaceAll(RegExp(r'\s+'), '');
       if (_searchQuery != newQuery) {
         setState(() => _searchQuery = newQuery);
-        if (_searchQuery.isNotEmpty) {
+        if (_searchQuery.isNotEmpty && _tabController.index == 0) {
           _panToFirstMatch();
+        } else if (_searchQuery.isEmpty) {
+          _currentMatchId = null;
         }
       }
     });
@@ -125,18 +136,25 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with TickerProvid
     final flatList = _flattenTree(provider.teamTree!);
     AdvisorTeamNode? firstMatch;
     for (final n in flatList) {
-      if (n.fullName.toLowerCase().contains(_searchQuery) ||
-          n.advisorCode.toLowerCase().contains(_searchQuery) ||
-          n.designation.toLowerCase().contains(_searchQuery)) {
+      final String nameClean = n.fullName.toLowerCase().replaceAll(RegExp(r'\s+'), '');
+      final String codeClean = n.advisorCode.toLowerCase().replaceAll(RegExp(r'\s+'), '');
+      final String roleClean = n.designation.toLowerCase().replaceAll(RegExp(r'\s+'), '');
+      
+      if (nameClean.contains(_searchQuery) ||
+          codeClean.contains(_searchQuery) ||
+          roleClean.contains(_searchQuery)) {
         firstMatch = n;
         break;
       }
     }
 
     if (firstMatch != null) {
+      _currentMatchId = firstMatch.advisorCode;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _panToNode(firstMatch!);
       });
+    } else {
+      _currentMatchId = null;
     }
   }
 
@@ -147,46 +165,41 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with TickerProvid
 
     final nodeBox = nodeKey.currentContext?.findRenderObject() as RenderBox?;
     final viewerBox = _viewerKey.currentContext?.findRenderObject() as RenderBox?;
-    if (nodeBox == null || viewerBox == null) return;
+    final graphBox = _graphKey.currentContext?.findRenderObject() as RenderBox?;
+    if (nodeBox == null || viewerBox == null || graphBox == null) return;
 
     _animationController.stop();
 
     final Matrix4 currentMatrix = _transformController.value;
     
     final Offset nodeCenterLocal = Offset(nodeBox.size.width / 2, nodeBox.size.height / 2);
-    final Offset currentCenterInViewer = nodeBox.localToGlobal(nodeCenterLocal, ancestor: viewerBox);
+    final Offset contentCenter = nodeBox.localToGlobal(nodeCenterLocal, ancestor: graphBox);
     final Size viewerSize = viewerBox.size;
     
     Matrix4 endMatrix;
     
     if (isRoot) {
-      final double currentScale = currentMatrix.entry(0, 0);
-      final double currentTx = currentMatrix.getTranslation().x;
-      final double currentTy = currentMatrix.getTranslation().y;
-      
-      final double localX = (currentCenterInViewer.dx - currentTx) / currentScale;
-      final double localY = (currentCenterInViewer.dy - currentTy) / currentScale;
-      
+      final double targetScale = 1.0;
       final double targetX = viewerSize.width / 2;
       final double targetY = 80.0; // Top padding + half node height
       
-      final double newTx = targetX - localX;
-      final double newTy = targetY - localY;
+      final double newTx = targetX - targetScale * contentCenter.dx;
+      final double newTy = targetY - targetScale * contentCenter.dy;
       
-      endMatrix = Matrix4.identity()..translate(newTx, newTy);
+      endMatrix = Matrix4.identity()
+        ..translate(newTx, newTy)
+        ..scale(targetScale);
     } else {
+      final double targetScale = 1.0; 
       final double targetX = viewerSize.width / 2;
       final double targetY = viewerSize.height / 2;
 
-      final double dx = targetX - currentCenterInViewer.dx;
-      final double dy = targetY - currentCenterInViewer.dy;
-
-      endMatrix = currentMatrix.clone()
-        ..setTranslationRaw(
-          currentMatrix.getTranslation().x + dx,
-          currentMatrix.getTranslation().y + dy,
-          currentMatrix.getTranslation().z,
-        );
+      final double newTx = targetX - targetScale * contentCenter.dx;
+      final double newTy = targetY - targetScale * contentCenter.dy;
+      
+      endMatrix = Matrix4.identity()
+        ..translate(newTx, newTy)
+        ..scale(targetScale);
     }
 
     _animationController.reset();
@@ -237,11 +250,14 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with TickerProvid
     if (provider.teamTree != null) {
       flatList = _flattenTree(provider.teamTree!);
       if (_searchQuery.isNotEmpty) {
-        flatList = flatList.where((n) =>
-        n.fullName.toLowerCase().contains(_searchQuery) ||
-            n.advisorCode.toLowerCase().contains(_searchQuery) ||
-            n.designation.toLowerCase().contains(_searchQuery)
-        ).toList();
+        flatList = flatList.where((n) {
+          final String nameClean = n.fullName.toLowerCase().replaceAll(RegExp(r'\s+'), '');
+          final String codeClean = n.advisorCode.toLowerCase().replaceAll(RegExp(r'\s+'), '');
+          final String roleClean = n.designation.toLowerCase().replaceAll(RegExp(r'\s+'), '');
+          return nameClean.contains(_searchQuery) ||
+              codeClean.contains(_searchQuery) ||
+              roleClean.contains(_searchQuery);
+        }).toList();
       }
     }
 
@@ -371,18 +387,21 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with TickerProvid
                   child: InteractiveViewer(
                         transformationController: _transformController,
                         constrained: false,
-                        boundaryMargin: const EdgeInsets.all(1500),
+                        boundaryMargin: const EdgeInsets.all(double.infinity),
                         minScale: 0.1,
                         maxScale: 3.5,
-                        child: GraphView(
-                          graph: graph,
-                          algorithm: BuchheimWalkerAlgorithm(algorithmConfig, TreeEdgeRenderer(algorithmConfig)),
-                          paint: Paint()
-                            ..color = primaryBlue.withOpacity(0.4)
-                            ..strokeWidth = 2.0
-                            ..strokeCap = StrokeCap.round
-                            ..style = PaintingStyle.stroke,
-                          builder: (Node node) => _buildNodeWidget(context, node.key!.value as AdvisorTeamNode, primaryBlue, isDark),
+                        child: Container(
+                          key: _graphKey,
+                          child: GraphView(
+                            graph: graph,
+                            algorithm: BuchheimWalkerAlgorithm(algorithmConfig, TreeEdgeRenderer(algorithmConfig)),
+                            paint: Paint()
+                              ..color = primaryBlue.withOpacity(0.4)
+                              ..strokeWidth = 2.0
+                              ..strokeCap = StrokeCap.round
+                              ..style = PaintingStyle.stroke,
+                            builder: (Node node) => _buildNodeWidget(context, node.key!.value as AdvisorTeamNode, primaryBlue, isDark),
+                          ),
                         ),
                       ),
                 ),
@@ -453,7 +472,11 @@ class _AdvisorTeamScreenState extends State<AdvisorTeamScreen> with TickerProvid
     final textColor = Theme.of(context).textTheme.bodyLarge?.color;
     final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
 
-    final bool isMatch = _searchQuery.isNotEmpty && (node.fullName.toLowerCase().contains(_searchQuery) || node.advisorCode.toLowerCase().contains(_searchQuery) || node.designation.toLowerCase().contains(_searchQuery));
+    final String nameClean = node.fullName.toLowerCase().replaceAll(RegExp(r'\s+'), '');
+    final String codeClean = node.advisorCode.toLowerCase().replaceAll(RegExp(r'\s+'), '');
+    final String roleClean = node.designation.toLowerCase().replaceAll(RegExp(r'\s+'), '');
+
+    final bool isMatch = _searchQuery.isNotEmpty && (nameClean.contains(_searchQuery) || codeClean.contains(_searchQuery) || roleClean.contains(_searchQuery));
 
     String initials = '?';
     final parts = node.fullName.trim().split(' ').where((s) => s.isNotEmpty).toList();

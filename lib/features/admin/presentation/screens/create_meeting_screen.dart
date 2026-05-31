@@ -1,13 +1,19 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:video_player/video_player.dart';
+import 'package:chewie/chewie.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/back_button.dart';
 import '../providers/admin_attendance_provider.dart';
 import 'package:prarambh_infra/core/utils/validators.dart';
+import '../../data/models/meeting_model.dart';
 
 class CreateMeetingScreen extends StatefulWidget {
-  const CreateMeetingScreen({super.key});
+  final MeetingModel? existingMeeting;
+  const CreateMeetingScreen({super.key, this.existingMeeting});
 
   @override
   State<CreateMeetingScreen> createState() => _CreateMeetingScreenState();
@@ -21,12 +27,63 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
   DateTime? _selectedDate;
   TimeOfDay? _selectedStartTime;
   TimeOfDay? _selectedEndTime;
+  File? _selectedVideo;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existingMeeting != null) {
+      final m = widget.existingMeeting!;
+      _titleCtrl.text = m.title;
+      _locationCtrl.text = m.location;
+      if (m.date.isNotEmpty) {
+        _selectedDate = DateTime.tryParse(m.date);
+      }
+      if (m.time.isNotEmpty && m.time != '--:--') {
+        final parts = m.time.split(':');
+        if (parts.length >= 2) {
+          _selectedStartTime = TimeOfDay(
+            hour: int.parse(parts[0]),
+            minute: int.parse(parts[1]),
+          );
+        }
+      }
+      if (m.endTime.isNotEmpty && m.endTime != '--:--') {
+        final parts = m.endTime.split(':');
+        if (parts.length >= 2) {
+          _selectedEndTime = TimeOfDay(
+            hour: int.parse(parts[0]),
+            minute: int.parse(parts[1]),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _pickVideo() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['mp4', 'mov', 'avi', 'mkv', 'webm'],
+    );
+    if (result != null && result.files.single.path != null) {
+      setState(() {
+        _selectedVideo = File(result.files.single.path!);
+      });
+    }
+  }
 
   @override
   void dispose() {
     _titleCtrl.dispose();
     _locationCtrl.dispose();
     super.dispose();
+  }
+
+  String _formatTime12Hour(TimeOfDay time) {
+    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
+    return '$hour:$minute $period';
   }
 
   Future<void> _pickDate() async {
@@ -43,6 +100,12 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
     final picked = await showTimePicker(
       context: context,
       initialTime: _selectedStartTime ?? TimeOfDay.now(),
+      builder: (BuildContext context, Widget? child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
+          child: child!,
+        );
+      },
     );
     if (picked != null) setState(() => _selectedStartTime = picked);
   }
@@ -51,6 +114,12 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
     final picked = await showTimePicker(
       context: context,
       initialTime: _selectedEndTime ?? _selectedStartTime ?? TimeOfDay.now(),
+      builder: (BuildContext context, Widget? child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
+          child: child!,
+        );
+      },
     );
     if (picked != null) setState(() => _selectedEndTime = picked);
   }
@@ -95,14 +164,36 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
       'end_time': _formatApiTime(_selectedEndTime!),
     };
 
-    final ok = await context.read<AdminAttendanceProvider>().addMeeting(data);
-    if (!mounted) return;
-
-    if (ok) {
-      _showSnack('Meeting created successfully!');
-      Navigator.pop(context, true);
+    final provider = context.read<AdminAttendanceProvider>();
+    
+    if (widget.existingMeeting != null) {
+      // UPDATE MEETING
+      final success = await provider.updateMeeting(widget.existingMeeting!.id, data);
+      if (!mounted) return;
+      if (success) {
+        _showSnack('Meeting updated successfully!');
+        if (_selectedVideo != null) {
+          _showSnack('Starting video upload in background...');
+          provider.uploadVideoInBackground(widget.existingMeeting!.id, _selectedVideo!);
+        }
+        Navigator.pop(context, true);
+      } else {
+        _showSnack('Failed to update meeting. Please try again.', isError: true);
+      }
     } else {
-      _showSnack('Failed to create meeting. Please try again.', isError: true);
+      // CREATE MEETING
+      final meetingId = await provider.addMeeting(data);
+      if (!mounted) return;
+      if (meetingId != null) {
+        _showSnack('Meeting created successfully!');
+        if (_selectedVideo != null) {
+          _showSnack('Starting video upload in background...');
+          provider.uploadVideoInBackground(meetingId, _selectedVideo!);
+        }
+        Navigator.pop(context, true);
+      } else {
+        _showSnack('Failed to create meeting. Please try again.', isError: true);
+      }
     }
   }
 
@@ -121,17 +212,17 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
     final cardColor = AppColors.getCardColor(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSaving = context.watch<AdminAttendanceProvider>().isSaving;
+    final isEdit = widget.existingMeeting != null;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
+      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
       appBar: AppBar(
         backgroundColor: primaryBlue,
         elevation: 0,
         centerTitle: true,
         leading: backButton(isDark: false),
         title: Text(
-          'Create Meeting',
+          isEdit ? 'Edit Meeting' : 'Create Meeting',
           style: GoogleFonts.montserrat(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -162,7 +253,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                     ),
                   )
                 : Text(
-                    'Create Meeting',
+                    isEdit ? 'Update Meeting' : 'Create Meeting',
                     style: GoogleFonts.montserrat(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -180,7 +271,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Meeting Details',
+                isEdit ? 'Edit Meeting Details' : 'Meeting Details',
                 style: GoogleFonts.montserrat(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -237,7 +328,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                               _tapField(
                                 value: _selectedStartTime == null
                                     ? 'Select Time'
-                                    : _selectedStartTime!.format(context),
+                                    : _formatTime12Hour(_selectedStartTime!),
                                 icon: Icons.access_time_outlined,
                                 placeholder: _selectedStartTime == null,
                                 isDark: isDark,
@@ -255,7 +346,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                               _tapField(
                                 value: _selectedEndTime == null
                                     ? 'Select Time'
-                                    : _selectedEndTime!.format(context),
+                                    : _formatTime12Hour(_selectedEndTime!),
                                 icon: Icons.access_time_outlined,
                                 placeholder: _selectedEndTime == null,
                                 isDark: isDark,
@@ -273,6 +364,63 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                       controller: _locationCtrl,
                       hint: 'e.g., Sector 45, Prarambh HQ',
                       icon: Icons.location_on_outlined,
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    _label('ATTENDANCE VIDEO (OPTIONAL)'),
+                    if (isEdit && _selectedVideo == null && widget.existingMeeting!.videoUrl.isNotEmpty) ...[
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        height: 180,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: _MeetingVideoPlayer(videoUrl: widget.existingMeeting!.videoUrl),
+                        ),
+                      ),
+                    ],
+                    GestureDetector(
+                      onTap: _pickVideo,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.grey[850] : Colors.grey[50],
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.video_file_outlined, color: _selectedVideo != null ? primaryBlue : Colors.grey[400], size: 20),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _selectedVideo != null
+                                    ? _selectedVideo!.path.split('/').last.split('\\').last
+                                    : (isEdit && widget.existingMeeting!.videoUrl.isNotEmpty
+                                        ? 'Change uploaded video...'
+                                        : 'Select a video file...'),
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 13,
+                                  color: (_selectedVideo != null || (isEdit && widget.existingMeeting!.videoUrl.isNotEmpty))
+                                      ? (isDark ? Colors.white : Colors.black87)
+                                      : Colors.grey[400],
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (_selectedVideo != null)
+                              GestureDetector(
+                                onTap: () => setState(() => _selectedVideo = null),
+                                child: const Icon(Icons.close, color: Colors.grey, size: 18),
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -373,5 +521,85 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
         ]),
       ),
     );
+  }
+}
+
+class _MeetingVideoPlayer extends StatefulWidget {
+  final String videoUrl;
+  const _MeetingVideoPlayer({required this.videoUrl});
+
+  @override
+  State<_MeetingVideoPlayer> createState() => _MeetingVideoPlayerState();
+}
+
+class _MeetingVideoPlayerState extends State<_MeetingVideoPlayer> {
+  late VideoPlayerController _videoPlayerController;
+  ChewieController? _chewieController;
+  bool _hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initPlayer();
+  }
+
+  Future<void> _initPlayer() async {
+    try {
+      _videoPlayerController = VideoPlayerController.networkUrl(
+        Uri.parse(widget.videoUrl),
+      );
+      await _videoPlayerController.initialize();
+
+      _chewieController = ChewieController(
+        videoPlayerController: _videoPlayerController,
+        autoPlay: false,
+        looping: false,
+        aspectRatio: _videoPlayerController.value.aspectRatio,
+        allowFullScreen: true,
+        materialProgressColors: ChewieProgressColors(
+          playedColor: Colors.blue,
+          handleColor: Colors.blueAccent,
+          backgroundColor: Colors.grey,
+          bufferedColor: Colors.white,
+        ),
+      );
+    } catch (e) {
+      debugPrint("Error initializing video player: $e");
+      _hasError = true;
+    }
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _videoPlayerController.dispose();
+    _chewieController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_hasError) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 48, color: Colors.grey[600]),
+          const SizedBox(height: 8),
+          Text(
+            'Failed to load video',
+            style: GoogleFonts.montserrat(
+              color: Colors.grey[500],
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return _chewieController != null &&
+            _chewieController!.videoPlayerController.value.isInitialized
+        ? Chewie(controller: _chewieController!)
+        : const Center(child: CircularProgressIndicator(color: Colors.white));
   }
 }

@@ -41,6 +41,20 @@ class _AdvisorEditProfileScreenState extends State<AdvisorEditProfileScreen> {
   late TextEditingController _nomineePhoneController;
   late TextEditingController _relationshipController;
 
+  // Read-only controllers for new fields
+  late TextEditingController _appNoController;
+  late TextEditingController _maritalStatusController;
+  late TextEditingController _branchCodeController;
+  late TextEditingController _branchLocController;
+  late TextEditingController _headOfficeController;
+  late TextEditingController _primaryProfController;
+  late TextEditingController _qualController;
+  late TextEditingController _natController;
+  late TextEditingController _refNameController;
+  late TextEditingController _refRelController;
+  late TextEditingController _refContController;
+  late TextEditingController _refAddController;
+
   String _selectedGender = 'Male';
   File? _profileImage;
   final ImagePicker _picker = ImagePicker();
@@ -68,6 +82,19 @@ class _AdvisorEditProfileScreenState extends State<AdvisorEditProfileScreen> {
     _nomineePhoneController = TextEditingController(text: p.nomineePhone);
     _relationshipController = TextEditingController(text: p.relationship);
     _selectedGender = p.gender;
+
+    _appNoController = TextEditingController(text: p.applicationNumber);
+    _maritalStatusController = TextEditingController(text: p.maritalStatus);
+    _branchCodeController = TextEditingController(text: p.branchCode);
+    _branchLocController = TextEditingController(text: p.branchLocation);
+    _headOfficeController = TextEditingController(text: p.headOffice);
+    _primaryProfController = TextEditingController(text: p.primaryProfession);
+    _qualController = TextEditingController(text: p.qualification);
+    _natController = TextEditingController(text: p.nationality);
+    _refNameController = TextEditingController(text: p.refName);
+    _refRelController = TextEditingController(text: p.refRelationship);
+    _refContController = TextEditingController(text: p.refContact);
+    _refAddController = TextEditingController(text: p.refAddress);
   }
 
   @override
@@ -90,6 +117,18 @@ class _AdvisorEditProfileScreenState extends State<AdvisorEditProfileScreen> {
     _nomineeNameController.dispose();
     _nomineePhoneController.dispose();
     _relationshipController.dispose();
+    _appNoController.dispose();
+    _maritalStatusController.dispose();
+    _branchCodeController.dispose();
+    _branchLocController.dispose();
+    _headOfficeController.dispose();
+    _primaryProfController.dispose();
+    _qualController.dispose();
+    _natController.dispose();
+    _refNameController.dispose();
+    _refRelController.dispose();
+    _refContController.dispose();
+    _refAddController.dispose();
     super.dispose();
   }
 
@@ -197,8 +236,19 @@ class _AdvisorEditProfileScreenState extends State<AdvisorEditProfileScreen> {
                    Expanded(child: _buildGenderDropdown()),
                 ],
               ),
-              _buildTextField(_occupationController, "Occupation", Icons.work_outline),
+               _buildTextField(_occupationController, "Occupation", Icons.work_outline),
+              _buildTextField(_maritalStatusController, "Marital Status", Icons.favorite_border, readOnly: true),
+              _buildTextField(_natController, "Nationality", Icons.flag_outlined, readOnly: true),
               
+              const SizedBox(height: 24),
+              _buildSectionTitle("Professional Details"),
+              _buildTextField(_appNoController, "Application No", Icons.assignment_outlined, readOnly: true),
+              _buildTextField(_primaryProfController, "Primary Profession", Icons.work, readOnly: true),
+              _buildTextField(_qualController, "Qualification", Icons.school_outlined, readOnly: true),
+              _buildTextField(_branchCodeController, "Branch Code", Icons.account_tree_outlined, readOnly: true),
+              _buildTextField(_branchLocController, "Branch Location", Icons.location_city_outlined, readOnly: true),
+              _buildTextField(_headOfficeController, "Head Office", Icons.business_outlined, readOnly: true),
+
               const SizedBox(height: 24),
               _buildSectionTitle("Contact Details"),
               _buildTextField(_emailController, "Email Address", Icons.email_outlined, keyboardType: TextInputType.emailAddress),
@@ -230,6 +280,13 @@ class _AdvisorEditProfileScreenState extends State<AdvisorEditProfileScreen> {
               _buildTextField(_relationshipController, "Relationship", Icons.handshake_outlined),
               _buildTextField(_nomineePhoneController, "Nominee Phone", Icons.phone, keyboardType: TextInputType.phone),
               
+              const SizedBox(height: 24),
+              _buildSectionTitle("Reference Person"),
+              _buildTextField(_refNameController, "Name", Icons.person_outline, readOnly: true),
+              _buildTextField(_refRelController, "Relationship", Icons.people_alt_outlined, readOnly: true),
+              _buildTextField(_refContController, "Contact", Icons.phone_outlined, readOnly: true),
+              _buildTextField(_refAddController, "Address", Icons.home_outlined, readOnly: true, maxLines: 2),
+
               const SizedBox(height: 40),
             ],
           ),

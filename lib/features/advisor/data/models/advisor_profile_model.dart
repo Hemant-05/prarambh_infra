@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class AdvisorProfileModel {
   final String id;
   final String advisorCode;
@@ -27,17 +29,60 @@ class AdvisorProfileModel {
   final String leaderId;
   final String advisorType;
   final String slab;
+  final String applicationNumber;
+  final String maritalStatus;
+  final String branchCode;
+  final String branchLocation;
+  final String headOffice;
+  final String primaryProfession;
+  final String qualification;
+  final String nationality;
+  final String refName;
+  final String refAddress;
+  final String refRelationship;
+  final String refContact;
 
   AdvisorProfileModel({
-    required this.id, required this.advisorCode, required this.fullName,
-    required this.email, required this.phone, required this.designation,
-    required this.status, required this.profilePhoto, required this.dob,
-    required this.gender, required this.fatherName, required this.address,
-    required this.city, required this.state, required this.pincode,
-    required this.aadhaar, required this.pan, required this.occupation,
-    required this.bankName, required this.accNumber, required this.ifsc,
-    required this.nomineeName, required this.nomineePhone, required this.relationship,
-    required this.joinedDate, required this.advisorType, required this.slab, required this.leaderId
+    required this.id,
+    required this.advisorCode,
+    required this.fullName,
+    required this.email,
+    required this.phone,
+    required this.designation,
+    required this.status,
+    required this.profilePhoto,
+    required this.dob,
+    required this.gender,
+    required this.fatherName,
+    required this.address,
+    required this.city,
+    required this.state,
+    required this.pincode,
+    required this.aadhaar,
+    required this.pan,
+    required this.occupation,
+    required this.bankName,
+    required this.accNumber,
+    required this.ifsc,
+    required this.nomineeName,
+    required this.nomineePhone,
+    required this.relationship,
+    required this.joinedDate,
+    required this.advisorType,
+    required this.slab,
+    required this.leaderId,
+    required this.applicationNumber,
+    required this.maritalStatus,
+    required this.branchCode,
+    required this.branchLocation,
+    required this.headOffice,
+    required this.primaryProfession,
+    required this.qualification,
+    required this.nationality,
+    required this.refName,
+    required this.refAddress,
+    required this.refRelationship,
+    required this.refContact,
   });
 
   factory AdvisorProfileModel.fromJson(Map<String, dynamic> json) {
@@ -48,7 +93,22 @@ class AdvisorProfileModel {
     String rawPath = data['profile_photo']?.toString() ?? '';
     String finalPhotoUrl = rawPath.startsWith('http')
         ? rawPath
-        : (rawPath.isNotEmpty ? baseUrl + (rawPath.startsWith('/') ? rawPath.substring(1) : rawPath) : '');
+        : (rawPath.isNotEmpty
+              ? baseUrl +
+                    (rawPath.startsWith('/') ? rawPath.substring(1) : rawPath)
+              : '');
+
+    Map<String, dynamic>? refPersonMap;
+    if (data['reference_person'] is Map) {
+      refPersonMap = data['reference_person'] as Map<String, dynamic>;
+    } else if (data['reference_person'] is String) {
+      try {
+        refPersonMap =
+            jsonDecode(data['reference_person']) as Map<String, dynamic>;
+      } catch (e) {
+        refPersonMap = null;
+      }
+    }
 
     return AdvisorProfileModel(
       id: data['id']?.toString() ?? '',
@@ -79,6 +139,18 @@ class AdvisorProfileModel {
       advisorType: data['advisor_type']?.toString() ?? 'Full-time',
       slab: data['slab']?.toString() ?? '0',
       leaderId: data['leader_id']?.toString() ?? '14',
+      applicationNumber: data['Application_number']?.toString() ?? 'N/A',
+      maritalStatus: data['Marital_status']?.toString() ?? 'N/A',
+      branchCode: data['Branch_code']?.toString() ?? 'N/A',
+      branchLocation: data['Branch_location']?.toString() ?? 'N/A',
+      headOffice: data['Head_office']?.toString() ?? 'N/A',
+      primaryProfession: data['Primary_profession']?.toString() ?? 'N/A',
+      qualification: data['Qualification']?.toString() ?? 'N/A',
+      nationality: data['nationality']?.toString() ?? 'Indian',
+      refName: refPersonMap?['name']?.toString() ?? 'N/A',
+      refAddress: refPersonMap?['address']?.toString() ?? 'N/A',
+      refRelationship: refPersonMap?['relationship']?.toString() ?? 'N/A',
+      refContact: refPersonMap?['contact_number']?.toString() ?? 'N/A',
     );
   }
 }

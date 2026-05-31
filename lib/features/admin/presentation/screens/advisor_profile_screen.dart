@@ -352,6 +352,20 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                       ),
                       _divider(),
                       _infoRow(
+                        Icons.favorite_border,
+                        'Marital Status',
+                        p.maritalStatus.isEmpty ? 'N/A' : p.maritalStatus,
+                        primaryBlue,
+                      ),
+                      _divider(),
+                      _infoRow(
+                        Icons.flag_outlined,
+                        'Nationality',
+                        p.nationality.isEmpty ? 'N/A' : p.nationality,
+                        primaryBlue,
+                      ),
+                      _divider(),
+                      _infoRow(
                         Icons.phone_android,
                         'Nominee Date of birth',
                         p.nomineePhone.isEmpty ? 'N/A' : p.nomineePhone,
@@ -372,6 +386,96 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                         primaryBlue,
                       ),
                     ],
+                  ]),
+                  const SizedBox(height: 16),
+
+                  // ── Professional Details ───────────────────────────────
+                  _card(cardColor, [
+                    _sectionTitle(
+                      Icons.work_history_outlined,
+                      'Professional Details',
+                      primaryBlue,
+                    ),
+                    const SizedBox(height: 16),
+                    _infoRow(
+                      Icons.assignment_outlined,
+                      'Application No',
+                      p.applicationNumber,
+                      primaryBlue,
+                    ),
+                    _divider(),
+                    _infoRow(
+                      Icons.work,
+                      'Primary Profession',
+                      p.primaryProfession,
+                      primaryBlue,
+                    ),
+                    _divider(),
+                    _infoRow(
+                      Icons.school_outlined,
+                      'Qualification',
+                      p.qualification,
+                      primaryBlue,
+                    ),
+                    _divider(),
+                    _infoRow(
+                      Icons.account_tree_outlined,
+                      'Branch Code',
+                      p.branchCode,
+                      primaryBlue,
+                    ),
+                    _divider(),
+                    _infoRow(
+                      Icons.location_city_outlined,
+                      'Branch Location',
+                      p.branchLocation,
+                      primaryBlue,
+                    ),
+                    _divider(),
+                    _infoRow(
+                      Icons.business_outlined,
+                      'Head Office',
+                      p.headOffice,
+                      primaryBlue,
+                    ),
+                  ]),
+                  const SizedBox(height: 16),
+
+                  // ── Reference Person ───────────────────────────────────
+                  _card(cardColor, [
+                    _sectionTitle(
+                      Icons.person_search_outlined,
+                      'Reference Person',
+                      primaryBlue,
+                    ),
+                    const SizedBox(height: 16),
+                    _infoRow(
+                      Icons.person_outline,
+                      'Name',
+                      p.refName,
+                      primaryBlue,
+                    ),
+                    _divider(),
+                    _infoRow(
+                      Icons.people_alt_outlined,
+                      'Relationship',
+                      p.refRelationship,
+                      primaryBlue,
+                    ),
+                    _divider(),
+                    _infoRow(
+                      Icons.phone_outlined,
+                      'Contact Number',
+                      p.refContact,
+                      primaryBlue,
+                    ),
+                    _divider(),
+                    _infoRow(
+                      Icons.home_outlined,
+                      'Address',
+                      p.refAddress,
+                      primaryBlue,
+                    ),
                   ]),
                   const SizedBox(height: 16),
 

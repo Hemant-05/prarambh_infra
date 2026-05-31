@@ -11,8 +11,11 @@ import '../../../../core/theme/app_colors.dart';
 import '../providers/admin_contest_provider.dart';
 import 'package:prarambh_infra/core/utils/validators.dart';
 
+import '../../data/models/contest_model.dart';
+
 class CreateContestScreen extends StatefulWidget {
-  const CreateContestScreen({super.key});
+  final ContestModel? existingContest;
+  const CreateContestScreen({super.key, this.existingContest});
 
   @override
   State<CreateContestScreen> createState() => _CreateContestScreenState();
@@ -29,10 +32,24 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
   File? _rewardImage;
-  final List<String> _rules = [
+  File? _selectedVideo;
+  List<String> _rules = [
     'Minimum of 5 deals closed to qualify for the grand prize.',
     'All entries must be logged in CRM by 5 PM Friday.',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existingContest != null) {
+      final c = widget.existingContest!;
+      _titleCtrl.text = c.title;
+      _rewardNameCtrl.text = c.rewardText;
+      _rules = List<String>.from(c.rules ?? []);
+      _startDate = ContestModel.smartParse(c.startDate);
+      _endDate = ContestModel.smartParse(c.endDate);
+    }
+  }
 
   @override
   void dispose() {
@@ -44,11 +61,22 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
 
   // --- Pickers ---
   Future<void> _pickDate(bool isStart) async {
+    final currentVal = isStart ? _startDate : _endDate;
+    final firstDate = DateTime.now().subtract(const Duration(days: 365));
+    final lastDate = DateTime.now().add(const Duration(days: 365));
+
+    DateTime initialDate = currentVal ?? DateTime.now();
+    if (initialDate.isBefore(firstDate)) {
+      initialDate = firstDate;
+    } else if (initialDate.isAfter(lastDate)) {
+      initialDate = lastDate;
+    }
+
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
     );
     if (picked != null) {
       setState(() {
@@ -72,6 +100,18 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
     if (result != null && result.files.single.path != null) {
       setState(() {
         _rewardImage = File(result.files.single.path!);
+      });
+    }
+  }
+
+  Future<void> _pickVideo() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['mp4', 'mov', 'avi', 'mkv', 'webm'],
+    );
+    if (result != null && result.files.single.path != null) {
+      setState(() {
+        _selectedVideo = File(result.files.single.path!);
       });
     }
   }
@@ -103,28 +143,61 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
     if (_startDate == null || _endDate == null) {
       return _showSnack('Start and End dates are required.');
     }
-    if (_rewardImage == null) return _showSnack('Reward image is required.');
+    if (widget.existingContest == null && _rewardImage == null) {
+      return _showSnack('Reward image is required.');
+    }
 
     // 2. Call Provider
     final provider = context.read<AdminContestProvider>();
-    final success = await provider.createContest(
-      title: _titleCtrl.text.trim(),
-      startDate: _formatDate(_startDate!),
-      endDate: _formatDate(_endDate!),
-      rewardName: _rewardNameCtrl.text.trim(),
-      rules: jsonEncode(
-        _rules,
-      ), // Encode rules array to JSON string for backend
-      rewardImage: _rewardImage!,
-    );
 
-    if (!mounted) return;
-
-    if (success) {
-      _showSnack('Contest launched successfully!', isError: false);
-      Navigator.pop(context);
+    if (widget.existingContest != null) {
+      // UPDATE
+      final success = await provider.updateContest(
+        widget.existingContest!.id.toString(),
+        title: _titleCtrl.text.trim(),
+        startDate: _formatDate(_startDate!),
+        endDate: _formatDate(_endDate!),
+        rewardName: _rewardNameCtrl.text.trim(),
+        rules: jsonEncode(_rules),
+        rewardImage: _rewardImage,
+      );
+      if (!mounted) return;
+      if (success) {
+        _showSnack('Contest updated successfully!', isError: false);
+        if (_selectedVideo != null) {
+          _showSnack('Starting video upload in background...', isError: false);
+          provider.uploadVideoInBackground(
+            widget.existingContest!.id.toString(),
+            _selectedVideo!,
+          );
+        }
+        Navigator.pop(context);
+      } else {
+        _showSnack('Failed to update contest. Try again.');
+      }
     } else {
-      _showSnack('Failed to launch contest. Try again.');
+      // CREATE
+      final contestId = await provider.createContest(
+        title: _titleCtrl.text.trim(),
+        startDate: _formatDate(_startDate!),
+        endDate: _formatDate(_endDate!),
+        rewardName: _rewardNameCtrl.text.trim(),
+        rules: jsonEncode(_rules),
+        rewardImage: _rewardImage!,
+      );
+
+      if (!mounted) return;
+
+      if (contestId != null) {
+        _showSnack('Contest launched successfully!', isError: false);
+        if (_selectedVideo != null) {
+          _showSnack('Starting video upload in background...', isError: false);
+          provider.uploadVideoInBackground(contestId, _selectedVideo!);
+        }
+        Navigator.pop(context);
+      } else {
+        _showSnack('Failed to launch contest. Try again.');
+      }
     }
   }
 
@@ -154,7 +227,7 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
         centerTitle: true,
         leading: backButton(isDark: isDark),
         title: Text(
-          'Create Contest',
+          widget.existingContest != null ? 'Edit Contest' : 'Create Contest',
           style: GoogleFonts.montserrat(
             color: isDark ? Colors.white : Colors.black,
             fontWeight: FontWeight.bold,
@@ -187,7 +260,13 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
                   ),
                 ),
                 label: Text(
-                  provider.isSaving ? 'Launching...' : 'Launch Contest',
+                  provider.isSaving
+                      ? (widget.existingContest != null
+                            ? 'Updating...'
+                            : 'Launching...')
+                      : (widget.existingContest != null
+                            ? 'Update Contest'
+                            : 'Launch Contest'),
                   style: GoogleFonts.montserrat(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -203,259 +282,366 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
         key: _formKey,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
-        physics: const BouncingScrollPhysics(),
-        child: Column(
-          children: [
-            // Section 1: Details
-            _buildSectionCard(
-              cardColor,
-              'Contest Details',
-              Icons.description_outlined,
-              [
-                _buildInputLabel('Contest Title'),
-                _buildTextField(
-                  'e.g., Q3 Sales Sprint',
-                  controller: _titleCtrl,
-                  validator: (v) => Validators.validateRequired(v, 'Contest Title'),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildInputLabel('Start Date'),
-                          _buildTextField(
-                            _startDate == null
-                                ? 'Select Date'
-                                : _formatDate(_startDate!),
-                            icon: Icons.calendar_today_outlined,
-                            readOnly: true,
-                            onTap: () => _pickDate(true),
-                          ),
-                        ],
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            children: [
+              // Section 1: Details
+              _buildSectionCard(
+                cardColor,
+                'Contest Details',
+                Icons.description_outlined,
+                [
+                  _buildInputLabel('Contest Title'),
+                  _buildTextField(
+                    'e.g., Q3 Sales Sprint',
+                    controller: _titleCtrl,
+                    validator: (v) =>
+                        Validators.validateRequired(v, 'Contest Title'),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildInputLabel('Start Date'),
+                  _buildTextField(
+                    _startDate == null
+                        ? 'Select Date'
+                        : _formatDate(_startDate!),
+                    icon: Icons.calendar_today_outlined,
+                    readOnly: true,
+                    onTap: () => _pickDate(true),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildInputLabel('End Date'),
+                  _buildTextField(
+                    _endDate == null
+                        ? 'Select Date'
+                        : _formatDate(_endDate!),
+                    icon: Icons.calendar_today_outlined,
+                    readOnly: true,
+                    onTap: () => _pickDate(false),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildInputLabel('Promotional Video (Optional)'),
+                  const SizedBox(height: 8),
+                  if (_selectedVideo != null || (widget.existingContest != null && widget.existingContest!.videoUrl.isNotEmpty))
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: primaryBlue.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: primaryBlue.withOpacity(0.15)),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
                         children: [
-                          _buildInputLabel('End Date'),
-                          _buildTextField(
-                            _endDate == null
-                                ? 'Select Date'
-                                : _formatDate(_endDate!),
-                            icon: Icons.calendar_today_outlined,
-                            readOnly: true,
-                            onTap: () => _pickDate(false),
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: primaryBlue.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.video_library_rounded, color: primaryBlue, size: 24),
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Section 2: Reward
-            _buildSectionCard(
-              cardColor,
-              'Reward',
-              Icons.emoji_events_outlined,
-              [
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: _pickImage,
-                      child: DottedBorder(
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[50],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: _rewardImage != null
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.file(
-                                    _rewardImage!,
-                                    fit: BoxFit.cover,
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _selectedVideo != null ? 'New Selected Video' : 'Existing Video',
+                                  style: GoogleFonts.montserrat(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                    color: primaryBlue,
                                   ),
-                                )
-                              : Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.add_photo_alternate,
-                                      color: Colors.grey[400],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Upload',
-                                      style: TextStyle(
-                                        color: Colors.grey[500],
-                                        fontSize: 10,
-                                      ),
-                                    ),
-                                  ],
                                 ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _selectedVideo != null
+                                      ? _selectedVideo!.path.split('/').last.split('\\').last
+                                      : widget.existingContest!.videoUrl.split('/').last,
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    color: isDark ? Colors.white70 : Colors.black87,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.edit_outlined, color: Colors.grey),
+                            onPressed: _pickVideo,
+                            tooltip: 'Change Video',
+                          ),
+                          if (_selectedVideo != null)
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                              onPressed: () => setState(() => _selectedVideo = null),
+                              tooltip: 'Remove selected video',
+                            ),
+                        ],
+                      ),
+                    )
+                  else
+                    GestureDetector(
+                      onTap: _pickVideo,
+                      child: DottedBorder(
+                       
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.grey[900] : Colors.grey[50],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.video_call_outlined,
+                                size: 36,
+                                color: Colors.grey[400],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Select a video file...',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'MP4, MOV, AVI, MKV, WEBM (Max 50MB)',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 11,
+                                  color: Colors.grey[400],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildInputLabel('Reward Name'),
-                          _buildTextField(
-                            'e.g. Weekend Trip to Goa',
-                            controller: _rewardNameCtrl,
-                            validator: (v) => Validators.validateRequired(v, 'Reward Name'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue[50],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Section 2: Reward
+              _buildSectionCard(
+                cardColor,
+                'Reward',
+                Icons.emoji_events_outlined,
+                [
+                  Row(
                     children: [
-                      Icon(Icons.info, color: primaryBlue, size: 16),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Ensure the reward image is clear and engaging.',
-                          style: GoogleFonts.montserrat(
-                            color: primaryBlue,
-                            fontSize: 12,
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: DottedBorder(
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[50],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: _rewardImage != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.file(
+                                      _rewardImage!,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : (widget.existingContest != null && widget.existingContest!.imageUrl.isNotEmpty
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.network(
+                                          widget.existingContest!.imageUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) => const Icon(
+                                            Icons.broken_image,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      )
+                                    : Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.add_photo_alternate,
+                                            color: Colors.grey[400],
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Upload',
+                                            style: TextStyle(
+                                              color: Colors.grey[500],
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                        ],
+                                      )),
                           ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildInputLabel('Reward Name'),
+                            _buildTextField(
+                              'e.g. Weekend Trip to Goa',
+                              controller: _rewardNameCtrl,
+                              validator: (v) =>
+                                  Validators.validateRequired(v, 'Reward Name'),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Section 3: Rules
-            _buildSectionCard(
-              cardColor,
-              'Contest Rules',
-              Icons.gavel_outlined,
-              [
-                ..._rules.asMap().entries.map(
-                  (entry) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CircleAvatar(
-                          radius: 12,
-                          backgroundColor: Colors.grey[200],
-                          child: Text(
-                            '${entry.key + 1}',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 10,
-                              color: Colors.black87,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
+                        Icon(Icons.info, color: primaryBlue, size: 16),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            entry.value,
+                            'Ensure the reward image is clear and engaging.',
                             style: GoogleFonts.montserrat(
-                              fontSize: 13,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () => _removeRule(entry.key),
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.red.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: const Icon(
-                              Icons.close,
-                              size: 16,
-                              color: Colors.red,
+                              color: primaryBlue,
+                              fontSize: 12,
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                _buildInputLabel('Add New Rule'),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _ruleController,
-                        style: GoogleFonts.montserrat(fontSize: 14),
-                        decoration: InputDecoration(
-                          hintText: 'Type a new rule here...',
-                          hintStyle: GoogleFonts.montserrat(
-                            color: Colors.grey[400],
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Section 3: Rules
+              _buildSectionCard(
+                cardColor,
+                'Contest Rules',
+                Icons.gavel_outlined,
+                [
+                  ..._rules.asMap().entries.map(
+                    (entry) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            radius: 12,
+                            backgroundColor: Colors.grey[200],
+                            child: Text(
+                              '${entry.key + 1}',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 10,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              entry.value,
+                              style: GoogleFonts.montserrat(
+                                fontSize: 13,
+                                color: Colors.grey[700],
+                              ),
+                            ),
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          GestureDetector(
+                            onTap: () => _removeRule(entry.key),
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Icon(
+                                Icons.close,
+                                size: 16,
+                                color: Colors.red,
+                              ),
+                            ),
                           ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildInputLabel('Add New Rule'),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _ruleController,
+                          style: GoogleFonts.montserrat(fontSize: 14),
+                          decoration: InputDecoration(
+                            hintText: 'Type a new rule here...',
+                            hintStyle: GoogleFonts.montserrat(
+                              color: Colors.grey[400],
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
+                            ),
+                          ),
+                          onSubmitted: (_) => _addRule(),
                         ),
-                        onSubmitted: (_) => _addRule(),
                       ),
+                      const SizedBox(width: 12),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: IconButton(
+                          icon: Icon(Icons.add, color: primaryBlue),
+                          onPressed: _addRule,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                trailing: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${_rules.length} added',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 10,
+                      color: Colors.grey[600],
                     ),
-                    const SizedBox(width: 12),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.blue[50],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: IconButton(
-                        icon: Icon(Icons.add, color: primaryBlue),
-                        onPressed: _addRule,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              trailing: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${_rules.length} added',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 10,
-                    color: Colors.grey[600],
                   ),
                 ),
               ),
-            ),
             ],
           ),
         ),

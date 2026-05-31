@@ -155,7 +155,7 @@ class _ApiClient implements ApiClient {
     String dob,
     String gender,
     String nomineeName,
-    String nomineeDob,
+    String nomineePhone,
     String relationship,
     String occupation,
     String aadhaar,
@@ -169,6 +169,15 @@ class _ApiClient implements ApiClient {
     String pincode,
     String leaderCode,
     String advisorType,
+    String? applicationNumber,
+    String? maritalStatus,
+    String? branchCode,
+    String? branchLocation,
+    String? headOffice,
+    String? primaryProfession,
+    String? qualification,
+    String? nationality,
+    String? referencePerson,
     File aadharFront,
     File aadharBack,
     File panPhoto,
@@ -177,6 +186,7 @@ class _ApiClient implements ApiClient {
   ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     final _data = FormData();
     _data.fields.add(MapEntry('full_name', fullName));
@@ -187,7 +197,7 @@ class _ApiClient implements ApiClient {
     _data.fields.add(MapEntry('date_of_birth', dob));
     _data.fields.add(MapEntry('gender', gender));
     _data.fields.add(MapEntry('nomineename', nomineeName));
-    _data.fields.add(MapEntry('nomineephone', nomineeDob));
+    _data.fields.add(MapEntry('nomineephone', nomineePhone));
     _data.fields.add(MapEntry('relationship', relationship));
     _data.fields.add(MapEntry('occupation', occupation));
     _data.fields.add(MapEntry('aadhaar_number', aadhaar));
@@ -201,6 +211,33 @@ class _ApiClient implements ApiClient {
     _data.fields.add(MapEntry('pincode', pincode));
     _data.fields.add(MapEntry('leader_code', leaderCode));
     _data.fields.add(MapEntry('advisor_type', advisorType));
+    if (applicationNumber != null) {
+      _data.fields.add(MapEntry('application_number', applicationNumber));
+    }
+    if (maritalStatus != null) {
+      _data.fields.add(MapEntry('marital_status', maritalStatus));
+    }
+    if (branchCode != null) {
+      _data.fields.add(MapEntry('branch_code', branchCode));
+    }
+    if (branchLocation != null) {
+      _data.fields.add(MapEntry('branch_location', branchLocation));
+    }
+    if (headOffice != null) {
+      _data.fields.add(MapEntry('head_office', headOffice));
+    }
+    if (primaryProfession != null) {
+      _data.fields.add(MapEntry('primary_profession', primaryProfession));
+    }
+    if (qualification != null) {
+      _data.fields.add(MapEntry('qualification', qualification));
+    }
+    if (nationality != null) {
+      _data.fields.add(MapEntry('nationality', nationality));
+    }
+    if (referencePerson != null) {
+      _data.fields.add(MapEntry('reference_person', referencePerson));
+    }
     _data.files.add(
       MapEntry(
         'addresscard_front_photo',
@@ -1433,6 +1470,78 @@ class _ApiClient implements ApiClient {
   }
 
   @override
+  Future<dynamic> uploadAttendanceVideo(String meetingId, File video) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = FormData();
+    _data.fields.add(MapEntry('meeting_id', meetingId));
+    _data.files.add(
+      MapEntry(
+        'video',
+        MultipartFile.fromFileSync(
+          video.path,
+          filename: video.path.split(Platform.pathSeparator).last,
+        ),
+      ),
+    );
+    final _options = _setStreamType<dynamic>(
+      Options(
+            method: 'POST',
+            headers: _headers,
+            extra: _extra,
+            contentType: 'multipart/form-data',
+          )
+          .compose(
+            _dio.options,
+            '/meetings/upload-video',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> uploadContestVideo(String contestId, File video) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = FormData();
+    _data.fields.add(MapEntry('contest_id', contestId));
+    _data.files.add(
+      MapEntry(
+        'video',
+        MultipartFile.fromFileSync(
+          video.path,
+          filename: video.path.split(Platform.pathSeparator).last,
+        ),
+      ),
+    );
+    final _options = _setStreamType<dynamic>(
+      Options(
+            method: 'POST',
+            headers: _headers,
+            extra: _extra,
+            contentType: 'multipart/form-data',
+          )
+          .compose(
+            _dio.options,
+            '/contests/upload-video',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
   Future<dynamic> addLead(dynamic body) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
@@ -2288,7 +2397,16 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> updateContest(String id, String? title, File? image) async {
+  Future<dynamic> updateContest(
+    String id,
+    String? title,
+    String? startDate,
+    String? endDate,
+    String? rewardName,
+    String? rules,
+    String? status,
+    File? image,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     queryParameters.removeWhere((k, v) => v == null);
@@ -2296,6 +2414,21 @@ class _ApiClient implements ApiClient {
     final _data = FormData();
     if (title != null) {
       _data.fields.add(MapEntry('title', title));
+    }
+    if (startDate != null) {
+      _data.fields.add(MapEntry('start_date', startDate));
+    }
+    if (endDate != null) {
+      _data.fields.add(MapEntry('end_date', endDate));
+    }
+    if (rewardName != null) {
+      _data.fields.add(MapEntry('reward_name', rewardName));
+    }
+    if (rules != null) {
+      _data.fields.add(MapEntry('rules', rules));
+    }
+    if (status != null) {
+      _data.fields.add(MapEntry('status', status));
     }
     if (image != null) {
       _data.files.add(

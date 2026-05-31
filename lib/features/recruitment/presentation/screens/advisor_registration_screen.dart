@@ -10,6 +10,7 @@ import '../providers/advisor_registration_provider.dart';
 import '../../../../../core/utils/ui_helper.dart';
 import '../../../../../core/utils/validators.dart';
 import 'package:flutter/services.dart';
+import '../../../../../core/constants/locations.dart';
 
 class AdvisorRegistrationScreen extends StatefulWidget {
   const AdvisorRegistrationScreen({super.key});
@@ -322,6 +323,19 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                     (v) => setState(() => provider.gender = v!),
                     textColor: textColor,
                   ),
+                  _buildDropdown(
+                    'Marital Status',
+                    provider.maritalStatus,
+                    ['Single', 'Married', 'Divorced', 'Widowed'],
+                    (v) => setState(() => provider.maritalStatus = v!),
+                    textColor: textColor,
+                  ),
+                  _buildTextField(
+                    'Nationality',
+                    'Indian',
+                    provider.nationalityCtrl,
+                    textColor: textColor,
+                  ),
                   _buildTextField(
                     'Aadhar Number',
                     '12- digit UIDAI Number',
@@ -392,24 +406,29 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: _buildTextField(
+                        child: _buildLocationDropdown(
                           'State',
-                          'Madhya Pradesh',
                           provider.stateCtrl,
-                          icon: Icons.map,
-                          textColor: textColor,
-                          validator: (v) => Validators.validateRequired(v, 'State'),
+                          AppLocations.states,
+                          (v) {
+                            setState(() {
+                              provider.stateCtrl.text = v!;
+                              // Reset city when state changes
+                              provider.cityCtrl.text = '';
+                            });
+                          },
+                          textColor,
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: _buildTextField(
+                        child: _buildLocationDropdown(
                           'City',
-                          'Ujjain',
                           provider.cityCtrl,
-                          icon: Icons.location_city_outlined,
-                          textColor: textColor,
-                          validator: (v) => Validators.validateRequired(v, 'City'),
+                          provider.stateCtrl.text.isNotEmpty ? AppLocations.getCities(provider.stateCtrl.text) : [],
+                          (v) => setState(() => provider.cityCtrl.text = v!),
+                          textColor,
+                          enabled: provider.stateCtrl.text.isNotEmpty,
                         ),
                       ),
                     ],
@@ -456,6 +475,86 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                     (v) => setState(() => provider.advisorType = v!),
                     textColor: textColor,
                   ),
+                  _buildTextField(
+                    'Application Number',
+                    'e.g. APP-12345',
+                    provider.applicationNumberCtrl,
+                    textColor: textColor,
+                  ),
+                  _buildTextField(
+                    'Primary Profession',
+                    'e.g. Real Estate Agent',
+                    provider.primaryProfessionCtrl,
+                    textColor: textColor,
+                  ),
+                  _buildTextField(
+                    'Qualification',
+                    'e.g. B.Com',
+                    provider.qualificationCtrl,
+                    textColor: textColor,
+                  ),
+                  _buildTextField(
+                    'Branch Code',
+                    'e.g. BR-101',
+                    provider.branchCodeCtrl,
+                    textColor: textColor,
+                  ),
+                  _buildTextField(
+                    'Branch Location',
+                    'e.g. Indore Main',
+                    provider.branchLocationCtrl,
+                    textColor: textColor,
+                  ),
+                  _buildTextField(
+                    'Head Office',
+                    'e.g. Bhopal HQ',
+                    provider.headOfficeCtrl,
+                    textColor: textColor,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            _buildSectionHeader('3', 'Reference Person'),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: cardColor,
+                border: Border.all(color: AppColors.getBorderColor(context)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  _buildTextField(
+                    'Reference Name',
+                    'Name of reference',
+                    provider.refNameCtrl,
+                    textColor: textColor,
+                  ),
+                  _buildTextField(
+                    'Reference Phone',
+                    '9876543210',
+                    provider.refPhoneCtrl,
+                    isNumber: true,
+                    textColor: textColor,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(10),
+                    ],
+                  ),
+                  _buildTextField(
+                    'Reference Relationship',
+                    'e.g. Friend, Colleague',
+                    provider.refRelationshipCtrl,
+                    textColor: textColor,
+                  ),
+                  _buildTextField(
+                    'Reference Address',
+                    'Address of reference',
+                    provider.refAddressCtrl,
+                    maxLines: 2,
+                    textColor: textColor,
+                  ),
                 ],
               ),
             ),
@@ -483,7 +582,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionHeader('3', 'Nominee Details'),
+            _buildSectionHeader('4', 'Nominee Details'),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -500,17 +599,22 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                     textColor: textColor,
                     validator: (v) => Validators.validateRequired(v, 'Nominee Name'),
                   ),
-                  _buildDatePicker(
-                    'Nominee Date of Birth',
-                    'YYYY-MM-DD',
-                    provider.nomineeDobCtrl,
-                    provider,
+                  _buildTextField(
+                    'Nominee Phone Number',
+                    'Enter Nominee Phone Number',
+                    provider.nomineePhoneCtrl,
+                    isNumber: true,
                     textColor: textColor,
+                    validator: (v) => Validators.validatePhone(v),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(10),
+                    ],
                   ),
                   _buildDropdown(
                     'Relationship',
                     provider.relationship,
-                    ['Wife', 'Husband', 'Son', 'Daughter', 'Parent', 'Sibling', 'Cousin', 'Friends'],
+                    ['Wife', 'Husband', 'Son', 'Daughter', 'Parent'],
                     (v) => setState(() => provider.relationship = v!),
                     textColor: textColor,
                   ),
@@ -518,7 +622,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            _buildSectionHeader('4', 'Bank Details'),
+            _buildSectionHeader('5', 'Bank Details'),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -571,7 +675,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            _buildSectionHeader('5', 'KYC Documents'),
+            _buildSectionHeader('6', 'KYC Documents'),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -630,7 +734,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            _buildSectionHeader('6', 'Leader Code (mandatory)'),
+            _buildSectionHeader('7', 'Leader Code (mandatory)'),
             _buildTextField(
               '',
               'Referral code (mandatory)',
@@ -823,8 +927,8 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
   Widget _buildDropdown(
     String label,
     String value,
-    List<String> items,
-    ValueChanged<String?> onChanged, {
+    List<String> options,
+    void Function(String?) onChanged, {
     Color? textColor,
   }) {
     return Padding(
@@ -837,31 +941,93 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
             style: GoogleFonts.montserrat(fontSize: 12, color: textColor?.withOpacity(0.8) ?? Colors.black87),
           ),
           const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.getBorderColor(context)),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: value,
-                isExpanded: true,
-                dropdownColor: Theme.of(context).cardColor,
-                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                style: GoogleFonts.montserrat(
-                  fontSize: 13,
-                  color: textColor,
-                ),
-                items: items
-                    .map(
-                      (item) =>
-                           DropdownMenuItem(value: item, child: Text(item, style: TextStyle(color: textColor))),
-                    )
-                    .toList(),
-                onChanged: onChanged,
+          DropdownButtonFormField<String>(
+            initialValue: options.toSet().contains(value) ? value : (options.isNotEmpty ? options.first : null),
+            dropdownColor: Theme.of(context).cardColor,
+            style: GoogleFonts.montserrat(fontSize: 14, color: textColor),
+            icon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: AppColors.getBorderColor(context)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: AppColors.getBorderColor(context)),
               ),
             ),
+            items: options.toSet().map((String option) {
+              return DropdownMenuItem<String>(
+                value: option,
+                child: Text(option),
+              );
+            }).toList(),
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationDropdown(
+    String label,
+    TextEditingController controller,
+    List<String> options,
+    void Function(String?) onChanged,
+    Color? textColor, {
+    bool enabled = true,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.montserrat(fontSize: 12, color: textColor?.withOpacity(0.8) ?? Colors.black87),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: controller.text.isNotEmpty && options.toSet().contains(controller.text) ? controller.text : null,
+            dropdownColor: Theme.of(context).cardColor,
+            style: GoogleFonts.montserrat(fontSize: 14, color: textColor),
+            icon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
+            decoration: InputDecoration(
+              hintText: 'Select $label',
+              hintStyle: GoogleFonts.montserrat(color: Colors.grey[400], fontSize: 13),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: AppColors.getBorderColor(context)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: AppColors.getBorderColor(context)),
+              ),
+              disabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: AppColors.getBorderColor(context).withOpacity(0.5)),
+              ),
+            ),
+            items: options.toSet().map((String option) {
+              return DropdownMenuItem<String>(
+                value: option,
+                child: Text(
+                  option,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+            }).toList(),
+            onChanged: enabled ? onChanged : null,
+            validator: (v) => Validators.validateRequired(v, label),
+            isExpanded: true,
           ),
         ],
       ),

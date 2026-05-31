@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
-import 'package:prarambh_infra/core/widgets/profile_image.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 

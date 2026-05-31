@@ -63,7 +63,12 @@ class _AdvisorContestsListScreenState extends State<AdvisorContestsListScreen> {
               itemCount: provider.contests.length,
               itemBuilder: (context, index) {
                 final contest = provider.contests[index];
-                final isLive = contest.status.toUpperCase() == 'ACTIVE' || contest.status.toUpperCase() == 'LIVE';
+                final isLive = contest.isLive;
+                final isEnded = contest.isEnded;
+                final isUpcoming = contest.isUpcoming;
+                
+                String statusText = isLive ? "LIVE" : (isEnded ? "ENDED" : (isUpcoming ? "UPCOMING" : contest.status.toUpperCase()));
+                Color statusColor = isLive ? Colors.deepOrange : Colors.grey;
 
                 // Check participation
                 final isJoined = contest.participants.any((p) => p.advisorCode == advisorCode);
@@ -93,12 +98,12 @@ class _AdvisorContestsListScreenState extends State<AdvisorContestsListScreen> {
                               children: [
                                 Row(
                                   children: [
-                                    Icon(Icons.circle, size: 8, color: isLive ? Colors.deepOrange : Colors.grey),
+                                    Icon(Icons.circle, size: 8, color: statusColor),
                                     const SizedBox(width: 6),
                                     Expanded(
                                       child: Text(
-                                        '${isLive ? "LIVE" : contest.status.toUpperCase()}  •  ${contest.rewardText}',
-                                        style: GoogleFonts.montserrat(fontSize: 11, fontWeight: FontWeight.bold, color: isLive ? Colors.deepOrange : Colors.grey[600]),
+                                        '$statusText  •  ${contest.rewardText}',
+                                        style: GoogleFonts.montserrat(fontSize: 11, fontWeight: FontWeight.bold, color: statusColor),
                                         maxLines: 1, overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
@@ -122,15 +127,15 @@ class _AdvisorContestsListScreenState extends State<AdvisorContestsListScreen> {
                                     }
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: isLive ? primaryBlue : Colors.grey[200],
-                                    foregroundColor: isLive ? Colors.white : Colors.grey[600],
+                                    backgroundColor: (isLive || isEnded) ? primaryBlue : Colors.grey[200],
+                                    foregroundColor: (isLive || isEnded) ? Colors.white : Colors.grey[600],
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                                     minimumSize: Size.zero,
                                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                   ),
-                                  child: Text(isLive ? 'View Details' : 'Coming Soon', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold)),
+                                  child: Text(isLive ? 'View Details' : (isEnded ? 'View Results' : 'Coming Soon'), style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold)),
                                 ),
                               ],
                             ),

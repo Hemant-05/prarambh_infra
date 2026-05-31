@@ -731,6 +731,7 @@ class _InlineVideoPlayer extends StatefulWidget {
 class _InlineVideoPlayerState extends State<_InlineVideoPlayer> {
   late VideoPlayerController _videoPlayerController;
   ChewieController? _chewieController;
+  bool _hasError = false;
 
   @override
   void initState() {
@@ -739,12 +740,13 @@ class _InlineVideoPlayerState extends State<_InlineVideoPlayer> {
   }
 
   Future<void> _initPlayer() async {
-    _videoPlayerController = VideoPlayerController.networkUrl(
-      Uri.parse(widget.videoUrl),
-    );
-    await _videoPlayerController.initialize();
+    try {
+      _videoPlayerController = VideoPlayerController.networkUrl(
+        Uri.parse(widget.videoUrl),
+      );
+      await _videoPlayerController.initialize();
 
-    _chewieController = ChewieController(
+      _chewieController = ChewieController(
       videoPlayerController: _videoPlayerController,
       autoPlay: false,
       looping: false,
@@ -760,7 +762,11 @@ class _InlineVideoPlayerState extends State<_InlineVideoPlayer> {
         bufferedColor: Colors.white,
       ),
     );
-    setState(() {});
+    } catch (e) {
+      debugPrint("Error initializing video player: $e");
+      _hasError = true;
+    }
+    if (mounted) setState(() {});
   }
 
   @override
@@ -772,6 +778,24 @@ class _InlineVideoPlayerState extends State<_InlineVideoPlayer> {
 
   @override
   Widget build(BuildContext context) {
+    if (_hasError) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64, color: Colors.grey[600]),
+          const SizedBox(height: 16),
+          Text(
+            'Failed to load video',
+            style: GoogleFonts.montserrat(
+              color: Colors.grey[500],
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      );
+    }
+
     return _chewieController != null &&
             _chewieController!.videoPlayerController.value.isInitialized
         ? Chewie(controller: _chewieController!)

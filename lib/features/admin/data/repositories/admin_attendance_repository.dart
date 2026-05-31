@@ -6,10 +6,13 @@ class AdminAttendanceRepository {
   final ApiClient apiClient;
   AdminAttendanceRepository({required this.apiClient});
 
-  Future<bool> addMeeting(Map<String, dynamic> data) async {
+  Future<String?> addMeeting(Map<String, dynamic> data) async {
     try {
       final response = await apiClient.addMeeting(data);
-      return response['status'];
+      if (response['status'] == true) {
+        return response['data']?['id']?.toString();
+      }
+      return null;
     } catch (e) { rethrow; }
   }
 

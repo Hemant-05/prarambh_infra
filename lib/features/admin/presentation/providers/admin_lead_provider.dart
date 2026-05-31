@@ -178,8 +178,8 @@ class AdminLeadProvider extends ChangeNotifier with ErrorHandlerMixin {
     }
   }
 
-  Future<LeadModel?> getSingleLead(String id) async {
-    setLoading(true);
+  Future<LeadModel?> getSingleLead(String id, {bool withLoading = true}) async {
+    if (withLoading) setLoading(true);
     try {
       return await repository.getSingleLead(id);
     } catch (e) {
@@ -187,7 +187,7 @@ class AdminLeadProvider extends ChangeNotifier with ErrorHandlerMixin {
       setError(UIHelper.summarizeError(e.toString()));
       return null;
     } finally {
-      setLoading(false);
+      if (withLoading) setLoading(false);
     }
   }
 }

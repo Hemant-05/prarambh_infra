@@ -11,6 +11,7 @@ class MeetingModel {
   final String status; // upcoming | ongoing | completed
   final String createdAt;
   final List<AttendanceRecord> attendanceRecords;
+  final String videoUrl;
 
   MeetingModel({
     required this.id,
@@ -23,6 +24,7 @@ class MeetingModel {
     required this.status,
     required this.createdAt,
     required this.attendanceRecords,
+    this.videoUrl = '',
   });
 
   int get presentCount => attendanceRecords.where((r) => r.isPresent).length;
@@ -83,6 +85,13 @@ class MeetingModel {
       }
     }
 
+    // Parse video URL
+    const String baseUrl = "https://workiees.com/";
+    String rawVideoUrl = json['video_url'] ?? json['video'] ?? json['video_path'] ?? '';
+    String finalVideoUrl = rawVideoUrl.startsWith('http')
+        ? rawVideoUrl
+        : (rawVideoUrl.isNotEmpty ? baseUrl + (rawVideoUrl.startsWith('/') ? rawVideoUrl.substring(1) : rawVideoUrl) : '');
+
     return MeetingModel(
       id: json['id']?.toString() ?? '',
       title: json['title'] ?? json['meeting_title'] ?? 'Untitled Meeting',
@@ -94,6 +103,7 @@ class MeetingModel {
       status: calculatedStatus,
       createdAt: json['created_at'] ?? '',
       attendanceRecords: records.map((e) => AttendanceRecord.fromJson(e)).toList(),
+      videoUrl: finalVideoUrl,
     );
   }
 }

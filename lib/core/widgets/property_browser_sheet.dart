@@ -483,7 +483,7 @@ class ProjectCard extends StatefulWidget {
   final bool Function(UnitModel) unitFilter;
   final Function(UnitModel) onSelectUnit;
 
-  const ProjectCard({
+  const ProjectCard({super.key, 
     required this.project,
     required this.primaryBlue,
     required this.isDark,

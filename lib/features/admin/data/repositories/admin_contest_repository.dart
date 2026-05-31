@@ -27,7 +27,7 @@ class AdminContestRepository {
     } catch (e) { rethrow; }
   }
 
-  Future<bool> addContest({
+  Future<String?> addContest({
     required String title, required String startDate, required String endDate,
     required String rewardName, required String rules, required File rewardImage,
   }) async {
@@ -35,13 +35,26 @@ class AdminContestRepository {
       final response = await apiClient.addContest(
         title, startDate, endDate, rewardName, rules, rewardImage,
       );
-      return response['status'];
+      if (response['status'] == true) {
+        return response['data']?['id']?.toString();
+      }
+      return null;
     } catch (e) { rethrow; }
   }
 
-  Future<bool> updateContest(String id, {String? title, File? rewardImage}) async {
+  Future<bool> updateContest(String id, {
+    String? title,
+    String? startDate,
+    String? endDate,
+    String? rewardName,
+    String? rules,
+    String? status,
+    File? rewardImage,
+  }) async {
     try {
-      final response = await apiClient.updateContest(id, title, rewardImage);
+      final response = await apiClient.updateContest(
+        id, title, startDate, endDate, rewardName, rules, status, rewardImage,
+      );
       return response['status'];
     } catch (e) { rethrow; }
   }

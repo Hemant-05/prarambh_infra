@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class AdvisorNode {
   final String id;
   final String name;
@@ -147,6 +149,18 @@ class BrokerProfileModel {
   final String? leaderCode;
   final String? leaderName;
   final String? leaderDesignation;
+  final String applicationNumber;
+  final String maritalStatus;
+  final String branchCode;
+  final String branchLocation;
+  final String headOffice;
+  final String primaryProfession;
+  final String qualification;
+  final String nationality;
+  final String refName;
+  final String refAddress;
+  final String refRelationship;
+  final String refContact;
   final String createdAt;
   final String updatedAt;
 
@@ -192,6 +206,10 @@ class BrokerProfileModel {
     required this.city, required this.state, required this.pincode,
     required this.slab, required this.status, required this.advisorType,
     this.leaderId, this.leaderCode, this.leaderName, this.leaderDesignation,
+    required this.applicationNumber, required this.maritalStatus, required this.branchCode,
+    required this.branchLocation, required this.headOffice, required this.primaryProfession,
+    required this.qualification, required this.nationality, required this.refName,
+    required this.refAddress, required this.refRelationship, required this.refContact,
     required this.createdAt, required this.updatedAt,
     required this.myTeam, required this.salesPipeline,
     required this.personalSales, required this.teamSales,
@@ -212,6 +230,15 @@ class BrokerProfileModel {
     final todayTeam = json['today_team_attendance'] as Map<String, dynamic>? ?? {};
     final otherFilesRaw = (docs['other_files'] as List<dynamic>?) ?? [];
     final contestsRaw = json['contests'] as List<dynamic>? ?? [];
+
+    Map<String, dynamic> refMap = {};
+    if (ad['reference_person'] is String) {
+      try {
+        refMap = jsonDecode(ad['reference_person']) as Map<String, dynamic>;
+      } catch (_) {}
+    } else if (ad['reference_person'] is Map) {
+      refMap = Map<String, dynamic>.from(ad['reference_person']);
+    }
 
     return BrokerProfileModel(
       id: ad['id']?.toString() ?? '',
@@ -248,6 +275,18 @@ class BrokerProfileModel {
       leaderCode: ad['leader_code'],
       leaderName: ad['leader_name'],
       leaderDesignation: ad['leader_designation'],
+      applicationNumber: ad['application_number']?.toString() ?? ad['Application_number']?.toString() ?? 'N/A',
+      maritalStatus: ad['marital_status']?.toString() ?? ad['Marital_status']?.toString() ?? 'N/A',
+      branchCode: ad['branch_code']?.toString() ?? ad['Branch_code']?.toString() ?? 'N/A',
+      branchLocation: ad['branch_location']?.toString() ?? ad['Branch_location']?.toString() ?? 'N/A',
+      headOffice: ad['head_office']?.toString() ?? ad['Head_office']?.toString() ?? 'N/A',
+      primaryProfession: ad['primary_profession']?.toString() ?? ad['Primary_profession']?.toString() ?? 'N/A',
+      qualification: ad['qualification']?.toString() ?? ad['Qualification']?.toString() ?? 'N/A',
+      nationality: ad['nationality']?.toString() ?? 'Indian',
+      refName: refMap['name']?.toString() ?? 'N/A',
+      refAddress: refMap['address']?.toString() ?? 'N/A',
+      refRelationship: refMap['relationship']?.toString() ?? 'N/A',
+      refContact: (refMap['phone'] ?? refMap['contact_number'])?.toString() ?? 'N/A',
       createdAt: ad['created_at'] ?? '',
       updatedAt: ad['updated_at'] ?? '',
       myTeam: myTeamRaw.map((e) => TeamMemberModel.fromJson(e)).toList(),

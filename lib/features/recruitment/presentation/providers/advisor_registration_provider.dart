@@ -38,13 +38,29 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
 
   String gender = 'Male';
   String designation = 'Advisor';
-  String advisorType = 'Full-time';
+  String advisorType = 'Full time';
   final stateCtrl = TextEditingController();
   final cityCtrl =  TextEditingController();
 
+  // --- NEW FIELDS ---
+  final applicationNumberCtrl = TextEditingController();
+  String maritalStatus = 'Single';
+  final branchCodeCtrl = TextEditingController();
+  final branchLocationCtrl = TextEditingController();
+  final headOfficeCtrl = TextEditingController();
+  final primaryProfessionCtrl = TextEditingController();
+  final qualificationCtrl = TextEditingController();
+  final nationalityCtrl = TextEditingController();
+  
+  // Reference Person
+  final refNameCtrl = TextEditingController();
+  final refAddressCtrl = TextEditingController();
+  final refPhoneCtrl = TextEditingController();
+  final refRelationshipCtrl = TextEditingController();
+
   // --- Step 2 Controllers ---
   final nomineeNameCtrl = TextEditingController();
-  final nomineeDobCtrl = TextEditingController();
+  final nomineePhoneCtrl = TextEditingController();
   final bankNameCtrl = TextEditingController();
   final accNumberCtrl = TextEditingController();
   final ifscCtrl = TextEditingController();
@@ -94,14 +110,29 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
     setError(null);
 
     try {
+      // Construct reference person JSON
+      String? refPersonJson;
+      if (refNameCtrl.text.isNotEmpty || refAddressCtrl.text.isNotEmpty || refPhoneCtrl.text.isNotEmpty || refRelationshipCtrl.text.isNotEmpty) {
+        refPersonJson = '{"name": "${refNameCtrl.text}", "address": "${refAddressCtrl.text}", "relationship": "${refRelationshipCtrl.text}", "contact_number": "${refPhoneCtrl.text}"}';
+      }
+
       final success = await repository.registerAdvisorDetailed(
           fullName: nameCtrl.text, email: emailCtrl.text, phone: phoneCtrl.text, designation: designation,
           fatherName: fatherNameCtrl.text, dob: dobCtrl.text, gender: gender,
-          nomineeName: nomineeNameCtrl.text, nomineeDob: nomineeDobCtrl.text, relationship: relationship,
+          nomineeName: nomineeNameCtrl.text, nomineePhone: nomineePhoneCtrl.text, relationship: relationship,
           occupation: occupationCtrl.text, aadhaar: aadharCtrl.text, pan: panCtrl.text,
           bankName: bankNameCtrl.text, accNumber: accNumberCtrl.text, ifsc: ifscCtrl.text,
           address: addressCtrl.text, city: cityCtrl.text, state: stateCtrl.text, pincode: pincodeCtrl.text, leaderCode: leaderCodeCtrl.text,
           advisorType: advisorType,
+          applicationNumber: applicationNumberCtrl.text.isEmpty ? null : applicationNumberCtrl.text,
+          maritalStatus: maritalStatus,
+          branchCode: branchCodeCtrl.text.isEmpty ? null : branchCodeCtrl.text,
+          branchLocation: branchLocationCtrl.text.isEmpty ? null : branchLocationCtrl.text,
+          headOffice: headOfficeCtrl.text.isEmpty ? null : headOfficeCtrl.text,
+          primaryProfession: primaryProfessionCtrl.text.isEmpty ? null : primaryProfessionCtrl.text,
+          qualification: qualificationCtrl.text.isEmpty ? null : qualificationCtrl.text,
+          nationality: nationalityCtrl.text.isEmpty ? null : nationalityCtrl.text,
+          referencePerson: refPersonJson,
           aadharFront: aadharFront!, aadharBack: aadharBack!, panPhoto: panPhoto!,
           panBackPhoto: panBackPhoto!, 
           profilePhoto: profilePhoto!
@@ -110,8 +141,12 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
       if(success){
         nameCtrl.clear(); fatherNameCtrl.clear(); dobCtrl.clear(); aadharCtrl.clear(); panCtrl.clear();
         phoneCtrl.clear(); emailCtrl.clear(); addressCtrl.clear(); occupationCtrl.clear(); pincodeCtrl.clear();
-        nomineeNameCtrl.clear(); nomineeDobCtrl.clear(); bankNameCtrl.clear(); accNumberCtrl.clear(); ifscCtrl.clear();
+        nomineeNameCtrl.clear(); nomineePhoneCtrl.clear(); bankNameCtrl.clear(); accNumberCtrl.clear(); ifscCtrl.clear();
         branchCtrl.clear(); leaderCodeCtrl.clear(); designation = 'Advisor';
+        applicationNumberCtrl.clear(); branchCodeCtrl.clear(); branchLocationCtrl.clear();
+        headOfficeCtrl.clear(); primaryProfessionCtrl.clear(); qualificationCtrl.clear(); nationalityCtrl.clear();
+        refNameCtrl.clear(); refAddressCtrl.clear(); refPhoneCtrl.clear(); refRelationshipCtrl.clear();
+        maritalStatus = 'Single';
         aadharFront = null; aadharBack = null; panPhoto = null; panBackPhoto = null; profilePhoto = null;
       }
 

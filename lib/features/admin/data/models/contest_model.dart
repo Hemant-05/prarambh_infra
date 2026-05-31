@@ -13,16 +13,18 @@ class ContestModel {
   final List<TopPerformer>? topPerformers;
   final List<String>? rules;
   final List<ContestParticipant> participants;
+  final String videoUrl;
 
   ContestModel({
     required this.id, required this.title, required this.status,
     required this.rewardText, required this.targetText, required this.dateRange,
     required this.imageUrl, this.startDate, this.endDate, this.topPerformers, this.rules,
     required this.participants,
+    this.videoUrl = '',
   });
 
   // Accurate Time-Based Getters
-  static DateTime? _smartParse(String? dateStr) {
+  static DateTime? smartParse(String? dateStr) {
     if (dateStr == null) return null;
     // Try standard YYYY-MM-DD
     DateTime? parsed = DateTime.tryParse(dateStr);
@@ -40,15 +42,17 @@ class ContestModel {
   }
 
   bool get isUpcoming {
-    final start = _smartParse(startDate);
+    final start = smartParse(startDate);
     if (start == null) return false;
     return DateTime.now().isBefore(start);
   }
 
   bool get isLive {
+    final stat = status.toLowerCase();
+    if (stat == 'completed' || stat == 'expired' || stat == 'inactive' || stat == 'ended') return false;
     final now = DateTime.now();
-    final start = _smartParse(startDate);
-    final end = _smartParse(endDate);
+    final start = smartParse(startDate);
+    final end = smartParse(endDate);
     if (start == null || end == null) return false;
     // End of day buffer (23:59:59)
     final endOfDay = end.add(const Duration(hours: 23, minutes: 59, seconds: 59));
@@ -56,7 +60,9 @@ class ContestModel {
   }
 
   bool get isEnded {
-    final end = _smartParse(endDate);
+    final stat = status.toLowerCase();
+    if (stat == 'completed' || stat == 'expired' || stat == 'ended') return true;
+    final end = smartParse(endDate);
     if (end == null) return false;
     // End of day buffer (23:59:59)
     final endOfDay = end.add(const Duration(hours: 23, minutes: 59, seconds: 59));
@@ -64,7 +70,7 @@ class ContestModel {
   }
 
   int get daysLeft {
-    final end = _smartParse(endDate);
+    final end = smartParse(endDate);
     if (end == null) return 0;
     final diff = end.difference(DateTime.now()).inDays;
     return diff > 0 ? diff : 0;
@@ -97,6 +103,12 @@ class ContestModel {
       }
     }
 
+    // Safely parse video URL
+    String rawVideoUrl = json['video_path'] ?? json['video_url'] ?? json['video'] ?? json['contest_video'] ?? json['video_file'] ?? '';
+    String finalVideoUrl = rawVideoUrl.startsWith('http')
+        ? rawVideoUrl
+        : (rawVideoUrl.isNotEmpty ? baseUrl + (rawVideoUrl.startsWith('/') ? rawVideoUrl.substring(1) : rawVideoUrl) : '');
+
     return ContestModel(
       id: json['id']?.toString() ?? '',
       title: json['title'] ?? '',
@@ -110,6 +122,7 @@ class ContestModel {
       rules: parsedRules,
       participants: (json['participants'] as List<dynamic>?)?.map((e) => ContestParticipant.fromJson(e)).toList() ?? [],
       topPerformers: (json['top_performers'] as List<dynamic>?)?.map((e) => TopPerformer.fromJson(e)).toList(),
+      videoUrl: finalVideoUrl,
     );
   }
 }

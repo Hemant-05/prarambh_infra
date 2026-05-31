@@ -461,7 +461,7 @@ class _MeetingManagementScreenState extends State<MeetingManagementScreen>
                     if (m.time.isNotEmpty)
                       _infoChip(
                         Icons.access_time_outlined,
-                        "${m.time} - ${m.endTime}",
+                        "${_formatTime(m.time)} - ${_formatTime(m.endTime)}",
                         Colors.grey[600]!,
                       ),
                     if (m.location.isNotEmpty)
@@ -504,6 +504,36 @@ class _MeetingManagementScreenState extends State<MeetingManagementScreen>
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
+                // Edit Button - Always visible
+                SizedBox(
+                  width: 44,
+                  child: OutlinedButton(
+                    onPressed: () async {
+                      final updated = await Navigator.push<bool>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CreateMeetingScreen(existingMeeting: m),
+                        ),
+                      );
+                      if (updated == true && context.mounted) {
+                        context.read<AdminAttendanceProvider>().fetchAllMeetings();
+                      }
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: blue,
+                      side: BorderSide(
+                        color: blue.withOpacity(0.5),
+                      ),
+                      padding: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Icon(Icons.edit_outlined, size: 18),
+                  ),
+                ),
+                const SizedBox(width: 8),
+
                 // Report Button - Only for Ongoing and Completed
                 if (m.status.toLowerCase() != 'upcoming') ...[
                   Expanded(
@@ -583,7 +613,7 @@ class _MeetingManagementScreenState extends State<MeetingManagementScreen>
                           onPressed: () => _confirmDelete(context, m, provider),
                           icon: const Icon(Icons.delete_outline, size: 18),
                           label: Text(
-                            'Delete/Drop Meeting',
+                            'Delete/Drop',
                             style: GoogleFonts.montserrat(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -807,10 +837,28 @@ class _MeetingManagementScreenState extends State<MeetingManagementScreen>
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
-            ),
+          ),
           ),
         ],
       ),
     );
+  }
+
+  String _formatTime(String timeStr) {
+    if (timeStr.isEmpty || timeStr == '--:--') return timeStr;
+    try {
+      final upper = timeStr.toUpperCase();
+      if (upper.contains('AM') || upper.contains('PM')) return timeStr;
+      
+      final parts = timeStr.split(':');
+      if (parts.isEmpty) return timeStr;
+      final hour = int.parse(parts[0]);
+      final minute = parts.length > 1 ? int.parse(parts[1]) : 0;
+      final period = hour >= 12 ? 'PM' : 'AM';
+      final hour12 = hour % 12 == 0 ? 12 : hour % 12;
+      return '$hour12:${minute.toString().padLeft(2, '0')} $period';
+    } catch (_) {
+      return timeStr;
+    }
   }
 }

@@ -27,30 +27,56 @@ class AdminContestProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> createContest({
+  Future<String?> createContest({
     required String title, required String startDate, required String endDate,
     required String rewardName, required String rules, required File rewardImage,
   }) async {
     _isSaving = true; notifyListeners();
     try {
-      final success = await repository.addContest(
+      final id = await repository.addContest(
         title: title, startDate: startDate, endDate: endDate,
         rewardName: rewardName, rules: rules, rewardImage: rewardImage,
       );
-      if (success) await fetchContests();
-      return success;
+      if (id != null) await fetchContests();
+      return id;
     } catch (e) {
       debugPrint('Create Contest Error: $e');
-      return false;
+      return null;
     } finally {
       _isSaving = false; notifyListeners();
     }
   }
 
-  Future<bool> updateContest(String id, {String? title, File? rewardImage}) async {
+  Future<void> uploadVideoInBackground(String contestId, File video) async {
+    try {
+      await repository.apiClient.uploadContestVideo(contestId, video);
+      debugPrint('Background video upload completed for contest $contestId');
+    } catch (e) {
+      debugPrint('Background video upload failed for contest $contestId: $e');
+    }
+  }
+
+  Future<bool> updateContest(String id, {
+    String? title,
+    String? startDate,
+    String? endDate,
+    String? rewardName,
+    String? rules,
+    String? status,
+    File? rewardImage,
+  }) async {
     _isSaving = true; notifyListeners();
     try {
-      final success = await repository.updateContest(id, title: title, rewardImage: rewardImage);
+      final success = await repository.updateContest(
+        id,
+        title: title,
+        startDate: startDate,
+        endDate: endDate,
+        rewardName: rewardName,
+        rules: rules,
+        status: status,
+        rewardImage: rewardImage,
+      );
       if (success) await fetchContests();
       return success;
     } catch (e) {

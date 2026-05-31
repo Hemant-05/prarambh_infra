@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:prarambh_infra/core/widgets/profile_image.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../data/datasources/remote/api_client.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';

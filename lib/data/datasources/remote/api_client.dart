@@ -50,7 +50,7 @@ abstract class ApiClient {
     @Part(name: "date_of_birth") String dob,
     @Part(name: "gender") String gender,
     @Part(name: "nomineename") String nomineeName,
-    @Part(name: "nomineephone") String nomineeDob,
+    @Part(name: "nomineephone") String nomineePhone,
     @Part(name: "relationship") String relationship,
     @Part(name: "occupation") String occupation,
     @Part(name: "aadhaar_number") String aadhaar,
@@ -64,6 +64,17 @@ abstract class ApiClient {
     @Part(name: "pincode") String pincode,
     @Part(name: "leader_code") String leaderCode,
     @Part(name: "advisor_type") String advisorType,
+    // NEW FIELDS
+    @Part(name: "application_number") String? applicationNumber,
+    @Part(name: "marital_status") String? maritalStatus,
+    @Part(name: "branch_code") String? branchCode,
+    @Part(name: "branch_location") String? branchLocation,
+    @Part(name: "head_office") String? headOffice,
+    @Part(name: "primary_profession") String? primaryProfession,
+    @Part(name: "qualification") String? qualification,
+    @Part(name: "nationality") String? nationality,
+    @Part(name: "reference_person") String? referencePerson,
+    // FILES
     @Part(name: "addresscard_front_photo") File aadharFront,
     @Part(name: "addresscard_back_photo") File aadharBack,
     @Part(name: "pancard_photo") File panPhoto,
@@ -312,6 +323,20 @@ abstract class ApiClient {
   // ==========================================
   // 8. Lead Management & Priority
   // ==========================================
+  
+  @MultiPart()
+  @POST("/meetings/upload-video")
+  Future<dynamic> uploadAttendanceVideo(
+    @Part(name: "meeting_id") String meetingId,
+    @Part(name: "video") File video,
+  );
+
+  @MultiPart()
+  @POST("/contests/upload-video")
+  Future<dynamic> uploadContestVideo(
+    @Part(name: "contest_id") String contestId,
+    @Part(name: "video") File video,
+  );
   @POST("/leads/add")
   Future<dynamic> addLead(@Body() dynamic body);
 
@@ -471,6 +496,11 @@ abstract class ApiClient {
   Future<dynamic> updateContest(
     @Path("id") String id,
     @Part(name: "title") String? title,
+    @Part(name: "start_date") String? startDate,
+    @Part(name: "end_date") String? endDate,
+    @Part(name: "reward_name") String? rewardName,
+    @Part(name: "rules") String? rules,
+    @Part(name: "status") String? status,
     @Part(name: "reward_image") File? image,
   );
 

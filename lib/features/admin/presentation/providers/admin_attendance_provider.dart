@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:prarambh_infra/core/providers/error_handler_mixin.dart';
 import '../../data/repositories/admin_attendance_repository.dart';
@@ -88,18 +89,27 @@ class AdminAttendanceProvider extends ChangeNotifier with ErrorHandlerMixin {
     }
   }
 
-  Future<bool> addMeeting(Map<String, dynamic> data) async {
+  Future<String?> addMeeting(Map<String, dynamic> data) async {
     isSaving = true;
     try {
-      final success = await repository.addMeeting(data);
-      if (success) await fetchAllMeetings();
-      return success;
+      final id = await repository.addMeeting(data);
+      if (id != null) await fetchAllMeetings();
+      return id;
     } catch (e) {
       debugPrint('Add Meeting Error: $e');
       setError(UIHelper.summarizeError(e.toString()));
-      return false;
+      return null;
     } finally {
       isSaving = false;
+    }
+  }
+
+  Future<void> uploadVideoInBackground(String meetingId, File video) async {
+    try {
+      await repository.apiClient.uploadAttendanceVideo(meetingId, video);
+      debugPrint('Background video upload completed for meeting $meetingId');
+    } catch (e) {
+      debugPrint('Background video upload failed for meeting $meetingId: $e');
     }
   }
 
@@ -131,6 +141,21 @@ class AdminAttendanceProvider extends ChangeNotifier with ErrorHandlerMixin {
       return success;
     } catch (e) {
       debugPrint('Complete Meeting Error: $e');
+      setError(UIHelper.summarizeError(e.toString()));
+      return false;
+    } finally {
+      isSaving = false;
+    }
+  }
+
+  Future<bool> updateMeeting(String id, Map<String, dynamic> data) async {
+    isSaving = true;
+    try {
+      final success = await repository.updateMeeting(id, data);
+      if (success) await fetchAllMeetings();
+      return success;
+    } catch (e) {
+      debugPrint('Update Meeting Error: $e');
       setError(UIHelper.summarizeError(e.toString()));
       return false;
     } finally {
