@@ -861,6 +861,13 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             const Color(0xFF059669), // Green
             onTap: () => _navigateToSalesPipeline(4),
           ),
+          _buildSalesCard(
+            context,
+            sales.recruitmentStats.toString(),
+            'RECRUITMENT',
+            const Color(0xFF9333EA), // Purple
+            onTap: () => Navigator.pushNamed(context, '/recruiter_dashboard'),
+          ),
         ],
       ),
     );

@@ -51,12 +51,11 @@ class _AdvisorMeetingDetailsScreenState
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          SliverAppBar(
-            expandedHeight: MediaQuery.of(context).size.height * 0.5,
-            pinned: true,
-            backgroundColor: isDark ? const Color(0xFF121212) : primaryBlue,
-            flexibleSpace: FlexibleSpaceBar(
-              background: _MeetingMediaCarousel(
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.4,
+              width: double.infinity,
+              child: _MeetingMediaCarousel(
                 videoUrl: widget.meeting.videoUrl,
               ),
             ),
@@ -153,24 +152,36 @@ class _AdvisorMeetingDetailsScreenState
                       ),
 
                       // Attendance Info
-                      if (widget.meeting.checkInTime != null) ...[
-                        const SizedBox(height: 14),
-                        _buildDetailRow(
-                          Icons.login,
-                          'Checked In',
-                          _formatTime(widget.meeting.checkInTime!),
-                          isDark,
-                          textColor: Colors.green,
-                        ),
-                      ],
-                      if (widget.meeting.checkOutTime != null) ...[
-                        const SizedBox(height: 14),
-                        _buildDetailRow(
-                          Icons.logout,
-                          'Checked Out',
-                          _formatTime(widget.meeting.checkOutTime!),
-                          isDark,
-                          textColor: Colors.blue,
+                      if (widget.meeting.checkInTime != null || widget.meeting.checkOutTime != null) ...[
+                        const SizedBox(height: 16),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (widget.meeting.checkInTime != null)
+                              Expanded(
+                                child: _buildAttendanceCard(
+                                  label: 'Checked In',
+                                  time: _formatTime(widget.meeting.checkInTime!),
+                                  photoUrl: widget.meeting.checkInPhoto,
+                                  isDark: isDark,
+                                  icon: Icons.login,
+                                  color: Colors.green,
+                                ),
+                              ),
+                            if (widget.meeting.checkInTime != null && widget.meeting.checkOutTime != null)
+                              const SizedBox(width: 12),
+                            if (widget.meeting.checkOutTime != null)
+                              Expanded(
+                                child: _buildAttendanceCard(
+                                  label: 'Checked Out',
+                                  time: _formatTime(widget.meeting.checkOutTime!),
+                                  photoUrl: widget.meeting.checkOutPhoto,
+                                  isDark: isDark,
+                                  icon: Icons.logout,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                          ],
                         ),
                       ],
                       if (widget.meeting.checkInTime != null &&
@@ -251,6 +262,107 @@ class _AdvisorMeetingDetailsScreenState
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildAttendanceCard({
+    required String label,
+    required String time,
+    required String? photoUrl,
+    required bool isDark,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label.toUpperCase(),
+                  style: GoogleFonts.montserrat(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[500],
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            time,
+            style: GoogleFonts.montserrat(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          if (photoUrl != null && photoUrl.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () {
+                _showFullScreenImage(photoUrl);
+              },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  photoUrl,
+                  height: 100,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 100,
+                      width: double.infinity,
+                      color: isDark ? Colors.grey[800] : Colors.grey[300],
+                      child: Icon(Icons.image_not_supported, color: Colors.grey[500]),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showFullScreenImage(String imageUrl) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            iconTheme: const IconThemeData(color: Colors.white),
+          ),
+          body: Center(
+            child: InteractiveViewer(
+              child: Image.network(imageUrl),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

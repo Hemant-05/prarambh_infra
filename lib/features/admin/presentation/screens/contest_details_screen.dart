@@ -26,7 +26,7 @@ class ContestDetailsScreen extends StatefulWidget {
 class _ContestDetailsScreenState extends State<ContestDetailsScreen> {
   Timer? _timer;
   Duration _timeLeft = Duration.zero;
-  bool _isUploadingVideo = false;
+  final bool _isUploadingVideo = false;
 
   @override
   void initState() {

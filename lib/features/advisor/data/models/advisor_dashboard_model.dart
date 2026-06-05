@@ -64,6 +64,7 @@ class SalesConversion {
   final int siteVisit;
   final int booking;
   final int completed;
+  final int recruitmentStats;
 
   SalesConversion({
     required this.suspecting,
@@ -71,6 +72,7 @@ class SalesConversion {
     required this.siteVisit,
     required this.booking,
     required this.completed,
+    required this.recruitmentStats,
   });
 
   factory SalesConversion.fromJson(Map<String, dynamic> json) {
@@ -80,6 +82,7 @@ class SalesConversion {
       siteVisit: int.tryParse(json['site_visit']?.toString() ?? '0') ?? 0,
       booking: int.tryParse(json['booking']?.toString() ?? '0') ?? 0,
       completed: int.tryParse(json['completed']?.toString() ?? '0') ?? 0,
+      recruitmentStats: int.tryParse(json['recruitment_stats']?.toString() ?? '0') ?? 0,
     );
   }
 }
