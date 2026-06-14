@@ -34,17 +34,18 @@ class _AdvisorMeetingDetailsScreenState
       backgroundColor: isDark
           ? const Color(0xFF121212)
           : const Color(0xFFF9FAFB),
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF121212) : primaryBlue,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        centerTitle: true,
-        leading: backButton(isDark: !isDark),
-        title: Text(
-          'Meeting Details',
-          style: GoogleFonts.montserrat(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: CircleAvatar(
+            backgroundColor: Colors.black54,
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+              onPressed: () => Navigator.pop(context),
+            ),
           ),
         ),
       ),
@@ -53,7 +54,7 @@ class _AdvisorMeetingDetailsScreenState
         slivers: [
           SliverToBoxAdapter(
             child: SizedBox(
-              height: MediaQuery.of(context).size.height * 0.4,
+              height: MediaQuery.of(context).size.height * 0.45,
               width: double.infinity,
               child: _MeetingMediaCarousel(
                 videoUrl: widget.meeting.videoUrl,

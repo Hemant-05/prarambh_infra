@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/widgets/back_button.dart';
 import 'package:prarambh_infra/features/advisor/data/models/advisor_attendance_history_model.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_meeting_details_screen.dart';
+import 'package:prarambh_infra/features/advisor/data/models/advisor_meeting_model.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -499,6 +501,31 @@ class _AdvisorMeetingScheduleScreenState
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AdvisorMeetingDetailsScreen(
+                meeting: AdvisorMeetingModel(
+                  id: detail.meetingId.toString(),
+                  title: detail.title,
+                  location: detail.location ?? '',
+                  meetingDate: detail.meetingDate,
+                  startTime: detail.startTime,
+                  endTime: detail.endTime ?? '',
+                  checkInTime: detail.checkInTime,
+                  checkOutTime: detail.checkOutTime,
+                  checkInPhoto: detail.checkInPhoto,
+                  checkOutPhoto: detail.checkOutPhoto,
+                  status: detail.status,
+                  videoUrl: detail.videoPath ?? '',
+                ),
+              ),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -621,6 +648,7 @@ class _AdvisorMeetingScheduleScreenState
             ],
           ),
         ),
+      ),
       ),
     );
   }

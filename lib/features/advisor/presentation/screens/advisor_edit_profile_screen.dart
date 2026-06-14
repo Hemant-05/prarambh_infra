@@ -50,10 +50,6 @@ class _AdvisorEditProfileScreenState extends State<AdvisorEditProfileScreen> {
   late TextEditingController _primaryProfController;
   late TextEditingController _qualController;
   late TextEditingController _natController;
-  late TextEditingController _refNameController;
-  late TextEditingController _refRelController;
-  late TextEditingController _refContController;
-  late TextEditingController _refAddController;
 
   String _selectedGender = 'Male';
   File? _profileImage;
@@ -91,10 +87,6 @@ class _AdvisorEditProfileScreenState extends State<AdvisorEditProfileScreen> {
     _primaryProfController = TextEditingController(text: p.primaryProfession);
     _qualController = TextEditingController(text: p.qualification);
     _natController = TextEditingController(text: p.nationality);
-    _refNameController = TextEditingController(text: p.refName);
-    _refRelController = TextEditingController(text: p.refRelationship);
-    _refContController = TextEditingController(text: p.refContact);
-    _refAddController = TextEditingController(text: p.refAddress);
   }
 
   @override
@@ -125,10 +117,6 @@ class _AdvisorEditProfileScreenState extends State<AdvisorEditProfileScreen> {
     _primaryProfController.dispose();
     _qualController.dispose();
     _natController.dispose();
-    _refNameController.dispose();
-    _refRelController.dispose();
-    _refContController.dispose();
-    _refAddController.dispose();
     super.dispose();
   }
 
@@ -278,14 +266,7 @@ class _AdvisorEditProfileScreenState extends State<AdvisorEditProfileScreen> {
               _buildSectionTitle("Nominee Details"),
               _buildTextField(_nomineeNameController, "Nominee Name", Icons.person_add_outlined),
               _buildTextField(_relationshipController, "Relationship", Icons.handshake_outlined),
-              _buildTextField(_nomineePhoneController, "Nominee Phone", Icons.phone, keyboardType: TextInputType.phone),
-              
-              const SizedBox(height: 24),
-              _buildSectionTitle("Reference Person"),
-              _buildTextField(_refNameController, "Name", Icons.person_outline, readOnly: true),
-              _buildTextField(_refRelController, "Relationship", Icons.people_alt_outlined, readOnly: true),
-              _buildTextField(_refContController, "Contact", Icons.phone_outlined, readOnly: true),
-              _buildTextField(_refAddController, "Address", Icons.home_outlined, readOnly: true, maxLines: 2),
+              _buildTextField(_nomineePhoneController, "Nominee Age", Icons.phone, keyboardType: TextInputType.phone),
 
               const SizedBox(height: 40),
             ],

@@ -1688,6 +1688,18 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
             'COMPANY WEBSITE',
             () => launchUrl(Uri.parse('https://prarambhinfra.com')),
           ),
+          _drawerItem(
+            context,
+            Icons.facebook,
+            'FACEBOOK',
+            () => launchUrl(Uri.parse('https://www.facebook.com/prarambhinfra')),
+          ),
+          _drawerItem(
+            context,
+            Icons.camera_alt_outlined,
+            'INSTAGRAM',
+            () => launchUrl(Uri.parse('https://www.instagram.com/prarambhinfra')),
+          ),
           Divider(color: AppColors.getBorderColor(context)),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),

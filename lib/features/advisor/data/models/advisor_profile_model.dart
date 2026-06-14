@@ -37,10 +37,7 @@ class AdvisorProfileModel {
   final String primaryProfession;
   final String qualification;
   final String nationality;
-  final String refName;
-  final String refAddress;
-  final String refRelationship;
-  final String refContact;
+  final List<Map<String, String>> referencePersons;
 
   AdvisorProfileModel({
     required this.id,
@@ -79,10 +76,7 @@ class AdvisorProfileModel {
     required this.primaryProfession,
     required this.qualification,
     required this.nationality,
-    required this.refName,
-    required this.refAddress,
-    required this.refRelationship,
-    required this.refContact,
+    required this.referencePersons,
   });
 
   factory AdvisorProfileModel.fromJson(Map<String, dynamic> json) {
@@ -98,15 +92,50 @@ class AdvisorProfileModel {
                     (rawPath.startsWith('/') ? rawPath.substring(1) : rawPath)
               : '');
 
-    Map<String, dynamic>? refPersonMap;
-    if (data['reference_person'] is Map) {
-      refPersonMap = data['reference_person'] as Map<String, dynamic>;
-    } else if (data['reference_person'] is String) {
-      try {
-        refPersonMap =
-            jsonDecode(data['reference_person']) as Map<String, dynamic>;
-      } catch (e) {
-        refPersonMap = null;
+    List<Map<String, String>> refPersons = [];
+    if (data['reference_person'] != null) {
+      if (data['reference_person'] is List) {
+        for (var item in (data['reference_person'] as List)) {
+          if (item is Map) {
+            refPersons.add({
+              'name': item['name']?.toString() ?? 'N/A',
+              'address': item['address']?.toString() ?? 'N/A',
+              'relationship': item['relationship']?.toString() ?? 'N/A',
+              'contact_number': item['contact_number']?.toString() ?? 'N/A',
+            });
+          }
+        }
+      } else if (data['reference_person'] is String) {
+        try {
+          var decoded = jsonDecode(data['reference_person']);
+          if (decoded is List) {
+            for (var item in decoded) {
+              if (item is Map) {
+                refPersons.add({
+                  'name': item['name']?.toString() ?? 'N/A',
+                  'address': item['address']?.toString() ?? 'N/A',
+                  'relationship': item['relationship']?.toString() ?? 'N/A',
+                  'contact_number': item['contact_number']?.toString() ?? 'N/A',
+                });
+              }
+            }
+          } else if (decoded is Map) {
+            refPersons.add({
+              'name': decoded['name']?.toString() ?? 'N/A',
+              'address': decoded['address']?.toString() ?? 'N/A',
+              'relationship': decoded['relationship']?.toString() ?? 'N/A',
+              'contact_number': decoded['contact_number']?.toString() ?? 'N/A',
+            });
+          }
+        } catch (_) {}
+      } else if (data['reference_person'] is Map) {
+        var decoded = data['reference_person'] as Map;
+        refPersons.add({
+          'name': decoded['name']?.toString() ?? 'N/A',
+          'address': decoded['address']?.toString() ?? 'N/A',
+          'relationship': decoded['relationship']?.toString() ?? 'N/A',
+          'contact_number': decoded['contact_number']?.toString() ?? 'N/A',
+        });
       }
     }
 
@@ -139,18 +168,15 @@ class AdvisorProfileModel {
       advisorType: data['advisor_type']?.toString() ?? 'Full-time',
       slab: data['slab']?.toString() ?? '0',
       leaderId: data['leader_id']?.toString() ?? '14',
-      applicationNumber: data['Application_number']?.toString() ?? 'N/A',
-      maritalStatus: data['Marital_status']?.toString() ?? 'N/A',
-      branchCode: data['Branch_code']?.toString() ?? 'N/A',
-      branchLocation: data['Branch_location']?.toString() ?? 'N/A',
-      headOffice: data['Head_office']?.toString() ?? 'N/A',
-      primaryProfession: data['Primary_profession']?.toString() ?? 'N/A',
-      qualification: data['Qualification']?.toString() ?? 'N/A',
+      applicationNumber: data['Application_number']?.toString() ?? data['application_number']?.toString() ?? 'N/A',
+      maritalStatus: data['Marital_status']?.toString() ?? data['marital_status']?.toString() ?? 'N/A',
+      branchCode: data['Branch_code']?.toString() ?? data['branch_code']?.toString() ?? 'N/A',
+      branchLocation: data['Branch_location']?.toString() ?? data['branch_location']?.toString() ?? 'N/A',
+      headOffice: data['Head_office']?.toString() ?? data['head_office']?.toString() ?? 'N/A',
+      primaryProfession: data['Primary_profession']?.toString() ?? data['primary_profession']?.toString() ?? 'N/A',
+      qualification: data['Qualification']?.toString() ?? data['qualification']?.toString() ?? 'N/A',
       nationality: data['nationality']?.toString() ?? 'Indian',
-      refName: refPersonMap?['name']?.toString() ?? 'N/A',
-      refAddress: refPersonMap?['address']?.toString() ?? 'N/A',
-      refRelationship: refPersonMap?['relationship']?.toString() ?? 'N/A',
-      refContact: refPersonMap?['contact_number']?.toString() ?? 'N/A',
+      referencePersons: refPersons,
     );
   }
 }

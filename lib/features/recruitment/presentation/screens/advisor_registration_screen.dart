@@ -326,7 +326,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                   _buildDropdown(
                     'Marital Status',
                     provider.maritalStatus,
-                    ['Single', 'Married', 'Divorced', 'Widowed'],
+                    ['Single', 'Married', 'Divorced'],
                     (v) => setState(() => provider.maritalStatus = v!),
                     textColor: textColor,
                   ),
@@ -452,11 +452,11 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _buildTextField(
-                          'Occupation',
+                          'Type of Work',
                           'e.g. Agent',
                           provider.occupationCtrl,
                           textColor: textColor,
-                          validator: (v) => Validators.validateRequired(v, 'Occupation'),
+                          validator: (v) => Validators.validateRequired(v, 'Type of Work'),
                         ),
                       ),
                     ],
@@ -475,27 +475,23 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                     (v) => setState(() => provider.advisorType = v!),
                     textColor: textColor,
                   ),
-                  _buildTextField(
-                    'Application Number',
-                    'e.g. APP-12345',
-                    provider.applicationNumberCtrl,
-                    textColor: textColor,
-                  ),
+
                   _buildTextField(
                     'Primary Profession',
                     'e.g. Real Estate Agent',
                     provider.primaryProfessionCtrl,
                     textColor: textColor,
                   ),
-                  _buildTextField(
+                  _buildDropdown(
                     'Qualification',
-                    'e.g. B.Com',
-                    provider.qualificationCtrl,
+                    provider.qualification,
+                    ['X', 'XII', 'Graduated', 'Post Graduated'],
+                    (v) => setState(() => provider.qualification = v!),
                     textColor: textColor,
                   ),
                   _buildTextField(
                     'Branch Code',
-                    'e.g. BR-101',
+                    'e.g. PIBUJ026',
                     provider.branchCodeCtrl,
                     textColor: textColor,
                   ),
@@ -525,16 +521,25 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
               ),
               child: Column(
                 children: [
+                  Text(
+                    'Reference Person 1',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   _buildTextField(
-                    'Reference Name',
-                    'Name of reference',
-                    provider.refNameCtrl,
+                    'Name',
+                    'Name of reference 1',
+                    provider.refNameCtrl1,
                     textColor: textColor,
                   ),
                   _buildTextField(
-                    'Reference Phone',
+                    'Phone',
                     '9876543210',
-                    provider.refPhoneCtrl,
+                    provider.refPhoneCtrl1,
                     isNumber: true,
                     textColor: textColor,
                     inputFormatters: [
@@ -543,15 +548,45 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                     ],
                   ),
                   _buildTextField(
-                    'Reference Relationship',
-                    'e.g. Friend, Colleague',
-                    provider.refRelationshipCtrl,
+                    'Address',
+                    'Address of reference 1',
+                    provider.refAddressCtrl1,
+                    maxLines: 2,
+                    textColor: textColor,
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Reference Person 2',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTextField(
+                    'Name',
+                    'Name of reference 2',
+                    provider.refNameCtrl2,
                     textColor: textColor,
                   ),
                   _buildTextField(
-                    'Reference Address',
-                    'Address of reference',
-                    provider.refAddressCtrl,
+                    'Phone',
+                    '9876543210',
+                    provider.refPhoneCtrl2,
+                    isNumber: true,
+                    textColor: textColor,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(10),
+                    ],
+                  ),
+                  _buildTextField(
+                    'Address',
+                    'Address of reference 2',
+                    provider.refAddressCtrl2,
                     maxLines: 2,
                     textColor: textColor,
                   ),
@@ -600,15 +635,19 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                     validator: (v) => Validators.validateRequired(v, 'Nominee Name'),
                   ),
                   _buildTextField(
-                    'Nominee Phone Number',
-                    'Enter Nominee Phone Number',
-                    provider.nomineePhoneCtrl,
+                    'Nominee Age',
+                    'Enter Nominee Age',
+                    provider.nomineeAgeCtrl,
                     isNumber: true,
                     textColor: textColor,
-                    validator: (v) => Validators.validatePhone(v),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Nominee Age is required';
+                      if (int.tryParse(v) == null) return 'Invalid age';
+                      return null;
+                    },
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(10),
+                      LengthLimitingTextInputFormatter(3),
                     ],
                   ),
                   _buildDropdown(
@@ -776,15 +815,26 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
             onTap: () async {
               final DateTime? picked = await showDatePicker(
                 context: context,
-                initialDate: DateTime(2000, 1, 1), // Default start date
+                initialDate: DateTime(DateTime.now().year - 18, DateTime.now().month, DateTime.now().day), // Default to 18 years ago
                 firstDate: DateTime(1950),
                 lastDate: DateTime.now(),
               );
               if (picked != null) {
-                // Format directly to YYYY-MM-DD for the backend
-                String formattedDate =
-                    "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
-                controller.text = formattedDate;
+                // Calculate age
+                final today = DateTime.now();
+                int age = today.year - picked.year;
+                if (today.month < picked.month || (today.month == picked.month && today.day < picked.day)) {
+                  age--;
+                }
+                if (age < 18) {
+                  UIHelper.showError(context, 'Advisor must be at least 18 years old.');
+                  controller.text = '';
+                } else {
+                  // Format directly to YYYY-MM-DD for the backend
+                  String formattedDate =
+                      "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                  controller.text = formattedDate;
+                }
               }
             },
             child: AbsorbPointer(

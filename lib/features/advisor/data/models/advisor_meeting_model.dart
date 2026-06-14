@@ -70,7 +70,7 @@ class AdvisorMeetingModel {
         }
         if (isUtc) {
           if (!fullDateTimeStr.endsWith('Z')) {
-            fullDateTimeStr = fullDateTimeStr.replaceAll(' ', 'T') + 'Z';
+            fullDateTimeStr = '${fullDateTimeStr.replaceAll(' ', 'T')}Z';
           }
           return DateTime.parse(fullDateTimeStr).toLocal().toString();
         } else {
@@ -81,7 +81,7 @@ class AdvisorMeetingModel {
       }
     }
 
-    String? cIn = parseToLocal((att != null ? att['check_in_time'] : json['check_in_time'])?.toString(), isUtc: true);
+    String? cIn = parseToLocal((att != null ? att['check_in_time'] : json['check_in_time'])?.toString(), isUtc: false);
     String? cOut = parseToLocal((att != null ? att['check_out_time'] : json['check_out_time'])?.toString(), isUtc: false);
 
     const String baseUrl = "https://workiees.com/";

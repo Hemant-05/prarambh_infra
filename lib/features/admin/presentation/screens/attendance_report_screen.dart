@@ -31,6 +31,8 @@ class AttendanceReportScreen extends StatefulWidget {
 class _AttendanceReportScreenState extends State<AttendanceReportScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocus = FocusNode();
   String _search = '';
 
   @override
@@ -47,6 +49,8 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -141,193 +145,197 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen>
           ),
         ],
       ),
-      body: Column(
-        children: [
-          if (meeting != null)
-            Container(
-              margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark ? Colors.grey[900] : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.withOpacity(0.15)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.02),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  if (meeting != null)
+                    Container(
+                      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[900] : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.02),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  meeting.title,
+                                  style: GoogleFonts.montserrat(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: isDark ? Colors.white : Colors.black87,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.edit_outlined, color: primaryBlue, size: 20),
+                                onPressed: () async {
+                                  final updated = await Navigator.push<bool>(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => CreateMeetingScreen(existingMeeting: meeting),
+                                    ),
+                                  );
+                                  if (updated == true && context.mounted) {
+                                    provider.fetchDailyAttendance(widget.meetingDate);
+                                    provider.fetchMeetingById(widget.meetingId);
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 16,
+                            runSpacing: 6,
+                            children: [
+                              _infoChip(Icons.calendar_today_outlined, _formatDate(meeting.date), Colors.grey[600]!),
+                              _infoChip(Icons.access_time_outlined, "${_formatTime(meeting.time)} - ${_formatTime(meeting.endTime)}", Colors.grey[600]!),
+                              if (meeting.location.isNotEmpty)
+                                _infoChip(Icons.location_on_outlined, meeting.location, Colors.grey[600]!),
+                            ],
+                          ),
+                          if (meeting.videoUrl.isNotEmpty) ...[
+                            const SizedBox(height: 14),
+                            Text(
+                              'ATTACHED VIDEO',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              height: 180,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Colors.black,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: _MeetingVideoPlayer(videoUrl: meeting.videoUrl),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  Container(
+                    color: isDark ? Colors.grey[900] : Colors.white,
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    child: Row(
+                      children: [
+                        _summaryChip('Present', presentCount, Colors.green, Icons.check_circle),
+                        const SizedBox(width: 10),
+                        _summaryChip('Absent', absentCount, Colors.red, Icons.cancel),
+                        const SizedBox(width: 10),
+                        _summaryChip('Total', totalCount, primaryBlue, Icons.people_outline),
+                      ],
+                    ),
                   ),
                 ],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            ),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _StickyHeaderDelegate(
+                child: Container(
+                  color: isDark ? Colors.grey[900] : Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
-                        child: Text(
-                          meeting.title,
-                          style: GoogleFonts.montserrat(
+                      Container(
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.grey[850] : Colors.grey[100],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: TabBar(
+                          controller: _tabController,
+                          indicator: BoxDecoration(
+                            color: primaryBlue,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          labelColor: Colors.white,
+                          unselectedLabelColor: Colors.grey[600],
+                          labelStyle: GoogleFonts.montserrat(
                             fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: isDark ? Colors.white : Colors.black87,
+                            fontSize: 12,
+                          ),
+                          padding: const EdgeInsets.all(3),
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          tabs: [
+                            Tab(text: 'Present ($presentCount)'),
+                            Tab(text: 'Absent ($absentCount)'),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        height: 42,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.grey[850] : Colors.grey[100],
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.grey.withOpacity(0.15)),
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          focusNode: _searchFocus,
+                          onChanged: (v) => setState(() => _search = v),
+                          style: GoogleFonts.montserrat(fontSize: 13),
+                          decoration: InputDecoration(
+                            icon: Icon(Icons.search, color: Colors.grey[400], size: 18),
+                            suffixIcon: _search.isNotEmpty
+                                ? IconButton(
+                                    icon: Icon(Icons.clear, color: Colors.grey[400], size: 18),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() => _search = '');
+                                    },
+                                  )
+                                : null,
+                            hintText: 'Search advisor name or code...',
+                            hintStyle: GoogleFonts.montserrat(color: Colors.grey[400], fontSize: 12),
+                            border: InputBorder.none,
                           ),
                         ),
                       ),
-                      IconButton(
-                        icon: Icon(Icons.edit_outlined, color: primaryBlue, size: 20),
-                        onPressed: () async {
-                          final updated = await Navigator.push<bool>(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => CreateMeetingScreen(existingMeeting: meeting),
-                            ),
-                          );
-                          if (updated == true && context.mounted) {
-                            provider.fetchDailyAttendance(widget.meetingDate);
-                            provider.fetchMeetingById(widget.meetingId);
-                          }
-                        },
-                      ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 16,
-                    runSpacing: 6,
-                    children: [
-                      _infoChip(Icons.calendar_today_outlined, _formatDate(meeting.date), Colors.grey[600]!),
-                      _infoChip(Icons.access_time_outlined, "${_formatTime(meeting.time)} - ${_formatTime(meeting.endTime)}", Colors.grey[600]!),
-                      if (meeting.location.isNotEmpty)
-                        _infoChip(Icons.location_on_outlined, meeting.location, Colors.grey[600]!),
-                    ],
-                  ),
-                  if (meeting.videoUrl.isNotEmpty) ...[
-                    const SizedBox(height: 14),
-                    Text(
-                      'ATTACHED VIDEO',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[500],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      height: 180,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: _MeetingVideoPlayer(videoUrl: meeting.videoUrl),
-                      ),
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
-          Container(
-            color: isDark ? Colors.grey[900] : Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    _summaryChip(
-                      'Present',
-                      presentCount,
-                      Colors.green,
-                      Icons.check_circle,
-                    ),
-                    const SizedBox(width: 10),
-                    _summaryChip(
-                      'Absent',
-                      absentCount,
-                      Colors.red,
-                      Icons.cancel,
-                    ),
-                    const SizedBox(width: 10),
-                    _summaryChip(
-                      'Total',
-                      totalCount,
-                      primaryBlue,
-                      Icons.people_outline,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[850] : Colors.grey[100],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: TabBar(
-                    controller: _tabController,
-                    indicator: BoxDecoration(
-                      color: primaryBlue,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    labelColor: Colors.white,
-                    unselectedLabelColor: Colors.grey[600],
-                    labelStyle: GoogleFonts.montserrat(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                    padding: const EdgeInsets.all(3),
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    tabs: [
-                      Tab(text: 'Present ($presentCount)'),
-                      Tab(text: 'Absent ($absentCount)'),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  height: 42,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[850] : Colors.grey[100],
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.grey.withOpacity(0.15)),
-                  ),
-                  child: TextField(
-                    onChanged: (v) => setState(() => _search = v),
-                    style: GoogleFonts.montserrat(fontSize: 13),
-                    decoration: InputDecoration(
-                      icon: Icon(
-                        Icons.search,
-                        color: Colors.grey[400],
-                        size: 18,
-                      ),
-                      hintText: 'Search advisor name...',
-                      hintStyle: GoogleFonts.montserrat(
-                        color: Colors.grey[400],
-                        fontSize: 12,
-                      ),
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: provider.isLoading
-                ? Center(child: CircularProgressIndicator(color: primaryBlue))
-                : TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildPresentList(presents, isDark, primaryBlue),
-                      _buildAbsentList(absents, isDark, primaryBlue),
-                    ],
-                  ),
-          ),
-        ],
+          ];
+        },
+        body: provider.isLoading
+            ? Center(child: CircularProgressIndicator(color: primaryBlue))
+            : TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildPresentList(presents, isDark, primaryBlue),
+                  _buildAbsentList(absents, isDark, primaryBlue),
+                ],
+              ),
       ),
     );
   }
@@ -798,8 +806,8 @@ class _MeetingVideoPlayerState extends State<_MeetingVideoPlayer> {
     } catch (e) {
       debugPrint("Error initializing video player: $e");
       _hasError = true;
+      if (mounted) setState(() {});
     }
-    if (mounted) setState(() {});
   }
 
   @override
@@ -812,26 +820,35 @@ class _MeetingVideoPlayerState extends State<_MeetingVideoPlayer> {
   @override
   Widget build(BuildContext context) {
     if (_hasError) {
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 48, color: Colors.grey[600]),
-          const SizedBox(height: 8),
-          Text(
-            'Failed to load video',
-            style: GoogleFonts.montserrat(
-              color: Colors.grey[500],
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
+      return Center(
+        child: Text(
+          "Error loading video",
+          style: GoogleFonts.montserrat(color: Colors.red),
+        ),
       );
     }
+    if (_chewieController != null &&
+        _chewieController!.videoPlayerController.value.isInitialized) {
+      return Chewie(controller: _chewieController!);
+    } else {
+      return const Center(child: CircularProgressIndicator(color: Colors.white));
+    }
+  }
+}
 
-    return _chewieController != null &&
-            _chewieController!.videoPlayerController.value.isInitialized
-        ? Chewie(controller: _chewieController!)
-        : const Center(child: CircularProgressIndicator(color: Colors.white));
+class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  _StickyHeaderDelegate({required this.child});
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return child;
+  }
+  @override
+  double get maxExtent => 120.0;
+  @override
+  double get minExtent => 120.0;
+  @override
+  bool shouldRebuild(covariant _StickyHeaderDelegate oldDelegate) {
+    return true;
   }
 }

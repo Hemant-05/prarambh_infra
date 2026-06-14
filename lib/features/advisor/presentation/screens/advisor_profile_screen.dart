@@ -387,7 +387,7 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                             ),
                             _buildInfoRow(
                               context,
-                              "Nominee Phone",
+                              "Nominee Age",
                               provider.profile!.nomineePhone,
                               Icons.phone,
                               isDark,
@@ -403,35 +403,40 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                           primaryBlue: primaryBlue,
                           isDark: isDark,
                           children: [
-                            _buildInfoRow(
-                              context,
-                              "Reference Name",
-                              provider.profile!.refName,
-                              Icons.person_outline,
-                              isDark,
-                            ),
-                            _buildInfoRow(
-                              context,
-                              "Relationship",
-                              provider.profile!.refRelationship,
-                              Icons.people_alt_outlined,
-                              isDark,
-                            ),
-                            _buildInfoRow(
-                              context,
-                              "Contact Number",
-                              provider.profile!.refContact,
-                              Icons.phone_outlined,
-                              isDark,
-                            ),
-                            _buildInfoRow(
-                              context,
-                              "Address",
-                              provider.profile!.refAddress,
-                              Icons.home_outlined,
-                              isDark,
-                              isLast: true,
-                            ),
+                            if (provider.profile!.referencePersons.isEmpty)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                child: Text('No references provided', style: GoogleFonts.montserrat(color: Colors.grey, fontSize: 13)),
+                              ),
+                            for (int i = 0; i < provider.profile!.referencePersons.length; i++) ...[
+                              if (i > 0) const Divider(height: 16),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                child: Text('Reference ${i + 1}', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13, color: Theme.of(context).textTheme.bodyLarge?.color)),
+                              ),
+                              _buildInfoRow(
+                                context,
+                                "Reference Name",
+                                provider.profile!.referencePersons[i]['name'] ?? 'N/A',
+                                Icons.person_outline,
+                                isDark,
+                              ),
+                              _buildInfoRow(
+                                context,
+                                "Contact Number",
+                                provider.profile!.referencePersons[i]['contact_number'] ?? 'N/A',
+                                Icons.phone_outlined,
+                                isDark,
+                              ),
+                              _buildInfoRow(
+                                context,
+                                "Address",
+                                provider.profile!.referencePersons[i]['address'] ?? 'N/A',
+                                Icons.home_outlined,
+                                isDark,
+                                isLast: i == provider.profile!.referencePersons.length - 1,
+                              ),
+                            ]
                           ],
                         ),
                         const SizedBox(height: 40), // Bottom Padding

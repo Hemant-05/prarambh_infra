@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:prarambh_infra/core/providers/error_handler_mixin.dart';
@@ -7,7 +8,13 @@ import 'package:prarambh_infra/core/utils/ui_helper.dart';
 
 class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin {
   final RecruitmentRepository repository;
-  AdvisorRegistrationProvider({required this.repository});
+  AdvisorRegistrationProvider({required this.repository}) {
+    // Auto-generate application number
+    applicationNumberCtrl.text = Random().nextInt(100000).toString().padLeft(5, '0');
+    // Prefill defaults
+    nationalityCtrl.text = 'Indian';
+    stateCtrl.text = 'Madhya Pradesh';
+  }
 
   // errorMessage, isLoading, clearError, setError, setLoading are provided by ErrorHandlerMixin
 
@@ -49,18 +56,22 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
   final branchLocationCtrl = TextEditingController();
   final headOfficeCtrl = TextEditingController();
   final primaryProfessionCtrl = TextEditingController();
-  final qualificationCtrl = TextEditingController();
+  String qualification = 'Graduated'; // Now a dropdown
   final nationalityCtrl = TextEditingController();
   
-  // Reference Person
-  final refNameCtrl = TextEditingController();
-  final refAddressCtrl = TextEditingController();
-  final refPhoneCtrl = TextEditingController();
-  final refRelationshipCtrl = TextEditingController();
+  // Reference Person 1
+  final refNameCtrl1 = TextEditingController();
+  final refAddressCtrl1 = TextEditingController();
+  final refPhoneCtrl1 = TextEditingController();
+
+  // Reference Person 2
+  final refNameCtrl2 = TextEditingController();
+  final refAddressCtrl2 = TextEditingController();
+  final refPhoneCtrl2 = TextEditingController();
 
   // --- Step 2 Controllers ---
   final nomineeNameCtrl = TextEditingController();
-  final nomineePhoneCtrl = TextEditingController();
+  final nomineeAgeCtrl = TextEditingController();
   final bankNameCtrl = TextEditingController();
   final accNumberCtrl = TextEditingController();
   final ifscCtrl = TextEditingController();
@@ -91,11 +102,27 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
 
   // --- Validation & Submission ---
   bool validateStep1(BuildContext context) {
-    // Also added dobCtrl verification since it's required by the backend
     if (nameCtrl.text.isEmpty || phoneCtrl.text.isEmpty || aadharCtrl.text.isEmpty || panCtrl.text.isEmpty || dobCtrl.text.isEmpty) {
       setError('Please fill all required Personal & Contact details.');
       return false;
     }
+
+    try {
+      // dob format should be yyyy-mm-dd or dd-mm-yyyy etc. Assuming the date picker sets it to yyyy-MM-dd
+      final parts = dobCtrl.text.split(RegExp(r'[-/]'));
+      if (parts.length == 3) {
+        int year = int.parse(parts[0].length == 4 ? parts[0] : parts[2]);
+        int month = int.parse(parts[1]);
+        int day = int.parse(parts[0].length == 4 ? parts[2] : parts[0]);
+        final dobDate = DateTime(year, month, day);
+        final age = DateTime.now().difference(dobDate).inDays / 365;
+        if (age < 18) {
+          setError('Advisor must be at least 18 years old.');
+          return false;
+        }
+      }
+    } catch (_) {}
+
     return true;
   }
 
@@ -110,16 +137,19 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
     setError(null);
 
     try {
-      // Construct reference person JSON
+      // Construct reference persons JSON
       String? refPersonJson;
-      if (refNameCtrl.text.isNotEmpty || refAddressCtrl.text.isNotEmpty || refPhoneCtrl.text.isNotEmpty || refRelationshipCtrl.text.isNotEmpty) {
-        refPersonJson = '{"name": "${refNameCtrl.text}", "address": "${refAddressCtrl.text}", "relationship": "${refRelationshipCtrl.text}", "contact_number": "${refPhoneCtrl.text}"}';
+      if (refNameCtrl1.text.isNotEmpty || refNameCtrl2.text.isNotEmpty) {
+        refPersonJson = '['
+            '{"name": "${refNameCtrl1.text}", "address": "${refAddressCtrl1.text}", "contact_number": "${refPhoneCtrl1.text}"},'
+            '{"name": "${refNameCtrl2.text}", "address": "${refAddressCtrl2.text}", "contact_number": "${refPhoneCtrl2.text}"}'
+            ']';
       }
 
       final success = await repository.registerAdvisorDetailed(
           fullName: nameCtrl.text, email: emailCtrl.text, phone: phoneCtrl.text, designation: designation,
           fatherName: fatherNameCtrl.text, dob: dobCtrl.text, gender: gender,
-          nomineeName: nomineeNameCtrl.text, nomineePhone: nomineePhoneCtrl.text, relationship: relationship,
+          nomineeName: nomineeNameCtrl.text, nomineePhone: nomineeAgeCtrl.text, relationship: relationship,
           occupation: occupationCtrl.text, aadhaar: aadharCtrl.text, pan: panCtrl.text,
           bankName: bankNameCtrl.text, accNumber: accNumberCtrl.text, ifsc: ifscCtrl.text,
           address: addressCtrl.text, city: cityCtrl.text, state: stateCtrl.text, pincode: pincodeCtrl.text, leaderCode: leaderCodeCtrl.text,
@@ -130,7 +160,7 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
           branchLocation: branchLocationCtrl.text.isEmpty ? null : branchLocationCtrl.text,
           headOffice: headOfficeCtrl.text.isEmpty ? null : headOfficeCtrl.text,
           primaryProfession: primaryProfessionCtrl.text.isEmpty ? null : primaryProfessionCtrl.text,
-          qualification: qualificationCtrl.text.isEmpty ? null : qualificationCtrl.text,
+          qualification: qualification,
           nationality: nationalityCtrl.text.isEmpty ? null : nationalityCtrl.text,
           referencePerson: refPersonJson,
           aadharFront: aadharFront!, aadharBack: aadharBack!, panPhoto: panPhoto!,
@@ -138,15 +168,18 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
           profilePhoto: profilePhoto!
       );
 
-      if(success){
+      if (success) {
         nameCtrl.clear(); fatherNameCtrl.clear(); dobCtrl.clear(); aadharCtrl.clear(); panCtrl.clear();
         phoneCtrl.clear(); emailCtrl.clear(); addressCtrl.clear(); occupationCtrl.clear(); pincodeCtrl.clear();
-        nomineeNameCtrl.clear(); nomineePhoneCtrl.clear(); bankNameCtrl.clear(); accNumberCtrl.clear(); ifscCtrl.clear();
+        nomineeNameCtrl.clear(); nomineeAgeCtrl.clear(); bankNameCtrl.clear(); accNumberCtrl.clear(); ifscCtrl.clear();
         branchCtrl.clear(); leaderCodeCtrl.clear(); designation = 'Advisor';
-        applicationNumberCtrl.clear(); branchCodeCtrl.clear(); branchLocationCtrl.clear();
-        headOfficeCtrl.clear(); primaryProfessionCtrl.clear(); qualificationCtrl.clear(); nationalityCtrl.clear();
-        refNameCtrl.clear(); refAddressCtrl.clear(); refPhoneCtrl.clear(); refRelationshipCtrl.clear();
+        applicationNumberCtrl.text = Random().nextInt(100000).toString().padLeft(5, '0');
+        branchCodeCtrl.clear(); branchLocationCtrl.clear();
+        headOfficeCtrl.clear(); primaryProfessionCtrl.clear(); nationalityCtrl.text = 'Indian';
+        refNameCtrl1.clear(); refAddressCtrl1.clear(); refPhoneCtrl1.clear();
+        refNameCtrl2.clear(); refAddressCtrl2.clear(); refPhoneCtrl2.clear();
         maritalStatus = 'Single';
+        qualification = 'Graduated';
         aadharFront = null; aadharBack = null; panPhoto = null; panBackPhoto = null; profilePhoto = null;
       }
 

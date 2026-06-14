@@ -83,7 +83,7 @@ class AdvisorAttendanceDetail {
         }
         if (isUtc) {
           if (!fullDateTimeStr.endsWith('Z')) {
-            fullDateTimeStr = fullDateTimeStr.replaceAll(' ', 'T') + 'Z';
+            fullDateTimeStr = '${fullDateTimeStr.replaceAll(' ', 'T')}Z';
           }
           return DateTime.parse(fullDateTimeStr).toLocal().toString();
         } else {
@@ -127,7 +127,7 @@ class AdvisorAttendanceDetail {
       endTime: json['end_time']?.toString(),
       location: json['location']?.toString(),
       status: json['status'] ?? '',
-      checkInTime: parseToLocal(json['check_in_time']?.toString(), isUtc: true),
+      checkInTime: parseToLocal(json['check_in_time']?.toString(), isUtc: false),
       checkOutTime: parseToLocal(json['check_out_time']?.toString(), isUtc: false),
       checkInPhoto: cInPhoto,
       checkOutPhoto: cOutPhoto,

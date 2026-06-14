@@ -278,7 +278,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                             )
                             .where(
                               (l) =>
-                                  l.stage.toLowerCase() == 'booking' &&
+                                  (l.stage.toLowerCase() == 'booking' || l.stage.toLowerCase() == 'pending_verification') &&
                                   l.advisorCode.isNotEmpty,
                             )
                             .toList(),

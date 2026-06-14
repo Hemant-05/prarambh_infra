@@ -58,6 +58,7 @@ import 'features/advisor/presentation/screens/installment_calculator_screen.dart
 import 'features/advisor/presentation/screens/advisor_leaderboard_screen.dart';
 import 'features/recruitment/presentation/providers/recruitment_provider.dart';
 import 'features/recruitment/presentation/screens/recruiter_dashboard_screen.dart';
+import 'features/advisor/presentation/screens/business_plan_screen.dart';
 import 'features/recruitment/presentation/screens/advisor_registration_screen.dart';
 import 'features/client/presentation/providers/client_dashboard_provider.dart';
 import 'features/client/presentation/providers/property_filter_provider.dart';
@@ -280,6 +281,7 @@ class MyApp extends StatelessWidget {
       '/admin_projects': (context) => const AdminProjectsScreen(),
       '/lead_management': (context) => const LeadManagementScreen(),
       '/advisor_dashboard': (context) => const AdvisorDashboardScreen(),
+      '/business_plan': (context) => const BusinessPlanScreen(),
       '/advisor_registration': (context) => const AdvisorRegistrationScreen(),
       '/recruiter_dashboard': (context) => const RecruiterDashboardScreen(),
       '/installment_calculator': (context) =>

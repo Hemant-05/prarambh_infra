@@ -37,10 +37,7 @@ class AdvisorApplicationModel {
   final String primaryProfession;
   final String qualification;
   final String nationality;
-  final String refName;
-  final String refAddress;
-  final String refRelationship;
-  final String refContact;
+  final List<Map<String, String>> referencePersons;
   final List<KycDocument> documents;
 
   AdvisorApplicationModel({
@@ -80,10 +77,7 @@ class AdvisorApplicationModel {
     required this.primaryProfession,
     required this.qualification,
     required this.nationality,
-    required this.refName,
-    required this.refAddress,
-    required this.refRelationship,
-    required this.refContact,
+    required this.referencePersons,
     required this.documents,
   });
 
@@ -117,15 +111,50 @@ class AdvisorApplicationModel {
     addDocIfPresent('pancard_back_photo', 'PAN Card Back');
     addDocIfPresent('profile_photo', 'Profile Photo');
 
-    Map<String, dynamic>? refPersonMap;
-    if (json['reference_person'] is Map) {
-      refPersonMap = json['reference_person'] as Map<String, dynamic>;
-    } else if (json['reference_person'] is String) {
-      try {
-        refPersonMap =
-            jsonDecode(json['reference_person']) as Map<String, dynamic>;
-      } catch (e) {
-        refPersonMap = null;
+    List<Map<String, String>> refPersons = [];
+    if (json['reference_person'] != null) {
+      if (json['reference_person'] is List) {
+        for (var item in (json['reference_person'] as List)) {
+          if (item is Map) {
+            refPersons.add({
+              'name': item['name']?.toString() ?? 'N/A',
+              'address': item['address']?.toString() ?? 'N/A',
+              'relationship': item['relationship']?.toString() ?? 'N/A',
+              'contact_number': item['contact_number']?.toString() ?? 'N/A',
+            });
+          }
+        }
+      } else if (json['reference_person'] is String) {
+        try {
+          var decoded = jsonDecode(json['reference_person']);
+          if (decoded is List) {
+            for (var item in decoded) {
+              if (item is Map) {
+                refPersons.add({
+                  'name': item['name']?.toString() ?? 'N/A',
+                  'address': item['address']?.toString() ?? 'N/A',
+                  'relationship': item['relationship']?.toString() ?? 'N/A',
+                  'contact_number': item['contact_number']?.toString() ?? 'N/A',
+                });
+              }
+            }
+          } else if (decoded is Map) {
+            refPersons.add({
+              'name': decoded['name']?.toString() ?? 'N/A',
+              'address': decoded['address']?.toString() ?? 'N/A',
+              'relationship': decoded['relationship']?.toString() ?? 'N/A',
+              'contact_number': decoded['contact_number']?.toString() ?? 'N/A',
+            });
+          }
+        } catch (_) {}
+      } else if (json['reference_person'] is Map) {
+        var decoded = json['reference_person'] as Map;
+        refPersons.add({
+          'name': decoded['name']?.toString() ?? 'N/A',
+          'address': decoded['address']?.toString() ?? 'N/A',
+          'relationship': decoded['relationship']?.toString() ?? 'N/A',
+          'contact_number': decoded['contact_number']?.toString() ?? 'N/A',
+        });
       }
     }
 
@@ -158,18 +187,15 @@ class AdvisorApplicationModel {
       slab: json['slab']?.toString() ?? '',
       advisorType: json['advisor_type']?.toString() ?? 'Full-time',
       leaderCode: json['leader_code']?.toString() ?? '',
-      applicationNumber: json['Application_number']?.toString() ?? 'N/A',
-      maritalStatus: json['Marital_status']?.toString() ?? 'N/A',
-      branchCode: json['Branch_code']?.toString() ?? 'N/A',
-      branchLocation: json['Branch_location']?.toString() ?? 'N/A',
-      headOffice: json['Head_office']?.toString() ?? 'N/A',
-      primaryProfession: json['Primary_profession']?.toString() ?? 'N/A',
-      qualification: json['Qualification']?.toString() ?? 'N/A',
+      applicationNumber: json['Application_number']?.toString() ?? json['application_number']?.toString() ?? 'N/A',
+      maritalStatus: json['Marital_status']?.toString() ?? json['marital_status']?.toString() ?? 'N/A',
+      branchCode: json['Branch_code']?.toString() ?? json['branch_code']?.toString() ?? 'N/A',
+      branchLocation: json['Branch_location']?.toString() ?? json['branch_location']?.toString() ?? 'N/A',
+      headOffice: json['Head_office']?.toString() ?? json['head_office']?.toString() ?? 'N/A',
+      primaryProfession: json['Primary_profession']?.toString() ?? json['primary_profession']?.toString() ?? 'N/A',
+      qualification: json['Qualification']?.toString() ?? json['qualification']?.toString() ?? 'N/A',
       nationality: json['nationality']?.toString() ?? 'Indian',
-      refName: refPersonMap?['name']?.toString() ?? 'N/A',
-      refAddress: refPersonMap?['address']?.toString() ?? 'N/A',
-      refRelationship: refPersonMap?['relationship']?.toString() ?? 'N/A',
-      refContact: refPersonMap?['contact_number']?.toString() ?? 'N/A',
+      referencePersons: refPersons,
       documents: docs,
     );
   }

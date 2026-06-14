@@ -419,17 +419,23 @@ class ReviewApplicationScreen extends StatelessWidget {
             // Card 3: Nominee Info
             _buildInfoCard(cardColor, 'NOMINEE DETAILS', [
               _buildDetailRow('Name', advisor.nomineeName),
-              _buildDetailRow('DOB', advisor.nomineePhone),
+              _buildDetailRow('Age', advisor.nomineePhone),
               _buildDetailRow('Relationship', advisor.relationship),
             ]),
             const SizedBox(height: 20),
 
-            // Card 3b: Reference Person
-            _buildInfoCard(cardColor, 'REFERENCE PERSON', [
-              _buildDetailRow('Name', advisor.refName),
-              _buildDetailRow('Relationship', advisor.refRelationship),
-              _buildDetailRow('Contact', advisor.refContact),
-              _buildDetailRow('Address', advisor.refAddress),
+            // Card 3b: Reference Persons
+            _buildInfoCard(cardColor, 'REFERENCE PERSONS', [
+              if (advisor.referencePersons.isEmpty)
+                Text('No references provided', style: GoogleFonts.montserrat(color: Colors.grey)),
+              for (int i = 0; i < advisor.referencePersons.length; i++) ...[
+                if (i > 0) const Divider(height: 16),
+                Text('Reference ${i + 1}', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13, color: textColor)),
+                const SizedBox(height: 8),
+                _buildDetailRow('Name', advisor.referencePersons[i]['name'] ?? 'N/A'),
+                _buildDetailRow('Contact', advisor.referencePersons[i]['contact_number'] ?? 'N/A'),
+                _buildDetailRow('Address', advisor.referencePersons[i]['address'] ?? 'N/A'),
+              ]
             ]),
             const SizedBox(height: 20),
 
