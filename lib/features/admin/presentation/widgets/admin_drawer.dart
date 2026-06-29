@@ -206,6 +206,18 @@ class AdminDrawer extends StatelessWidget {
                   title: 'COMPANY WEBSITE',
                   onTap: () => launchUrl(Uri.parse('https://prarambhinfra.com')),
                 ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.facebook,
+                  title: 'FACEBOOK',
+                  onTap: () => launchUrl(Uri.parse('https://www.facebook.com/prarambhinfra')),
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.camera_alt_outlined,
+                  title: 'INSTAGRAM',
+                  onTap: () => launchUrl(Uri.parse('https://www.instagram.com/prarambhinfra')),
+                ),
               ],
             ),
           ),

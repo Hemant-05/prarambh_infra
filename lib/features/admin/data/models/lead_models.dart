@@ -26,6 +26,7 @@ class LeadModel {
   final String createdAt;
   final String updatedAt;
   final String description;
+  final String advisorName;
 
   LeadModel({
     required this.id, required this.clientName, required this.clientNumber,
@@ -37,7 +38,7 @@ class LeadModel {
     required this.reason, required this.notes, required this.reminder,
     required this.meetingPoint, required this.communicationAttempt,
     required this.createdAt, required this.updatedAt,
-    required this.description,
+    required this.description, this.advisorName = '',
   });
 
   factory LeadModel.fromJson(Map<String, dynamic> json) {
@@ -50,6 +51,7 @@ class LeadModel {
       clientName: json['client_name']?.toString() ?? 'Unknown Client',
       clientNumber: json['client_number']?.toString() ?? 'N/A',
       advisorCode: json['advisor_code']?.toString() ?? '',
+      advisorName: json['advisor_name']?.toString() ?? '',
       source: json['source']?.toString() ?? 'Generated',
 
       clientAge: json['client_age']?.toString() ?? 'N/A',

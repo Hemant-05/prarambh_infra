@@ -260,10 +260,10 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
       ];
     } else {
       if (designationStr == 'director') {
-        designationOptions = ['Advisor', 'Supervisor', 'Manager', 'Chief Manager', 'Senior Manager'];
-      } else if (designationStr == 'senior manager') {
-        designationOptions = ['Advisor', 'Supervisor', 'Manager', 'Chief Manager'];
+        designationOptions = ['Advisor', 'Supervisor', 'Manager', 'Senior Manager', 'Chief Manager'];
       } else if (designationStr == 'chief manager') {
+        designationOptions = ['Advisor', 'Supervisor', 'Manager', 'Senior Manager'];
+      } else if (designationStr == 'senior manager') {
         designationOptions = ['Advisor', 'Supervisor', 'Manager'];
       } else if (designationStr == 'manager') {
         designationOptions = ['Advisor', 'Supervisor'];

@@ -929,7 +929,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        'Source: ${lead.source.toUpperCase()}',
+                        'Advisor: ${lead.advisorName.isNotEmpty ? lead.advisorName.toUpperCase() : "N/A"}',
                         style: GoogleFonts.montserrat(
                           fontSize: 10,
                           color: Colors.grey[600],
@@ -1085,7 +1085,7 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        'Source: ${lead.source.toUpperCase()}',
+                        'Advisor: ${lead.advisorName.isNotEmpty ? lead.advisorName.toUpperCase() : "N/A"}',
                         style: GoogleFonts.montserrat(
                           fontSize: 10,
                           color: Colors.grey[600],
