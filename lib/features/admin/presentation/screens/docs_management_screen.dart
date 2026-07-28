@@ -30,16 +30,26 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
   // --- 1. VIEW DOCUMENT LOGIC ---
   Future<void> _viewDocument(DocumentModel doc) async {
     if (doc.type == 'IMAGE') {
-      // Show Image in Full Screen Zoomable Dialog
-      showDialog(
-        context: context,
-        builder: (context) => Dialog(
-          backgroundColor: Colors.black87,
-          insetPadding: EdgeInsets.zero,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              InteractiveViewer(
+      // Show Image in Full Screen Scaffold
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => Scaffold(
+            backgroundColor: Colors.black,
+            appBar: AppBar(
+              backgroundColor: Colors.black,
+              iconTheme: const IconThemeData(color: Colors.white),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.pop(context),
+              ),
+              title: Text(
+                doc.name,
+                style: const TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
+            body: Center(
+              child: InteractiveViewer(
                 panEnabled: true,
                 minScale: 0.5,
                 maxScale: 4.0,
@@ -61,15 +71,7 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
                   ),
                 ),
               ),
-              Positioned(
-                top: 40,
-                right: 20,
-                child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       );
@@ -361,16 +363,38 @@ class _DocsManagementScreenState extends State<DocsManagementScreen> {
                         ),
                       )
                     else
-                      ...provider.groupedDocuments.entries.map((entry) {
-                        return _buildExpandableSection(
-                          entry.key,
-                          entry.value,
-                          primaryBlue,
-                          textColor,
-                          isDark,
-                          initiallyExpanded: true,
-                        );
-                      }),
+                      ...(() {
+                        final order = [
+                          'Advisor Business Plan',
+                          'Circulars',
+                          'Company Legal Documents',
+                          'RERA',
+                          'New Policy',
+                          'Project Brochures',
+                          'Project Site Maps',
+                          'Project Rate Chart',
+                          'Others',
+                          'Company Rules & Regulations',
+                        ];
+                        final entries = provider.groupedDocuments.entries.toList();
+                        entries.sort((a, b) {
+                          int indexA = order.indexWhere((e) => e.toLowerCase() == a.key.toLowerCase());
+                          int indexB = order.indexWhere((e) => e.toLowerCase() == b.key.toLowerCase());
+                          if (indexA == -1) indexA = 999;
+                          if (indexB == -1) indexB = 999;
+                          return indexA.compareTo(indexB);
+                        });
+                        return entries.map((entry) {
+                          return _buildExpandableSection(
+                            entry.key,
+                            entry.value,
+                            primaryBlue,
+                            textColor,
+                            isDark,
+                            initiallyExpanded: true,
+                          );
+                        });
+                      })(),
                   ],
                 ),
               ),

@@ -33,7 +33,8 @@ class AdminProvider extends ChangeNotifier with ErrorHandlerMixin {
     notifyListeners();
 
     try {
-      _dashboardData = await adminRepository.getDashboardData(projectId: _selectedProjectId);
+      final apiProjectId = _selectedProjectId == 'all' ? null : _selectedProjectId;
+      _dashboardData = await adminRepository.getDashboardData(projectId: apiProjectId);
     } catch (e) {
       setError(e.toString());
     } finally {

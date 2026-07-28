@@ -452,8 +452,8 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _buildTextField(
-                          'Type of Work',
-                          'e.g. Agent',
+                          'TYPE OF WORK',
+                          'e.g. Salaried',
                           provider.occupationCtrl,
                           textColor: textColor,
                           validator: (v) => Validators.validateRequired(v, 'Type of Work'),
@@ -820,6 +820,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                 lastDate: DateTime.now(),
               );
               if (picked != null) {
+                if (!context.mounted) return;
                 // Calculate age
                 final today = DateTime.now();
                 int age = today.year - picked.year;
@@ -839,8 +840,9 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
             },
             child: AbsorbPointer(
               // Prevents keyboard from popping up
-              child: TextField(
+              child: TextFormField(
                 controller: controller,
+                validator: (v) => Validators.validateRequired(v, 'Date of Birth'),
                 style: GoogleFonts.montserrat(fontSize: 14, color: textColor),
                 decoration: InputDecoration(
                   hintText: hint,

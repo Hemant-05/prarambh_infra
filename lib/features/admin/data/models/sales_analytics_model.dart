@@ -36,13 +36,22 @@ class SalesAnalyticsModel {
 class SalesSummary {
   final int totalDeals;
   final double totalRevenue;
+  final int totalActiveAdvisors;
+  final int totalSiteVisits;
 
-  SalesSummary({required this.totalDeals, required this.totalRevenue});
+  SalesSummary({
+    required this.totalDeals,
+    required this.totalRevenue,
+    required this.totalActiveAdvisors,
+    required this.totalSiteVisits,
+  });
 
   factory SalesSummary.fromJson(Map<String, dynamic> json) {
     return SalesSummary(
       totalDeals: json['total_deals'] ?? 0,
       totalRevenue: (json['total_revenue'] ?? 0).toDouble(),
+      totalActiveAdvisors: json['total_active_advisors'] ?? 0,
+      totalSiteVisits: json['total_site_visits'] ?? 0,
     );
   }
 }
@@ -103,10 +112,14 @@ class FunnelStageData {
   // Helper for display labels
   String get displayLabel {
     switch (stage.toLowerCase()) {
-      case 'pending_verification': return 'Pending Approval';
-      case 'sus suspecting': return 'Suspecting';
-      case 'site visit': return 'Site Visits';
-      default: return stage[0].toUpperCase() + stage.substring(1);
+      case 'pending_verification': return 'PENDING APPROVAL';
+      case 'sus suspecting':
+      case 'suspecting': return 'SUSPECTING';
+      case 'prospecting': return 'PROSPECTING';
+      case 'site visit': return 'SITE VISITS';
+      case 'booking': return 'BOOKING DONE';
+      case 'completed': return 'SALES COMPLETED';
+      default: return stage.toUpperCase();
     }
   }
 }

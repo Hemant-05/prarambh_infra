@@ -15,6 +15,8 @@ import 'package:dio/dio.dart';
 import 'package:prarambh_infra/core/utils/file_download_helper.dart';
 import 'package:prarambh_infra/core/widgets/property_browser_sheet.dart';
 
+import 'package:prarambh_infra/features/advisor/utils/token_receipt_generator.dart';
+import '../../../../core/utils/ui_helper.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../admin/data/models/lead_models.dart';
 import '../../../admin/data/models/project_model.dart';
@@ -2411,7 +2413,7 @@ Please feel free to contact us for more information.""";
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (!widget.isAdmin && _currentLead.siteVisitPhoto.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -2423,6 +2425,26 @@ Please feel free to contact us for more information.""";
                 );
                 return;
               }
+              
+              if (!widget.isAdmin) {
+                try {
+                  final dealProvider = context.read<AdminDealProvider>();
+                  final authProvider = context.read<AuthProvider>();
+                  
+                  await dealProvider.initiateDeal(
+                    clientName: _currentLead.clientName,
+                    clientNumber: _currentLead.clientNumber,
+                    clientEmail: '',
+                    advisorCode: authProvider.currentUser?.advisorCode ?? '',
+                    leadId: _currentLead.id.toString(),
+                    propertyId: _selectedProject?.id.toString() ?? selectedPropertyId?.toString() ?? '0',
+                    unitId: _selectedUnit?.id.toString() ?? selectedUnitId?.toString() ?? '0',
+                  );
+                } catch (e) {
+                  debugPrint("Failed to create deal: $e");
+                }
+              }
+
               _updateStageInDb("pending_verification", note: "Site visit successful. Lead submitted for booking verification.");
             },
             style: ElevatedButton.styleFrom(
@@ -2577,10 +2599,29 @@ Please feel free to contact us for more information.""";
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () => _triggerLocalNotification(
-                "Download Started",
-                "Receipt $_generatedTokenId saving...",
-              ),
+              onPressed: () async {
+                _triggerLocalNotification("Generating PDF", "Please wait...");
+                final file = await TokenReceiptGenerator.generateAndSaveReceipt(
+                  customerName: _currentLead.clientName,
+                  mobileNumber: _currentLead.clientNumber,
+                  projectName: _selectedProject?.projectName ?? 'N/A',
+                  unitNumber: _selectedUnit?.unitNumber ?? _selectedUnit?.plotNumber ?? 'N/A',
+                  dimensions: 'N/A', // Update if fields available
+                  buildUpArea: 'N/A', // Update if fields available
+                  tokenAmount: _tokenAmountCtrl.text,
+                  modeOfPayment: _paymentMode,
+                  dueDate: 'N/A',
+                  status: 'Received',
+                  tokenId: _generatedTokenId ?? 'Unknown',
+                );
+                if (file != null) {
+                  _triggerLocalNotification("Download Complete", "Receipt saved at \${file.path}");
+                } else {
+                  if (context.mounted) {
+                    UIHelper.showError(context, "Failed to generate receipt PDF.");
+                  }
+                }
+              },
               icon: const Icon(Icons.download, size: 18),
               label: const Text("Download Receipt"),
             ),

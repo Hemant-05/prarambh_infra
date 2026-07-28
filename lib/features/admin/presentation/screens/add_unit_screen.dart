@@ -28,16 +28,15 @@ class _AddUnitScreenState extends State<AddUnitScreen>
   final _unitCtrl = TextEditingController();
   final _areaCtrl = TextEditingController();
   final _rateCtrl = TextEditingController();
-  final _locationCtrl = TextEditingController();
-  final _plotNumCtrl = TextEditingController();
   final _plotDimCtrl = TextEditingController();
 
   // Dropdown States
-  String _config = '3BHK';
-  String _type = 'Apartment';
+  String _config = '1 BHK';
+  String _type = 'FLAT';
   String _saleCategory = 'New Sale';
   String _facing = 'East';
   String _status = 'Available';
+  String _location = 'GARDEN FACING';
 
   // Bulk Upload State
   File? _selectedCsvFile;
@@ -78,8 +77,6 @@ class _AddUnitScreenState extends State<AddUnitScreen>
     _unitCtrl.dispose();
     _areaCtrl.dispose();
     _rateCtrl.dispose();
-    _locationCtrl.dispose();
-    _plotNumCtrl.dispose();
     _plotDimCtrl.dispose();
     super.dispose();
   }
@@ -176,76 +173,111 @@ class _AddUnitScreenState extends State<AddUnitScreen>
           children: [
             Row(
               children: [
-                Expanded(child: _buildTextField('Tower Name', _towerCtrl,
-                    validator: (v) => Validators.validateRequired(v, 'Tower Name'))),
-                const SizedBox(width: 16),
-                Expanded(child: _buildTextField('Floor Number', _floorCtrl,
-                    isNumber: true,
-                    validator: (v) => Validators.validateInteger(v, 'Floor Number'),
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly])),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _buildTextField('Unit Number/Plot Number', _unitCtrl,
-                isNumber: true,
-                validator: (v) => Validators.validateInteger(v, 'Unit Number'),
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly]),
-            const SizedBox(height: 16),
-            Row(
-              children: [
                 Expanded(
-                  child: _buildDropdown('Configuration', _config, [
-                    '1BHK', '2BHK', '3BHK', '4BHK', 'Villa',
-                  ], (v) => setState(() => _config = v!)),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildDropdown('Property Type', _type, [
-                    'Apartment', 'Villa', 'Plot'
+                  child: _buildDropdown('PROPERTY TYPE', _type, [
+                    'FLAT', 'LAND FARMING', 'ROW HOUSE', 'BANGLOW', 'VILLA', 'PLOT'
                   ], (v) => setState(() => _type = v!)),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
+                const SizedBox(width: 16),
                 Expanded(
-                  child: _buildDropdown('Sale Category', _saleCategory, [
+                  child: _buildDropdown('SALE CATEGORY', _saleCategory, [
                     'New Sale', 'Resale', 'Rent'
                   ], (v) => setState(() => _saleCategory = v!)),
                 ),
-                const SizedBox(width: 16),
+              ],
+            ),
+            const SizedBox(height: 16),
+            
+            // TYPE: FLAT
+            if (_type == 'FLAT') ...[
+              Row(
+                children: [
+                  Expanded(child: _buildTextField('BLOCK NAME', _towerCtrl, validator: (v) => Validators.validateRequired(v, 'BLOCK NAME'))),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildTextField('FLOOR NUMBER', _floorCtrl, isNumber: true, validator: (v) => Validators.validateInteger(v, 'FLOOR NUMBER'), inputFormatters: [FilteringTextInputFormatter.digitsOnly])),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildTextField('UNIT NUMBER', _unitCtrl, validator: (v) => Validators.validateRequired(v, 'UNIT NUMBER')),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildDropdown('CONFIGURATION', _config, [
+                      '1 BHK', '2 BHK', '3 BHK', '4 BHK', 'G + 1', 'G + 2', 'GROUND', 'NA'
+                    ], (v) => setState(() => _config = v!)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildDropdown('FACING', _facing, [
+                      'East', 'West', 'North', 'South',
+                    ], (v) => setState(() => _facing = v!)),
+                  ),
+                ],
+              ),
+            ],
+
+            // TYPE: ROW HOUSE / BUNGALOW / VILLA
+            if (_type == 'ROW HOUSE' || _type == 'BANGLOW' || _type == 'VILLA') ...[
+              _buildTextField('UNIT/PLOT NUMBER', _unitCtrl, validator: (v) => Validators.validateRequired(v, 'UNIT/PLOT NUMBER')),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildDropdown('CONFIGURATION', _config, [
+                      '1 BHK', '2 BHK', '3 BHK', '4 BHK', 'G + 1', 'G + 2', 'GROUND', 'NA'
+                    ], (v) => setState(() => _config = v!)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildDropdown('FACING', _facing, [
+                      'East', 'West', 'North', 'South',
+                    ], (v) => setState(() => _facing = v!)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildTextField('PLOT DIMENSION', _plotDimCtrl),
+            ],
+
+            // TYPE: LAND FARMING / PLOT
+            if (_type == 'LAND FARMING' || _type == 'PLOT') ...[
+              _buildTextField('PLOT NUMBER', _unitCtrl, validator: (v) => Validators.validateRequired(v, 'PLOT NUMBER')),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: _buildTextField('PLOT DIMENSION', _plotDimCtrl)),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildDropdown('FACING', _facing, [
+                      'East', 'West', 'North', 'South',
+                    ], (v) => setState(() => _facing = v!)),
+                  ),
+                ],
+              ),
+            ],
+
+            const SizedBox(height: 16),
+            Row(
+              children: [
                 Expanded(
-                  child: _buildDropdown('Facing', _facing, [
-                    'East', 'West', 'North', 'South',
-                  ], (v) => setState(() => _facing = v!)),
+                  child: _buildDropdown('LOCATION', _location, [
+                    'GARDEN FACING', 'CORNER', 'CORNER + GARDEN'
+                  ], (v) => setState(() => _location = v!)),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            _buildTextField('Location (e.g. Corner Unit)', _locationCtrl),
-            const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: _buildTextField('Plot Number', _plotNumCtrl,
+                Expanded(child: _buildTextField('BUILD UP AREA/ sq.feet', _areaCtrl, 
                     isNumber: true,
-                    validator: (v) => Validators.validateInteger(v, 'Plot Number'),
+                    validator: (v) => Validators.validateInteger(v, 'BUILD UP AREA/ sq.feet'),
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly])),
                 const SizedBox(width: 16),
-                Expanded(child: _buildTextField('Plot Dimensions', _plotDimCtrl)),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(child: _buildTextField('Area (SqFt)', _areaCtrl, 
+                Expanded(child: _buildTextField('PRICE/SQFT', _rateCtrl, 
                     isNumber: true,
-                    validator: (v) => Validators.validateInteger(v, 'Area'),
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly])),
-                const SizedBox(width: 16),
-                Expanded(child: _buildTextField('Rate / SqFt', _rateCtrl, 
-                    isNumber: true,
-                    validator: (v) => Validators.validateInteger(v, 'Rate'),
+                    validator: (v) => Validators.validateInteger(v, 'PRICE/SQFT'),
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly])),
               ],
             ),
@@ -253,7 +285,7 @@ class _AddUnitScreenState extends State<AddUnitScreen>
             Row(
               children: [
                 Expanded(
-                  child: _buildDropdown('Status', _status, [
+                  child: _buildDropdown('STATUS', _status, [
                     'Available', 'Booked', 'Sold',
                   ], (v) => setState(() => _status = v!)),
                 ),
@@ -322,15 +354,15 @@ class _AddUnitScreenState extends State<AddUnitScreen>
 
                       final data = {
                         "project_id": widget.projectId,
-                        "tower_name": _towerCtrl.text,
-                        "floor_number": _floorCtrl.text,
+                        "tower_name": _type == 'FLAT' ? _towerCtrl.text : "",
+                        "floor_number": _type == 'FLAT' ? _floorCtrl.text : "",
                         "unit_number": _unitCtrl.text,
-                        "configuration": _config,
+                        "configuration": (_type == 'LAND FARMING' || _type == 'PLOT') ? "NA" : _config,
                         "property_type": _type,
                         "sale_category": _saleCategory,
                         "facing": _facing,
-                        "Location": _locationCtrl.text,
-                        "plot_number": _plotNumCtrl.text,
+                        "Location": _location,
+                        "plot_number": _unitCtrl.text,
                         "plot_dimensions": _plotDimCtrl.text,
                         "area_sqft": double.tryParse(_areaCtrl.text) ?? 0,
                         "rate_per_sqft": double.tryParse(_rateCtrl.text) ?? 0,

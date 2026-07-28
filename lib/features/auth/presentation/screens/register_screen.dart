@@ -107,7 +107,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            _buildTextFieldLabel('Full Name', textColor),
+                            _buildTextFieldLabel('FULL NAME', textColor),
                             const SizedBox(height: 8),
                             _buildTextField(
                               context: context,
@@ -117,7 +117,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               validator: (v) => Validators.validateRequired(v, 'Full Name'),
                             ),
                             const SizedBox(height: 16),
-                            _buildTextFieldLabel('Email Address', textColor),
+                            _buildTextFieldLabel('EMAIL ADDRESS', textColor),
                             const SizedBox(height: 8),
                             _buildTextField(
                               context: context,
@@ -128,7 +128,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               validator: Validators.validateEmail,
                             ),
                             const SizedBox(height: 16),
-                            _buildTextFieldLabel('Phone Number', textColor),
+                            _buildTextFieldLabel('MOBILE NUMBER', textColor),
                             const SizedBox(height: 8),
                             _buildTextField(
                               context: context,
@@ -143,7 +143,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ],
                             ),
                             const SizedBox(height: 16),
-                            _buildTextFieldLabel('Password', textColor),
+                            _buildTextFieldLabel('PASSWORD', textColor),
                             const SizedBox(height: 8),
                             _buildTextField(
                               context: context,

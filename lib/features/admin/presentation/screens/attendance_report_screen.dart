@@ -251,6 +251,41 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen>
                       ],
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Container(
+                      height: 42,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[850] : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        focusNode: _searchFocus,
+                        onChanged: (v) => setState(() => _search = v),
+                        style: GoogleFonts.montserrat(fontSize: 13),
+                        decoration: InputDecoration(
+                          icon: Icon(Icons.search, color: Colors.grey[400], size: 18),
+                          suffixIcon: _search.isNotEmpty
+                              ? IconButton(
+                                  icon: Icon(Icons.clear, color: Colors.grey[400], size: 18),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() => _search = '');
+                                  },
+                                )
+                              : null,
+                          hintText: 'Search advisor name or code...',
+                          hintStyle: GoogleFonts.montserrat(color: Colors.grey[400], fontSize: 12),
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
@@ -287,37 +322,6 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen>
                             Tab(text: 'Present ($presentCount)'),
                             Tab(text: 'Absent ($absentCount)'),
                           ],
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        height: 42,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: isDark ? Colors.grey[850] : Colors.grey[100],
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.grey.withOpacity(0.15)),
-                        ),
-                        child: TextField(
-                          controller: _searchController,
-                          focusNode: _searchFocus,
-                          onChanged: (v) => setState(() => _search = v),
-                          style: GoogleFonts.montserrat(fontSize: 13),
-                          decoration: InputDecoration(
-                            icon: Icon(Icons.search, color: Colors.grey[400], size: 18),
-                            suffixIcon: _search.isNotEmpty
-                                ? IconButton(
-                                    icon: Icon(Icons.clear, color: Colors.grey[400], size: 18),
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      setState(() => _search = '');
-                                    },
-                                  )
-                                : null,
-                            hintText: 'Search advisor name or code...',
-                            hintStyle: GoogleFonts.montserrat(color: Colors.grey[400], fontSize: 12),
-                            border: InputBorder.none,
-                          ),
                         ),
                       ),
                     ],
@@ -844,9 +848,9 @@ class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
     return child;
   }
   @override
-  double get maxExtent => 120.0;
+  double get maxExtent => 68.0;
   @override
-  double get minExtent => 120.0;
+  double get minExtent => 68.0;
   @override
   bool shouldRebuild(covariant _StickyHeaderDelegate oldDelegate) {
     return true;

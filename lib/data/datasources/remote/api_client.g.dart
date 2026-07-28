@@ -685,6 +685,8 @@ class _ApiClient implements ApiClient {
     String developerName,
     String description,
     String reraNumber,
+    String tncpNumber,
+    String landOwnerName,
     String projectType,
     String constructionStatus,
     String fullAddress,
@@ -710,6 +712,8 @@ class _ApiClient implements ApiClient {
     _data.fields.add(MapEntry('developer_name', developerName));
     _data.fields.add(MapEntry('description', description));
     _data.fields.add(MapEntry('rera_number', reraNumber));
+    _data.fields.add(MapEntry('tncp_number', tncpNumber));
+    _data.fields.add(MapEntry('land_owner_name', landOwnerName));
     _data.fields.add(MapEntry('project_type', projectType));
     _data.fields.add(MapEntry('construction_status', constructionStatus));
     _data.fields.add(MapEntry('full_address', fullAddress));
@@ -836,6 +840,8 @@ class _ApiClient implements ApiClient {
     String? amenities,
     String? budgetRange,
     String? reraNumber,
+    String? tncpNumber,
+    String? landOwnerName,
     String? status,
     File? videoFile,
     File? brochureFile,
@@ -893,6 +899,12 @@ class _ApiClient implements ApiClient {
     }
     if (reraNumber != null) {
       _data.fields.add(MapEntry('rera_number', reraNumber));
+    }
+    if (tncpNumber != null) {
+      _data.fields.add(MapEntry('tncp_number', tncpNumber));
+    }
+    if (landOwnerName != null) {
+      _data.fields.add(MapEntry('land_owner_name', landOwnerName));
     }
     if (status != null) {
       _data.fields.add(MapEntry('status', status));

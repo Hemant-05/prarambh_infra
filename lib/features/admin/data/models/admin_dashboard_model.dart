@@ -14,6 +14,11 @@ class AdminDashboardModel {
   final List<dynamic> recentClosures;
   final int totalPendingTasks;
   final List<PendingAction> pendingActions;
+  
+  final int totalDeals;
+  final int totalActiveAdvisors;
+  final int totalSiteVisits;
+  final double totalRevenue;
 
   AdminDashboardModel({
     required this.unitsSold,
@@ -31,6 +36,10 @@ class AdminDashboardModel {
     required this.recentClosures,
     required this.totalPendingTasks,
     required this.pendingActions,
+    this.totalDeals = 0,
+    this.totalActiveAdvisors = 0,
+    this.totalSiteVisits = 0,
+    this.totalRevenue = 0.0,
   });
 
   factory AdminDashboardModel.fromJson(Map<String, dynamic> json) {
@@ -46,6 +55,10 @@ class AdminDashboardModel {
     }
 
     return AdminDashboardModel(
+      totalDeals: int.tryParse(json['total_deals']?.toString() ?? up['sold']?.toString() ?? '0') ?? 0,
+      totalActiveAdvisors: int.tryParse(json['total_active_advisors']?.toString() ?? '0') ?? 0,
+      totalSiteVisits: int.tryParse(json['total_site_visits']?.toString() ?? '0') ?? 0,
+      totalRevenue: double.tryParse(json['total_revenue']?.toString() ?? '0.0') ?? 0.0,
       unitsSold: int.tryParse(up['sold']?.toString() ?? '0') ?? 0,
       unitsTarget: int.tryParse(up['total']?.toString() ?? '0') ?? 0,
       monthlyProgressPercent: int.tryParse(up['monthly_progress']?.toString() ?? '0') ?? 0,

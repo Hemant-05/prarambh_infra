@@ -315,7 +315,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                     ),
                                     const SizedBox(width: 12),
                                     Text(
-                                      'EVALUATE ALL PROMOTIONS',
+                                      'EVALUATE PROMOTIONS',
                                       style: GoogleFonts.montserrat(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,

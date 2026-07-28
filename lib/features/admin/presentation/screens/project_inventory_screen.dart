@@ -189,7 +189,7 @@ class _ProjectInventoryScreenState extends State<ProjectInventoryScreen> {
                       ),
                       const SizedBox(height: 20),
                       Text(
-                        'Rate / Sqft: ${_filterState.minRate?.toInt() ?? minRate.toInt()} - ${_filterState.maxRate?.toInt() ?? maxRate.toInt()}',
+                        'PRICE/SQFT: ${_filterState.minRate?.toInt() ?? minRate.toInt()} - ${_filterState.maxRate?.toInt() ?? maxRate.toInt()}',
                         style: GoogleFonts.montserrat(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,

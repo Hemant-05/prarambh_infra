@@ -27,15 +27,18 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
 
   // State Variables
   String _projectType = 'Residential';
-  String _constructionStatus = 'Raw House';
+  String _constructionStatus = 'Row House';
   String _projectStatus = 'Ongoing';
-  bool _reraApproved = true;
+  bool _reraApproved = false;
+  bool _tncpApproved = false;
 
   // Controllers
   final _nameCtrl = TextEditingController();
   final _devCtrl = TextEditingController();
+  final _landOwnerCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _reraCtrl = TextEditingController();
+  final _tncpCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
   final _mapLinkCtrl = TextEditingController();
@@ -62,8 +65,10 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       final p = widget.existingProject!;
       _nameCtrl.text = p.projectName;
       _devCtrl.text = p.developerName;
+      _landOwnerCtrl.text = p.landOwnerName;
       _descCtrl.text = p.description;
       _reraCtrl.text = p.reraNumber;
+      _tncpCtrl.text = p.tncpNumber;
       _addressCtrl.text = p.fullAddress;
       _cityCtrl.text = p.city;
       _mapLinkCtrl.text = p.locationMapUrl;
@@ -76,14 +81,37 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       _specialtiesCtrl.text = p.specialties.join(', ');
 
       _reraApproved = p.reraNumber.isNotEmpty;
+      _tncpApproved = p.tncpNumber.isNotEmpty;
 
       // Safe assignment for dropdowns to prevent crashes if DB has legacy data
-      final validTypes = ['Residential', 'Commercial', 'Industrial', 'Agriculture'];
+      final validTypes = [
+        'Residential',
+        'Commercial',
+        'Industrial',
+        'Agriculture',
+      ];
       if (validTypes.contains(p.projectType)) _projectType = p.projectType;
 
-      final validPropertyTypes = ['Raw House', 'Flats', 'Plots', 'P+C', 'Shop', 'Office', 'Farming Land', 'Raw Houses', 'Office/Shop', 'Under Construction', 'Ready to Move'];
-      if (validPropertyTypes.contains(p.constructionStatus)) {
-        _constructionStatus = p.constructionStatus;
+      final validPropertyTypes = [
+        'Row House',
+        'Flats',
+        'Plots',
+        'P+C',
+        'Shop',
+        'Office',
+        'Farming Land',
+        'Row Houses',
+        'Office/Shop',
+        'Under Construction',
+        'Ready to Move',
+        'Bungalow',
+        'Villa',
+      ];
+      String mappedStatus = p.constructionStatus == 'Raw House'
+          ? 'Row House'
+          : p.constructionStatus;
+      if (validPropertyTypes.contains(mappedStatus)) {
+        _constructionStatus = mappedStatus;
       }
 
       final validProjStatus = ['Completed', 'Ongoing', 'Upcoming'];
@@ -119,8 +147,10 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
   void dispose() {
     _nameCtrl.dispose();
     _devCtrl.dispose();
+    _landOwnerCtrl.dispose();
     _descCtrl.dispose();
     _reraCtrl.dispose();
+    _tncpCtrl.dispose();
     _addressCtrl.dispose();
     _cityCtrl.dispose();
     _mapLinkCtrl.dispose();
@@ -152,7 +182,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          isEditing ? 'Update Project' : 'Add Project',
+          isEditing ? 'UPDATE PROJECT' : 'ADD PROJECT',
           style: GoogleFonts.montserrat(
             color: textColor,
             fontWeight: FontWeight.bold,
@@ -215,7 +245,9 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
-            border: Border(top: BorderSide(color: AppColors.getBorderColor(context))),
+            border: Border(
+              top: BorderSide(color: AppColors.getBorderColor(context)),
+            ),
           ),
           child: Consumer<AdminProjectProvider>(
             builder: (context, provider, child) {
@@ -226,7 +258,9 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                       child: OutlinedButton(
                         onPressed: () => setState(() => _currentStep = 0),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: AppColors.getBorderColor(context)),
+                          side: BorderSide(
+                            color: AppColors.getBorderColor(context),
+                          ),
                           foregroundColor: textColor,
                         ),
                         child: const Text('Back'),
@@ -254,7 +288,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                                 }
                               } else {
                                 if (!_formKey.currentState!.validate()) return;
-                                
+
                                 if (_nameCtrl.text.isEmpty ||
                                     _devCtrl.text.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -274,6 +308,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                                     id: widget.existingProject!.id.toString(),
                                     projectName: _nameCtrl.text,
                                     developerName: _devCtrl.text,
+                                    landOwnerName: _landOwnerCtrl.text,
                                     city: _cityCtrl.text,
                                     fullAddress: _addressCtrl.text,
                                     projectType: _projectType,
@@ -282,6 +317,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                                     totalPlots: _totalPlotsCtrl.text,
                                     buildArea: _buildAreaCtrl.text,
                                     reraNumber: _reraCtrl.text,
+                                    tncpNumber: _tncpCtrl.text,
                                     location: _mapLinkCtrl.text,
                                     ratePerSqft: _rateCtrl.text,
                                     budgetRange: _budgetRangeCtrl.text,
@@ -300,6 +336,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                                   success = await provider.createProject(
                                     projectName: _nameCtrl.text,
                                     developerName: _devCtrl.text,
+                                    landOwnerName: _landOwnerCtrl.text,
                                     city: _cityCtrl.text,
                                     fullAddress: _addressCtrl.text,
                                     projectType: _projectType,
@@ -308,6 +345,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                                     totalPlots: _totalPlotsCtrl.text,
                                     buildArea: _buildAreaCtrl.text,
                                     reraNumber: _reraCtrl.text,
+                                    tncpNumber: _tncpCtrl.text,
                                     location: _mapLinkCtrl.text,
                                     ratePerSqft: _rateCtrl.text,
                                     budgetRange: _budgetRangeCtrl.text,
@@ -398,21 +436,33 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
 
     return Column(
       children: [
-        _buildCard(cardColor, primaryBlue, 'Basic Details', Icons.business, [
-          _buildTextField('Project Name', _nameCtrl, 
-              validator: (v) => Validators.validateRequired(v, 'Project Name')),
+        _buildCard(cardColor, primaryBlue, 'BASIC DETAILS', Icons.business, [
+          _buildTextField(
+            'PROJECT NAME',
+            _nameCtrl,
+            validator: (v) => Validators.validateRequired(v, 'PROJECT NAME'),
+          ),
           const SizedBox(height: 16),
-          _buildTextField('Developer Name', _devCtrl,
-              validator: (v) => Validators.validateRequired(v, 'Developer Name')),
+          _buildTextField(
+            'DEVELOPER NAME',
+            _devCtrl,
+            validator: (v) => Validators.validateRequired(v, 'DEVELOPER NAME'),
+          ),
           const SizedBox(height: 16),
-          _buildTextField('Description', _descCtrl, maxLines: 3,
-              validator: (v) => Validators.validateRequired(v, 'Description')),
+          _buildTextField('LAND OWNER NAME', _landOwnerCtrl),
+          const SizedBox(height: 16),
+          _buildTextField(
+            'DESCRIPTION',
+            _descCtrl,
+            maxLines: 3,
+            validator: (v) => Validators.validateRequired(v, 'DESCRIPTION'),
+          ),
           const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
                 child: _buildDropdown(
-                  'Project Type',
+                  'PROJECT TYPE',
                   _projectType,
                   ['Residential', 'Commercial', 'Industrial', 'Agriculture'],
                   (val) {
@@ -423,9 +473,19 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: _buildDropdown(
-                  'Property Type',
+                  'PROPERTY TYPE',
                   _constructionStatus,
-                  ['Raw House', 'Flats', 'Plots', 'P+C', 'Shop', 'Office', 'Farming Land'],
+                  [
+                    'Row House',
+                    'Flats',
+                    'Plots',
+                    'P+C',
+                    'Shop',
+                    'Office',
+                    'Farming Land',
+                    'Bungalow',
+                    'Villa',
+                  ],
                   (val) {
                     if (val != null) setState(() => _constructionStatus = val);
                   },
@@ -434,24 +494,23 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
             ],
           ),
           const SizedBox(height: 16),
+          _buildDropdown(
+            'PROJECT STATUS',
+            _projectStatus,
+            ['Completed', 'Ongoing', 'Upcoming'],
+            (val) {
+              if (val != null) setState(() => _projectStatus = val);
+            },
+          ),
+          const SizedBox(height: 16),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Expanded(
-                child: _buildDropdown(
-                  'Project Status',
-                  _projectStatus,
-                  ['Completed', 'Ongoing', 'Upcoming'],
-                  (val) {
-                    if (val != null) setState(() => _projectStatus = val);
-                  },
-                ),
-              ),
-              const SizedBox(width: 16),
               Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    'RERA Approved',
+                    'RERA APPROVED',
                     style: GoogleFonts.montserrat(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
@@ -467,20 +526,49 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                   ),
                 ],
               ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'TNCP APPROVED',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: secondaryTextColor,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Switch(
+                    value: _tncpApproved,
+                    activeTrackColor: primaryBlue.withOpacity(0.5),
+                    activeThumbColor: primaryBlue,
+                    onChanged: (v) => setState(() => _tncpApproved = v),
+                  ),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 16),
-          if (_reraApproved) _buildTextField('RERA No.', _reraCtrl),
+          if (_reraApproved) _buildTextField('RERA NO.', _reraCtrl),
+          if (_reraApproved && _tncpApproved) const SizedBox(height: 16),
+          if (_tncpApproved) _buildTextField('TNCP NO.', _tncpCtrl),
         ]),
         const SizedBox(height: 24),
-        _buildCard(cardColor, primaryBlue, 'Location', Icons.location_on, [
-          _buildTextField('Full Address', _addressCtrl, maxLines: 2,
-              validator: (v) => Validators.validateRequired(v, 'Address')),
+        _buildCard(cardColor, primaryBlue, 'LOCATION', Icons.location_on, [
+          _buildTextField(
+            'FULL ADDRESS',
+            _addressCtrl,
+            maxLines: 2,
+            validator: (v) => Validators.validateRequired(v, 'FULL ADDRESS'),
+          ),
           const SizedBox(height: 16),
-          _buildTextField('City', _cityCtrl,
-              validator: (v) => Validators.validateRequired(v, 'City')),
+          _buildTextField(
+            'CITY',
+            _cityCtrl,
+            validator: (v) => Validators.validateRequired(v, 'CITY'),
+          ),
           const SizedBox(height: 16),
-          _buildTextField('Google Maps Link', _mapLinkCtrl),
+          _buildTextField('GOOGLE MAPS LINK', _mapLinkCtrl),
         ]),
       ],
     );
@@ -493,23 +581,27 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
         _buildCard(
           cardColor,
           primaryBlue,
-          'Configuration & Pricing',
+          'CONFIGURATION & PRICING',
           Icons.tune,
           [
             Row(
               children: [
                 Expanded(
                   child: _buildTextField(
-                    'Total Units/Plots',
+                    'TOTAL UNITS/PLOTS',
                     _totalPlotsCtrl,
                     isNumber: true,
-                    validator: (v) => Validators.validateInteger(v, 'Total Units/Plots'),
+                    validator: (v) =>
+                        Validators.validateInteger(v, 'Total Units/Plots'),
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildTextField('Total Area (e.g. 60000 sqft)', _buildAreaCtrl),
+                  child: _buildTextField(
+                    'BUILD UP AREA/ sq.feet',
+                    _buildAreaCtrl,
+                  ),
                 ),
               ],
             ),
@@ -518,36 +610,38 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
               children: [
                 Expanded(
                   child: _buildTextField(
-                    'Market Value(e.g. 4-5 Cr)',
+                    'MARKET VALUE (E.G. 4-5 CR)',
                     _marketValueCtrl,
                     isNumber: true,
-                    validator: (v) => Validators.validateInteger(v, 'Market Value'),
+                    validator: (v) =>
+                        Validators.validateInteger(v, 'MARKET VALUE'),
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildTextField(
-                    'Rate per Sqft',
+                    'PRICE/SQFT',
                     _rateCtrl,
                     isNumber: true,
-                    validator: (v) => Validators.validateInteger(v, 'Rate per Sqft'),
+                    validator: (v) =>
+                        Validators.validateInteger(v, 'PRICE/SQFT'),
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            _buildTextField('Budget Range (e.g. 50L - 1Cr)', _budgetRangeCtrl),
+            _buildTextField('BUDGET RANGE (E.G. 50L - 1CR)', _budgetRangeCtrl),
             const SizedBox(height: 16),
-            _buildTextField('Amenities (Comma separated)', _amenitiesCtrl),
+            _buildTextField('AMENITIES (COMMA SEPARATED)', _amenitiesCtrl),
             const SizedBox(height: 16),
-            _buildTextField('Specialties (Comma separated)', _specialtiesCtrl),
+            _buildTextField('SPECIALTIES (COMMA SEPARATED)', _specialtiesCtrl),
           ],
         ),
         const SizedBox(height: 24),
 
-        _buildCard(cardColor, primaryBlue, 'Media Uploads', Icons.cloud_upload, [
+        _buildCard(cardColor, primaryBlue, 'MEDIA UPLOADS', Icons.cloud_upload, [
           if (isEditing)
             Padding(
               padding: const EdgeInsets.only(bottom: 12.0),
@@ -611,7 +705,10 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                                   setState(() => _selectedImages.remove(img)),
                               child: Container(
                                 padding: const EdgeInsets.all(2),
-                                decoration: const BoxDecoration(color: Colors.white70, shape: BoxShape.circle),
+                                decoration: const BoxDecoration(
+                                  color: Colors.white70,
+                                  shape: BoxShape.circle,
+                                ),
                                 child: const Icon(
                                   Icons.cancel,
                                   color: Colors.red,
@@ -638,7 +735,9 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                 : (isEditing && widget.existingProject!.videoUrl.isNotEmpty
                       ? 'Replace Existing Video'
                       : 'Select Preview Video'),
-            onClear: _selectedVideo != null ? () => setState(() => _selectedVideo = null) : null,
+            onClear: _selectedVideo != null
+                ? () => setState(() => _selectedVideo = null)
+                : null,
           ),
           const SizedBox(height: 12),
 
@@ -646,20 +745,31 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
             context,
             onTap: _pickBrochure,
             icon: Icons.picture_as_pdf,
-            iconColor: _selectedBrochure != null ? Colors.redAccent : Colors.grey,
+            iconColor: _selectedBrochure != null
+                ? Colors.redAccent
+                : Colors.grey,
             title: _selectedBrochure != null
                 ? 'New Brochure Selected'
                 : (isEditing && widget.existingProject!.brochureUrl.isNotEmpty
                       ? 'Replace Existing Brochure'
                       : 'Select Brochure PDF'),
-            onClear: _selectedBrochure != null ? () => setState(() => _selectedBrochure = null) : null,
+            onClear: _selectedBrochure != null
+                ? () => setState(() => _selectedBrochure = null)
+                : null,
           ),
         ]),
       ],
     );
   }
 
-  Widget _buildMediaListTile(BuildContext context, {required VoidCallback onTap, required IconData icon, required Color iconColor, required String title, VoidCallback? onClear}) {
+  Widget _buildMediaListTile(
+    BuildContext context, {
+    required VoidCallback onTap,
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    VoidCallback? onClear,
+  }) {
     return ListTile(
       onTap: onTap,
       tileColor: Theme.of(context).dividerColor.withOpacity(0.05),
@@ -752,7 +862,10 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
           validator: validator,
           inputFormatters: inputFormatters,
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-          style: GoogleFonts.montserrat(fontSize: 13, color: Theme.of(context).textTheme.bodyLarge?.color),
+          style: GoogleFonts.montserrat(
+            fontSize: 13,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
+          ),
           decoration: InputDecoration(
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,

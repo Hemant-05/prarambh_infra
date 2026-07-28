@@ -119,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     setState(() => _loginType = value!),
                               ),
                               Text(
-                                'User',
+                                'CUSTOMER',
                                 style: GoogleFonts.montserrat(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 13,
@@ -135,7 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     setState(() => _loginType = value!),
                               ),
                               Text(
-                                'Advisor',
+                                'ADVISOR',
                                 style: GoogleFonts.montserrat(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 13,
@@ -147,12 +147,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 16),
 
                           if (_loginType == 'Advisor') ...[
-                            _buildTextFieldLabel('Advisor Code', textColor),
+                            _buildTextFieldLabel('ADVISOR CODE', textColor),
                             const SizedBox(height: 8),
                             _buildTextField(
                               context: context,
                               controller: _advisorCodeController,
-                              hint: 'Enter advisor code',
+                              hint: 'ENTER ADVISOR CODE',
                               icon: Icons.badge_outlined,
                               validator: (value) => Validators.validateRequired(value, 'Advisor Code'),
                             ),
@@ -160,12 +160,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
 
                           if (_loginType == 'User') ...[
-                            _buildTextFieldLabel('Email Address', textColor),
+                            _buildTextFieldLabel('EMAIL ADDRESS', textColor),
                             const SizedBox(height: 8),
                             _buildTextField(
                               context: context,
                               controller: _emailController,
-                              hint: 'Enter your email',
+                              hint: 'ENTER YOUR EMAIL',
                               icon: Icons.email_outlined,
                               keyboardType: TextInputType.emailAddress,
                               validator: Validators.validateEmail,
@@ -173,12 +173,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             const SizedBox(height: 20),
                           ],
 
-                          _buildTextFieldLabel('Password', textColor),
+                          _buildTextFieldLabel('PASSWORD', textColor),
                           const SizedBox(height: 8),
                           _buildTextField(
                             context: context,
                             controller: _passwordController,
-                            hint: 'Enter password',
+                            hint: 'ENTER PASSWORD',
                             icon: Icons.lock_outline,
                             isPassword: !_isPasswordVisible,
                             onTogglePassword: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
@@ -195,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 );
                               },
                               child: Text(
-                                'Forgot password ?',
+                                'FORGOT PASSWORD ?',
                                 style: GoogleFonts.montserrat(
                                   color: primaryBlue,
                                   fontWeight: FontWeight.bold,
@@ -221,7 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     color: Colors.white,
                                   )
                                 : Text(
-                                    'Log in',
+                                    'LOG IN',
                                     style: GoogleFonts.montserrat(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -234,7 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                "Don't have an account ? ",
+                                "DON'T HAVE AN ACCOUNT ? ",
                                 style: GoogleFonts.montserrat(fontSize: 12, color: textColor),
                               ),
                               GestureDetector(
@@ -242,7 +242,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Navigator.pushNamed(context, '/register');
                                 },
                                 child: Text(
-                                  'Create account',
+                                  'CREATE ACCOUNT',
                                   style: GoogleFonts.montserrat(
                                     color: primaryBlue,
                                     fontWeight: FontWeight.bold,

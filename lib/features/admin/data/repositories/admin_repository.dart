@@ -9,7 +9,7 @@ class AdminRepository {
   Future<AdminDashboardModel> getDashboardData({String? projectId}) async {
     try {
       final response = await apiClient.getAdminDashboard(projectId);
-      if (response['status'] == true || response['status'] == 'success') {
+      if (response['status'] == true || response['status'] == 'success' || response['success'] == true) {
         return AdminDashboardModel.fromJson(response['data']);
       }
       throw Exception(response['message'] ?? 'Failed to load dashboard data');

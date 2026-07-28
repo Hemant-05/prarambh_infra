@@ -42,9 +42,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
 
       if (projectProvider.projects.isNotEmpty &&
           adminProvider.selectedProjectId == null) {
-        adminProvider.setProjectId(
-          projectProvider.projects.first.id.toString(),
-        );
+        adminProvider.setProjectId('all');
       } else {
         adminProvider.fetchDashboardData();
       }
@@ -274,19 +272,32 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                             color: primaryBlue,
                           ),
                           dropdownColor: cardColor,
-                          items: projectState.projects.map((project) {
-                            return DropdownMenuItem<String>(
-                              value: project.id.toString(),
+                          items: [
+                            DropdownMenuItem<String>(
+                              value: 'all',
                               child: Text(
-                                project.projectName,
+                                'ALL PROJECTS',
                                 style: GoogleFonts.montserrat(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                   color: textColor,
                                 ),
                               ),
-                            );
-                          }).toList(),
+                            ),
+                            ...projectState.projects.map((project) {
+                              return DropdownMenuItem<String>(
+                                value: project.id.toString(),
+                                child: Text(
+                                  project.projectName.toUpperCase(),
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: textColor,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ],
                           onChanged: (val) {
                             if (val != null) {
                               adminState.setProjectId(val);
@@ -334,7 +345,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Units Sold',
+                                    'UNITS SOLD',
                                     style: GoogleFonts.montserrat(
                                       color: Colors.white.withOpacity(0.9),
                                       fontSize: 13,
@@ -388,7 +399,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Monthly Progress',
+                                'MONTHLY PROGRESS',
                                 style: GoogleFonts.montserrat(
                                   color: Colors.white70,
                                   fontSize: 13,
@@ -436,7 +447,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'High Priority Leads',
+                        'HIGH PRIORITY LEADS',
                         style: GoogleFonts.montserrat(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -451,7 +462,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                           ),
                         ),
                         child: Text(
-                          'View All',
+                          'VIEW ALL',
                           style: GoogleFonts.montserrat(
                             color: primaryBlue,
                             fontWeight: FontWeight.w600,
@@ -466,7 +477,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 20),
                             child: Text(
-                              "No priority leads available",
+                              "NO PRIORITY LEADS AVAILABLE",
                               style: GoogleFonts.montserrat(
                                 color: secondaryTextColor,
                               ),
@@ -496,7 +507,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
 
                   // Sales Overview
                   Text(
-                    'Sales Overview',
+                    'SALES OVERVIEW',
                     style: GoogleFonts.montserrat(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -525,7 +536,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                       children: [
                         _buildSalesRow(
                           context,
-                          'Suspecting',
+                          'SUSPECTING',
                           data.suspectingLeads.toString(),
                           getPercent(data.suspectingLeads),
                           const Color(0xFF2962FF),
@@ -535,7 +546,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                         const SizedBox(height: 16),
                         _buildSalesRow(
                           context,
-                          'Prospecting',
+                          'PROSPECTING',
                           data.prospectingLeads.toString(),
                           getPercent(data.prospectingLeads),
                           const Color(0xFF448AFF),
@@ -545,7 +556,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                         const SizedBox(height: 16),
                         _buildSalesRow(
                           context,
-                          'Site Visiting',
+                          'SITE VISITING',
                           data.siteVisitingLeads.toString(),
                           getPercent(data.siteVisitingLeads),
                           const Color(0xFFFF9100),
@@ -555,7 +566,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                         const SizedBox(height: 16),
                         _buildSalesRow(
                           context,
-                          'Booking',
+                          'BOOKING',
                           data.bookingLeads.toString(),
                           getPercent(data.bookingLeads),
                           const Color(0xFF90CAF9),
@@ -565,7 +576,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                         const SizedBox(height: 16),
                         _buildSalesRow(
                           context,
-                          'Completed',
+                          'COMPLETED',
                           data.completedLeads.toString(),
                           getPercent(data.completedLeads),
                           Colors.green,
@@ -578,64 +589,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
 
                   const SizedBox(height: 30),
 
-                  // Pending Verifications
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Pending Verifications',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pushNamed(
-                          context,
-                          '/advisor_applications',
-                        ),
-                        child: Text(
-                          'View All',
-                          style: GoogleFonts.montserrat(
-                            color: primaryBlue,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  data.pendingVerifications.isEmpty
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 20),
-                            child: Text(
-                              'No pending verifications',
-                              style: GoogleFonts.montserrat(
-                                color: secondaryTextColor,
-                              ),
-                            ),
-                          ),
-                        )
-                      : ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: min(data.pendingVerifications.length, 3),
-                          itemBuilder: (context, index) {
-                            final ad = data.pendingVerifications[index];
-                            return _buildVerificationCard(
-                              context,
-                              ad['id'].toString(),
-                              ad['full_name'].toString(),
-                              ad['applied_time_ago'].toString(),
-                              ad['profile_photo']?.toString(),
-                              cardColor,
-                              primaryBlue,
-                              textColor,
-                            );
-                          },
-                        ),
+
 
                   const SizedBox(height: 30),
 
@@ -644,7 +598,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Recent Deal Done',
+                        'RECENT DEAL DONE',
                         style: GoogleFonts.montserrat(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -771,11 +725,10 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                                       ),
                                     ),
                                     Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
+                                      crossAxisAlignment: CrossAxisAlignment.end,
                                       children: [
                                         Text(
-                                          '₹${formatPrice(double.tryParse(closure['payment_amount'])!)}',
+                                          '₹${formatPrice(double.tryParse(closure['payment_amount']?.toString() ?? '0') ?? 0)}',
                                           style: GoogleFonts.montserrat(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
@@ -804,7 +757,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                           ),
                           child: Center(
                             child: Text(
-                              'No closures recorded today',
+                              'NO CLOSURES RECORDED TODAY',
                               style: GoogleFonts.montserrat(
                                 color: secondaryTextColor,
                                 fontSize: 14,
@@ -1144,7 +1097,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Pending Actions',
+              'PENDING ACTIONS',
               style: GoogleFonts.montserrat(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,

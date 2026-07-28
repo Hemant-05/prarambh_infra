@@ -22,7 +22,7 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
   String _searchQuery = "";
 
   // Filter States
-  String? _selectedPaymentStatus;
+  String? _selectedPaymentMode;
   String? _selectedVerificationStatus;
   int? _selectedProjectId;
   DateTimeRange? _selectedDateRange;
@@ -56,10 +56,10 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
           deal.id.toString().contains(_searchQuery);
       if (!matchesSearch) return false;
 
-      // 2. Payment Status Filter
-      if (_selectedPaymentStatus != null) {
-        if (deal.paymentStatus.toLowerCase() !=
-            _selectedPaymentStatus!.toLowerCase()) {
+      // 2. Payment Mode Filter
+      if (_selectedPaymentMode != null) {
+        if (deal.tokenPaymentMode?.toLowerCase() !=
+            _selectedPaymentMode!.toLowerCase()) {
           return false;
         }
       }
@@ -99,7 +99,7 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
 
   int get _activeFilterCount {
     int count = 0;
-    if (_selectedPaymentStatus != null) count++;
+    if (_selectedPaymentMode != null) count++;
     if (_selectedVerificationStatus != null) count++;
     if (_selectedProjectId != null) count++;
     if (_selectedDateRange != null) count++;
@@ -109,7 +109,7 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
 
   void _clearFilters() {
     setState(() {
-      _selectedPaymentStatus = null;
+      _selectedPaymentMode = null;
       _selectedVerificationStatus = null;
       _selectedProjectId = null;
       _selectedDateRange = null;
@@ -137,7 +137,7 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                     child: TextField(
                       controller: _searchCtrl,
                       decoration: InputDecoration(
-                        hintText: 'Search deals...',
+                        hintText: 'Search bookings...',
                         hintStyle: GoogleFonts.montserrat(
                           fontSize: 13,
                           color: Colors.grey,
@@ -323,24 +323,24 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                     const Divider(),
                     const SizedBox(height: 16),
 
-                    // Payment Status
+                    // Payment Mode
                     _buildFilterSection(
-                      'Payment Status',
+                      'Payment Mode',
                       DropdownButtonFormField<String>(
-                        initialValue: _selectedPaymentStatus,
+                        initialValue: _selectedPaymentMode,
                         dropdownColor: sheetBg,
                         style: GoogleFonts.montserrat(
                           color: textColor,
                           fontSize: 13,
                         ),
-                        items: ['Pending', 'Paid', 'Partially Paid']
+                        items: ['Online', 'Cash', 'Cheque']
                             .map(
                               (s) => DropdownMenuItem(value: s, child: Text(s)),
                             )
                             .toList(),
                         onChanged: (val) {
-                          setModalState(() => _selectedPaymentStatus = val);
-                          setState(() => _selectedPaymentStatus = val);
+                          setModalState(() => _selectedPaymentMode = val);
+                          setState(() => _selectedPaymentMode = val);
                         },
                         decoration: _inputDecoration(isDark),
                       ),
@@ -826,7 +826,11 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // _buildInfoItem("Property", "PROP-${deal.propertyId}", Icons.domain),
+                _buildInfoItem(
+                  "Project",
+                  context.read<AdminProjectProvider>().projects.where((p) => p.id == deal.propertyId).firstOrNull?.projectName ?? deal.projectName ?? "ID: ${deal.propertyId}",
+                  Icons.domain,
+                ),
                 _buildInfoItem(
                   "Token",
                   (deal.tokenAmount != null &&

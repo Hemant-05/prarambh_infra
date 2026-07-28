@@ -748,7 +748,7 @@ class _InlineVideoPlayerState extends State<_InlineVideoPlayer> {
 
       _chewieController = ChewieController(
       videoPlayerController: _videoPlayerController,
-      autoPlay: false,
+      autoPlay: true,
       looping: false,
       aspectRatio: _videoPlayerController.value.aspectRatio,
       showControlsOnInitialize: false,

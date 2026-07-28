@@ -91,19 +91,19 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
         children: [
           _buildSummaryCards(data.summary),
           const SizedBox(height: 30),
-          _buildSectionHeader("Revenue Trend (Monthly)"),
+          _buildSectionHeader("REVENUE TREND (MONTHLY)"),
           const SizedBox(height: 16),
           _buildMonthlyBarChart(data.barChartMonthly),
           const SizedBox(height: 30),
-          _buildSectionHeader("Deals by Project"),
+          _buildSectionHeader("BOOKINGS BY PROJECT"),
           const SizedBox(height: 16),
           _buildProjectPieChart(data.pieChartProjects),
           const SizedBox(height: 30),
-          _buildSectionHeader("Sales Funnel"),
+          _buildSectionHeader("SALES OVERVIEW"),
           const SizedBox(height: 16),
           _buildLeadFunnel(data.funnelChartLeads),
           const SizedBox(height: 30),
-          _buildSectionHeader("Top Performing Advisors"),
+          _buildSectionHeader("TOP PERFORMERS"),
           const SizedBox(height: 16),
           _buildTopAdvisorsList(data.topAdvisors),
           const SizedBox(height: 40),
@@ -124,30 +124,56 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
   }
 
   Widget _buildSummaryCards(SalesSummary summary) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _buildSummaryCard(
-            "Total Revenue",
-            "₹${_formatCurrency(summary.totalRevenue)}",
-            Icons.account_balance_wallet,
-            Colors.blue,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _buildSummaryCard(
+                "TOTAL REVENUE",
+                "₹${_formatCurrency(summary.totalRevenue)}",
+                Icons.account_balance_wallet,
+                Colors.blue,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildSummaryCard(
+                "TOTAL DEALS",
+                summary.totalDeals.toString(),
+                Icons.handshake,
+                Colors.orange,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdminDealsScreen()),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildSummaryCard(
-            "Total Deals",
-            summary.totalDeals.toString(),
-            Icons.handshake,
-            Colors.orange,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AdminDealsScreen()),
-              );
-            },
-          ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildSummaryCard(
+                "ACTIVE ADVISORS",
+                summary.totalActiveAdvisors.toString(),
+                Icons.groups_outlined,
+                Colors.green,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildSummaryCard(
+                "SITE VISITS",
+                summary.totalSiteVisits.toString(),
+                Icons.location_on_outlined,
+                Colors.purple,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -222,12 +248,17 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
           groupsSpace: 40,
           maxY: (data.map((e) => e.totalRevenue).reduce((a, b) => a > b ? a : b) * 1.3).toDouble(),
           barTouchData: BarTouchData(
+            enabled: false,
             touchTooltipData: BarTouchTooltipData(
               tooltipRoundedRadius: 8,
               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                 return BarTooltipItem(
-                  '${data[groupIndex].month}\n₹${_formatCurrency(rod.toY)}',
-                  const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                  _formatCurrencyShort(rod.toY),
+                  TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 10,
+                  ),
                 );
               },
             ),
@@ -287,6 +318,7 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
           barGroups: data.asMap().entries.map((entry) {
             return BarChartGroupData(
               x: entry.key,
+              showingTooltipIndicators: [0],
               barRods: [
                 BarChartRodData(
                   toY: entry.value.totalRevenue,
@@ -407,8 +439,8 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
         border: Border.all(color: AppColors.getBorderColor(context)),
       ),
       child: Column(
-        children: data.map((item) {
-          double widthFactor = (item.count / data.map((e) => e.count).reduce((a, b) => a > b ? a : b));
+        children: data.where((item) => item.stage.toLowerCase() != 'dead').map((item) {
+          double widthFactor = (item.count / data.where((e) => e.stage.toLowerCase() != 'dead').map((e) => e.count).fold(0, (a, b) => a > b ? a : b));
           
           return GestureDetector(
             onTap: () {

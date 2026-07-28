@@ -6,6 +6,7 @@ import 'package:prarambh_infra/features/admin/presentation/providers/admin_proje
 import 'package:provider/provider.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../data/models/unit_model.dart';
+import 'package:intl/intl.dart';
 
 class UnitDetailsScreen extends StatefulWidget {
   final UnitModel unit;
@@ -359,10 +360,17 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
                                   ),
                                 ),
                                 Text(
-                                  '₹${widget.unit.ratePerSqft} / sqft',
+                                  'PRICE/SQFT',
                                   style: GoogleFonts.montserrat(
                                     fontSize: 10,
                                     color: Colors.grey,
+                                  ),
+                                ),
+                                Text(
+                                  '₹${NumberFormat.compact().format(widget.unit.ratePerSqft)}',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ],
@@ -400,7 +408,7 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
                       ),
                       _buildSpecBox(
                         Icons.square_foot,
-                        'Super Area',
+                        'PLOT AREA',
                         '${widget.unit.areaSqft} sqft',
                         cardColor,
                       ),
@@ -727,7 +735,7 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: _buildTextField(
-                          'Area (SqFt)',
+                          'BUILD UP AREA/ sq.feet',
                           _areaCtrl,
                           isNumber: true,
                         ),
@@ -739,7 +747,7 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
                     children: [
                       Expanded(
                         child: _buildTextField(
-                          'Rate/SqFt',
+                          'PRICE/SQFT',
                           _rateCtrl,
                           isNumber: true,
                         ),

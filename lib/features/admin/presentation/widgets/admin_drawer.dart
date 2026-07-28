@@ -166,7 +166,7 @@ class AdminDrawer extends StatelessWidget {
                 _buildDrawerItem(
                   context: context,
                   icon: Icons.contact_support_outlined,
-                  title: 'USER ENQUIRY',
+                  title: 'CUSTOMER ENQUIRY',
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(context, '/admin_enquiries');

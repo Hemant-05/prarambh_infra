@@ -6,6 +6,7 @@ import 'package:prarambh_infra/features/admin/presentation/screens/project_detai
 import 'package:provider/provider.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../data/models/project_model.dart';
+import 'package:intl/intl.dart';
 import 'add_project_screen.dart';
 
 class AdminProjectsScreen extends StatefulWidget {
@@ -50,7 +51,7 @@ class _AdminProjectsScreenState extends State<AdminProjectsScreen> {
         backgroundColor: primaryBlue,
         icon: const Icon(Icons.add, color: Colors.white),
         label: Text(
-          'Add Project',
+          'ADD PROJECT',
           style: GoogleFonts.montserrat(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -463,8 +464,8 @@ class _AdminProjectsScreenState extends State<AdminProjectsScreen> {
                   primaryBlue,
                 ),
                 _buildStatColumn(
-                  'Rate',
-                  '${project.ratePerSqft.toStringAsFixed(0)}/sqft',
+                  'PRICE/SQFT',
+                  '₹${NumberFormat.compact().format(project.ratePerSqft)}',
                   primaryBlue,
                 ),
               ],

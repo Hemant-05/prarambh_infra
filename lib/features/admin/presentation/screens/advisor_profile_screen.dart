@@ -308,6 +308,13 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                       ),
                       _divider(),
                       _infoRow(
+                        Icons.numbers,
+                        'Application Number',
+                        p.applicationNumber.isEmpty ? 'N/A' : p.applicationNumber,
+                        primaryBlue,
+                      ),
+                      _divider(),
+                      _infoRow(
                         Icons.cake_outlined,
                         'Date of Birth',
                         p.dateOfBirth.isEmpty ? 'N/A' : p.dateOfBirth,
@@ -465,7 +472,7 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                     _divider(),
                     _infoRow(
                       Icons.phone_outlined,
-                      'Contact Number',
+                      'MOBILE NUMBER',
                       p.refContact,
                       primaryBlue,
                     ),

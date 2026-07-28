@@ -399,7 +399,7 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                     children: [
                       Expanded(
                         child: _buildStatBox(
-                          'Start Rate',
+                          'PRICE/SQFT',
                           '₹${project.ratePerSqft}/sq.ft',
                         ),
                       ),
@@ -768,7 +768,7 @@ class _InlineVideoPlayerState extends State<_InlineVideoPlayer> {
 
     _chewieController = ChewieController(
       videoPlayerController: _videoPlayerController,
-      autoPlay: false,
+      autoPlay: true,
       looping: false,
       aspectRatio: _videoPlayerController.value.aspectRatio,
       showControlsOnInitialize: false,

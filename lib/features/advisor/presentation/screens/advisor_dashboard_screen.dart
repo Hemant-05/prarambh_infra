@@ -23,6 +23,7 @@ import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_con
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_alerts_reminders_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_projects_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_meeting_schedule_screen.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/business_plan_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/document_center_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/sales_pipeline_screen.dart';
 import 'package:prarambh_infra/features/advisor/presentation/screens/advisor_edit_profile_screen.dart';
@@ -987,6 +988,14 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                 );
               }
             }
+            if (actions[index]['label'] == 'Business Plan') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const BusinessPlanScreen(),
+                ),
+              );
+            }
             if (actions[index]['label'] == 'Upcoming\nInstallment') {
               Navigator.pushNamed(context, '/upcoming_installments');
             }
@@ -1858,8 +1867,10 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
         id: resale.projectId,
         projectName: resale.colonyName,
         description: 'Project details for ${resale.colonyName}',
-        developerName: 'N/A',
+        developerName: '',
         reraNumber: 'N/A',
+        tncpNumber: '',
+        landOwnerName: '',
         projectType: resale.propertyType,
         constructionStatus: 'Ready to Move',
         status: 'Active',

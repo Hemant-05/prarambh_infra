@@ -115,7 +115,7 @@ class _EditAdminProfileScreenState extends State<EditAdminProfileScreen> {
                         const SizedBox(height: 20),
                         _buildTextField(
                           controller: _phoneController,
-                          label: 'Phone Number',
+                          label: 'MOBILE NUMBER',
                           icon: Icons.phone_outlined,
                           validator: (v) => v!.isEmpty ? 'Phone is required' : null,
                         ),

@@ -28,6 +28,8 @@ class _AdvisorAlertsRemindersScreenState extends State<AdvisorAlertsRemindersScr
         description: 'Project details for ${resale.colonyName}',
         developerName: 'N/A',
         reraNumber: 'N/A',
+        tncpNumber: '',
+        landOwnerName: '',
         projectType: resale.propertyType,
         constructionStatus: 'Ready to Move',
         status: 'Active',

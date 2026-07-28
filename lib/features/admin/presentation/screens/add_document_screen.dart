@@ -19,18 +19,20 @@ class AddDocumentScreen extends StatefulWidget {
 class _AddDocumentScreenState extends State<AddDocumentScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
-  String _selectedCategory = 'Project Brochures';
+  String _selectedCategory = 'Advisor Business Plan';
   File? _selectedFile;
 
   final List<String> _categories = [
+    'Advisor Business Plan',
+    'Circulars',
+    'Company Legal Documents',
+    'RERA',
+    'New Policy',
     'Project Brochures',
     'Project Site Maps',
-    'RERA',
-    'Company Legal Documents',
-    'Business Plan',
-    'Circulars',
-    'Company Rules & Regulations',
-    'Others'
+    'Project Rate Chart',
+    'Others',
+    'Company Rules & Regulations'
   ];
 
   @override

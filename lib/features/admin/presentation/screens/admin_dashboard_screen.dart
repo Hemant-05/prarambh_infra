@@ -88,11 +88,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   // 2. ADD THIS: A matching list of titles
   final List<String> _pageTitles = [
-    'Admin Dashboard',
-    'Project Management',
-    'Deal Management',
-    'Team Management',
-    'My Profile',
+    'ADMIN DASHBOARD',
+    'PROJECT MANAGEMENT',
+    'BOOKING MANAGEMENT',
+    'TEAM MANAGEMENT',
+    'MY PROFILE',
   ];
 
   void _refreshCurrentPage(BuildContext context, int index) {
@@ -175,19 +175,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           color: Colors.white70,
         ),
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.business), label: 'Project'),
+          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'HOME'),
+          BottomNavigationBarItem(icon: Icon(Icons.business), label: 'PROJECT'),
           BottomNavigationBarItem(
             icon: Icon(Icons.handshake_outlined),
-            label: 'Deals',
+            label: 'BOOKING',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.people_alt_outlined),
-            label: 'Team',
+            label: 'TEAM',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
-            label: 'Profile',
+            label: 'PROFILE',
           ),
         ],
       ),

@@ -6,6 +6,8 @@ class ProjectModel {
   final String description;
   final String developerName;
   final String reraNumber;
+  final String tncpNumber;
+  final String landOwnerName;
   final String projectType;
   final String constructionStatus;
   final String status;
@@ -39,6 +41,8 @@ class ProjectModel {
     required this.description,
     required this.developerName,
     required this.reraNumber,
+    required this.tncpNumber,
+    required this.landOwnerName,
     required this.projectType,
     required this.constructionStatus,
     required this.status,
@@ -98,6 +102,8 @@ class ProjectModel {
       description: json['description'] ?? '',
       developerName: json['developer_name'] ?? '',
       reraNumber: json['rera_number'] ?? '',
+      tncpNumber: json['tncp_number'] ?? '',
+      landOwnerName: json['land_owner_name'] ?? '',
       projectType: json['project_type'] ?? '',
       constructionStatus: json['construction_status'] ?? '',
       status: json['status'] ?? '',

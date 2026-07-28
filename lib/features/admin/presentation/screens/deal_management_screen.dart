@@ -436,7 +436,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
 
             // 2. Client Profile & KYC
             _buildModernSectionHeader(
-              "Client Profile",
+              "CUSTOMER PROFILE",
               Icons.person_outline,
               primaryBlue,
             ),
@@ -522,7 +522,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _buildModernSectionHeader(
-                  "Property Specification",
+                  "PROPERTY DETAILS",
                   Icons.apartment_outlined,
                   primaryBlue,
                 ),
@@ -1915,7 +1915,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                         ),
                         const SizedBox(height: 16),
                         _buildInfoItem(
-                          'Contact Number',
+                          'MOBILE NUMBER',
                           '+91 ${profile.phone}',
                           textColor,
                           icon: Icons.phone_android,
