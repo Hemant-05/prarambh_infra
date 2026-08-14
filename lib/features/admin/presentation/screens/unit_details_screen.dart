@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart';
@@ -7,6 +8,8 @@ import 'package:provider/provider.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../data/models/unit_model.dart';
 import 'package:intl/intl.dart';
+import 'deal_management_screen.dart';
+import '../../data/models/deal_model.dart';
 
 class UnitDetailsScreen extends StatefulWidget {
   final UnitModel unit;
@@ -18,6 +21,38 @@ class UnitDetailsScreen extends StatefulWidget {
 
 class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
   int _currentPage = 0;
+  final PageController _pageController = PageController();
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startAutoSlide();
+  }
+
+  void _startAutoSlide() {
+    if (widget.unit.unitImages.isEmpty) return;
+    _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (_pageController.hasClients) {
+        int nextPage = _currentPage + 1;
+        if (nextPage >= widget.unit.unitImages.length) {
+          nextPage = 0;
+        }
+        _pageController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
 
   void _showUpdateBottomSheet(BuildContext context, Color primaryBlue) {
     showModalBottomSheet(
@@ -66,6 +101,111 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
     );
   }
 
+  void _showBookUnitDialog(BuildContext context, Color primaryBlue) {
+    final nameCtrl = TextEditingController();
+    final phoneCtrl = TextEditingController();
+    final advCodeCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Book Unit',
+          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameCtrl,
+              decoration: InputDecoration(
+                labelText: 'Customer Name*',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: phoneCtrl,
+              keyboardType: TextInputType.phone,
+              decoration: InputDecoration(
+                labelText: 'Phone Number*',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: advCodeCtrl,
+              decoration: InputDecoration(
+                labelText: 'Advisor Code (Optional)',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryBlue,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () {
+              if (nameCtrl.text.isEmpty || phoneCtrl.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Name and Phone are required')),
+                );
+                return;
+              }
+              Navigator.pop(c);
+              
+              DealModel newDeal = DealModel(
+                id: DateTime.now().millisecondsSinceEpoch,
+                leadId: DateTime.now().millisecondsSinceEpoch,
+                propertyId: widget.unit.projectId,
+                unitId: widget.unit.id,
+                advisorCode: advCodeCtrl.text.trim(),
+                clientName: nameCtrl.text.trim(),
+                clientNumber: phoneCtrl.text.trim(),
+                clientEmail: 'N/A',
+                clientAdharFront: '',
+                clientAdharBack: '',
+                clientPanFront: '',
+                clientPanBack: '',
+                stage: 'suspecting',
+                isResale: false,
+                notes: [],
+                dealStatus: 'verified',
+                paymentStatus: 'Pending',
+                createdAt: DateTime.now().toString(),
+                updatedAt: DateTime.now().toString(),
+                propertyDocs: [],
+                installments: [],
+                projectName: 'Property',
+                unitNumber: widget.unit.unitNumber.isNotEmpty ? widget.unit.unitNumber : widget.unit.plotNumber,
+                towerName: widget.unit.towerName,
+              );
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DealManagementScreen(
+                    deal: newDeal,
+                    isReraApproved: false,
+                  ),
+                ),
+              );
+            },
+            child: const Text('Continue to Booking', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final primaryBlue = AppColors.getPrimaryBlue(context);
@@ -89,8 +229,36 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
           color: isDark ? Colors.grey[900] : Colors.white,
           child: Consumer<AdminProjectProvider>(
             builder: (context, provider, child) {
-              return Row(
+              return Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (widget.unit.availabilityStatus.toUpperCase().contains('AVAILABLE')) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: provider.isSaving
+                            ? null
+                            : () => _showBookUnitDialog(context, primaryBlue),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          'Book Unit',
+                          style: GoogleFonts.montserrat(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  Row(
+                    children: [
                   Expanded(
                     child: OutlinedButton(
                       onPressed: provider.isSaving
@@ -171,6 +339,8 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
                       ),
                     ),
                   ),
+                    ],
+                  ),
                 ],
               );
             },
@@ -205,6 +375,7 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
                       fit: StackFit.expand,
                       children: [
                         PageView.builder(
+                          controller: _pageController,
                           itemCount: widget.unit.unitImages.length,
                           onPageChanged: (index) =>
                               setState(() => _currentPage = index),
@@ -581,23 +752,23 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
     _areaCtrl.text = widget.unit.areaSqft.toString();
     _rateCtrl.text = widget.unit.ratePerSqft.toString();
 
-    configOptions = ['1BHK', '2BHK', '3BHK', '4BHK', 'Villa'];
+    configOptions = ['1 BHK', '2 BHK', '3 BHK', '4 BHK', 'G + 1', 'G + 2', 'GROUND', 'NA'];
     if (!configOptions.contains(widget.unit.configuration) &&
         widget.unit.configuration.isNotEmpty) {
       configOptions.add(widget.unit.configuration);
     }
     _config = widget.unit.configuration.isNotEmpty
         ? widget.unit.configuration
-        : '3BHK';
+        : configOptions.first;
 
-    typeOptions = ['Apartment', 'Villa', 'Plot'];
+    typeOptions = ['FLAT', 'LAND FARMING', 'ROW HOUSE', 'BANGLOW', 'VILLA', 'PLOT'];
     if (!typeOptions.contains(widget.unit.propertyType) &&
         widget.unit.propertyType.isNotEmpty) {
       typeOptions.add(widget.unit.propertyType);
     }
     _type = widget.unit.propertyType.isNotEmpty
         ? widget.unit.propertyType
-        : 'Apartment';
+        : typeOptions.first;
 
     saleOptions = ['New Sale', 'Resale', 'Rent'];
     if (!saleOptions.contains(widget.unit.saleCategory) &&
@@ -684,32 +855,7 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
                     children: [
                       Expanded(
                         child: _buildDropdown(
-                          'Status',
-                          _status,
-                          statusOptions,
-                          (v) => setState(() => _status = v!),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildTextField('Unit/Plot Number', _unitCtrl),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(child: _buildTextField('Tower', _towerCtrl)),
-                      const SizedBox(width: 16),
-                      Expanded(child: _buildTextField('Floor', _floorCtrl)),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildDropdown(
-                          'Type',
+                          'PROPERTY TYPE',
                           _type,
                           typeOptions,
                           (v) => setState(() => _type = v!),
@@ -718,44 +864,7 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: _buildDropdown(
-                          'Config',
-                          _config,
-                          configOptions,
-                          (v) => setState(() => _config = v!),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildTextField('Dimensions', _plotDimCtrl),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildTextField(
-                          'BUILD UP AREA/ sq.feet',
-                          _areaCtrl,
-                          isNumber: true,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildTextField(
-                          'PRICE/SQFT',
-                          _rateCtrl,
-                          isNumber: true,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildDropdown(
-                          'Category',
+                          'SALE CATEGORY',
                           _saleCategory,
                           saleOptions,
                           (v) => setState(() => _saleCategory = v!),
@@ -764,21 +873,123 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
                     ],
                   ),
                   const SizedBox(height: 16),
+                  
+                  // TYPE: FLAT
+                  if (_type == 'FLAT') ...[
+                    Row(
+                      children: [
+                        Expanded(child: _buildTextField('BLOCK NAME', _towerCtrl)),
+                        const SizedBox(width: 16),
+                        Expanded(child: _buildTextField('FLOOR NUMBER', _floorCtrl, isNumber: true)),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField('UNIT NUMBER', _unitCtrl),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildDropdown(
+                            'CONFIGURATION',
+                            _config,
+                            configOptions,
+                            (v) => setState(() => _config = v!),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildDropdown(
+                            'FACING',
+                            _facing,
+                            facingOptions,
+                            (v) => setState(() => _facing = v!),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField('DIMENSION', _plotDimCtrl),
+                  ],
+
+                  // TYPE: ROW HOUSE / BANGLOW / VILLA
+                  if (_type == 'ROW HOUSE' || _type == 'BANGLOW' || _type == 'VILLA') ...[
+                    _buildTextField('UNIT/PLOT NUMBER', _unitCtrl),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildDropdown(
+                            'CONFIGURATION',
+                            _config,
+                            configOptions,
+                            (v) => setState(() => _config = v!),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildDropdown(
+                            'FACING',
+                            _facing,
+                            facingOptions,
+                            (v) => setState(() => _facing = v!),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField('PLOT DIMENSION', _plotDimCtrl),
+                  ],
+
+                  // TYPE: LAND FARMING / PLOT
+                  if (_type == 'LAND FARMING' || _type == 'PLOT') ...[
+                    _buildTextField('PLOT NUMBER', _unitCtrl),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(child: _buildTextField('PLOT DIMENSION', _plotDimCtrl)),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildDropdown(
+                            'FACING',
+                            _facing,
+                            facingOptions,
+                            (v) => setState(() => _facing = v!),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+
+                  const SizedBox(height: 16),
                   Row(
                     children: [
                       Expanded(
                         child: _buildDropdown(
-                          'Facing',
-                          _facing,
-                          facingOptions,
-                          (v) => setState(() => _facing = v!),
+                          'LOCATION',
+                          _locationCtrl.text.isEmpty ? 'GARDEN FACING' : _locationCtrl.text,
+                          ['GARDEN FACING', 'CORNER', 'CORNER + GARDEN', _locationCtrl.text].toSet().toList()..removeWhere((e) => e.isEmpty),
+                          (v) => setState(() => _locationCtrl.text = v!),
                         ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(child: _buildTextField('BUILD UP AREA/ sq.feet', _areaCtrl, isNumber: true)),
                       const SizedBox(width: 16),
+                      Expanded(child: _buildTextField('PRICE/SQFT', _rateCtrl, isNumber: true)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
                       Expanded(
-                        child: _buildTextField(
-                          'Location (Corner)',
-                          _locationCtrl,
+                        child: _buildDropdown(
+                          'STATUS',
+                          _status,
+                          statusOptions,
+                          (v) => setState(() => _status = v!),
                         ),
                       ),
                     ],

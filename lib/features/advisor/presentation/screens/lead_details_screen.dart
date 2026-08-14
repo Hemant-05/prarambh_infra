@@ -2431,7 +2431,7 @@ Please feel free to contact us for more information.""";
                   final dealProvider = context.read<AdminDealProvider>();
                   final authProvider = context.read<AuthProvider>();
                   
-                  await dealProvider.initiateDeal(
+                  bool success = await dealProvider.initiateDeal(
                     clientName: _currentLead.clientName,
                     clientNumber: _currentLead.clientNumber,
                     clientEmail: '',
@@ -2440,8 +2440,29 @@ Please feel free to contact us for more information.""";
                     propertyId: _selectedProject?.id.toString() ?? selectedPropertyId?.toString() ?? '0',
                     unitId: _selectedUnit?.id.toString() ?? selectedUnitId?.toString() ?? '0',
                   );
+
+                  if (!success) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Failed to create deal. Please select a Project and Unit first.'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                    return; // Stop and do not update stage if deal creation fails
+                  }
                 } catch (e) {
                   debugPrint("Failed to create deal: $e");
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                  return;
                 }
               }
 

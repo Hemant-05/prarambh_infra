@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:prarambh_infra/core/utils/file_download_helper.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../data/models/deal_model.dart';
+import '../../../../core/utils/pdf_receipt_generator.dart';
 import '../../data/models/unit_model.dart';
 import '../providers/admin_deal_provider.dart';
 import '../providers/admin_project_provider.dart';
@@ -282,9 +283,15 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
         backgroundColor: primaryBlue,
         elevation: 0,
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.receipt_long, color: Colors.white),
+            onPressed: () => PdfReceiptGenerator.generateAndShareReceipt(widget.deal),
+          ),
+        ],
         leading: backButton(isDark: !isDark),
         title: Text(
-          "Deal Configuration",
+          "BOOKING CONFIGURATION",
           style: GoogleFonts.montserrat(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -393,7 +400,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text(
-                                'Deal Configuration Saved Successfully!',
+                                'Booking Configuration Saved Successfully!',
                               ),
                             ),
                           );
@@ -411,7 +418,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                 child: provider.isSaving
                     ? const CircularProgressIndicator(color: Colors.white)
                     : Text(
-                        'Confirm Configuration',
+                        'CONFIRM BOOKING',
                         style: GoogleFonts.montserrat(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -436,7 +443,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
 
             // 2. Client Profile & KYC
             _buildModernSectionHeader(
-              "CUSTOMER PROFILE",
+              "CUSTOMER DETAILS",
               Icons.person_outline,
               primaryBlue,
             ),
@@ -781,7 +788,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "MODE",
+                              "MODE OF PAYMENT",
                               style: GoogleFonts.montserrat(
                                 fontSize: 9,
                                 fontWeight: FontWeight.bold,
@@ -840,9 +847,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                             ),
                             const SizedBox(height: 4),
                             InkWell(
-                              onTap: _isTokenDateLocked
-                                  ? null
-                                  : () => _pickDate('token', null),
+                              onTap: () => _pickDate('token', null),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 12,
@@ -888,7 +893,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
             // 7. Commercial Architecture
             if (isTokenTaken) ...[
               _buildModernSectionHeader(
-                "Commercial Architecture",
+                "COMMERCIAL DETAILS",
                 Icons.account_balance_outlined,
                 primaryBlue,
               ),
@@ -922,7 +927,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                     TextField(
                       controller: _totalAmountCtrl,
                       keyboardType: TextInputType.number,
-                      enabled: !_isTotalAmountLocked,
+                      enabled: true,
                       onChanged: (v) => _generateInstallments(),
                       style: GoogleFonts.montserrat(
                         fontWeight: FontWeight.bold,
@@ -941,7 +946,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      "STRATEGY PLAN",
+                      "INSTALLMENT PLAN",
                       style: GoogleFonts.montserrat(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
@@ -990,7 +995,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
             // 8. Installment Pulse
             if (isTokenTaken && _installments.isNotEmpty) ...[
               _buildModernSectionHeader(
-                "Installment Pulse",
+                "INSTALLMENT COUNT",
                 Icons.analytics_outlined,
                 primaryBlue,
               ),
@@ -1051,12 +1056,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                             ),
                             const SizedBox(height: 6),
                             InkWell(
-                              onTap:
-                                  (isPaid ||
-                                      (inst['date'] != null &&
-                                          inst['date'] != 'Select Date'))
-                                  ? null
-                                  : () => _pickDate('installment', idx),
+                              onTap: () => _pickDate('installment', idx),
                               child: Row(
                                 children: [
                                   Icon(
@@ -2084,7 +2084,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "ACTION PLATE",
+                          "ACTION",
                           style: GoogleFonts.montserrat(
                             fontSize: 9,
                             fontWeight: FontWeight.bold,

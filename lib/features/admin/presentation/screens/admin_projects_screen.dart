@@ -460,7 +460,7 @@ class _AdminProjectsScreenState extends State<AdminProjectsScreen> {
               children: [
                 _buildStatColumn(
                   'Area',
-                  '${project.buildArea} ',
+                  '${project.buildArea} \n sq.ft',
                   primaryBlue,
                 ),
                 _buildStatColumn(

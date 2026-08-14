@@ -1153,7 +1153,9 @@ class _AdvisorDashboardScreenState extends State<AdvisorDashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        action.title,
+                        action.title.toLowerCase().contains("pending verification")
+                            ? "Pending Approval"
+                            : action.title,
                         style: GoogleFonts.montserrat(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,

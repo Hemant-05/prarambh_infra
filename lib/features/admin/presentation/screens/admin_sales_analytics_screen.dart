@@ -8,6 +8,7 @@ import '../../data/models/sales_analytics_model.dart';
 import 'admin_deals_screen.dart';
 import 'advisor_profile_screen.dart';
 import 'lead_management_screen.dart';
+import '../widgets/admin_add_lead_dialog.dart';
 
 class AdminSalesAnalyticsScreen extends StatefulWidget {
   const AdminSalesAnalyticsScreen({super.key});
@@ -61,6 +62,29 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
               : provider.analyticsData == null
                   ? const Center(child: Text("No analytics data available"))
                   : _buildMainContent(context, provider.analyticsData!),
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'admin_sales_analytics_add_lead_fab',
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) => const AdminAddLeadDialog(),
+          ).then((added) {
+            if (added == true) {
+              provider.fetchSalesAnalytics();
+            }
+          });
+        },
+        backgroundColor: primaryBlue,
+        elevation: 4,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: Text(
+          'Add Lead',
+          style: GoogleFonts.montserrat(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
     );
   }
 
@@ -250,12 +274,17 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
           barTouchData: BarTouchData(
             enabled: false,
             touchTooltipData: BarTouchTooltipData(
+              getTooltipColor: (group) => Theme.of(context).brightness == Brightness.dark 
+                  ? Colors.grey[800]! 
+                  : Colors.grey[200]!,
               tooltipRoundedRadius: 8,
               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                 return BarTooltipItem(
                   _formatCurrencyShort(rod.toY),
                   TextStyle(
-                    color: Colors.white,
+                    color: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.white 
+                        : Colors.black87,
                     fontWeight: FontWeight.bold,
                     fontSize: 10,
                   ),

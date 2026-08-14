@@ -296,7 +296,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                                   ),
                                 ),
                               );
-                            }).toList(),
+                            }),
                           ],
                           onChanged: (val) {
                             if (val != null) {
@@ -1233,7 +1233,11 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    action.title,
+                    action.title.toLowerCase().contains("kyc approvals")
+                        ? "PENDING ADVISOR APPROVALS"
+                        : action.title.toLowerCase().contains("career enquiries")
+                            ? "CAREER ENQUIRIES"
+                            : action.title,
                     style: GoogleFonts.montserrat(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,

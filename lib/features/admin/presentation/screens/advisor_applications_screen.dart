@@ -419,8 +419,8 @@ class _AdvisorApplicationsScreenState extends State<AdvisorApplicationsScreen> {
                   fontSize: 13,
                 ),
                 tabs: const [
-                  Tab(text: 'Pending Verification'),
-                  Tab(text: 'Career Inquirey'),
+                  Tab(text: 'PENDING APPROVAL'),
+                  Tab(text: 'CAREER INQUIREY'),
                 ],
               ),
 

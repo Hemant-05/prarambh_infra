@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/widgets/back_button.dart';
@@ -23,12 +24,35 @@ class ProjectDetailsAdminScreen extends StatefulWidget {
 
 class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
   int _currentMediaIndex = 0;
+  final PageController _pageController = PageController();
+  Timer? _carouselTimer;
   final List<Map<String, String>> _mediaItems = []; // Combines video and images
 
   @override
   void initState() {
     super.initState();
     _setupMediaList();
+    _startCarousel();
+  }
+
+  void _startCarousel() {
+    _carouselTimer = Timer.periodic(const Duration(seconds: 2), (Timer timer) {
+      if (_mediaItems.isNotEmpty && _pageController.hasClients) {
+        int next = (_currentMediaIndex + 1) % _mediaItems.length;
+        _pageController.animateToPage(
+          next,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _carouselTimer?.cancel();
+    _pageController.dispose();
+    super.dispose();
   }
 
   void _setupMediaList() {
@@ -124,6 +148,7 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                   width: double.infinity,
                   child: _mediaItems.isNotEmpty
                       ? PageView.builder(
+                          controller: _pageController,
                           itemCount: _mediaItems.length,
                           onPageChanged: (index) =>
                               setState(() => _currentMediaIndex = index),
@@ -381,7 +406,7 @@ class _ProjectDetailsAdminScreenState extends State<ProjectDetailsAdminScreen> {
                       Expanded(
                         child: _buildStatBox(
                           'Total Area',
-                          project.buildArea,
+                          '${project.buildArea} sqft',
                         ),
                       ),
                       const SizedBox(width: 12),

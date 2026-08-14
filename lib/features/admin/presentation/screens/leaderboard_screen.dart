@@ -1,10 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/full_screen_image_viewer.dart';
 import '../providers/admin_leaderboard_provider.dart';
 import '../../data/models/advisor_rank_model.dart';
+import '../widgets/starwall_share_card.dart';
 
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key});
@@ -14,12 +19,56 @@ class LeaderboardScreen extends StatefulWidget {
 }
 
 class _LeaderboardScreenState extends State<LeaderboardScreen> {
+  final ScreenshotController _screenshotController = ScreenshotController();
+  bool _isSharing = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AdminLeaderboardProvider>().fetchLeaderboard();
     });
+  }
+
+  Future<void> _shareStarwall(AdminLeaderboardProvider provider) async {
+    if (provider.allAdvisors.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No advisors to share')),
+      );
+      return;
+    }
+
+    setState(() => _isSharing = true);
+
+    try {
+      final imageBytes = await _screenshotController.captureFromWidget(
+        StarwallShareCard(
+          advisors: provider.allAdvisors,
+          categoryTitle: provider.currentTab,
+        ),
+        delay: const Duration(milliseconds: 500),
+        targetSize: const Size(540, 960),
+        pixelRatio: 2.0,
+      );
+
+      final directory = await getTemporaryDirectory();
+      final imagePath = '${directory.path}/starwall_share.png';
+      final file = File(imagePath);
+      await file.writeAsBytes(imageBytes);
+
+      await Share.shareXFiles(
+        [XFile(imagePath)],
+        text: 'Top 10 Advisors - ${provider.currentTab}',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to share: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSharing = false);
+    }
   }
 
   @override
@@ -48,6 +97,23 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           ),
         ),
         actions: [
+          if (_isSharing)
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              ),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.share, color: Colors.white),
+              onPressed: () => _shareStarwall(provider),
+            ),
           IconButton(
             icon: const Icon(Icons.calendar_month, color: Colors.white),
             onPressed: () => _showDateFilter(context, provider),

@@ -37,6 +37,18 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
   // --- NEW: Search Implementation ---
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  bool _searchNotFound = false;
+  Set<String> _highlightedPathIds = {};
+
+  bool _findPath(AdvisorNode current, String targetCode, List<String> path) {
+    path.add(current.code);
+    if (current.code == targetCode) return true;
+    for (var child in current.children) {
+      if (_findPath(child, targetCode, path)) return true;
+    }
+    path.removeLast();
+    return false;
+  }
 
   final Map<String, GlobalKey> _nodeKeys = {};
   late AnimationController _animationController;
@@ -93,11 +105,17 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
     _searchController.addListener(() {
       final newQuery = _searchController.text.trim().toLowerCase().replaceAll(RegExp(r'\s+'), '');
       if (_searchQuery != newQuery) {
-        setState(() => _searchQuery = newQuery);
+        _searchQuery = newQuery;
         if (_searchQuery.isNotEmpty && _tabController.index == 0) {
           _panToFirstMatch();
         } else if (_searchQuery.isEmpty) {
-          _currentMatchId = null;
+          setState(() {
+            _currentMatchId = null;
+            _highlightedPathIds.clear();
+            _searchNotFound = false;
+          });
+        } else {
+          setState(() {}); // Trigger list rebuild
         }
       }
     });
@@ -207,12 +225,22 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
     }
 
     if (firstMatch != null) {
-      _currentMatchId = firstMatch.code;
+      final List<String> path = [];
+      _findPath(provider.teamTree!, firstMatch.code, path);
+      setState(() {
+        _currentMatchId = firstMatch!.code;
+        _highlightedPathIds = path.toSet();
+        _searchNotFound = false;
+      });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _panToNode(firstMatch!);
       });
     } else {
-      _currentMatchId = null;
+      setState(() {
+        _currentMatchId = null;
+        _highlightedPathIds.clear();
+        _searchNotFound = true;
+      });
     }
   }
 
@@ -431,16 +459,33 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
                               size: 20,
                             ),
                             suffixIcon: _searchQuery.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(
-                                      Icons.clear,
-                                      color: Colors.grey,
-                                      size: 18,
-                                    ),
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      // FocusScope.of(context).unfocus();
-                                    },
+                                ? Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (_searchNotFound)
+                                        Padding(
+                                          padding: const EdgeInsets.only(right: 8.0),
+                                          child: Text(
+                                            'Not found',
+                                            style: GoogleFonts.montserrat(
+                                              color: Colors.redAccent,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          color: Colors.grey,
+                                          size: 18,
+                                        ),
+                                        onPressed: () {
+                                          _searchController.clear();
+                                          // FocusScope.of(context).unfocus();
+                                        },
+                                      ),
+                                    ],
                                   )
                                 : null,
                             filled: true,
@@ -812,11 +857,8 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
     final String codeClean = node.code.toLowerCase().replaceAll(RegExp(r'\s+'), '');
     final String roleClean = node.role.toLowerCase().replaceAll(RegExp(r'\s+'), '');
     
-    final bool isMatch =
-        _searchQuery.isNotEmpty &&
-        (nameClean.contains(_searchQuery) ||
-            codeClean.contains(_searchQuery) ||
-            roleClean.contains(_searchQuery));
+    final bool isMatch = _currentMatchId == node.code;
+    final bool isPath = _highlightedPathIds.contains(node.code);
 
     // Build initials safely
     String initials = '?';
@@ -850,18 +892,22 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
           border: Border.all(
             color: isMatch
                 ? Colors.orange
-                : (isRoot ? blue : blue.withOpacity(0.25)),
-            width: isMatch ? 3.0 : (isRoot ? 2.0 : 1.0),
+                : (isPath
+                    ? Colors.green
+                    : (isRoot ? blue : blue.withOpacity(0.25))),
+            width: isMatch ? 3.0 : (isPath ? 2.5 : (isRoot ? 2.0 : 1.0)),
           ),
           // --- NEW: Glow Shadow ---
           boxShadow: [
             BoxShadow(
               color: isMatch
                   ? Colors.orange.withOpacity(0.5)
-                  : (isRoot
-                        ? blue.withOpacity(0.18)
-                        : Colors.black.withOpacity(0.05)),
-              blurRadius: isMatch ? 15 : (isRoot ? 16 : 8),
+                  : (isPath
+                      ? Colors.green.withOpacity(0.3)
+                      : (isRoot
+                          ? blue.withOpacity(0.18)
+                          : Colors.black.withOpacity(0.05))),
+              blurRadius: isMatch ? 15 : (isPath ? 12 : (isRoot ? 16 : 8)),
               offset: const Offset(0, 4),
             ),
           ],
@@ -875,7 +921,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
                 color: Colors.white,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isMatch ? Colors.orange : blue.withOpacity(0.4),
+                  color: isMatch ? Colors.orange : (isPath ? Colors.green : blue.withOpacity(0.4)),
                   width: 1.5,
                 ),
               ),
@@ -899,7 +945,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
                     radius: 20,
                     backgroundColor: isMatch
                         ? Colors.orange.withOpacity(0.1)
-                        : blue.withOpacity(0.1),
+                        : (isPath ? Colors.green.withOpacity(0.1) : blue.withOpacity(0.1)),
                     backgroundImage: node.avatarUrl.isNotEmpty
                         ? NetworkImage(node.avatarUrl)
                         : null,
@@ -908,7 +954,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
                             initials,
                             style: GoogleFonts.montserrat(
                               fontWeight: FontWeight.bold,
-                              color: isMatch ? Colors.orange : blue,
+                              color: isMatch ? Colors.orange : (isPath ? Colors.green : blue),
                               fontSize: 13,
                             ),
                           )

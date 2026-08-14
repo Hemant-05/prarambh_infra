@@ -215,6 +215,8 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
+              _buildTextField('DIMENSION', _plotDimCtrl),
             ],
 
             // TYPE: ROW HOUSE / BUNGALOW / VILLA

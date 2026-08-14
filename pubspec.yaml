@@ -60,6 +60,7 @@ dependencies:
   device_info_plus: ^12.4.0
   path: ^1.9.1
   syncfusion_flutter_pdfviewer: ^33.1.49
+  screenshot: ^3.0.0
 
 dev_dependencies:
   flutter_test:

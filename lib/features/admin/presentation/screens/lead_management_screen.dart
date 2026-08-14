@@ -13,6 +13,8 @@ import 'select_advisor_screen.dart';
 import '../../../advisor/presentation/screens/lead_details_screen.dart';
 import '../../../../core/utils/lead_filter_helper.dart'; // NEW
 import '../../../../core/utils/excel_helper.dart';
+import '../widgets/admin_add_lead_dialog.dart';
+import '../../../../core/utils/excel_helper.dart';
 
 class LeadManagementScreen extends StatefulWidget {
   final int initialIndex;
@@ -159,6 +161,32 @@ class _LeadManagementScreenState extends State<LeadManagementScreen>
             tooltip: 'Refresh Leads',
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'admin_lead_management_add_lead_fab',
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) => const AdminAddLeadDialog(),
+          ).then((added) {
+            if (added == true) {
+              context.read<AdminLeadProvider>().fetchUnassignedLeads();
+              context.read<AdminLeadProvider>().fetchLeads(
+                  advisorCode: _selectedAdvisorFilter?.advisorCode,
+              );
+            }
+          });
+        },
+        backgroundColor: primaryBlue,
+        elevation: 4,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: Text(
+          'Add Lead',
+          style: GoogleFonts.montserrat(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())

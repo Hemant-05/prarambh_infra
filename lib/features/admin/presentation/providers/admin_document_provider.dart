@@ -26,8 +26,27 @@ class AdminDocumentProvider extends ChangeNotifier with ErrorHandlerMixin {
       // Hide personal documents from general management view
       if (doc.category.toLowerCase() == 'personal') continue;
       
-      if (!map.containsKey(doc.category)) map[doc.category] = [];
-      map[doc.category]!.add(doc);
+      String categoryName = doc.category;
+      final lowerCat = categoryName.toLowerCase();
+      
+      if (lowerCat.contains('business plan')) {
+        categoryName = 'Advisor Business Plan';
+      } else if (lowerCat == 'legal documents' || lowerCat == 'legal') {
+        categoryName = 'Company Legal Documents';
+      } else if (lowerCat == 'other') {
+        categoryName = 'Others';
+      } else if (lowerCat == 'project broucher' || lowerCat == 'project brochure') {
+        categoryName = 'Project Brochures';
+      } else if (lowerCat == 'project site map') {
+        categoryName = 'Project Site Maps';
+      } else if (lowerCat.contains('rules') && lowerCat.contains('regulations')) {
+        categoryName = 'Company Rules & Regulations';
+      } else if (lowerCat == 'rera') {
+        categoryName = 'RERA';
+      }
+      
+      if (!map.containsKey(categoryName)) map[categoryName] = [];
+      map[categoryName]!.add(doc);
     }
     return map;
   }

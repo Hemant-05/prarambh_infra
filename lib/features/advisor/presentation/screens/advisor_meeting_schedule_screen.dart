@@ -9,10 +9,8 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/advisor_attendance_provider.dart';
-import '../../data/models/advisor_meeting_model.dart';
 import 'advisor_camera_screen.dart';
 import '../../../../core/utils/access_helper.dart';
-import 'advisor_meeting_details_screen.dart';
 
 class AdvisorMeetingScheduleScreen extends StatefulWidget {
   const AdvisorMeetingScheduleScreen({super.key});

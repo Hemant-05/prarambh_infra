@@ -5,7 +5,6 @@ import 'package:chewie/chewie.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/models/advisor_meeting_model.dart';
-import 'package:prarambh_infra/core/widgets/back_button.dart';
 
 class AdvisorMeetingDetailsScreen extends StatefulWidget {
   final AdvisorMeetingModel meeting;
