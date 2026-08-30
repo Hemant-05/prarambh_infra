@@ -105,6 +105,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
         setState(() {
           _unit = unit;
           _isLoadingUnit = false;
+          _totalAmountCtrl.text = widget.deal.paymentAmount ?? _unit!.calculatedPrice.toString();
         });
       }
     } catch (e) {
@@ -117,7 +118,8 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
     _selectedUnitId = widget.deal.unitId.toString();
     // Only lock fields if they have meaningful data AND the deal is somewhat finalized
     // For now, let's keep them editable if the deal is not verified
-    bool isVerified = widget.deal.dealStatus.toLowerCase() == 'verified';
+    bool isClosed = widget.deal.dealStatus.toLowerCase() == 'closed';
+    bool isVerified = widget.deal.dealStatus.toLowerCase() == 'verified' || isClosed;
 
     _tokenAmountCtrl.text = widget.deal.tokenAmount ?? '';
     double tAmt = double.tryParse(_tokenAmountCtrl.text) ?? 0;
@@ -135,13 +137,12 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
 
     if (isVerified &&
         (widget.deal.tokenPaymentMode?.isNotEmpty ?? false) &&
-        tAmt > 0) {
+        _tokenPaymentMode != 'online') {
       _isTokenPaymentModeLocked = true;
     }
 
     if (widget.deal.tokenDate != null &&
         widget.deal.tokenDate!.isNotEmpty &&
-        tAmt > 0 &&
         isVerified) {
       _tokenDate = widget.deal.tokenDate!;
       _isTokenDateLocked = true;
@@ -164,8 +165,21 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
 
     if (widget.deal.installments.isNotEmpty) {
       _installments = widget.deal.installments
-          .map((e) => Map<String, dynamic>.from(e))
+          .map((i) => {
+                'id': i['id'],
+                'date': i['due_date'],
+                'amount': i['amount'],
+                'status': i['status'],
+              })
           .toList();
+    }
+
+    if (isClosed) {
+      _isTokenAmountLocked = true;
+      _isTokenDateLocked = true;
+      _isTokenPaymentModeLocked = true;
+      _isPaymentPlanLocked = true;
+      _isTotalAmountLocked = true;
     }
   }
 
@@ -277,6 +291,8 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
             (double.tryParse(activeDeal.tokenAmount!) ?? 0) > 0) ||
         (double.tryParse(_tokenAmountCtrl.text) ?? 0) > 0;
 
+    bool isClosed = activeDeal.dealStatus.toLowerCase() == 'closed';
+
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
@@ -316,7 +332,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
           child: Consumer<AdminDealProvider>(
             builder: (context, provider, child) {
               return ElevatedButton(
-                onPressed: provider.isSaving
+                onPressed: (provider.isSaving || isClosed)
                     ? null
                     : () async {
                         if (_installments.isNotEmpty &&
@@ -368,14 +384,14 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
 
                         if (success && mounted) {
                           if (mounted) {
-                            if ((isTokenTaken || isFullyPaid) &&
+                            if (!isClosed && (isTokenTaken || isFullyPaid) &&
                                 activeDeal.dealStatus != 'verified') {
                               final now = DateFormat(
                                 'yyyy-MM-dd HH:mm',
                               ).format(DateTime.now());
                               context.read<AdminLeadProvider>().addLeadNote(
                                 activeDeal.leadId.toString(),
-                                "Deal verified by admin. Token collected: ₹${_tokenAmountCtrl.text} via $_tokenPaymentMode.",
+                                "Booking verified by admin. Token collected: ₹${_tokenAmountCtrl.text} via $_tokenPaymentMode.",
                                 now,
                               );
                               context
@@ -533,8 +549,9 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                   Icons.apartment_outlined,
                   primaryBlue,
                 ),
-                TextButton.icon(
-                  onPressed: _showUnitSelectionDialog,
+                if (!isClosed)
+                  TextButton.icon(
+                    onPressed: _showUnitSelectionDialog,
                   icon: Icon(Icons.swap_horiz, color: primaryBlue, size: 20),
                   label: Text(
                     "Change Unit",
@@ -1056,7 +1073,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                             ),
                             const SizedBox(height: 6),
                             InkWell(
-                              onTap: () => _pickDate('installment', idx),
+                              onTap: (isPaid || isClosed) ? null : () => _pickDate('installment', idx),
                               child: Row(
                                 children: [
                                   Icon(
@@ -1099,7 +1116,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                             child: Switch(
                               value: isPaid,
                               activeThumbColor: Colors.green,
-                              onChanged: isPaid
+                              onChanged: (isPaid || isClosed)
                                   ? null
                                   : (val) {
                                       setState(
@@ -1146,15 +1163,16 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                           letterSpacing: 1,
                         ),
                       ),
-                      _buildCircleAction(
-                        Icons.add,
-                        primaryBlue,
-                        onTap: () => _showAddNoteDialog(
+                      if (!isClosed)
+                        _buildCircleAction(
+                          Icons.add,
                           primaryBlue,
-                          textColor,
-                          cardColor,
+                          onTap: () => _showAddNoteDialog(
+                            primaryBlue,
+                            textColor,
+                            cardColor,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -2105,7 +2123,7 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                         const SizedBox(height: 2),
                         Text(
                           isFullyPaid
-                              ? "All payments verified & deal complete"
+                              ? "All payments verified & Booking complete"
                               : "Awaiting final documentation",
                           style: GoogleFonts.montserrat(
                             fontSize: 10,
@@ -2209,45 +2227,6 @@ class _DealManagementScreenState extends State<DealManagementScreen> {
                       await launchUrl(telUri);
                     }
                   },
-                ),
-              ],
-            ),
-          ),
-          Divider(height: 1, color: Colors.grey.shade100),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "KYC DOCUMENTS",
-                  style: GoogleFonts.montserrat(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                    letterSpacing: 1,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 1.5,
-                  children: [
-                    _buildDocumentThumbnail(
-                      "Aadhaar Front",
-                      deal.clientAdharFront,
-                    ),
-                    _buildDocumentThumbnail(
-                      "Aadhaar Back",
-                      deal.clientAdharBack,
-                    ),
-                    _buildDocumentThumbnail("PAN Front", deal.clientPanFront),
-                    _buildDocumentThumbnail("PAN Back", deal.clientPanBack),
-                  ],
                 ),
               ],
             ),

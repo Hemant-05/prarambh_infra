@@ -15,13 +15,13 @@ class AdminAnalyticsProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  Future<void> fetchSalesAnalytics() async {
+  Future<void> fetchSalesAnalytics({String? projectId}) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      _analyticsData = await repository.getSalesAnalytics();
+      _analyticsData = await repository.getSalesAnalytics(projectId: projectId);
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
     } finally {

@@ -8,7 +8,7 @@ class AdvisorRankModel {
   final double totalRevenue;
   final int teamSize;
   final int rank;
-  final double attendancePercentage;
+  final int siteVisits;
 
   AdvisorRankModel({
     required this.id,
@@ -20,21 +20,32 @@ class AdvisorRankModel {
     required this.totalRevenue,
     required this.teamSize,
     required this.rank,
-    required this.attendancePercentage,
+    required this.siteVisits,
   });
 
   factory AdvisorRankModel.fromJson(Map<String, dynamic> json) {
     return AdvisorRankModel(
-      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? '0') ?? 0,
+      id: json['id'] is int
+          ? json['id']
+          : int.tryParse(json['id']?.toString() ?? '0') ?? 0,
       advisorCode: json['Advisor_code']?.toString() ?? '',
       fullName: json['full_name']?.toString() ?? '',
       designation: json['designation']?.toString() ?? '',
       profilePhoto: json['profile_photo']?.toString(),
-      totalDeals: json['total_deals'] is int ? json['total_deals'] : int.tryParse(json['total_deals']?.toString() ?? '0') ?? 0,
-      totalRevenue: double.tryParse(json['total_revenue']?.toString() ?? '0') ?? 0.0,
-      teamSize: json['team_size'] is int ? json['team_size'] : int.tryParse(json['team_size']?.toString() ?? '0') ?? 0,
-      rank: json['rank'] is int ? json['rank'] : int.tryParse(json['rank']?.toString() ?? '0') ?? 0,
-      attendancePercentage: double.tryParse(json['attendance_percentage']?.toString() ?? '0') ?? 0.0,
+      totalDeals: json['total_deals'] is int
+          ? json['total_deals']
+          : int.tryParse(json['total_deals']?.toString() ?? '0') ?? 0,
+      totalRevenue:
+          double.tryParse(json['total_revenue']?.toString() ?? '0') ?? 0.0,
+      teamSize: json['team_size'] is int
+          ? json['team_size']
+          : int.tryParse(json['team_size']?.toString() ?? '0') ?? 0,
+      rank: json['rank'] is int
+          ? json['rank']
+          : int.tryParse(json['rank']?.toString() ?? '0') ?? 0,
+      siteVisits: json['site_visits'] is int
+          ? json['site_visits']
+          : int.tryParse(json['site_visits']?.toString() ?? '0') ?? 0,
     );
   }
 

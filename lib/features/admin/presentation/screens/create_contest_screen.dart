@@ -32,6 +32,7 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
   File? _rewardImage;
+  File? _titleImage;
   File? _selectedVideo;
   List<String> _rules = [
     'Minimum of 5 deals closed to qualify for the grand prize.',
@@ -104,6 +105,17 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
     }
   }
 
+  Future<void> _pickTitleImage() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+    );
+    if (result != null && result.files.single.path != null) {
+      setState(() {
+        _titleImage = File(result.files.single.path!);
+      });
+    }
+  }
+
   Future<void> _pickVideo() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -146,6 +158,9 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
     if (widget.existingContest == null && _rewardImage == null) {
       return _showSnack('Reward image is required.');
     }
+    if (widget.existingContest == null && _titleImage == null) {
+      return _showSnack('Title image is required.');
+    }
 
     // 2. Call Provider
     final provider = context.read<AdminContestProvider>();
@@ -160,6 +175,7 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
         rewardName: _rewardNameCtrl.text.trim(),
         rules: jsonEncode(_rules),
         rewardImage: _rewardImage,
+        titleImage: _titleImage,
       );
       if (!mounted) return;
       if (success) {
@@ -184,6 +200,7 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
         rewardName: _rewardNameCtrl.text.trim(),
         rules: jsonEncode(_rules),
         rewardImage: _rewardImage!,
+        titleImage: _titleImage!,
       );
 
       if (!mounted) return;
@@ -291,12 +308,74 @@ class _CreateContestScreenState extends State<CreateContestScreen> {
                 'Contest Details',
                 Icons.description_outlined,
                 [
-                  _buildInputLabel('Contest Title'),
-                  _buildTextField(
-                    'e.g., Q3 Sales Sprint',
-                    controller: _titleCtrl,
-                    validator: (v) =>
-                        Validators.validateRequired(v, 'Contest Title'),
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: _pickTitleImage,
+                        child: DottedBorder(
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[50],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: _titleImage != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.file(
+                                      _titleImage!,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : (widget.existingContest != null && widget.existingContest!.titleImageUrl.isNotEmpty
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.network(
+                                          widget.existingContest!.titleImageUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) => const Icon(
+                                            Icons.broken_image,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      )
+                                    : Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.add_photo_alternate,
+                                            color: Colors.grey[400],
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Title Img',
+                                            style: TextStyle(
+                                              color: Colors.grey[500],
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                        ],
+                                      )),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildInputLabel('Contest Title'),
+                            _buildTextField(
+                              'e.g., Q3 Sales Sprint',
+                              controller: _titleCtrl,
+                              validator: (v) =>
+                                  Validators.validateRequired(v, 'Contest Title'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   _buildInputLabel('Start Date'),

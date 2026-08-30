@@ -2,15 +2,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prarambh_infra/core/widgets/back_button.dart';
-import 'package:prarambh_infra/features/advisor/presentation/screens/project_inventory_advisor_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:video_player/video_player.dart';
-import 'package:chewie/chewie.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/ui_helper.dart';
-import '../../../admin/data/models/project_model.dart';
+import 'package:prarambh_infra/core/theme/app_colors.dart';
+import 'package:prarambh_infra/core/utils/ui_helper.dart';
+import 'package:prarambh_infra/features/admin/data/models/project_model.dart';
 import 'package:prarambh_infra/core/widgets/pdf_viewer_screen.dart';
+import 'package:prarambh_infra/core/widgets/media_carousel.dart';
+import 'package:prarambh_infra/features/advisor/presentation/screens/project_inventory_advisor_screen.dart';
 
 class AdvisorProjectDetailsScreen extends StatefulWidget {
   final ProjectModel project;
@@ -22,36 +21,25 @@ class AdvisorProjectDetailsScreen extends StatefulWidget {
 }
 
 class _AdvisorProjectDetailsScreenState extends State<AdvisorProjectDetailsScreen> {
-  int _currentMediaIndex = 0;
-  final PageController _pageController = PageController();
-  Timer? _carouselTimer;
   final List<Map<String, String>> _mediaItems = []; // Combines video and images
+  bool _isVisible = true;
 
   @override
   void initState() {
     super.initState();
     _setupMediaList();
-    _startCarousel();
   }
 
-  void _startCarousel() {
-    _carouselTimer = Timer.periodic(const Duration(seconds: 2), (Timer timer) {
-      if (_mediaItems.isNotEmpty && _pageController.hasClients) {
-        int next = (_currentMediaIndex + 1) % _mediaItems.length;
-        _pageController.animateToPage(
-          next,
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeInOut,
-        );
-      }
+  Future<void> _navigateTo(Widget screen) async {
+    setState(() {
+      _isVisible = false;
     });
-  }
-
-  @override
-  void dispose() {
-    _carouselTimer?.cancel();
-    _pageController.dispose();
-    super.dispose();
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+    if (mounted) {
+      setState(() {
+        _isVisible = true;
+      });
+    }
   }
 
   void _setupMediaList() {
@@ -84,6 +72,7 @@ class _AdvisorProjectDetailsScreenState extends State<AdvisorProjectDetailsScree
     final Uri url = Uri.parse(fullUrl);
 
     try {
+      // Platform default is the safest bet to avoid Android null component crashes
       await launchUrl(url);
     } catch (e) {
       if (mounted) {
@@ -100,6 +89,16 @@ class _AdvisorProjectDetailsScreenState extends State<AdvisorProjectDetailsScree
     final cardColor = AppColors.getCardColor(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final project = widget.project;
+
+    String formattedBudgetRange = project.budgetRange;
+    if (project.budgetRange.contains('-')) {
+      final parts = project.budgetRange.split('-');
+      if (parts.length == 2) {
+        String p1 = UIHelper.formatIndianCurrency(parts[0].trim());
+        String p2 = UIHelper.formatIndianCurrency(parts[1].trim());
+        formattedBudgetRange = '$p1 - $p2';
+      }
+    }
 
     return Scaffold(
       backgroundColor: isDark
@@ -123,82 +122,9 @@ class _AdvisorProjectDetailsScreenState extends State<AdvisorProjectDetailsScree
         slivers: [
           // MEDIA CAROUSEL moved to top of body
           SliverToBoxAdapter(
-            child: Stack(
-              children: [
-                SizedBox(
-                  height: MediaQuery.of(context).size.width * 9 / 16,
-                  width: double.infinity,
-                  child: _mediaItems.isNotEmpty
-                      ? PageView.builder(
-                          controller: _pageController,
-                          itemCount: _mediaItems.length,
-                          onPageChanged: (index) =>
-                              setState(() => _currentMediaIndex = index),
-                          itemBuilder: (context, index) {
-                            final media = _mediaItems[index];
-                            if (media['type'] == 'video') {
-                              return _InlineVideoPlayer(
-                                videoUrl: media['url']!,
-                              );
-                            } else {
-                              return Image.network(
-                                media['url']!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (c, e, s) => Container(
-                                  color: Colors.grey[300],
-                                  child: const Icon(
-                                    Icons.broken_image,
-                                    size: 50,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-                        )
-                      : Container(
-                          color: Colors.grey[300],
-                          child: const Center(
-                            child: Icon(
-                              Icons.domain,
-                              size: 60,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ),
-                ),
-                // Dot Indicators
-                if (_mediaItems.length > 1)
-                  Positioned(
-                    bottom: 12,
-                    left: 0,
-                    right: 0,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(_mediaItems.length, (index) {
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          width: _currentMediaIndex == index ? 10 : 6,
-                          height: _currentMediaIndex == index ? 10 : 6,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: _currentMediaIndex == index
-                                ? Colors.white
-                                : Colors.white.withOpacity(0.5),
-                            boxShadow: [
-                              if (_currentMediaIndex == index)
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 4,
-                                ),
-                            ],
-                          ),
-                        );
-                      }),
-                    ),
-                  ),
-              ],
+            child: MediaCarousel(
+              mediaItems: _mediaItems,
+              isVisible: _isVisible,
             ),
           ),
           SliverToBoxAdapter(
@@ -272,29 +198,93 @@ class _AdvisorProjectDetailsScreenState extends State<AdvisorProjectDetailsScree
                   const SizedBox(height: 24),
 
                   // Project Status & Type Row
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildStatusBadge(
-                          Icons.category,
-                          project.projectType,
-                          Colors.orange,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Project Type",
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
                         ),
-                        const SizedBox(width: 8),
-                        _buildStatusBadge(
-                          Icons.construction,
-                          project.constructionStatus,
-                          Colors.blue,
+                      ),
+                      const SizedBox(height: 8),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            if (project.projectType.isNotEmpty)
+                              ...project.projectType
+                                  .split(',')
+                                  .map((e) => e.trim())
+                                  .where((e) => e.isNotEmpty)
+                                  .map(
+                                    (type) => Padding(
+                                      padding: const EdgeInsets.only(
+                                        right: 8.0,
+                                      ),
+                                      child: _buildStatusBadge(
+                                        Icons.category,
+                                        type,
+                                        Colors.orange,
+                                      ),
+                                    ),
+                                  ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        _buildStatusBadge(
-                          Icons.check_circle,
-                          project.status,
-                          Colors.green,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "Property Type",
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 8),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            if (project.constructionStatus.isNotEmpty)
+                              ...project.constructionStatus
+                                  .split(',')
+                                  .map((e) => e.trim())
+                                  .where((e) => e.isNotEmpty)
+                                  .map(
+                                    (type) => Padding(
+                                      padding: const EdgeInsets.only(
+                                        right: 8.0,
+                                      ),
+                                      child: _buildStatusBadge(
+                                        Icons.construction,
+                                        type,
+                                        Colors.blue,
+                                      ),
+                                    ),
+                                  ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "Construction Status",
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      if (project.status.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: _buildStatusBadge(
+                                  Icons.check_circle,
+                                  project.status,
+                                  Colors.green,
+                                ),
+                              ),
+                    ],
                   ),
                   const SizedBox(height: 24),
 
@@ -378,6 +368,85 @@ class _AdvisorProjectDetailsScreenState extends State<AdvisorProjectDetailsScree
                           ),
                         ],
                       ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.person,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'LAND OWNER',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 10,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                project.landOwnerName.isNotEmpty
+                                    ? project.landOwnerName
+                                    : 'N/A',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.fact_check,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'TNCP NO.',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 10,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                project.tncpNumber.isNotEmpty
+                                    ? project.tncpNumber
+                                    : 'N/A',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryBlue,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                   const SizedBox(height: 24),
@@ -394,8 +463,8 @@ class _AdvisorProjectDetailsScreenState extends State<AdvisorProjectDetailsScree
                       const SizedBox(width: 12),
                       Expanded(
                         child: _buildStatBox(
-                          'Market Value',
-                          '₹${project.marketValue}',
+                          'PRICE/SQFT',
+                          '₹${project.ratePerSqft}/sq.ft',
                         ),
                       ),
                     ],
@@ -406,15 +475,8 @@ class _AdvisorProjectDetailsScreenState extends State<AdvisorProjectDetailsScree
                     children: [
                       Expanded(
                         child: _buildStatBox(
-                          'Start Rate',
-                          '₹${project.ratePerSqft}/sq.ft',
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildStatBox(
                           'Budget Range',
-                          project.budgetRange,
+                          formattedBudgetRange,
                         ),
                       ),
                     ],
@@ -507,10 +569,10 @@ class _AdvisorProjectDetailsScreenState extends State<AdvisorProjectDetailsScree
                         'View & Download',
                         primaryBlue,
                         () {
-                          String path = project.brochureUrl.isNotEmpty 
-                              ? project.brochureUrl 
+                          String path = project.brochureUrl.isNotEmpty
+                              ? project.brochureUrl
                               : project.brochureFile;
-                              
+
                           if (path.isEmpty) {
                             UIHelper.showError(
                               context,
@@ -518,22 +580,20 @@ class _AdvisorProjectDetailsScreenState extends State<AdvisorProjectDetailsScree
                             );
                             return;
                           }
-                          
+
                           String fullUrl = path.startsWith('http')
                               ? path
                               : 'https://workiees.com/${path.startsWith('/') ? path.substring(1) : path}';
 
+                          // Encode URL to handle spaces/special chars
                           fullUrl = Uri.encodeFull(fullUrl);
 
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => PdfViewerScreen(
-                                url: fullUrl,
-                                title: '${project.projectName} Brochure',
-                                fileName:
-                                    "${project.projectName.replaceAll(' ', '_')}_Brochure.pdf",
-                              ),
+                          _navigateTo(
+                            PdfViewerScreen(
+                              url: fullUrl,
+                              title: '${project.projectName} Brochure',
+                              fileName:
+                                  "${project.projectName.replaceAll(' ', '_')}_Brochure.pdf",
                             ),
                           );
                         },
@@ -542,16 +602,16 @@ class _AdvisorProjectDetailsScreenState extends State<AdvisorProjectDetailsScree
                   ),
                   const SizedBox(height: 30),
 
-                  // Availability Card: Links to dedicated inventory screen
+                  // Availability Card (Unchanged)
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: cardColor,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                      border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.02),
+                          color: Colors.black.withValues(alpha: 0.02),
                           blurRadius: 10,
                         ),
                       ],
@@ -569,12 +629,8 @@ class _AdvisorProjectDetailsScreenState extends State<AdvisorProjectDetailsScree
                               ),
                             ),
                             TextButton(
-                              onPressed: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      ProjectInventoryAdvisorScreen(project: project),
-                                ),
+                              onPressed: () => _navigateTo(
+                                ProjectInventoryAdvisorScreen(project: project),
                               ),
                               child: Text(
                                 'View All',
@@ -703,9 +759,9 @@ class _AdvisorProjectDetailsScreenState extends State<AdvisorProjectDetailsScree
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -729,9 +785,9 @@ class _AdvisorProjectDetailsScreenState extends State<AdvisorProjectDetailsScree
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
+        color: color.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.15)),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
       ),
       child: Text(
         label,
@@ -742,88 +798,5 @@ class _AdvisorProjectDetailsScreenState extends State<AdvisorProjectDetailsScree
         ),
       ),
     );
-  }
-}
-
-class _InlineVideoPlayer extends StatefulWidget {
-  final String videoUrl;
-  const _InlineVideoPlayer({required this.videoUrl});
-
-  @override
-  State<_InlineVideoPlayer> createState() => _InlineVideoPlayerState();
-}
-
-class _InlineVideoPlayerState extends State<_InlineVideoPlayer> {
-  late VideoPlayerController _videoPlayerController;
-  ChewieController? _chewieController;
-  bool _hasError = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _initPlayer();
-  }
-
-  Future<void> _initPlayer() async {
-    try {
-      _videoPlayerController = VideoPlayerController.networkUrl(
-        Uri.parse(widget.videoUrl),
-      );
-      await _videoPlayerController.initialize();
-
-      _chewieController = ChewieController(
-      videoPlayerController: _videoPlayerController,
-      autoPlay: true,
-      looping: false,
-      aspectRatio: _videoPlayerController.value.aspectRatio,
-      showControlsOnInitialize: false,
-      // Ensure the video covers the container to remove empty space while maintaining ratio (cropping instead of stretching)
-      fullScreenByDefault: false,
-      allowFullScreen: true,
-      materialProgressColors: ChewieProgressColors(
-        playedColor: Colors.blue,
-        handleColor: Colors.blueAccent,
-        backgroundColor: Colors.grey,
-        bufferedColor: Colors.white,
-      ),
-    );
-    } catch (e) {
-      debugPrint("Error initializing video player: $e");
-      _hasError = true;
-    }
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void dispose() {
-    _videoPlayerController.dispose();
-    _chewieController?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_hasError) {
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 64, color: Colors.grey[600]),
-          const SizedBox(height: 16),
-          Text(
-            'Failed to load video',
-            style: GoogleFonts.montserrat(
-              color: Colors.grey[500],
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      );
-    }
-
-    return _chewieController != null &&
-            _chewieController!.videoPlayerController.value.isInitialized
-        ? Chewie(controller: _chewieController!)
-        : const Center(child: CircularProgressIndicator());
   }
 }

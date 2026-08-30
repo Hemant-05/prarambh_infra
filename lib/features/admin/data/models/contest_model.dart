@@ -14,6 +14,7 @@ class ContestModel {
   final List<String>? rules;
   final List<ContestParticipant> participants;
   final String videoUrl;
+  final String titleImageUrl;
 
   ContestModel({
     required this.id, required this.title, required this.status,
@@ -21,6 +22,7 @@ class ContestModel {
     required this.imageUrl, this.startDate, this.endDate, this.topPerformers, this.rules,
     required this.participants,
     this.videoUrl = '',
+    this.titleImageUrl = '',
   });
 
   // Accurate Time-Based Getters
@@ -85,6 +87,11 @@ class ContestModel {
         ? rawUrl
         : (rawUrl.isNotEmpty ? baseUrl + (rawUrl.startsWith('/') ? rawUrl.substring(1) : rawUrl) : '');
 
+    String rawTitleUrl = json['title_image'] ?? '';
+    String finalTitleImageUrl = rawTitleUrl.startsWith('http')
+        ? rawTitleUrl
+        : (rawTitleUrl.isNotEmpty ? baseUrl + (rawTitleUrl.startsWith('/') ? rawTitleUrl.substring(1) : rawTitleUrl) : '');
+
     // Safely parse rules
     List<String> parsedRules = [];
     if (json['rules'] is List) {
@@ -123,6 +130,7 @@ class ContestModel {
       participants: (json['participants'] as List<dynamic>?)?.map((e) => ContestParticipant.fromJson(e)).toList() ?? [],
       topPerformers: (json['top_performers'] as List<dynamic>?)?.map((e) => TopPerformer.fromJson(e)).toList(),
       videoUrl: finalVideoUrl,
+      titleImageUrl: finalTitleImageUrl,
     );
   }
 }

@@ -10,10 +10,13 @@ class ClientPropertyDetailsScreen extends StatefulWidget {
   const ClientPropertyDetailsScreen({super.key, required this.project});
 
   @override
-  State<ClientPropertyDetailsScreen> createState() => _ClientPropertyDetailsScreenState();
+  State<ClientPropertyDetailsScreen> createState() =>
+      _ClientPropertyDetailsScreenState();
 }
 
-class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScreen> with SingleTickerProviderStateMixin {
+class _ClientPropertyDetailsScreenState
+    extends State<ClientPropertyDetailsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final bool _isFavorite = false;
 
@@ -50,20 +53,21 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
                     children: [
                       // Image Header
                       _buildImageHeader(item, context, isDark),
-                      
+
                       const SizedBox(height: 16),
-                      
+
                       // Title & Location
                       _buildTitleSection(item, isDark),
-                      
+
                       const SizedBox(height: 16),
-                      
+
                       // Tab Bar
                       _buildTabBar(primaryBlue, isDark),
-                      
+
                       // Tab Content
                       SizedBox(
-                        height: 800, // Fixed height for scrollable tabs inside scrollview
+                        height:
+                            800, // Fixed height for scrollable tabs inside scrollview
                         child: TabBarView(
                           controller: _tabController,
                           children: [
@@ -77,7 +81,7 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
                   ),
                 ),
               ),
-              
+
               // Bottom Bar
               _buildBottomPriceBar(item, primaryBlue, isDark),
             ],
@@ -87,7 +91,11 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
     );
   }
 
-  Widget _buildImageHeader(ProjectModel item, BuildContext context, bool isDark) {
+  Widget _buildImageHeader(
+    ProjectModel item,
+    BuildContext context,
+    bool isDark,
+  ) {
     return Stack(
       children: [
         Hero(
@@ -97,7 +105,11 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
             width: double.infinity,
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: NetworkImage(item.images.isNotEmpty ? item.images[0] : 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=400'),
+                image: NetworkImage(
+                  item.images.isNotEmpty
+                      ? item.images[0]
+                      : 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=400',
+                ),
                 fit: BoxFit.cover,
               ),
             ),
@@ -109,12 +121,20 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _circleButton(Icons.arrow_back, () => Navigator.pop(context), isDark),
+                _circleButton(
+                  Icons.arrow_back,
+                  () => Navigator.pop(context),
+                  isDark,
+                ),
                 Row(
                   children: [
                     _circleButton(Icons.share_outlined, () {}, isDark),
                     const SizedBox(width: 12),
-                    _circleButton(_isFavorite ? Icons.favorite : Icons.favorite_border, () {}, isDark),
+                    _circleButton(
+                      _isFavorite ? Icons.favorite : Icons.favorite_border,
+                      () {},
+                      isDark,
+                    ),
                   ],
                 ),
               ],
@@ -130,8 +150,15 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(color: Theme.of(context).cardColor.withOpacity(0.9), shape: BoxShape.circle),
-        child: Icon(icon, color: Theme.of(context).textTheme.bodyLarge?.color, size: 20),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor.withOpacity(0.9),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          icon,
+          color: Theme.of(context).textTheme.bodyLarge?.color,
+          size: 20,
+        ),
       ),
     );
   }
@@ -149,28 +176,83 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
             children: [
               Icon(Icons.star, color: Colors.amber[600], size: 16),
               const SizedBox(width: 4),
-              Text("4.9 (6.8k review)", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w600, color: secondaryTextColor)),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: Theme.of(context).primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-                child: Text(item.projectType.toUpperCase(), style: GoogleFonts.montserrat(fontSize: 10, color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
+              Text(
+                "4.9 (6.8k review)",
+                style: GoogleFonts.montserrat(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: secondaryTextColor,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  reverse: true,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: item.projectType.isNotEmpty
+                        ? item.projectType
+                              .split(',')
+                              .map((e) => e.trim())
+                              .where((e) => e.isNotEmpty)
+                              .map(
+                                (type) => Padding(
+                                  padding: const EdgeInsets.only(left: 4.0),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(
+                                        context,
+                                      ).primaryColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      type.toUpperCase(),
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 10,
+                                        color: Theme.of(context).primaryColor,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList()
+                        : [],
+                  ),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
             item.projectName,
-            style: GoogleFonts.montserrat(fontSize: 24, fontWeight: FontWeight.bold, color: textColor),
+            style: GoogleFonts.montserrat(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
           ),
           const SizedBox(height: 4),
           Row(
             children: [
-              Icon(Icons.location_on, color: secondaryTextColor?.withOpacity(0.5), size: 14),
+              Icon(
+                Icons.location_on,
+                color: secondaryTextColor?.withOpacity(0.5),
+                size: 14,
+              ),
               const SizedBox(width: 4),
               Text(
                 item.city,
-                style: GoogleFonts.montserrat(fontSize: 13, color: secondaryTextColor, fontWeight: FontWeight.w500),
+                style: GoogleFonts.montserrat(
+                  fontSize: 13,
+                  color: secondaryTextColor,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),
@@ -185,7 +267,11 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1))),
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).dividerColor.withOpacity(0.1),
+          ),
+        ),
       ),
       child: TabBar(
         controller: _tabController,
@@ -193,8 +279,14 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
         unselectedLabelColor: secondaryTextColor,
         indicatorColor: primaryBlue,
         indicatorWeight: 3,
-        labelStyle: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold),
-        unselectedLabelStyle: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.w600),
+        labelStyle: GoogleFonts.montserrat(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+        ),
+        unselectedLabelStyle: GoogleFonts.montserrat(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
         tabs: const [
           Tab(text: "Description"),
           Tab(text: "Gallery"),
@@ -204,7 +296,11 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
     );
   }
 
-  Widget _buildDescriptionTab(ProjectModel item, Color primaryBlue, bool isDark) {
+  Widget _buildDescriptionTab(
+    ProjectModel item,
+    Color primaryBlue,
+    bool isDark,
+  ) {
     final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
 
     return Padding(
@@ -219,22 +315,27 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
               _statCard(Icons.aspect_ratio, item.buildArea, "sqft", isDark),
               _statCard(Icons.bed_outlined, "3.0", "BHK", isDark),
               _statCard(Icons.bathtub_outlined, "1.0", "Bath", isDark),
-              _statCard(Icons.verified_user_outlined, "4,457", "Safety", isDark),
+              _statCard(
+                Icons.verified_user_outlined,
+                "4,457",
+                "Safety",
+                isDark,
+              ),
             ],
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           _sectionHeader("Listing Agent", isDark),
           const SizedBox(height: 12),
           _buildAgentTile(item, isDark),
-          
+
           const SizedBox(height: 24),
-          
+
           _sectionHeader("Facilities", isDark),
           const SizedBox(height: 16),
           _buildFacilitiesGrid(isDark),
-          
+
           const SizedBox(height: 24),
 
           _sectionHeader("Project Brochure", isDark),
@@ -281,7 +382,7 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
                     String fullUrl = path.startsWith('http')
                         ? path
                         : 'https://workiees.com/${path.startsWith('/') ? path.substring(1) : path}';
-                    
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -297,7 +398,9 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryBlue,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                   ),
                   child: const Text("Download"),
@@ -307,12 +410,16 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
           ),
 
           const SizedBox(height: 24),
-          
+
           _sectionHeader("Address", isDark),
           const SizedBox(height: 12),
           Text(
             item.fullAddress,
-            style: GoogleFonts.montserrat(fontSize: 13, color: secondaryTextColor, height: 1.5),
+            style: GoogleFonts.montserrat(
+              fontSize: 13,
+              color: secondaryTextColor,
+              height: 1.5,
+            ),
           ),
           const SizedBox(height: 16),
           // Mock Map
@@ -322,20 +429,40 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
               borderRadius: BorderRadius.circular(16),
               color: Theme.of(context).dividerColor.withOpacity(0.1),
               image: const DecorationImage(
-                image: NetworkImage('https://miro.medium.com/max/1400/1*q6ybgv9X0E7oW7R8q8A8pQ.png'),
+                image: NetworkImage(
+                  'https://miro.medium.com/max/1400/1*q6ybgv9X0E7oW7R8q8A8pQ.png',
+                ),
                 fit: BoxFit.cover,
               ),
             ),
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)]),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.location_on, color: Theme.of(context).primaryColor, size: 16),
+                    Icon(
+                      Icons.location_on,
+                      color: Theme.of(context).primaryColor,
+                      size: 16,
+                    ),
                     const SizedBox(width: 8),
-                    Text("LOCATION", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
+                    Text(
+                      "LOCATION",
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -356,15 +483,31 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withOpacity(0.1),
+        ),
       ),
       child: Column(
         children: [
           Icon(icon, color: primaryBlue, size: 20),
           const SizedBox(height: 8),
-          Text(value, style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: primaryBlue)),
+          Text(
+            value,
+            style: GoogleFonts.montserrat(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: primaryBlue,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(label, style: GoogleFonts.montserrat(fontSize: 10, color: secondaryTextColor, fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: GoogleFonts.montserrat(
+              fontSize: 10,
+              color: secondaryTextColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
@@ -378,21 +521,40 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
       children: [
         const CircleAvatar(
           radius: 24,
-          backgroundImage: NetworkImage('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100'),
+          backgroundImage: NetworkImage(
+            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100',
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(item.developerName.isEmpty ? "Sandeep S." : item.developerName, style: GoogleFonts.montserrat(fontSize: 15, fontWeight: FontWeight.bold, color: textColor)),
-              Text("Developer Partner", style: GoogleFonts.montserrat(fontSize: 12, color: secondaryTextColor)),
+              Text(
+                item.developerName.isEmpty ? "Sandeep S." : item.developerName,
+                style: GoogleFonts.montserrat(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: textColor,
+                ),
+              ),
+              Text(
+                "Developer Partner",
+                style: GoogleFonts.montserrat(
+                  fontSize: 12,
+                  color: secondaryTextColor,
+                ),
+              ),
             ],
           ),
         ),
         _actionIcon(Icons.mail_outline, Theme.of(context).primaryColor, isDark),
         const SizedBox(width: 12),
-        _actionIcon(Icons.phone_outlined, Theme.of(context).primaryColor, isDark),
+        _actionIcon(
+          Icons.phone_outlined,
+          Theme.of(context).primaryColor,
+          isDark,
+        ),
       ],
     );
   }
@@ -400,7 +562,10 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
   Widget _actionIcon(IconData icon, Color color, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: Icon(icon, color: color, size: 20),
     );
   }
@@ -422,7 +587,12 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, mainAxisSpacing: 16, crossAxisSpacing: 12, childAspectRatio: 0.9),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        mainAxisSpacing: 16,
+        crossAxisSpacing: 12,
+        childAspectRatio: 0.9,
+      ),
       itemCount: facilities.length,
       itemBuilder: (context, index) {
         return Column(
@@ -432,12 +602,27 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
               decoration: BoxDecoration(
                 color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+                border: Border.all(
+                  color: Theme.of(context).dividerColor.withOpacity(0.1),
+                ),
               ),
-              child: Icon(facilities[index]['icon'] as IconData, color: Theme.of(context).primaryColor, size: 24),
+              child: Icon(
+                facilities[index]['icon'] as IconData,
+                color: Theme.of(context).primaryColor,
+                size: 24,
+              ),
             ),
             const SizedBox(height: 4),
-            Text(facilities[index]['label'] as String, style: GoogleFonts.montserrat(fontSize: 10, color: secondaryTextColor, fontWeight: FontWeight.w600), textAlign: TextAlign.center, maxLines: 1),
+            Text(
+              facilities[index]['label'] as String,
+              style: GoogleFonts.montserrat(
+                fontSize: 10,
+                color: secondaryTextColor,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+            ),
           ],
         );
       },
@@ -455,7 +640,12 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 1.2),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 1.2,
+            ),
             itemCount: item.images.length > 6 ? 6 : item.images.length,
             itemBuilder: (context, index) {
               return ClipRRect(
@@ -471,23 +661,46 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
 
   Widget _buildReviewTab(bool isDark) {
     final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
-    return Center(child: Text("Coming Soon", style: TextStyle(color: secondaryTextColor)));
+    return Center(
+      child: Text("Coming Soon", style: TextStyle(color: secondaryTextColor)),
+    );
   }
 
   Widget _sectionHeader(String title, bool isDark) {
     final textColor = Theme.of(context).textTheme.bodyLarge?.color;
-    return Text(title, style: GoogleFonts.montserrat(fontSize: 16, fontWeight: FontWeight.bold, color: textColor));
+    return Text(
+      title,
+      style: GoogleFonts.montserrat(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: textColor,
+      ),
+    );
   }
 
-  Widget _buildBottomPriceBar(ProjectModel item, Color primaryBlue, bool isDark) {
+  Widget _buildBottomPriceBar(
+    ProjectModel item,
+    Color primaryBlue,
+    bool isDark,
+  ) {
     final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        border: Border(top: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1))),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).dividerColor.withOpacity(0.1),
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -495,11 +708,25 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Starting From", style: GoogleFonts.montserrat(fontSize: 12, color: secondaryTextColor, fontWeight: FontWeight.w500)),
+              Text(
+                "Starting From",
+                style: GoogleFonts.montserrat(
+                  fontSize: 12,
+                  color: secondaryTextColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text("₹${item.budgetRange}", style: GoogleFonts.montserrat(fontSize: 22, fontWeight: FontWeight.bold, color: primaryBlue)),
+                  Text(
+                    "₹${item.budgetRange}",
+                    style: GoogleFonts.montserrat(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: primaryBlue,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -520,10 +747,18 @@ class _ClientPropertyDetailsScreenState extends State<ClientPropertyDetailsScree
                 backgroundColor: primaryBlue,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 elevation: 0,
               ),
-              child: Text("Site visit", style: GoogleFonts.montserrat(fontSize: 16, fontWeight: FontWeight.bold)),
+              child: Text(
+                "Site visit",
+                style: GoogleFonts.montserrat(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
         ],

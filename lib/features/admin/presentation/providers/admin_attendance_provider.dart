@@ -89,10 +89,10 @@ class AdminAttendanceProvider extends ChangeNotifier with ErrorHandlerMixin {
     }
   }
 
-  Future<String?> addMeeting(Map<String, dynamic> data) async {
+  Future<String?> addMeeting(Map<String, dynamic> data, {File? image}) async {
     isSaving = true;
     try {
-      final id = await repository.addMeeting(data);
+      final id = await repository.addMeeting(data, image: image);
       if (id != null) await fetchAllMeetings();
       return id;
     } catch (e) {
@@ -148,10 +148,10 @@ class AdminAttendanceProvider extends ChangeNotifier with ErrorHandlerMixin {
     }
   }
 
-  Future<bool> updateMeeting(String id, Map<String, dynamic> data) async {
+  Future<bool> updateMeeting(String id, Map<String, dynamic> data, {File? image}) async {
     isSaving = true;
     try {
-      final success = await repository.updateMeeting(id, data);
+      final success = await repository.updateMeeting(id, data, image: image);
       if (success) await fetchAllMeetings();
       return success;
     } catch (e) {

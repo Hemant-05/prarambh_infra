@@ -345,6 +345,12 @@ class _AdvisorProjectsScreenState extends State<AdvisorProjectsScreen> {
     final cardColor = isDark ? Colors.grey[900] : Colors.white;
     String displayImage = project.images.isNotEmpty ? project.images.first : '';
 
+    final typesList = project.projectType.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    String displayProjectType = typesList.join(', ');
+    if (typesList.length > 2) {
+      displayProjectType = '${typesList[0]}, ${typesList[1]}.....';
+    }
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -445,7 +451,7 @@ class _AdvisorProjectsScreenState extends State<AdvisorProjectsScreen> {
                         ),
                       ),
                       Text(
-                        project.projectType,
+                        displayProjectType,
                         style: GoogleFonts.montserrat(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -482,7 +488,6 @@ class _AdvisorProjectsScreenState extends State<AdvisorProjectsScreen> {
                     child: Divider(height: 1),
                   ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -502,28 +507,6 @@ class _AdvisorProjectsScreenState extends State<AdvisorProjectsScreen> {
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
                               color: isDark ? Colors.white : Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            'Market Value',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 10,
-                              color: Colors.grey[500],
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '₹${project.marketValue}',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: primaryBlue,
                             ),
                           ),
                         ],

@@ -22,14 +22,49 @@ class SalesAnalyticsModel {
       pieChartProjects: (json['pie_chart_projects'] as List? ?? [])
           .map((e) => ProjectChartData.fromJson(e))
           .toList(),
-      funnelChartLeads: (json['funnel_chart_leads'] as List? ?? [])
-          .map((e) => FunnelStageData.fromJson(e))
-          .where((e) => e.stage.toLowerCase() != 'new') // User requested to filter out 'new'
-          .toList(),
+      funnelChartLeads: _parseAndSortFunnel(json['funnel_chart_leads']),
       topAdvisors: (json['top_advisors'] as List? ?? [])
           .map((e) => AdvisorPerformanceData.fromJson(e))
           .toList(),
     );
+  }
+
+  static List<FunnelStageData> _parseAndSortFunnel(dynamic jsonList) {
+    final list = (jsonList as List? ?? [])
+        .map((e) => FunnelStageData.fromJson(e))
+        .where((e) {
+          final s = e.stage.toLowerCase();
+          return s != 'new' && s != 'pending_verification' && s != 'dead';
+        })
+        .toList();
+        
+    final requiredStages = ['completed', 'booking', 'site_visit', 'prospecting', 'suspecting'];
+    for (String req in requiredStages) {
+      bool exists = false;
+      if (req == 'booking') {
+        exists = list.any((e) => e.stage.toLowerCase() == 'booking' || e.stage.toLowerCase() == 'closed');
+      } else if (req == 'site_visit') {
+        exists = list.any((e) => e.stage.toLowerCase() == 'site_visit' || e.stage.toLowerCase() == 'site visit');
+      } else if (req == 'suspecting') {
+        exists = list.any((e) => e.stage.toLowerCase() == 'suspecting' || e.stage.toLowerCase() == 'sus suspecting');
+      } else {
+        exists = list.any((e) => e.stage.toLowerCase() == req);
+      }
+      
+      if (!exists) {
+        list.add(FunnelStageData(stage: req, count: 0));
+      }
+    }
+        
+    final order = ['completed', 'closed', 'booking', 'site_visit', 'site visit', 'prospecting', 'suspecting', 'sus suspecting'];
+    list.sort((a, b) {
+      final aIndex = order.indexOf(a.stage.toLowerCase());
+      final bIndex = order.indexOf(b.stage.toLowerCase());
+      final aVal = aIndex == -1 ? 99 : aIndex;
+      final bVal = bIndex == -1 ? 99 : bIndex;
+      return aVal.compareTo(bVal);
+    });
+    return list;
   }
 }
 
@@ -116,7 +151,9 @@ class FunnelStageData {
       case 'sus suspecting':
       case 'suspecting': return 'SUSPECTING';
       case 'prospecting': return 'PROSPECTING';
-      case 'site visit': return 'SITE VISITS';
+      case 'site_visit':
+      case 'site visit': return 'SITE VISIT';
+      case 'closed':
       case 'booking': return 'BOOKING DONE';
       case 'completed': return 'SALES COMPLETED';
       default: return stage.toUpperCase();

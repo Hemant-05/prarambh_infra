@@ -121,7 +121,9 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
               controller: nameCtrl,
               decoration: InputDecoration(
                 labelText: 'Customer Name*',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -130,7 +132,9 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
                 labelText: 'Phone Number*',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -138,7 +142,9 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
               controller: advCodeCtrl,
               decoration: InputDecoration(
                 labelText: 'Advisor Code (Optional)',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ],
@@ -151,7 +157,9 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryBlue,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             onPressed: () {
               if (nameCtrl.text.isEmpty || phoneCtrl.text.isEmpty) {
@@ -161,7 +169,7 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
                 return;
               }
               Navigator.pop(c);
-              
+
               DealModel newDeal = DealModel(
                 id: DateTime.now().millisecondsSinceEpoch,
                 leadId: DateTime.now().millisecondsSinceEpoch,
@@ -185,7 +193,9 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
                 propertyDocs: [],
                 installments: [],
                 projectName: 'Property',
-                unitNumber: widget.unit.unitNumber.isNotEmpty ? widget.unit.unitNumber : widget.unit.plotNumber,
+                unitNumber: widget.unit.unitNumber.isNotEmpty
+                    ? widget.unit.unitNumber
+                    : widget.unit.plotNumber,
                 towerName: widget.unit.towerName,
               );
 
@@ -199,7 +209,10 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
                 ),
               );
             },
-            child: const Text('Continue to Booking', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Continue to Booking',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -219,6 +232,35 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
         ? Colors.orange
         : Colors.red;
 
+    bool isValid(String? val) {
+      if (val == null || val.trim().isEmpty) return false;
+      final lower = val.trim().toLowerCase();
+      if (lower == 'na' ||
+          lower == 'n/a' ||
+          lower == 'null' ||
+          lower == '0' ||
+          lower == '0.0')
+        return false;
+      return true;
+    }
+
+    String getAreaLabel() {
+      final pt = widget.unit.propertyType.toLowerCase();
+      if (pt.contains('plot')) return 'PLOT AREA';
+      if (pt.contains('flat')) return 'FLAT AREA';
+      if (pt.contains('land farming')) return 'LAND AREA';
+      return 'AREA';
+    }
+
+    String getFormattedPrice(double price) {
+      if (price >= 10000000) {
+        return '₹${(price / 10000000).toStringAsFixed(2).replaceAll(RegExp(r'0*$'), '').replaceAll(RegExp(r'\.$'), '')}Cr';
+      } else if (price >= 100000) {
+        return '₹${(price / 100000).toStringAsFixed(2).replaceAll(RegExp(r'0*$'), '').replaceAll(RegExp(r'\.$'), '')}L';
+      }
+      return '₹${price.toStringAsFixed(2).replaceAll(RegExp(r'0*$'), '').replaceAll(RegExp(r'\.$'), '')}';
+    }
+
     return Scaffold(
       backgroundColor: isDark
           ? const Color(0xFF121212)
@@ -232,7 +274,9 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (widget.unit.availabilityStatus.toUpperCase().contains('AVAILABLE')) ...[
+                  if (widget.unit.availabilityStatus.toUpperCase().contains(
+                    'AVAILABLE',
+                  )) ...[
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -259,86 +303,91 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
                   ],
                   Row(
                     children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: provider.isSaving
-                          ? null
-                          : () async {
-                              bool confirm =
-                                  await showDialog(
-                                    context: context,
-                                    builder: (c) => AlertDialog(
-                                      title: const Text('Delete Unit?'),
-                                      content: const Text(
-                                        'This cannot be undone.',
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(c, false),
-                                          child: const Text('Cancel'),
-                                        ),
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(c, true),
-                                          child: const Text(
-                                            'Delete',
-                                            style: TextStyle(color: Colors.red),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: provider.isSaving
+                              ? null
+                              : () async {
+                                  bool confirm =
+                                      await showDialog(
+                                        context: context,
+                                        builder: (c) => AlertDialog(
+                                          title: const Text('Delete Unit?'),
+                                          content: const Text(
+                                            'This cannot be undone.',
                                           ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(c, false),
+                                              child: const Text('Cancel'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(c, true),
+                                              child: const Text(
+                                                'Delete',
+                                                style: TextStyle(
+                                                  color: Colors.red,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
-                                  ) ??
-                                  false;
+                                      ) ??
+                                      false;
 
-                              if (confirm) {
-                                final success = await provider.removeUnit(
-                                  widget.unit.id.toString(),
-                                  widget.unit.projectId.toString(),
-                                );
-                                if (success && context.mounted) {
-                                  Navigator.pop(context);
-                                }
-                              }
-                            },
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: const BorderSide(color: Colors.redAccent),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                                  if (confirm) {
+                                    final success = await provider.removeUnit(
+                                      widget.unit.id.toString(),
+                                      widget.unit.projectId.toString(),
+                                    );
+                                    if (success && context.mounted) {
+                                      Navigator.pop(context);
+                                    }
+                                  }
+                                },
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            side: const BorderSide(color: Colors.redAccent),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            'Delete',
+                            style: GoogleFonts.montserrat(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
-                      child: Text(
-                        'Delete',
-                        style: GoogleFonts.montserrat(
-                          color: Colors.redAccent,
-                          fontWeight: FontWeight.bold,
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: provider.isSaving
+                              ? null
+                              : () => _showUpdateBottomSheet(
+                                  context,
+                                  primaryBlue,
+                                ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryBlue,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            'Update Unit',
+                            style: GoogleFonts.montserrat(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: provider.isSaving
-                          ? null
-                          : () => _showUpdateBottomSheet(context, primaryBlue),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryBlue,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: Text(
-                        'Update Unit',
-                        style: GoogleFonts.montserrat(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
                     ],
                   ),
                 ],
@@ -523,7 +572,9 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
                                   ),
                                 ),
                                 Text(
-                                  '₹${widget.unit.calculatedPrice}',
+                                  getFormattedPrice(
+                                    widget.unit.calculatedPrice,
+                                  ),
                                   style: GoogleFonts.montserrat(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
@@ -569,62 +620,65 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                     children: [
-                      _buildSpecBox(
-                        Icons.straighten,
-                        'Dimensions',
-                        widget.unit.plotDimensions.isNotEmpty
-                            ? widget.unit.plotDimensions
-                            : 'N/A',
-                        cardColor,
-                      ),
-                      _buildSpecBox(
-                        Icons.square_foot,
-                        'PLOT AREA',
-                        '${widget.unit.areaSqft} sqft',
-                        cardColor,
-                      ),
-                      _buildSpecBox(
-                        Icons.bed,
-                        'Configuration',
-                        widget.unit.configuration,
-                        cardColor,
-                      ),
-                      _buildSpecBox(
-                        Icons.explore,
-                        'Facing',
-                        widget.unit.facing,
-                        cardColor,
-                      ),
-                      _buildSpecBox(
-                        Icons.map,
-                        'Unit/Plot No.',
-                        widget.unit.unitNumber.isNotEmpty
-                            ? widget.unit.unitNumber
-                            : widget.unit.plotNumber.isNotEmpty
-                            ? widget.unit.plotNumber
-                            : 'NA',
-                        cardColor,
-                      ),
-                      _buildSpecBox(
-                        Icons.layers,
-                        'Floor',
-                        widget.unit.floorNumber,
-                        cardColor,
-                      ),
-                      _buildSpecBox(
-                        Icons.location_on,
-                        'Location',
-                        widget.unit.location.isNotEmpty
-                            ? widget.unit.location
-                            : 'N/A',
-                        cardColor,
-                      ),
-                      _buildSpecBox(
-                        Icons.category,
-                        'Sale Category',
-                        widget.unit.saleCategory,
-                        cardColor,
-                      ),
+                      if (isValid(widget.unit.plotDimensions))
+                        _buildSpecBox(
+                          Icons.straighten,
+                          'Dimensions',
+                          widget.unit.plotDimensions,
+                          cardColor,
+                        ),
+                      if (widget.unit.areaSqft > 0)
+                        _buildSpecBox(
+                          Icons.square_foot,
+                          getAreaLabel(),
+                          '${widget.unit.areaSqft} sqft',
+                          cardColor,
+                        ),
+                      if (isValid(widget.unit.configuration))
+                        _buildSpecBox(
+                          Icons.bed,
+                          'Configuration',
+                          widget.unit.configuration,
+                          cardColor,
+                        ),
+                      if (isValid(widget.unit.facing))
+                        _buildSpecBox(
+                          Icons.explore,
+                          'Facing',
+                          widget.unit.facing,
+                          cardColor,
+                        ),
+                      if (isValid(widget.unit.unitNumber) ||
+                          isValid(widget.unit.plotNumber))
+                        _buildSpecBox(
+                          Icons.map,
+                          'Unit/Plot No.',
+                          isValid(widget.unit.unitNumber)
+                              ? widget.unit.unitNumber
+                              : widget.unit.plotNumber,
+                          cardColor,
+                        ),
+                      if (isValid(widget.unit.floorNumber))
+                        _buildSpecBox(
+                          Icons.layers,
+                          'Floor',
+                          widget.unit.floorNumber,
+                          cardColor,
+                        ),
+                      if (isValid(widget.unit.location))
+                        _buildSpecBox(
+                          Icons.location_on,
+                          'Location',
+                          widget.unit.location,
+                          cardColor,
+                        ),
+                      if (isValid(widget.unit.saleCategory))
+                        _buildSpecBox(
+                          Icons.category,
+                          'Sale Category',
+                          widget.unit.saleCategory,
+                          cardColor,
+                        ),
                     ],
                   ),
                   const SizedBox(height: 40),
@@ -752,7 +806,16 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
     _areaCtrl.text = widget.unit.areaSqft.toString();
     _rateCtrl.text = widget.unit.ratePerSqft.toString();
 
-    configOptions = ['1 BHK', '2 BHK', '3 BHK', '4 BHK', 'G + 1', 'G + 2', 'GROUND', 'NA'];
+    configOptions = [
+      '1 BHK',
+      '2 BHK',
+      '3 BHK',
+      '4 BHK',
+      'G + 1',
+      'G + 2',
+      'GROUND',
+      'NA',
+    ];
     if (!configOptions.contains(widget.unit.configuration) &&
         widget.unit.configuration.isNotEmpty) {
       configOptions.add(widget.unit.configuration);
@@ -761,7 +824,17 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
         ? widget.unit.configuration
         : configOptions.first;
 
-    typeOptions = ['FLAT', 'LAND FARMING', 'ROW HOUSE', 'BANGLOW', 'VILLA', 'PLOT'];
+    typeOptions = [
+      'FLAT',
+      'LAND FARMING',
+      'ROW HOUSE',
+      'BANGLOW',
+      'VILLA',
+      'PLOT',
+      'SHOP',
+      'OFFICE',
+      'P+C',
+    ];
     if (!typeOptions.contains(widget.unit.propertyType) &&
         widget.unit.propertyType.isNotEmpty) {
       typeOptions.add(widget.unit.propertyType);
@@ -779,7 +852,7 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
         ? widget.unit.saleCategory
         : 'New Sale';
 
-    facingOptions = ['East', 'West', 'North', 'South'];
+    facingOptions = ['East', 'West', 'North', 'South', 'NA'];
     if (!facingOptions.contains(widget.unit.facing) &&
         widget.unit.facing.isNotEmpty) {
       facingOptions.add(widget.unit.facing);
@@ -873,92 +946,49 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  
-                  // TYPE: FLAT
-                  if (_type == 'FLAT') ...[
-                    Row(
-                      children: [
-                        Expanded(child: _buildTextField('BLOCK NAME', _towerCtrl)),
-                        const SizedBox(width: 16),
-                        Expanded(child: _buildTextField('FLOOR NUMBER', _floorCtrl, isNumber: true)),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField('UNIT NUMBER', _unitCtrl),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildDropdown(
-                            'CONFIGURATION',
-                            _config,
-                            configOptions,
-                            (v) => setState(() => _config = v!),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildDropdown(
-                            'FACING',
-                            _facing,
-                            facingOptions,
-                            (v) => setState(() => _facing = v!),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField('DIMENSION', _plotDimCtrl),
-                  ],
 
-                  // TYPE: ROW HOUSE / BANGLOW / VILLA
-                  if (_type == 'ROW HOUSE' || _type == 'BANGLOW' || _type == 'VILLA') ...[
-                    _buildTextField('UNIT/PLOT NUMBER', _unitCtrl),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildDropdown(
-                            'CONFIGURATION',
-                            _config,
-                            configOptions,
-                            (v) => setState(() => _config = v!),
-                          ),
+                  // Unconditional Fields
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTextField('BLOCK NAME', _towerCtrl),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildTextField(
+                          'FLOOR NUMBER',
+                          _floorCtrl,
+                          isNumber: true,
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildDropdown(
-                            'FACING',
-                            _facing,
-                            facingOptions,
-                            (v) => setState(() => _facing = v!),
-                          ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField('UNIT/PLOT NUMBER', _unitCtrl),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildDropdown(
+                          'CONFIGURATION',
+                          _config,
+                          configOptions,
+                          (v) => setState(() => _config = v!),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField('PLOT DIMENSION', _plotDimCtrl),
-                  ],
-
-                  // TYPE: LAND FARMING / PLOT
-                  if (_type == 'LAND FARMING' || _type == 'PLOT') ...[
-                    _buildTextField('PLOT NUMBER', _unitCtrl),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(child: _buildTextField('PLOT DIMENSION', _plotDimCtrl)),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildDropdown(
-                            'FACING',
-                            _facing,
-                            facingOptions,
-                            (v) => setState(() => _facing = v!),
-                          ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildDropdown(
+                          'FACING',
+                          _facing,
+                          facingOptions,
+                          (v) => setState(() => _facing = v!),
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField('DIMENSION', _plotDimCtrl),
 
                   const SizedBox(height: 16),
                   Row(
@@ -966,8 +996,16 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
                       Expanded(
                         child: _buildDropdown(
                           'LOCATION',
-                          _locationCtrl.text.isEmpty ? 'GARDEN FACING' : _locationCtrl.text,
-                          ['GARDEN FACING', 'CORNER', 'CORNER + GARDEN', _locationCtrl.text].toSet().toList()..removeWhere((e) => e.isEmpty),
+                          _locationCtrl.text.isEmpty
+                              ? 'GARDEN FACING'
+                              : _locationCtrl.text,
+                          {
+                            'GARDEN FACING',
+                            'CORNER',
+                            'CORNER + GARDEN',
+                            'NA',
+                            _locationCtrl.text,
+                          }.toList()..removeWhere((e) => e.isEmpty),
                           (v) => setState(() => _locationCtrl.text = v!),
                         ),
                       ),
@@ -976,9 +1014,21 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      Expanded(child: _buildTextField('BUILD UP AREA/ sq.feet', _areaCtrl, isNumber: true)),
+                      Expanded(
+                        child: _buildTextField(
+                          'BUILD UP AREA/ sq.feet',
+                          _areaCtrl,
+                          isNumber: true,
+                        ),
+                      ),
                       const SizedBox(width: 16),
-                      Expanded(child: _buildTextField('PRICE/SQFT', _rateCtrl, isNumber: true)),
+                      Expanded(
+                        child: _buildTextField(
+                          'PRICE/SQFT',
+                          _rateCtrl,
+                          isNumber: true,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -1090,7 +1140,7 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
                                     "sale_category": _saleCategory,
                                     "facing": _facing,
                                     "Location": _locationCtrl.text,
-                                    "plot_number": _plotNumCtrl.text,
+                                    "plot_number": _unitCtrl.text,
                                     "plot_dimensions": _plotDimCtrl.text,
                                     "area_sqft":
                                         double.tryParse(_areaCtrl.text) ?? 0,

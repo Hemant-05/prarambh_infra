@@ -30,10 +30,11 @@ class AdminContestRepository {
   Future<String?> addContest({
     required String title, required String startDate, required String endDate,
     required String rewardName, required String rules, required File rewardImage,
+    required File titleImage,
   }) async {
     try {
       final response = await apiClient.addContest(
-        title, startDate, endDate, rewardName, rules, rewardImage,
+        title, startDate, endDate, rewardName, rules, rewardImage, titleImage,
       );
       if (response['status'] == true) {
         return response['data']?['id']?.toString();
@@ -50,10 +51,11 @@ class AdminContestRepository {
     String? rules,
     String? status,
     File? rewardImage,
+    File? titleImage,
   }) async {
     try {
       final response = await apiClient.updateContest(
-        id, title, startDate, endDate, rewardName, rules, status, rewardImage,
+        id, title, startDate, endDate, rewardName, rules, status, rewardImage, titleImage,
       );
       return response['status'];
     } catch (e) { rethrow; }

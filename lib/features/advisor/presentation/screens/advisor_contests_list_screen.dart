@@ -148,8 +148,8 @@ class _AdvisorContestsListScreenState extends State<AdvisorContestsListScreen> {
                             decoration: BoxDecoration(color: isDark ? Colors.grey[850] : const Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(12)),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: contest.imageUrl.isNotEmpty
-                                  ? Image.network(contest.imageUrl, fit: BoxFit.cover, errorBuilder: (ctx, err, stack) => const Icon(Icons.image_not_supported, color: Colors.grey))
+                              child: contest.titleImageUrl.isNotEmpty
+                                  ? Image.network(contest.titleImageUrl, fit: BoxFit.cover, errorBuilder: (ctx, err, stack) => const Icon(Icons.image_not_supported, color: Colors.grey))
                                   : const Icon(Icons.image, color: Colors.grey, size: 40),
                             ),
                           ),

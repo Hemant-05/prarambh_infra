@@ -12,6 +12,7 @@ class MeetingModel {
   final String createdAt;
   final List<AttendanceRecord> attendanceRecords;
   final String videoUrl;
+  final String imageUrl;
 
   MeetingModel({
     required this.id,
@@ -25,6 +26,7 @@ class MeetingModel {
     required this.createdAt,
     required this.attendanceRecords,
     this.videoUrl = '',
+    this.imageUrl = '',
   });
 
   int get presentCount => attendanceRecords.where((r) => r.isPresent).length;
@@ -92,6 +94,11 @@ class MeetingModel {
         ? rawVideoUrl
         : (rawVideoUrl.isNotEmpty ? baseUrl + (rawVideoUrl.startsWith('/') ? rawVideoUrl.substring(1) : rawVideoUrl) : '');
 
+    String rawImageUrl = json['image'] ?? json['image_url'] ?? '';
+    String finalImageUrl = rawImageUrl.startsWith('http')
+        ? rawImageUrl
+        : (rawImageUrl.isNotEmpty ? baseUrl + (rawImageUrl.startsWith('/') ? rawImageUrl.substring(1) : rawImageUrl) : '');
+
     return MeetingModel(
       id: json['id']?.toString() ?? '',
       title: json['title'] ?? json['meeting_title'] ?? 'Untitled Meeting',
@@ -104,6 +111,7 @@ class MeetingModel {
       createdAt: json['created_at'] ?? '',
       attendanceRecords: records.map((e) => AttendanceRecord.fromJson(e)).toList(),
       videoUrl: finalVideoUrl,
+      imageUrl: finalImageUrl,
     );
   }
 }

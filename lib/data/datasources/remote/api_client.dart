@@ -164,8 +164,8 @@ abstract class ApiClient {
     @Part(name: "developer_name") String developerName,
     @Part(name: "description") String description,
     @Part(name: "rera_number") String reraNumber,
-    @Part(name: "tncp_number") String tncpNumber,
-    @Part(name: "land_owner_name") String landOwnerName,
+    @Part(name: "TNCP") String tncpNumber,
+    @Part(name: "land_owner") String landOwnerName,
     @Part(name: "project_type") String projectType,
     @Part(name: "construction_status") String constructionStatus,
     @Part(name: "full_address") String fullAddress,
@@ -209,8 +209,8 @@ abstract class ApiClient {
     @Part(name: "amenities") String? amenities,
     @Part(name: "budget_range") String? budgetRange,
     @Part(name: "rera_number") String? reraNumber,
-    @Part(name: "tncp_number") String? tncpNumber,
-    @Part(name: "land_owner_name") String? landOwnerName,
+    @Part(name: "TNCP") String? tncpNumber,
+    @Part(name: "land_owner") String? landOwnerName,
     @Part(name: "status") String? status,
     @Part(name: "video_file") File? videoFile,
     @Part(name: "brochure_file") File? brochureFile,
@@ -327,7 +327,7 @@ abstract class ApiClient {
   // ==========================================
   // 8. Lead Management & Priority
   // ==========================================
-  
+
   @MultiPart()
   @POST("/meetings/upload-video")
   Future<dynamic> uploadAttendanceVideo(
@@ -438,11 +438,26 @@ abstract class ApiClient {
   // ==========================================
   // 10. Meetings & Attendance
   // ==========================================
+  @MultiPart()
   @POST("/meetings/add")
-  Future<dynamic> addMeeting(@Body() dynamic body);
+  Future<dynamic> addMeeting(
+    @Part(name: "title") String title,
+    @Part(name: "meeting_date") String meetingDate,
+    @Part(name: "start_time") String startTime,
+    @Part(name: "end_time") String endTime,
+    @Part(name: "image") File? image,
+  );
 
+  @MultiPart()
   @PUT("/meetings/update/{id}")
-  Future<dynamic> updateMeeting(@Path("id") String id, @Body() dynamic body);
+  Future<dynamic> updateMeeting(
+    @Path("id") String id,
+    @Part(name: "title") String? title,
+    @Part(name: "meeting_date") String? meetingDate,
+    @Part(name: "start_time") String? startTime,
+    @Part(name: "end_time") String? endTime,
+    @Part(name: "image") File? image,
+  );
 
   @GET("/meetings")
   Future<dynamic> getAllMeetings();
@@ -493,6 +508,7 @@ abstract class ApiClient {
     @Part(name: "reward_name") String rewardName,
     @Part(name: "rules") String rules,
     @Part(name: "reward_image") File image,
+    @Part(name: "title_image") File titleImage,
   );
 
   @MultiPart()
@@ -506,6 +522,7 @@ abstract class ApiClient {
     @Part(name: "rules") String? rules,
     @Part(name: "status") String? status,
     @Part(name: "reward_image") File? image,
+    @Part(name: "title_image") File? titleImage,
   );
 
   @POST("/contests/join")
@@ -550,12 +567,12 @@ abstract class ApiClient {
   // 13. Dashboards & Analytics
   // ==========================================
   @GET("/admin/sales-analytics")
-  Future<dynamic> getAdminSalesAnalytics();
-
-  @GET("/admin/dashboard")
-  Future<dynamic> getAdminDashboard(
+  Future<dynamic> getAdminSalesAnalytics(
     @Query("project_id") String? projectId,
   );
+
+  @GET("/admin/dashboard")
+  Future<dynamic> getAdminDashboard(@Query("project_id") String? projectId);
 
   @GET("/advisor/app-dashboard")
   Future<dynamic> getAdvisorDashboard(

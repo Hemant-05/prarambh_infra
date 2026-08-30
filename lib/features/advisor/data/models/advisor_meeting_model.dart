@@ -11,6 +11,7 @@ class AdvisorMeetingModel {
   final String? checkOutPhoto;
   final String status; // upcoming | ongoing | completed
   final String videoUrl;
+  final String imageUrl;
 
   AdvisorMeetingModel({
     required this.id,
@@ -25,6 +26,7 @@ class AdvisorMeetingModel {
     this.checkOutPhoto,
     this.status = 'upcoming',
     this.videoUrl = '',
+    this.imageUrl = '',
   });
 
   factory AdvisorMeetingModel.fromJson(Map<String, dynamic> json) {
@@ -111,6 +113,20 @@ class AdvisorMeetingModel {
         ? rawVideoUrl
         : (rawVideoUrl.isNotEmpty ? baseUrl + (rawVideoUrl.startsWith('/') ? rawVideoUrl.substring(1) : rawVideoUrl) : '');
 
+    // Parse image URL
+    String rawImageUrl = '';
+    if (json['image'] != null && json['image'].toString().isNotEmpty) {
+      rawImageUrl = json['image'].toString();
+    } else if (json['image_path'] != null && json['image_path'].toString().isNotEmpty) {
+      rawImageUrl = json['image_path'].toString();
+    } else if (json['image_url'] != null && json['image_url'].toString().isNotEmpty) {
+      rawImageUrl = json['image_url'].toString();
+    }
+    
+    String finalImageUrl = rawImageUrl.startsWith('http')
+        ? rawImageUrl
+        : (rawImageUrl.isNotEmpty ? baseUrl + (rawImageUrl.startsWith('/') ? rawImageUrl.substring(1) : rawImageUrl) : '');
+
     return AdvisorMeetingModel(
       id: json['id']?.toString() ?? '',
       title: json['title'] ?? 'Untitled Meeting',
@@ -124,6 +140,7 @@ class AdvisorMeetingModel {
       checkOutPhoto: cOutPhoto,
       status: calculatedStatus,
       videoUrl: finalVideoUrl,
+      imageUrl: finalImageUrl,
     );
   }
 
@@ -140,6 +157,7 @@ class AdvisorMeetingModel {
     String? checkOutPhoto,
     String? status,
     String? videoUrl,
+    String? imageUrl,
   }) {
     return AdvisorMeetingModel(
       id: id ?? this.id,
@@ -154,6 +172,7 @@ class AdvisorMeetingModel {
       checkOutPhoto: checkOutPhoto ?? this.checkOutPhoto,
       status: status ?? this.status,
       videoUrl: videoUrl ?? this.videoUrl,
+      imageUrl: imageUrl ?? this.imageUrl,
     );
   }
 }

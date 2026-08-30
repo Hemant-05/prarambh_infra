@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../../../../../core/widgets/multi_select_dropdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:image_picker/image_picker.dart';
@@ -26,8 +27,8 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
   int _currentStep = 0;
 
   // State Variables
-  String _projectType = 'Residential';
-  String _constructionStatus = 'Row House';
+  List<String> _selectedProjectTypes = ['Residential'];
+  List<String> _selectedPropertyTypes = ['Row House'];
   String _projectStatus = 'Ongoing';
   bool _reraApproved = false;
   bool _tncpApproved = false;
@@ -43,7 +44,9 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
   final _cityCtrl = TextEditingController();
   final _mapLinkCtrl = TextEditingController();
   final _marketValueCtrl = TextEditingController();
-  final _budgetRangeCtrl = TextEditingController();
+  RangeValues _budgetRange = const RangeValues(1000000, 100000000);
+  final _budgetMinCtrl = TextEditingController(text: '1000000');
+  final _budgetMaxCtrl = TextEditingController(text: '100000000');
   final _rateCtrl = TextEditingController();
   final _buildAreaCtrl = TextEditingController();
   final _totalPlotsCtrl = TextEditingController();
@@ -73,7 +76,20 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       _cityCtrl.text = p.city;
       _mapLinkCtrl.text = p.locationMapUrl;
       _marketValueCtrl.text = p.marketValue.toString();
-      _budgetRangeCtrl.text = p.budgetRange;
+      if (p.budgetRange.isNotEmpty) {
+        final parts = p.budgetRange.split('-');
+        if (parts.length == 2) {
+          final minStr = parts[0].replaceAll(RegExp(r'[^0-9]'), '');
+          final maxStr = parts[1].replaceAll(RegExp(r'[^0-9]'), '');
+          final min = double.tryParse(minStr) ?? 1000000;
+          final max = double.tryParse(maxStr) ?? 100000000;
+          if (min >= 1000000 && max <= 100000000 && min <= max) {
+            _budgetRange = RangeValues(min, max);
+            _budgetMinCtrl.text = min.toInt().toString();
+            _budgetMaxCtrl.text = max.toInt().toString();
+          }
+        }
+      }
       _rateCtrl.text = p.ratePerSqft.toString();
       _buildAreaCtrl.text = p.buildArea;
       _totalPlotsCtrl.text = p.totalPlots.toString();
@@ -90,7 +106,12 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
         'Industrial',
         'Agriculture',
       ];
-      if (validTypes.contains(p.projectType)) _projectType = p.projectType;
+      _selectedProjectTypes = p.projectType
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => validTypes.contains(e))
+          .toList();
+      if (_selectedProjectTypes.isEmpty) _selectedProjectTypes = ['Residential'];
 
       final validPropertyTypes = [
         'Row House',
@@ -107,12 +128,11 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
         'Bungalow',
         'Villa',
       ];
-      String mappedStatus = p.constructionStatus == 'Raw House'
-          ? 'Row House'
-          : p.constructionStatus;
-      if (validPropertyTypes.contains(mappedStatus)) {
-        _constructionStatus = mappedStatus;
-      }
+      _selectedPropertyTypes = p.constructionStatus.split(',').map((e) {
+        String trimmed = e.trim();
+        return trimmed == 'Raw House' ? 'Row House' : trimmed;
+      }).where((e) => validPropertyTypes.contains(e)).toList();
+      if (_selectedPropertyTypes.isEmpty) _selectedPropertyTypes = ['Row House'];
 
       final validProjStatus = ['Completed', 'Ongoing', 'Upcoming'];
       if (validProjStatus.contains(p.status)) _projectStatus = p.status;
@@ -155,7 +175,8 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
     _cityCtrl.dispose();
     _mapLinkCtrl.dispose();
     _marketValueCtrl.dispose();
-    _budgetRangeCtrl.dispose();
+    _budgetMinCtrl.dispose();
+    _budgetMaxCtrl.dispose();
     _rateCtrl.dispose();
     _buildAreaCtrl.dispose();
     _totalPlotsCtrl.dispose();
@@ -311,8 +332,8 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                                     landOwnerName: _landOwnerCtrl.text,
                                     city: _cityCtrl.text,
                                     fullAddress: _addressCtrl.text,
-                                    projectType: _projectType,
-                                    constructionStatus: _constructionStatus,
+                                    projectType: _selectedProjectTypes.join(', '),
+                                    constructionStatus: _selectedPropertyTypes.join(', '),
                                     marketValue: _marketValueCtrl.text,
                                     totalPlots: _totalPlotsCtrl.text,
                                     buildArea: _buildAreaCtrl.text,
@@ -320,7 +341,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                                     tncpNumber: _tncpCtrl.text,
                                     location: _mapLinkCtrl.text,
                                     ratePerSqft: _rateCtrl.text,
-                                    budgetRange: _budgetRangeCtrl.text,
+                                    budgetRange: '${_budgetMinCtrl.text} - ${_budgetMaxCtrl.text}',
                                     description: _descCtrl.text,
                                     amenities: _amenitiesCtrl.text,
                                     specialties: _specialtiesCtrl.text,
@@ -339,8 +360,8 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                                     landOwnerName: _landOwnerCtrl.text,
                                     city: _cityCtrl.text,
                                     fullAddress: _addressCtrl.text,
-                                    projectType: _projectType,
-                                    constructionStatus: _constructionStatus,
+                                    projectType: _selectedProjectTypes.join(', '),
+                                    constructionStatus: _selectedPropertyTypes.join(', '),
                                     marketValue: _marketValueCtrl.text,
                                     totalPlots: _totalPlotsCtrl.text,
                                     buildArea: _buildAreaCtrl.text,
@@ -348,7 +369,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                                     tncpNumber: _tncpCtrl.text,
                                     location: _mapLinkCtrl.text,
                                     ratePerSqft: _rateCtrl.text,
-                                    budgetRange: _budgetRangeCtrl.text,
+                                    budgetRange: '${_budgetMinCtrl.text} - ${_budgetMaxCtrl.text}',
                                     description: _descCtrl.text,
                                     amenities: _amenitiesCtrl.text,
                                     specialties: _specialtiesCtrl.text,
@@ -461,21 +482,21 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
           Row(
             children: [
               Expanded(
-                child: _buildDropdown(
-                  'PROJECT TYPE',
-                  _projectType,
-                  ['Residential', 'Commercial', 'Industrial', 'Agriculture'],
-                  (val) {
-                    if (val != null) setState(() => _projectType = val);
+                child: MultiSelectDropdown(
+                  label: 'PROJECT TYPE',
+                  selectedValues: _selectedProjectTypes,
+                  allItems: const ['Residential', 'Commercial', 'Industrial', 'Agriculture'],
+                  onChanged: (val) {
+                    setState(() => _selectedProjectTypes = val);
                   },
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: _buildDropdown(
-                  'PROPERTY TYPE',
-                  _constructionStatus,
-                  [
+                child: MultiSelectDropdown(
+                  label: 'PROPERTY TYPE',
+                  selectedValues: _selectedPropertyTypes,
+                  allItems: const [
                     'Row House',
                     'Flats',
                     'Plots',
@@ -486,8 +507,8 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                     'Bungalow',
                     'Villa',
                   ],
-                  (val) {
-                    if (val != null) setState(() => _constructionStatus = val);
+                  onChanged: (val) {
+                    setState(() => _selectedPropertyTypes = val);
                   },
                 ),
               ),
@@ -606,33 +627,89 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
               ],
             ),
             const SizedBox(height: 16),
+            _buildTextField(
+              'PRICE/SQFT',
+              _rateCtrl,
+              isNumber: true,
+              validator: (v) => Validators.validateInteger(v, 'PRICE/SQFT'),
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'BUDGET RANGE',
+              style: GoogleFonts.montserrat(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
-                  child: _buildTextField(
-                    'MARKET VALUE (E.G. 4-5 CR)',
-                    _marketValueCtrl,
-                    isNumber: true,
-                    validator: (v) =>
-                        Validators.validateInteger(v, 'MARKET VALUE'),
+                  child: TextField(
+                    controller: _budgetMinCtrl,
+                    keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: InputDecoration(
+                      labelText: 'Min Value',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      isDense: true,
+                    ),
+                    onChanged: (val) {
+                      final min = double.tryParse(val) ?? 1000000;
+                      setState(() {
+                        _budgetRange = RangeValues(
+                          min.clamp(1000000, _budgetRange.end),
+                          _budgetRange.end,
+                        );
+                      });
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildTextField(
-                    'PRICE/SQFT',
-                    _rateCtrl,
-                    isNumber: true,
-                    validator: (v) =>
-                        Validators.validateInteger(v, 'PRICE/SQFT'),
+                  child: TextField(
+                    controller: _budgetMaxCtrl,
+                    keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: InputDecoration(
+                      labelText: 'Max Value',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      isDense: true,
+                    ),
+                    onChanged: (val) {
+                      final max = double.tryParse(val) ?? 100000000;
+                      setState(() {
+                        _budgetRange = RangeValues(
+                          _budgetRange.start,
+                          max.clamp(_budgetRange.start, 100000000),
+                        );
+                      });
+                    },
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            _buildTextField('BUDGET RANGE (E.G. 50L - 1CR)', _budgetRangeCtrl),
+            RangeSlider(
+              values: _budgetRange,
+              min: 1000000,
+              max: 100000000,
+              divisions: 990,
+              labels: RangeLabels(
+                _budgetRange.start.toInt().toString(),
+                _budgetRange.end.toInt().toString(),
+              ),
+              onChanged: (RangeValues values) {
+                setState(() {
+                  _budgetRange = values;
+                  _budgetMinCtrl.text = values.start.toInt().toString();
+                  _budgetMaxCtrl.text = values.end.toInt().toString();
+                });
+              },
+            ),
             const SizedBox(height: 16),
             _buildTextField('AMENITIES (COMMA SEPARATED)', _amenitiesCtrl),
             const SizedBox(height: 16),

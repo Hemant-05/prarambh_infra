@@ -2,6 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class UIHelper {
+  static String formatIndianCurrency(String valueStr) {
+    if (valueStr.isEmpty) return valueStr;
+    double? value = double.tryParse(valueStr.replaceAll(RegExp(r'[^0-9.]'), ''));
+    if (value == null || value == 0) return '0';
+
+    if (value >= 10000000) {
+      double cr = value / 10000000;
+      return '${cr.toStringAsFixed(cr.truncateToDouble() == cr ? 0 : 2)} Cr';
+    } else if (value >= 100000) {
+      double l = value / 100000;
+      return '${l.toStringAsFixed(l.truncateToDouble() == l ? 0 : 2)} L';
+    } else if (value >= 1000) {
+      double k = value / 1000;
+      return '${k.toStringAsFixed(k.truncateToDouble() == k ? 0 : 2)} K';
+    } else {
+      return value.toStringAsFixed(value.truncateToDouble() == value ? 0 : 2);
+    }
+  }
   static void showError(BuildContext context, String message) {
     if (message.isEmpty) return;
     

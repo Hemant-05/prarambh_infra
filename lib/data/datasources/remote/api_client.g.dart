@@ -712,8 +712,8 @@ class _ApiClient implements ApiClient {
     _data.fields.add(MapEntry('developer_name', developerName));
     _data.fields.add(MapEntry('description', description));
     _data.fields.add(MapEntry('rera_number', reraNumber));
-    _data.fields.add(MapEntry('tncp_number', tncpNumber));
-    _data.fields.add(MapEntry('land_owner_name', landOwnerName));
+    _data.fields.add(MapEntry('TNCP', tncpNumber));
+    _data.fields.add(MapEntry('land_owner', landOwnerName));
     _data.fields.add(MapEntry('project_type', projectType));
     _data.fields.add(MapEntry('construction_status', constructionStatus));
     _data.fields.add(MapEntry('full_address', fullAddress));
@@ -901,10 +901,10 @@ class _ApiClient implements ApiClient {
       _data.fields.add(MapEntry('rera_number', reraNumber));
     }
     if (tncpNumber != null) {
-      _data.fields.add(MapEntry('tncp_number', tncpNumber));
+      _data.fields.add(MapEntry('TNCP', tncpNumber));
     }
     if (landOwnerName != null) {
-      _data.fields.add(MapEntry('land_owner_name', landOwnerName));
+      _data.fields.add(MapEntry('land_owner', landOwnerName));
     }
     if (status != null) {
       _data.fields.add(MapEntry('status', status));
@@ -2108,13 +2108,40 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> addMeeting(dynamic body) async {
+  Future<dynamic> addMeeting(
+    String title,
+    String meetingDate,
+    String startTime,
+    String endTime,
+    File? image,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
-    final _data = body;
+    final _data = FormData();
+    _data.fields.add(MapEntry('title', title));
+    _data.fields.add(MapEntry('meeting_date', meetingDate));
+    _data.fields.add(MapEntry('start_time', startTime));
+    _data.fields.add(MapEntry('end_time', endTime));
+    if (image != null) {
+      _data.files.add(
+        MapEntry(
+          'image',
+          MultipartFile.fromFileSync(
+            image.path,
+            filename: image.path.split(Platform.pathSeparator).last,
+          ),
+        ),
+      );
+    }
     final _options = _setStreamType<dynamic>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
+      Options(
+            method: 'POST',
+            headers: _headers,
+            extra: _extra,
+            contentType: 'multipart/form-data',
+          )
           .compose(
             _dio.options,
             '/meetings/add',
@@ -2129,13 +2156,49 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> updateMeeting(String id, dynamic body) async {
+  Future<dynamic> updateMeeting(
+    String id,
+    String? title,
+    String? meetingDate,
+    String? startTime,
+    String? endTime,
+    File? image,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
-    final _data = body;
+    final _data = FormData();
+    if (title != null) {
+      _data.fields.add(MapEntry('title', title));
+    }
+    if (meetingDate != null) {
+      _data.fields.add(MapEntry('meeting_date', meetingDate));
+    }
+    if (startTime != null) {
+      _data.fields.add(MapEntry('start_time', startTime));
+    }
+    if (endTime != null) {
+      _data.fields.add(MapEntry('end_time', endTime));
+    }
+    if (image != null) {
+      _data.files.add(
+        MapEntry(
+          'image',
+          MultipartFile.fromFileSync(
+            image.path,
+            filename: image.path.split(Platform.pathSeparator).last,
+          ),
+        ),
+      );
+    }
     final _options = _setStreamType<dynamic>(
-      Options(method: 'PUT', headers: _headers, extra: _extra)
+      Options(
+            method: 'PUT',
+            headers: _headers,
+            extra: _extra,
+            contentType: 'multipart/form-data',
+          )
           .compose(
             _dio.options,
             '/meetings/update/${id}',
@@ -2369,6 +2432,7 @@ class _ApiClient implements ApiClient {
     String rewardName,
     String rules,
     File image,
+    File titleImage,
   ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
@@ -2385,6 +2449,15 @@ class _ApiClient implements ApiClient {
         MultipartFile.fromFileSync(
           image.path,
           filename: image.path.split(Platform.pathSeparator).last,
+        ),
+      ),
+    );
+    _data.files.add(
+      MapEntry(
+        'title_image',
+        MultipartFile.fromFileSync(
+          titleImage.path,
+          filename: titleImage.path.split(Platform.pathSeparator).last,
         ),
       ),
     );
@@ -2418,6 +2491,7 @@ class _ApiClient implements ApiClient {
     String? rules,
     String? status,
     File? image,
+    File? titleImage,
   ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
@@ -2449,6 +2523,17 @@ class _ApiClient implements ApiClient {
           MultipartFile.fromFileSync(
             image.path,
             filename: image.path.split(Platform.pathSeparator).last,
+          ),
+        ),
+      );
+    }
+    if (titleImage != null) {
+      _data.files.add(
+        MapEntry(
+          'title_image',
+          MultipartFile.fromFileSync(
+            titleImage.path,
+            filename: titleImage.path.split(Platform.pathSeparator).last,
           ),
         ),
       );
@@ -2685,9 +2770,10 @@ class _ApiClient implements ApiClient {
   }
 
   @override
-  Future<dynamic> getAdminSalesAnalytics() async {
+  Future<dynamic> getAdminSalesAnalytics(String? projectId) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'project_id': projectId};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<dynamic>(

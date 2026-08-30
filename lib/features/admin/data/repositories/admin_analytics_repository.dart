@@ -6,10 +6,12 @@ class AdminAnalyticsRepository {
 
   AdminAnalyticsRepository({required this.apiClient});
 
-  Future<SalesAnalyticsModel> getSalesAnalytics() async {
+  Future<SalesAnalyticsModel> getSalesAnalytics({String? projectId}) async {
     try {
-      final dynamic response = await apiClient.getAdminSalesAnalytics();
-      
+      final dynamic response = await apiClient.getAdminSalesAnalytics(
+        projectId,
+      );
+
       if (response is! Map<String, dynamic>) {
         throw Exception('Invalid response format: Expected a JSON object');
       }

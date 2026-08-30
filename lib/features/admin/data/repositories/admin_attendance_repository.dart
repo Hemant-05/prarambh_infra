@@ -6,9 +6,15 @@ class AdminAttendanceRepository {
   final ApiClient apiClient;
   AdminAttendanceRepository({required this.apiClient});
 
-  Future<String?> addMeeting(Map<String, dynamic> data) async {
+  Future<String?> addMeeting(Map<String, dynamic> data, {File? image}) async {
     try {
-      final response = await apiClient.addMeeting(data);
+      final response = await apiClient.addMeeting(
+        data['title'] ?? '',
+        data['meeting_date'] ?? '',
+        data['start_time'] ?? '',
+        data['end_time'] ?? '',
+        image,
+      );
       if (response['status'] == true) {
         return response['data']?['id']?.toString();
       }
@@ -36,9 +42,16 @@ class AdminAttendanceRepository {
     } catch (e) { rethrow; }
   }
 
-  Future<bool> updateMeeting(String id, Map<String, dynamic> data) async {
+  Future<bool> updateMeeting(String id, Map<String, dynamic> data, {File? image}) async {
     try {
-      final response = await apiClient.updateMeeting(id, data);
+      final response = await apiClient.updateMeeting(
+        id,
+        data['title'],
+        data['meeting_date'],
+        data['start_time'],
+        data['end_time'],
+        image,
+      );
       return response['status'];
     } catch (e) { rethrow; }
   }

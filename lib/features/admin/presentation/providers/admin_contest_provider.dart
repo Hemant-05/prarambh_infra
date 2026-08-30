@@ -30,12 +30,14 @@ class AdminContestProvider extends ChangeNotifier {
   Future<String?> createContest({
     required String title, required String startDate, required String endDate,
     required String rewardName, required String rules, required File rewardImage,
+    required File titleImage,
   }) async {
     _isSaving = true; notifyListeners();
     try {
       final id = await repository.addContest(
         title: title, startDate: startDate, endDate: endDate,
         rewardName: rewardName, rules: rules, rewardImage: rewardImage,
+        titleImage: titleImage,
       );
       if (id != null) await fetchContests();
       return id;
@@ -64,6 +66,7 @@ class AdminContestProvider extends ChangeNotifier {
     String? rules,
     String? status,
     File? rewardImage,
+    File? titleImage,
   }) async {
     _isSaving = true; notifyListeners();
     try {
@@ -76,6 +79,7 @@ class AdminContestProvider extends ChangeNotifier {
         rules: rules,
         status: status,
         rewardImage: rewardImage,
+        titleImage: titleImage,
       );
       if (success) await fetchContests();
       return success;

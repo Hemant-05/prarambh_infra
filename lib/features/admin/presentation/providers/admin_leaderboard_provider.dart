@@ -15,7 +15,7 @@ class AdminLeaderboardProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool _isSaving = false;
   String _currentTab = 'Sales Volume';
-  
+
   late int _selectedMonth;
   late int _selectedYear;
 
@@ -59,21 +59,24 @@ class AdminLeaderboardProvider extends ChangeNotifier {
       );
 
       _advisors = rawAdvisors
-          .where((a) =>
-              a.advisorCode.toLowerCase() != 'admin001' &&
-              a.designation.toLowerCase() != 'admin')
+          .where(
+            (a) =>
+                a.advisorCode.toLowerCase() != 'admin001' &&
+                a.designation.toLowerCase() != 'admin',
+          )
           .toList();
-      
+
       // Sort based on tab if needed, but usually the API rank is sufficient.
       // If we want to re-sort locally:
       if (_currentTab == 'Sales Volume') {
         _advisors.sort((a, b) => b.totalRevenue.compareTo(a.totalRevenue));
       } else if (_currentTab == 'Recruitment') {
         _advisors.sort((a, b) => b.teamSize.compareTo(a.teamSize));
-      } else if (_currentTab == 'Attendance') {
-        _advisors.sort((a, b) => b.attendancePercentage.compareTo(a.attendancePercentage));
+      } else if (_currentTab == 'Site Visits') {
+        _advisors.sort(
+          (a, b) => b.siteVisits.compareTo(a.siteVisits),
+        );
       }
-      
     } catch (e) {
       debugPrint('Fetch Leaderboard Error: $e');
       _advisors = [];
@@ -84,7 +87,8 @@ class AdminLeaderboardProvider extends ChangeNotifier {
   }
 
   Future<bool> evaluateLevel(String advisorId) async {
-    _isSaving = true; notifyListeners();
+    _isSaving = true;
+    notifyListeners();
     try {
       final success = await repository.evaluateLevel(advisorId);
       if (success) await fetchLeaderboard();
@@ -93,7 +97,8 @@ class AdminLeaderboardProvider extends ChangeNotifier {
       debugPrint('Evaluate Level Error: $e');
       return false;
     } finally {
-      _isSaving = false; notifyListeners();
+      _isSaving = false;
+      notifyListeners();
     }
   }
 }

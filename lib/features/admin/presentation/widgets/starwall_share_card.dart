@@ -19,7 +19,7 @@ class StarwallShareCard extends StatelessWidget {
     } else if (categoryTitle.toLowerCase().contains('recruitment')) {
       return '${adv.teamSize} TEAM';
     } else {
-      return '${adv.attendancePercentage.toStringAsFixed(0)}% ATT.';
+      return '${adv.siteVisits} VISITS';
     }
   }
 

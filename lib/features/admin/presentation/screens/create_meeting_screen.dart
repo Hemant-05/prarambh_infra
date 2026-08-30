@@ -28,6 +28,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
   TimeOfDay? _selectedStartTime;
   TimeOfDay? _selectedEndTime;
   File? _selectedVideo;
+  File? _selectedImage;
 
   @override
   void initState() {
@@ -68,6 +69,17 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
     if (result != null && result.files.single.path != null) {
       setState(() {
         _selectedVideo = File(result.files.single.path!);
+      });
+    }
+  }
+
+  Future<void> _pickImage() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+    );
+    if (result != null && result.files.single.path != null) {
+      setState(() {
+        _selectedImage = File(result.files.single.path!);
       });
     }
   }
@@ -168,7 +180,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
     
     if (widget.existingMeeting != null) {
       // UPDATE MEETING
-      final success = await provider.updateMeeting(widget.existingMeeting!.id, data);
+      final success = await provider.updateMeeting(widget.existingMeeting!.id, data, image: _selectedImage);
       if (!mounted) return;
       if (success) {
         _showSnack('Meeting updated successfully!');
@@ -182,7 +194,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
       }
     } else {
       // CREATE MEETING
-      final meetingId = await provider.addMeeting(data);
+      final meetingId = await provider.addMeeting(data, image: _selectedImage);
       if (!mounted) return;
       if (meetingId != null) {
         _showSnack('Meeting created successfully!');
@@ -367,6 +379,69 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                     ),
                     const SizedBox(height: 16),
                     
+                    _label('MEETING IMAGE (OPTIONAL)'),
+                    if (isEdit && _selectedImage == null && widget.existingMeeting!.imageUrl.isNotEmpty) ...[
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        height: 180,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          image: DecorationImage(
+                            image: NetworkImage(widget.existingMeeting!.imageUrl),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (_selectedImage != null) ...[
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        height: 180,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          image: DecorationImage(
+                            image: FileImage(_selectedImage!),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ],
+                    GestureDetector(
+                      onTap: _pickImage,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.grey[800] : Colors.grey[100],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.image_outlined, color: primaryBlue, size: 20),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _selectedImage != null
+                                    ? _selectedImage!.path.split('/').last.split('\\').last
+                                    : (isEdit && widget.existingMeeting!.imageUrl.isNotEmpty
+                                        ? 'Change Meeting Image'
+                                        : 'Upload Meeting Image'),
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 14,
+                                  color: isDark ? Colors.white70 : Colors.black87,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
                     _label('ATTENDANCE VIDEO (OPTIONAL)'),
                     if (isEdit && _selectedVideo == null && widget.existingMeeting!.videoUrl.isNotEmpty) ...[
                       Container(

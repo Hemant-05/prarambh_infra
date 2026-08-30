@@ -32,9 +32,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
   Future<void> _shareStarwall(AdminLeaderboardProvider provider) async {
     if (provider.allAdvisors.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No advisors to share')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No advisors to share')));
       return;
     }
 
@@ -56,15 +56,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       final file = File(imagePath);
       await file.writeAsBytes(imageBytes);
 
-      await Share.shareXFiles(
-        [XFile(imagePath)],
-        text: 'Top 10 Advisors - ${provider.currentTab}',
-      );
+      await Share.shareXFiles([
+        XFile(imagePath),
+      ], text: 'Top 10 Advisors - ${provider.currentTab}');
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to share: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to share: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSharing = false);
@@ -146,7 +145,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   children: [
                     _buildTab('Sales Volume', provider, primaryBlue, isDark),
                     _buildTab('Recruitment', provider, primaryBlue, isDark),
-                    _buildTab('Attendance', provider, primaryBlue, isDark),
+                    _buildTab('Site Visits', provider, primaryBlue, isDark),
                   ],
                 ),
               ),
@@ -252,15 +251,26 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             const SizedBox(height: 16),
 
                             // Remaining List
-                            if (provider.remainingAdvisors.isEmpty && provider.topThree.length < 4)
-                               Center(child: Padding(
-                                 padding: const EdgeInsets.only(top: 40),
-                                 child: Text("No more advisors", style: TextStyle(color: Colors.grey[600])),
-                               ))
+                            if (provider.remainingAdvisors.isEmpty &&
+                                provider.topThree.length < 4)
+                              Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 40),
+                                  child: Text(
+                                    "No more advisors",
+                                    style: TextStyle(color: Colors.grey[600]),
+                                  ),
+                                ),
+                              )
                             else
                               ...provider.remainingAdvisors.map(
-                                (advisor) =>
-                                    _buildListItem(advisor, primaryBlue, isDark, provider.currentTab, provider.allAdvisors.first),
+                                (advisor) => _buildListItem(
+                                  advisor,
+                                  primaryBlue,
+                                  isDark,
+                                  provider.currentTab,
+                                  provider.allAdvisors.first,
+                                ),
                               ),
                           ],
                         ),
@@ -315,7 +325,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }) {
     final double avatarSize = isCenter ? 42 : 32;
     final textColor = isDark ? Colors.white : Colors.black87;
-    
+
     String mainValue = "";
     String trendValue = "";
     if (currentTab == 'Sales Volume') {
@@ -325,8 +335,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       mainValue = "${advisor.teamSize}";
       trendValue = "Members";
     } else {
-      mainValue = "${advisor.attendancePercentage.toStringAsFixed(0)}%";
-      trendValue = "Attendance";
+      mainValue = "${advisor.siteVisits}";
+      trendValue = "Site Visits";
     }
 
     return Column(
@@ -340,7 +350,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isCenter ? Colors.amber : (rank == 2 ? Colors.grey.shade400 : Colors.brown.shade300),
+                  color: isCenter
+                      ? Colors.amber
+                      : (rank == 2
+                            ? Colors.grey.shade400
+                            : Colors.brown.shade300),
                   width: isCenter ? 3 : 2,
                 ),
                 boxShadow: [
@@ -348,7 +362,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     color: primaryBlue.withOpacity(0.1),
                     blurRadius: 10,
                     spreadRadius: 2,
-                  )
+                  ),
                 ],
               ),
               child: InkWell(
@@ -370,8 +384,18 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   child: CircleAvatar(
                     radius: avatarSize,
                     backgroundColor: Colors.white,
-                    backgroundImage: advisor.profilePhoto != null ? NetworkImage(advisor.avatarUrl) : null,
-                    child: advisor.profilePhoto == null ? Text(advisor.fullName[0].toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)) : null,
+                    backgroundImage: advisor.profilePhoto != null
+                        ? NetworkImage(advisor.avatarUrl)
+                        : null,
+                    child: advisor.profilePhoto == null
+                        ? Text(
+                            advisor.fullName[0].toUpperCase(),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                            ),
+                          )
+                        : null,
                   ),
                 ),
               ),
@@ -439,23 +463,29 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   ) {
     final cardColor = isDark ? Colors.grey[900] : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
-    
+
     double progress = 0;
     String statusLabel = "";
     String secondaryLabel = "";
-    
+
     if (currentTab == 'Sales Volume') {
-      progress = topAdvisor.totalRevenue > 0 ? (advisor.totalRevenue / topAdvisor.totalRevenue) : 0;
+      progress = topAdvisor.totalRevenue > 0
+          ? (advisor.totalRevenue / topAdvisor.totalRevenue)
+          : 0;
       statusLabel = advisor.formattedRevenue;
       secondaryLabel = "${advisor.totalDeals} Deals";
     } else if (currentTab == 'Recruitment') {
-      progress = topAdvisor.teamSize > 0 ? (advisor.teamSize / topAdvisor.teamSize) : 0;
+      progress = topAdvisor.teamSize > 0
+          ? (advisor.teamSize / topAdvisor.teamSize)
+          : 0;
       statusLabel = "${advisor.teamSize}";
       secondaryLabel = "Members";
     } else {
-      progress = (advisor.attendancePercentage / 100);
-      statusLabel = "${advisor.attendancePercentage.toStringAsFixed(0)}%";
-      secondaryLabel = "Attendance";
+      progress = topAdvisor.siteVisits > 0
+          ? (advisor.siteVisits / topAdvisor.siteVisits)
+          : 0;
+      statusLabel = "${advisor.siteVisits}";
+      secondaryLabel = "Site Visits";
     }
 
     return Container(
@@ -507,8 +537,15 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               child: CircleAvatar(
                 radius: 20,
                 backgroundColor: Colors.grey[200],
-                backgroundImage: advisor.profilePhoto != null ? NetworkImage(advisor.avatarUrl) : null,
-                child: advisor.profilePhoto == null ? Text(advisor.fullName[0].toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold)) : null,
+                backgroundImage: advisor.profilePhoto != null
+                    ? NetworkImage(advisor.avatarUrl)
+                    : null,
+                child: advisor.profilePhoto == null
+                    ? Text(
+                        advisor.fullName[0].toUpperCase(),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      )
+                    : null,
               ),
             ),
           ),
@@ -578,7 +615,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     );
   }
 
-  void _showDateFilter(BuildContext context, AdminLeaderboardProvider provider) {
+  void _showDateFilter(
+    BuildContext context,
+    AdminLeaderboardProvider provider,
+  ) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -604,8 +644,17 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   Expanded(
                     child: DropdownButtonFormField<int>(
                       initialValue: provider.selectedMonth,
-                      decoration: const InputDecoration(labelText: "Month", border: OutlineInputBorder()),
-                      items: List.generate(12, (i) => DropdownMenuItem(value: i + 1, child: Text(_getMonthName(i + 1)))),
+                      decoration: const InputDecoration(
+                        labelText: "Month",
+                        border: OutlineInputBorder(),
+                      ),
+                      items: List.generate(
+                        12,
+                        (i) => DropdownMenuItem(
+                          value: i + 1,
+                          child: Text(_getMonthName(i + 1)),
+                        ),
+                      ),
                       onChanged: (val) {
                         provider.setTimeframe(val!, provider.selectedYear);
                         Navigator.pop(context);
@@ -616,8 +665,17 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   Expanded(
                     child: DropdownButtonFormField<int>(
                       initialValue: provider.selectedYear,
-                      decoration: const InputDecoration(labelText: "Year", border: OutlineInputBorder()),
-                      items: List.generate(3, (i) => DropdownMenuItem(value: 2024 + i, child: Text((2024 + i).toString()))),
+                      decoration: const InputDecoration(
+                        labelText: "Year",
+                        border: OutlineInputBorder(),
+                      ),
+                      items: List.generate(
+                        3,
+                        (i) => DropdownMenuItem(
+                          value: 2024 + i,
+                          child: Text((2024 + i).toString()),
+                        ),
+                      ),
                       onChanged: (val) {
                         provider.setTimeframe(provider.selectedMonth, val!);
                         Navigator.pop(context);
@@ -635,7 +693,20 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }
 
   String _getMonthName(int month) {
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     return months[month - 1];
   }
 }

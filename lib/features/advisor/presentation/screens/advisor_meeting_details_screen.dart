@@ -57,6 +57,7 @@ class _AdvisorMeetingDetailsScreenState
               width: double.infinity,
               child: _MeetingMediaCarousel(
                 videoUrl: widget.meeting.videoUrl,
+                imageUrl: widget.meeting.imageUrl,
               ),
             ),
           ),
@@ -484,8 +485,9 @@ class _MeetingVideoPlayerState extends State<_MeetingVideoPlayer> {
 
 class _MeetingMediaCarousel extends StatefulWidget {
   final String videoUrl;
+  final String imageUrl;
 
-  const _MeetingMediaCarousel({required this.videoUrl});
+  const _MeetingMediaCarousel({required this.videoUrl, required this.imageUrl});
 
   @override
   State<_MeetingMediaCarousel> createState() => _MeetingMediaCarouselState();
@@ -504,11 +506,29 @@ class _MeetingMediaCarouselState extends State<_MeetingMediaCarousel> {
   @override
   Widget build(BuildContext context) {
     List<Widget> mediaWidgets = [];
+    
+    if (widget.imageUrl.isNotEmpty) {
+      mediaWidgets.add(
+        Image.network(
+          widget.imageUrl,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          errorBuilder: (_, __, ___) => Container(
+            color: Colors.black,
+            child: Icon(
+              Icons.image_not_supported_outlined,
+              size: 64,
+              color: Colors.grey[600],
+            ),
+          ),
+        ),
+      );
+    }
+    
     if (widget.videoUrl.isNotEmpty) {
       mediaWidgets.add(_MeetingVideoPlayer(videoUrl: widget.videoUrl));
     }
 
-    // As Meeting might not have a banner image unlike Contest, we skip it or add placeholder if both empty.
     if (mediaWidgets.isEmpty) {
       return Container(
         color: Colors.black,
@@ -522,7 +542,7 @@ class _MeetingMediaCarouselState extends State<_MeetingMediaCarousel> {
             ),
             const SizedBox(height: 16),
             Text(
-              'No meeting video available',
+              'No meeting media available',
               style: GoogleFonts.montserrat(
                 color: Colors.grey[500],
                 fontSize: 14,

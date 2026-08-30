@@ -22,7 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _advisorCodeController = TextEditingController();
 
-  String _loginType = 'User';
+  final String _loginType = 'Advisor';
   bool _isPasswordVisible = false;
 
   @override
@@ -53,14 +53,13 @@ class _LoginScreenState extends State<LoginScreen> {
     if (success && mounted) {
       UIHelper.showSuccess(context, 'Welcome back');
       final userRole = authProvider.currentUser?.role;
-      print('------------------- $userRole');
 
       if (userRole == 'Admin') {
         Navigator.pushReplacementNamed(context, '/admin_dashboard');
       } else if (userRole == 'Advisor') {
         Navigator.pushReplacementNamed(context, '/advisor_dashboard');
       } else {
-        Navigator.pushReplacementNamed(context, '/client_dashboard');
+        // Navigator.pushReplacementNamed(context, '/client_dashboard');
       }
     } else if (mounted) {
       UIHelper.showError(context, authProvider.errorMessage ?? 'Login failed');
@@ -108,42 +107,42 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Radio<String>(
-                                value: 'User',
-                                groupValue: _loginType,
-                                activeColor: primaryBlue,
-                                onChanged: (value) =>
-                                    setState(() => _loginType = value!),
-                              ),
-                              Text(
-                                'CUSTOMER',
-                                style: GoogleFonts.montserrat(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                  color: textColor,
-                                ),
-                              ),
-                              const SizedBox(width: 20),
-                              Radio<String>(
-                                value: 'Advisor',
-                                groupValue: _loginType,
-                                activeColor: primaryBlue,
-                                onChanged: (value) =>
-                                    setState(() => _loginType = value!),
-                              ),
-                              Text(
-                                'ADVISOR',
-                                style: GoogleFonts.montserrat(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                  color: textColor,
-                                ),
-                              ),
-                            ],
-                          ),
+                          // Row(
+                          //   mainAxisAlignment: MainAxisAlignment.center,
+                          //   children: [
+                          //     Radio<String>(
+                          //       value: 'User',
+                          //       groupValue: _loginType,
+                          //       activeColor: primaryBlue,
+                          //       onChanged: (value) =>
+                          //           setState(() => _loginType = value!),
+                          //     ),
+                          //     Text(
+                          //       'CUSTOMER',
+                          //       style: GoogleFonts.montserrat(
+                          //         fontWeight: FontWeight.w600,
+                          //         fontSize: 13,
+                          //         color: textColor,
+                          //       ),
+                          //     ),
+                          //     const SizedBox(width: 20),
+                          //     Radio<String>(
+                          //       value: 'Advisor',
+                          //       groupValue: _loginType,
+                          //       activeColor: primaryBlue,
+                          //       onChanged: (value) =>
+                          //           setState(() => _loginType = value!),
+                          //     ),
+                          //     Text(
+                          //       'ADVISOR',
+                          //       style: GoogleFonts.montserrat(
+                          //         fontWeight: FontWeight.w600,
+                          //         fontSize: 13,
+                          //         color: textColor,
+                          //       ),
+                          //     ),
+                          //   ],
+                          // ),
                           const SizedBox(height: 16),
 
                           if (_loginType == 'Advisor') ...[
@@ -230,28 +229,28 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                           ),
                           const SizedBox(height: 24),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "DON'T HAVE AN ACCOUNT ? ",
-                                style: GoogleFonts.montserrat(fontSize: 12, color: textColor),
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.pushNamed(context, '/register');
-                                },
-                                child: Text(
-                                  'CREATE ACCOUNT',
-                                  style: GoogleFonts.montserrat(
-                                    color: primaryBlue,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                          // Row(
+                          //   mainAxisAlignment: MainAxisAlignment.center,
+                          //   children: [
+                          //     Text(
+                          //       "DON'T HAVE AN ACCOUNT ? ",
+                          //       style: GoogleFonts.montserrat(fontSize: 12, color: textColor),
+                          //     ),
+                          //     GestureDetector(
+                          //       onTap: () {
+                          //         Navigator.pushNamed(context, '/register');
+                          //       },
+                          //       child: Text(
+                          //         'CREATE ACCOUNT',
+                          //         style: GoogleFonts.montserrat(
+                          //           color: primaryBlue,
+                          //           fontWeight: FontWeight.bold,
+                          //           fontSize: 12,
+                          //         ),
+                          //       ),
+                          //     ),
+                          //   ],
+                          // ),
                         ],
                       ),
                     ),

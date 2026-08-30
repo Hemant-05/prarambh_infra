@@ -684,7 +684,7 @@ class _AdminDealsScreenState extends State<AdminDealsScreen> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        "DEAL #${deal.id}",
+                        "BOOKING #${deal.id}",
                         style: GoogleFonts.montserrat(
                           fontSize: 9,
                           fontWeight: FontWeight.bold,

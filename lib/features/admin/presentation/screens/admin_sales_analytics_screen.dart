@@ -9,6 +9,8 @@ import 'admin_deals_screen.dart';
 import 'advisor_profile_screen.dart';
 import 'lead_management_screen.dart';
 import '../widgets/admin_add_lead_dialog.dart';
+import '../providers/admin_project_provider.dart';
+import '../../data/models/project_model.dart';
 
 class AdminSalesAnalyticsScreen extends StatefulWidget {
   const AdminSalesAnalyticsScreen({super.key});
@@ -18,11 +20,17 @@ class AdminSalesAnalyticsScreen extends StatefulWidget {
 }
 
 class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
+  String? _selectedProjectId;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AdminAnalyticsProvider>().fetchSalesAnalytics();
+      final projProvider = context.read<AdminProjectProvider>();
+      if (projProvider.projects.isEmpty) {
+        projProvider.fetchProjects();
+      }
     });
   }
 
@@ -51,17 +59,24 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
-            onPressed: () => provider.fetchSalesAnalytics(),
+            onPressed: () => provider.fetchSalesAnalytics(projectId: _selectedProjectId),
           ),
         ],
       ),
-      body: provider.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : provider.errorMessage != null
-              ? _buildErrorView(provider.errorMessage!)
-              : provider.analyticsData == null
-                  ? const Center(child: Text("No analytics data available"))
-                  : _buildMainContent(context, provider.analyticsData!),
+      body: Column(
+        children: [
+          _buildProjectDropdown(context),
+          Expanded(
+            child: provider.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : provider.errorMessage != null
+                    ? _buildErrorView(provider.errorMessage!)
+                    : provider.analyticsData == null
+                        ? const Center(child: Text("No analytics data available"))
+                        : _buildMainContent(context, provider.analyticsData!),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'admin_sales_analytics_add_lead_fab',
         onPressed: () {
@@ -88,6 +103,64 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
     );
   }
 
+  Widget _buildProjectDropdown(BuildContext context) {
+    final projectProvider = context.watch<AdminProjectProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? Theme.of(context).cardColor : Colors.white,
+        border: Border(bottom: BorderSide(color: AppColors.getBorderColor(context))),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.business_outlined, color: AppColors.getPrimaryBlue(context)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _selectedProjectId,
+                isExpanded: true,
+                hint: Text(
+                  'All Projects',
+                  style: GoogleFonts.montserrat(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.getTextColor(context),
+                  ),
+                ),
+                icon: const Icon(Icons.arrow_drop_down),
+                items: [
+                  DropdownMenuItem<String>(
+                    value: null,
+                    child: Text('All Projects', style: GoogleFonts.montserrat(fontWeight: FontWeight.w600)),
+                  ),
+                  ...projectProvider.projects.map((project) {
+                    return DropdownMenuItem<String>(
+                      value: project.id.toString(),
+                      child: Text(
+                        project.projectName,
+                        style: GoogleFonts.montserrat(fontWeight: FontWeight.w500),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }),
+                ],
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedProjectId = newValue;
+                  });
+                  context.read<AdminAnalyticsProvider>().fetchSalesAnalytics(projectId: newValue);
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildErrorView(String message) {
     return Center(
       child: Column(
@@ -98,8 +171,8 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
           Text(message, textAlign: TextAlign.center),
           const SizedBox(height: 24),
           ElevatedButton(
-            onPressed: () => context.read<AdminAnalyticsProvider>().fetchSalesAnalytics(),
-            child: const Text("Retry"),
+            onPressed: () => context.read<AdminAnalyticsProvider>().fetchSalesAnalytics(projectId: _selectedProjectId),
+            child: const Text('Retry'),
           )
         ],
       ),
@@ -122,11 +195,12 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
           _buildSectionHeader("BOOKINGS BY PROJECT"),
           const SizedBox(height: 16),
           _buildProjectPieChart(data.pieChartProjects),
-          const SizedBox(height: 30),
-          _buildSectionHeader("SALES OVERVIEW"),
-          const SizedBox(height: 16),
-          _buildLeadFunnel(data.funnelChartLeads),
-          const SizedBox(height: 30),
+          if (data.funnelChartLeads.isNotEmpty && data.funnelChartLeads.any((e) => e.count > 0)) ...[
+            _buildSectionHeader("SALES OVERVIEW"),
+            const SizedBox(height: 16),
+            _buildLeadFunnel(data.funnelChartLeads),
+            const SizedBox(height: 30),
+          ],
           _buildSectionHeader("TOP PERFORMERS"),
           const SizedBox(height: 16),
           _buildTopAdvisorsList(data.topAdvisors),
@@ -468,8 +542,10 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
         border: Border.all(color: AppColors.getBorderColor(context)),
       ),
       child: Column(
-        children: data.where((item) => item.stage.toLowerCase() != 'dead').map((item) {
-          double widthFactor = (item.count / data.where((e) => e.stage.toLowerCase() != 'dead').map((e) => e.count).fold(0, (a, b) => a > b ? a : b));
+        children: data.map((item) {
+          double maxCount = data.isEmpty ? 1 : data.map((e) => e.count).reduce((a, b) => a > b ? a : b).toDouble();
+          if (maxCount == 0) maxCount = 1;
+          double widthFactor = item.count / maxCount;
           
           return GestureDetector(
             onTap: () {

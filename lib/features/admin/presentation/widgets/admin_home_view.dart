@@ -598,7 +598,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'RECENT DEAL DONE',
+                        'RECENT BOOKING DONE',
                         style: GoogleFonts.montserrat(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -1237,7 +1237,7 @@ class _AdminHomeViewState extends State<AdminHomeView> {
                         ? "PENDING ADVISOR APPROVALS"
                         : action.title.toLowerCase().contains("career enquiries")
                             ? "CAREER ENQUIRIES"
-                            : action.title,
+                            : action.title.toLowerCase().contains("deal verification") ? "PENDING BOOKING VERIFICATION" : action.title,
                     style: GoogleFonts.montserrat(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
