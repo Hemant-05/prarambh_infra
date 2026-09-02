@@ -13,6 +13,7 @@ class UnitModel {
   final String plotNumber;
   final String plotDimensions;
   final double areaSqft;
+  final double buildupArea;
   final double ratePerSqft;
   final String size;
   final String availabilityStatus;
@@ -34,6 +35,7 @@ class UnitModel {
     required this.plotNumber,
     required this.plotDimensions,
     required this.areaSqft,
+    required this.buildupArea,
     required this.ratePerSqft,
     required this.size,
     required this.availabilityStatus,
@@ -58,6 +60,7 @@ class UnitModel {
       plotNumber: json['plot_number']?.toString() ?? '',
       plotDimensions: json['plot_dimensions']?.toString() ?? '',
       areaSqft: double.tryParse(json['area_sqft']?.toString() ?? '0') ?? 0,
+      buildupArea: double.tryParse(json['buildup_area']?.toString() ?? '0') ?? 0,
       ratePerSqft:
           double.tryParse(json['rate_per_sqft']?.toString() ?? '0') ?? 0,
       size: json['size']?.toString() ?? '',

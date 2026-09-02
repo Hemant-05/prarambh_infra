@@ -211,10 +211,10 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen>
                                 _infoChip(Icons.location_on_outlined, meeting.location, Colors.grey[600]!),
                             ],
                           ),
-                          if (meeting.videoUrl.isNotEmpty) ...[
+                          if (meeting.imageUrl.isNotEmpty || meeting.videoUrl.isNotEmpty) ...[
                             const SizedBox(height: 14),
                             Text(
-                              'ATTACHED VIDEO',
+                              'ATTACHED MEDIA',
                               style: GoogleFonts.montserrat(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
@@ -222,18 +222,40 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen>
                               ),
                             ),
                             const SizedBox(height: 8),
-                            Container(
-                              height: 180,
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                color: Colors.black,
-                                borderRadius: BorderRadius.circular(12),
+                            if (meeting.imageUrl.isNotEmpty)
+                              Container(
+                                height: 180,
+                                width: double.infinity,
+                                margin: EdgeInsets.only(bottom: meeting.videoUrl.isNotEmpty ? 12 : 0),
+                                decoration: BoxDecoration(
+                                  color: isDark ? Colors.grey[800] : Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    meeting.imageUrl,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        const Center(
+                                      child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                                    ),
+                                  ),
+                                ),
                               ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: _MeetingVideoPlayer(videoUrl: meeting.videoUrl),
+                            if (meeting.videoUrl.isNotEmpty)
+                              Container(
+                                height: 180,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: Colors.black,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: _MeetingVideoPlayer(videoUrl: meeting.videoUrl),
+                                ),
                               ),
-                            ),
                           ],
                         ],
                       ),

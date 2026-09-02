@@ -90,4 +90,28 @@ class AdminAdvisorRepository {
       rethrow;
     }
   }
+
+  Future<bool> postReviewMessage(String advisorId, String message) async {
+    try {
+      final response = await apiClient.postReviewMessage(
+        advisorId,
+        {'message': message},
+      );
+      return response['status'] ?? false;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getReviewMessages(String advisorId) async {
+    try {
+      final response = await apiClient.getReviewMessages(advisorId);
+      if (response['status'] == true) {
+        return response['data'] ?? [];
+      }
+      return [];
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

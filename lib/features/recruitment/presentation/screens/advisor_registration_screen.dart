@@ -25,6 +25,27 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
   final _formKey1 = GlobalKey<FormState>();
   final _formKey2 = GlobalKey<FormState>();
   int _currentStep = 0;
+  bool _isInit = true;
+  bool _isEditMode = false;
+  String? _advisorId;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_isInit) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      if (args != null && args['isEdit'] == true) {
+        _isEditMode = true;
+        _advisorId = args['advisorId'];
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final provider = context.read<AdvisorRegistrationProvider>();
+          provider.fetchReviewMessages(_advisorId!);
+          provider.loadApplicationData(_advisorId!);
+        });
+      }
+      _isInit = false;
+    }
+  }
   
   @override
   void initState() {
@@ -48,6 +69,8 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
         );
         setState(() => _currentStep = 1);
       }
+    } else {
+      UIHelper.showError(context, 'Please correct the highlighted errors before continuing.');
     }
   }
 
@@ -123,7 +146,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
               : () => Navigator.pop(context),
         ),
         title: Text(
-          'Advisor Recruitment',
+          _isEditMode ? 'Edit Application' : 'Advisor Recruitment',
           style: GoogleFonts.montserrat(
             color: textColor,
             fontWeight: FontWeight.bold,
@@ -133,6 +156,8 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
       ),
       body: Column(
         children: [
+          if (_isEditMode && provider.reviewMessages.isNotEmpty)
+            _buildReviewMessagesSection(provider.reviewMessages, isDark, primaryBlue),
           // Forms
           Expanded(
             child: PageView(
@@ -705,7 +730,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                           'Hoshangabad',
                           provider.branchCtrl,
                           textColor: textColor,
-                          validator: (v) => Validators.validateRequired(v, 'Branch'),
+                          // Bank branch is not stored by backend, so we don't strictly validate it
                         ),
                       ),
                     ],
@@ -728,6 +753,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                     'Aadhar Card (Front)',
                     'aadhar_front',
                     provider.aadharFront,
+                    provider.aadharFrontUrl,
                     provider,
                     primaryBlue,
                     textColor: textColor,
@@ -737,6 +763,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                     'Aadhar Card (Back)',
                     'aadhar_back',
                     provider.aadharBack,
+                    provider.aadharBackUrl,
                     provider,
                     primaryBlue,
                     textColor: textColor,
@@ -746,6 +773,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                     'PAN Card (Front)',
                     'pan',
                     provider.panPhoto,
+                    provider.panPhotoUrl,
                     provider,
                     primaryBlue,
                     textColor: textColor,
@@ -755,6 +783,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                     'PAN Card (Back)',
                     'pan_back',
                     provider.panBackPhoto,
+                    provider.panBackPhotoUrl,
                     provider,
                     primaryBlue,
                     textColor: textColor,
@@ -764,6 +793,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                     'Profile Photo (Selfie)',
                     'profile',
                     provider.profilePhoto,
+                    provider.profilePhotoUrl,
                     provider,
                     primaryBlue,
                     textColor: textColor,
@@ -1090,6 +1120,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
     String title,
     String type,
     File? file,
+    String? fileUrl,
     AdvisorRegistrationProvider provider,
     Color primaryBlue, {
     Color? textColor,
@@ -1112,7 +1143,7 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 decoration: BoxDecoration(
-                  color: file != null
+                  color: (file != null || (fileUrl != null && fileUrl.isNotEmpty))
                       ? primaryBlue.withOpacity(0.1)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
@@ -1120,14 +1151,18 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                 child: Column(
                   children: [
                     Icon(
-                      file != null ? Icons.check_circle : Icons.upload_file,
-                      color: file != null ? primaryBlue : Colors.grey,
+                      (file != null || (fileUrl != null && fileUrl.isNotEmpty)) ? Icons.check_circle : Icons.upload_file,
+                      color: (file != null || (fileUrl != null && fileUrl.isNotEmpty)) ? primaryBlue : Colors.grey,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      file != null ? 'File Attached' : 'Tap to Upload',
+                      file != null 
+                        ? 'New File Attached' 
+                        : ((fileUrl != null && fileUrl.isNotEmpty) 
+                            ? 'Document Uploaded (Tap to update)' 
+                            : 'Tap to Upload'),
                       style: GoogleFonts.montserrat(
-                        color: file != null ? primaryBlue : Colors.grey,
+                        color: (file != null || (fileUrl != null && fileUrl.isNotEmpty)) ? primaryBlue : Colors.grey,
                         fontSize: 12,
                       ),
                     ),
@@ -1135,6 +1170,72 @@ class _AdvisorRegistrationScreenState extends State<AdvisorRegistrationScreen> {
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReviewMessagesSection(List<dynamic> messages, bool isDark, Color primaryBlue) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.orange.withOpacity(0.1) : Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.orange.shade700, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Review Notes',
+                style: GoogleFonts.montserrat(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange.shade800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: messages.length,
+            separatorBuilder: (context, index) => const Divider(color: Colors.orange),
+            itemBuilder: (context, index) {
+              final msg = messages[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      msg.message,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 13,
+                        color: isDark ? Colors.white70 : Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Admin • ${msg.createdAt}',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.orange.shade800,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),

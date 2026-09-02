@@ -1,10 +1,14 @@
 import 'dart:io';
+import 'package:dio/dio.dart';
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:prarambh_infra/core/providers/error_handler_mixin.dart';
 import 'package:prarambh_infra/features/recruitment/data/repositories/recruitment_repository.dart';
 import 'package:prarambh_infra/core/utils/ui_helper.dart';
+import 'package:prarambh_infra/features/admin/data/models/review_message_model.dart';
+import 'package:prarambh_infra/features/admin/data/models/team_models.dart';
 
 class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin {
   final RecruitmentRepository repository;
@@ -18,6 +22,22 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
 
   // errorMessage, isLoading, clearError, setError, setLoading are provided by ErrorHandlerMixin
 
+  List<ReviewMessageModel> reviewMessages = [];
+  bool isEditMode = false;
+  String? editAdvisorId;
+
+  Future<void> fetchReviewMessages(String advisorId) async {
+    reviewMessages = [];
+    notifyListeners();
+    try {
+      reviewMessages = await repository.getReviewMessages(advisorId);
+      notifyListeners();
+    } catch (e) {
+      reviewMessages = [];
+      notifyListeners();
+      debugPrint('Failed to fetch review messages: $e');
+    }
+  }
   void preFillFromEnquiry({
     required String name,
     required String email,
@@ -29,6 +49,90 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
     phoneCtrl.text = phone;
     cityCtrl.text = city;
     notifyListeners();
+  }
+
+  Future<void> loadApplicationData(String advisorId) async {
+    isEditMode = true;
+    editAdvisorId = advisorId;
+    setLoading(true);
+    try {
+      final data = await repository.getSingleAdvisor(advisorId);
+      final profile = BrokerProfileModel.fromJson(data);
+
+      nameCtrl.text = profile.name;
+      fatherNameCtrl.text = profile.fatherName;
+      dobCtrl.text = profile.dateOfBirth;
+      aadharCtrl.text = profile.aadhaarNumber;
+      panCtrl.text = profile.panNumber;
+      phoneCtrl.text = profile.phone;
+      emailCtrl.text = profile.email;
+      addressCtrl.text = profile.address;
+      occupationCtrl.text = profile.occupation;
+      pincodeCtrl.text = profile.pincode;
+      
+      gender = profile.gender.isNotEmpty ? profile.gender : 'Male';
+      designation = profile.designation.isNotEmpty ? profile.designation : 'Advisor';
+      advisorType = profile.advisorType.isNotEmpty ? profile.advisorType : 'Full time';
+      stateCtrl.text = profile.state;
+      cityCtrl.text = profile.city;
+
+      if (profile.applicationNumber != 'N/A') applicationNumberCtrl.text = profile.applicationNumber;
+      maritalStatus = (profile.maritalStatus.isNotEmpty && profile.maritalStatus != 'N/A') ? profile.maritalStatus : 'Single';
+      if (profile.branchCode != 'N/A') branchCodeCtrl.text = profile.branchCode;
+      if (profile.branchLocation != 'N/A') branchLocationCtrl.text = profile.branchLocation;
+      if (profile.headOffice != 'N/A') headOfficeCtrl.text = profile.headOffice;
+      if (profile.primaryProfession != 'N/A') primaryProfessionCtrl.text = profile.primaryProfession;
+      qualification = (profile.qualification.isNotEmpty && profile.qualification != 'N/A') ? profile.qualification : 'Graduated';
+      nationalityCtrl.text = profile.nationality;
+      
+      if (profile.referencePersons.isNotEmpty) {
+        refNameCtrl1.text = profile.referencePersons[0]['name'] ?? '';
+        refAddressCtrl1.text = profile.referencePersons[0]['address'] ?? '';
+        refPhoneCtrl1.text = profile.referencePersons[0]['contact_number'] ?? '';
+        
+        if (profile.referencePersons.length > 1) {
+          refNameCtrl2.text = profile.referencePersons[1]['name'] ?? '';
+          refAddressCtrl2.text = profile.referencePersons[1]['address'] ?? '';
+          refPhoneCtrl2.text = profile.referencePersons[1]['contact_number'] ?? '';
+        }
+      } else {
+        if (profile.refName != 'N/A') refNameCtrl1.text = profile.refName;
+        if (profile.refAddress != 'N/A') refAddressCtrl1.text = profile.refAddress;
+        if (profile.refContact != 'N/A') refPhoneCtrl1.text = profile.refContact;
+      }
+
+      nomineeNameCtrl.text = profile.nomineeName;
+      nomineeAgeCtrl.text = profile.nomineePhone;
+      bankNameCtrl.text = profile.bankName;
+      accNumberCtrl.text = profile.accountNumber;
+      ifscCtrl.text = profile.ifscCode;
+      relationship = profile.relationship.isNotEmpty ? profile.relationship : 'Wife';
+
+      if (profile.leaderId != null && profile.leaderId!.isNotEmpty) {
+        try {
+          final leaderData = await repository.getSingleAdvisor(profile.leaderId!);
+          final leaderProfile = BrokerProfileModel.fromJson(leaderData);
+          leaderCodeCtrl.text = leaderProfile.advisorCode;
+        } catch (_) {
+          leaderCodeCtrl.text = profile.leaderCode ?? '';
+        }
+      } else {
+        leaderCodeCtrl.text = profile.leaderCode ?? '';
+      }
+
+      aadharFrontUrl = profile.addressCardFrontPhoto;
+      aadharBackUrl = profile.addressCardBackPhoto;
+      panPhotoUrl = profile.panCardPhoto;
+      panBackPhotoUrl = profile.panCardBackPhoto;
+      profilePhotoUrl = profile.profilePhoto;
+
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Failed to load application data: $e');
+      setError('Failed to load application data');
+    } finally {
+      setLoading(false);
+    }
   }
 
   // --- Step 1 Controllers ---
@@ -87,6 +191,12 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
   File? panBackPhoto; // NEW FIELD
   File? profilePhoto;
 
+  String? aadharFrontUrl;
+  String? aadharBackUrl;
+  String? panPhotoUrl;
+  String? panBackPhotoUrl;
+  String? profilePhotoUrl;
+
   Future<void> pickFile(String type) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
     if (result != null) {
@@ -127,10 +237,16 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
   }
 
   Future<bool> submitRegistration(BuildContext context) async {
-    // Added panBackPhoto to validation
-    if (leaderCodeCtrl.text.isEmpty || aadharFront == null || aadharBack == null || panPhoto == null || panBackPhoto == null || profilePhoto == null) {
-      setError('Please upload all required documents and provide Leader Code.');
-      return false;
+    if (!isEditMode) {
+      if (leaderCodeCtrl.text.isEmpty || aadharFront == null || aadharBack == null || panPhoto == null || panBackPhoto == null || profilePhoto == null) {
+        setError('Please upload all required documents and provide Leader Code.');
+        return false;
+      }
+    } else {
+      if (leaderCodeCtrl.text.isEmpty) {
+        setError('Please provide Leader Code.');
+        return false;
+      }
     }
 
     setLoading(true);
@@ -139,34 +255,71 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
     try {
       // Construct reference persons JSON
       String? refPersonJson;
-      if (refNameCtrl1.text.isNotEmpty || refNameCtrl2.text.isNotEmpty) {
-        refPersonJson = '['
-            '{"name": "${refNameCtrl1.text}", "address": "${refAddressCtrl1.text}", "contact_number": "${refPhoneCtrl1.text}"},'
-            '{"name": "${refNameCtrl2.text}", "address": "${refAddressCtrl2.text}", "contact_number": "${refPhoneCtrl2.text}"}'
-            ']';
+      List<Map<String, String>> refPersons = [];
+      if (refNameCtrl1.text.isNotEmpty) {
+        refPersons.add({
+          "name": refNameCtrl1.text,
+          "address": refAddressCtrl1.text,
+          "contact_number": refPhoneCtrl1.text,
+        });
+      }
+      if (refNameCtrl2.text.isNotEmpty) {
+        refPersons.add({
+          "name": refNameCtrl2.text,
+          "address": refAddressCtrl2.text,
+          "contact_number": refPhoneCtrl2.text,
+        });
+      }
+      if (refPersons.isNotEmpty) {
+        refPersonJson = jsonEncode(refPersons);
       }
 
-      final success = await repository.registerAdvisorDetailed(
-          fullName: nameCtrl.text, email: emailCtrl.text, phone: phoneCtrl.text, designation: designation,
-          fatherName: fatherNameCtrl.text, dob: dobCtrl.text, gender: gender,
-          nomineeName: nomineeNameCtrl.text, nomineePhone: nomineeAgeCtrl.text, relationship: relationship,
-          occupation: occupationCtrl.text, aadhaar: aadharCtrl.text, pan: panCtrl.text,
-          bankName: bankNameCtrl.text, accNumber: accNumberCtrl.text, ifsc: ifscCtrl.text,
-          address: addressCtrl.text, city: cityCtrl.text, state: stateCtrl.text, pincode: pincodeCtrl.text, leaderCode: leaderCodeCtrl.text,
-          advisorType: advisorType,
-          applicationNumber: applicationNumberCtrl.text.isEmpty ? null : applicationNumberCtrl.text,
-          maritalStatus: maritalStatus,
-          branchCode: branchCodeCtrl.text.isEmpty ? null : branchCodeCtrl.text,
-          branchLocation: branchLocationCtrl.text.isEmpty ? null : branchLocationCtrl.text,
-          headOffice: headOfficeCtrl.text.isEmpty ? null : headOfficeCtrl.text,
-          primaryProfession: primaryProfessionCtrl.text.isEmpty ? null : primaryProfessionCtrl.text,
-          qualification: qualification,
-          nationality: nationalityCtrl.text.isEmpty ? null : nationalityCtrl.text,
-          referencePerson: refPersonJson,
-          aadharFront: aadharFront!, aadharBack: aadharBack!, panPhoto: panPhoto!,
-          panBackPhoto: panBackPhoto!, 
-          profilePhoto: profilePhoto!
-      );
+      bool success = false;
+      if (isEditMode && editAdvisorId != null) {
+         success = await repository.updateAdvisorDetailed(
+            editAdvisorId!,
+            fullName: nameCtrl.text, email: emailCtrl.text, phone: phoneCtrl.text, designation: designation,
+            fatherName: fatherNameCtrl.text, dob: dobCtrl.text, gender: gender,
+            nomineeName: nomineeNameCtrl.text, nomineePhone: nomineeAgeCtrl.text, relationship: relationship,
+            occupation: occupationCtrl.text, aadhaar: aadharCtrl.text, pan: panCtrl.text,
+            bankName: bankNameCtrl.text, accNumber: accNumberCtrl.text, ifsc: ifscCtrl.text,
+            address: addressCtrl.text, city: cityCtrl.text, state: stateCtrl.text, pincode: pincodeCtrl.text, 
+            leaderCode: leaderCodeCtrl.text, advisorType: advisorType,
+            applicationNumber: applicationNumberCtrl.text.isEmpty ? null : applicationNumberCtrl.text,
+            maritalStatus: maritalStatus,
+            branchCode: branchCodeCtrl.text.isEmpty ? null : branchCodeCtrl.text,
+            branchLocation: branchLocationCtrl.text.isEmpty ? null : branchLocationCtrl.text,
+            headOffice: headOfficeCtrl.text.isEmpty ? null : headOfficeCtrl.text,
+            primaryProfession: primaryProfessionCtrl.text.isEmpty ? null : primaryProfessionCtrl.text,
+            qualification: qualification,
+            nationality: nationalityCtrl.text,
+            referencePerson: refPersonJson,
+            aadharFront: aadharFront, aadharBack: aadharBack, panPhoto: panPhoto,
+            panBackPhoto: panBackPhoto, profilePhoto: profilePhoto
+         );
+      } else {
+         success = await repository.registerAdvisorDetailed(
+            fullName: nameCtrl.text, email: emailCtrl.text, phone: phoneCtrl.text, designation: designation,
+            fatherName: fatherNameCtrl.text, dob: dobCtrl.text, gender: gender,
+            nomineeName: nomineeNameCtrl.text, nomineePhone: nomineeAgeCtrl.text, relationship: relationship,
+            occupation: occupationCtrl.text, aadhaar: aadharCtrl.text, pan: panCtrl.text,
+            bankName: bankNameCtrl.text, accNumber: accNumberCtrl.text, ifsc: ifscCtrl.text,
+            address: addressCtrl.text, city: cityCtrl.text, state: stateCtrl.text, pincode: pincodeCtrl.text, leaderCode: leaderCodeCtrl.text,
+            advisorType: advisorType,
+            applicationNumber: applicationNumberCtrl.text.isEmpty ? null : applicationNumberCtrl.text,
+            maritalStatus: maritalStatus,
+            branchCode: branchCodeCtrl.text.isEmpty ? null : branchCodeCtrl.text,
+            branchLocation: branchLocationCtrl.text.isEmpty ? null : branchLocationCtrl.text,
+            headOffice: headOfficeCtrl.text.isEmpty ? null : headOfficeCtrl.text,
+            primaryProfession: primaryProfessionCtrl.text.isEmpty ? null : primaryProfessionCtrl.text,
+            qualification: qualification,
+            nationality: nationalityCtrl.text.isEmpty ? null : nationalityCtrl.text,
+            referencePerson: refPersonJson,
+            aadharFront: aadharFront!, aadharBack: aadharBack!, panPhoto: panPhoto!,
+            panBackPhoto: panBackPhoto!, 
+            profilePhoto: profilePhoto!
+         );
+      }
 
       if (success) {
         nameCtrl.clear(); fatherNameCtrl.clear(); dobCtrl.clear(); aadharCtrl.clear(); panCtrl.clear();
@@ -181,15 +334,25 @@ class AdvisorRegistrationProvider extends ChangeNotifier with ErrorHandlerMixin 
         maritalStatus = 'Single';
         qualification = 'Graduated';
         aadharFront = null; aadharBack = null; panPhoto = null; panBackPhoto = null; profilePhoto = null;
+        aadharFrontUrl = null; aadharBackUrl = null; panPhotoUrl = null; panBackPhotoUrl = null; profilePhotoUrl = null;
       }
 
-      setLoading(false);
       return success;
     } catch (e) {
       debugPrint('Registration Error: $e');
-      setError(UIHelper.summarizeError(e.toString()));
-      setLoading(false);
+      if (e is DioException) {
+        final resData = e.response?.data;
+        if (resData is Map && resData.containsKey('message')) {
+          setError(resData['message'].toString());
+        } else {
+          setError('Update failed: ${e.response?.statusCode} - ${e.response?.statusMessage}');
+        }
+      } else {
+        setError('Registration failed: $e');
+      }
       return false;
+    } finally {
+      setLoading(false);
     }
   }
 }

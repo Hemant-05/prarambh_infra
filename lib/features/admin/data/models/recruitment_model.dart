@@ -2,12 +2,14 @@ class RecruitmentDashboardModel {
   final int totalRecruits;
   final int activeRecruits;
   final int pendingApprovals;
+  final int reviewing;
   final int inactiveOrSuspended;
   final List<RecruitedPersonModel> recentApplications;
 
   RecruitmentDashboardModel({
     required this.totalRecruits, required this.activeRecruits,
-    required this.pendingApprovals, required this.inactiveOrSuspended,
+    required this.pendingApprovals, required this.reviewing,
+    required this.inactiveOrSuspended,
     required this.recentApplications,
   });
 
@@ -22,19 +24,27 @@ class RecruitmentDashboardModel {
     int total = parseStat(json['metrics']?['total_recruits']);
     int active = parseStat(json['metrics']?['active_recruits']);
     
+    final apps = (json['recent_applications'] as List<dynamic>?)
+            ?.map((e) => RecruitedPersonModel.fromJson(e))
+            .where((m) =>
+                m.advisorCode.toLowerCase() != 'admin001' &&
+                m.designation.toLowerCase() != 'admin')
+            .toList() ??
+        [];
+
+    int reviewingCount = parseStat(json['metrics']?['reviewing'] ?? json['metrics']?['reviewing_approvals']);
+    if (reviewingCount == 0) {
+      reviewingCount = apps.where((m) => m.status.toLowerCase() == 'reviewing').length;
+    }
+
     // Subtract 1 from total and active to exclude Admin
     return RecruitmentDashboardModel(
       totalRecruits: total > 0 ? total - 1 : 0,
       activeRecruits: active > 0 ? active - 1 : 0,
       pendingApprovals: parseStat(json['metrics']?['pending_approvals']),
+      reviewing: reviewingCount,
       inactiveOrSuspended: parseStat(json['metrics']?['inactive_or_suspended']),
-      recentApplications: (json['recent_applications'] as List<dynamic>?)
-              ?.map((e) => RecruitedPersonModel.fromJson(e))
-              .where((m) =>
-                  m.advisorCode.toLowerCase() != 'admin001' &&
-                  m.designation.toLowerCase() != 'admin')
-              .toList() ??
-          [],
+      recentApplications: apps,
     );
   }
 }

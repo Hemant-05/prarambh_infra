@@ -130,6 +130,21 @@ abstract class ApiClient {
     @Part(name: "city") String? city,
     @Part(name: "state") String? state,
     @Part(name: "pincode") String? pincode,
+    @Part(name: "leader_code") String? leaderCode,
+    @Part(name: "advisor_type") String? advisorType,
+    @Part(name: "application_number") String? applicationNumber,
+    @Part(name: "marital_status") String? maritalStatus,
+    @Part(name: "branch_code") String? branchCode,
+    @Part(name: "branch_location") String? branchLocation,
+    @Part(name: "head_office") String? headOffice,
+    @Part(name: "primary_profession") String? primaryProfession,
+    @Part(name: "qualification") String? qualification,
+    @Part(name: "nationality") String? nationality,
+    @Part(name: "reference_person") String? referencePerson,
+    @Part(name: "addresscard_front_photo") File? aadharFront,
+    @Part(name: "addresscard_back_photo") File? aadharBack,
+    @Part(name: "pancard_photo") File? panPhoto,
+    @Part(name: "pancard_back_photo") File? panBackPhoto,
     @Part(name: "profile_photo") File? profilePhoto,
   );
 
@@ -138,6 +153,15 @@ abstract class ApiClient {
     @Path("id") String id,
     @Body() dynamic body,
   );
+
+  @POST("/advisor/review-message/{id}")
+  Future<dynamic> postReviewMessage(
+    @Path("id") String id,
+    @Body() dynamic body,
+  );
+
+  @GET("/advisor/review-messages/{id}")
+  Future<dynamic> getReviewMessages(@Path("id") String id);
 
   @DELETE("/advisor/delete/{id}")
   Future<dynamic> deleteAdvisor(@Path("id") String id);
@@ -238,6 +262,7 @@ abstract class ApiClient {
     @Part(name: "plot_number") String plotNumber,
     @Part(name: "plot_dimensions") String plotDimensions,
     @Part(name: "area_sqft") String areaSqft,
+    @Part(name: "buildup_area") String buildupArea,
     @Part(name: "rate_per_sqft") String ratePerSqft,
     @Part(name: "size") String size,
     @Part(name: "availability_status") String availabilityStatus,
@@ -282,6 +307,7 @@ abstract class ApiClient {
     @Part(name: "plot_number") String? plotNumber,
     @Part(name: "plot_dimensions") String? plotDimensions,
     @Part(name: "area_sqft") String? areaSqft,
+    @Part(name: "buildup_area") String? buildupArea,
     @Part(name: "rate_per_sqft") String? ratePerSqft,
     @Part(name: "size") String? size,
     @Part(name: "availability_status") String? availabilityStatus,

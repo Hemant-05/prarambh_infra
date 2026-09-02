@@ -555,7 +555,7 @@ class _AdminSalesAnalyticsScreenState extends State<AdminSalesAnalyticsScreen> {
                 tabIndex = 1;
               } else if (stageLabel == 'prospecting' || stageLabel.contains('prospect')) tabIndex = 2;
               else if (stageLabel == 'site visit' || stageLabel.contains('site')) tabIndex = 3;
-              else if (stageLabel == 'booking' || stageLabel.contains('book')) tabIndex = 4;
+              else if (stageLabel == 'pending_verification' || stageLabel.contains('pending')) tabIndex = 4;
               else if (stageLabel == 'dead') tabIndex = 5;
               else if (stageLabel == 'completed') tabIndex = 6;
               

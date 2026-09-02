@@ -53,6 +53,10 @@ class _AdvisorEditProfileScreenState extends State<AdvisorEditProfileScreen> {
 
   String _selectedGender = 'Male';
   File? _profileImage;
+  File? _aadharFront;
+  File? _aadharBack;
+  File? _panPhoto;
+  File? _panBackPhoto;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -125,6 +129,18 @@ class _AdvisorEditProfileScreenState extends State<AdvisorEditProfileScreen> {
     if (image != null) {
       setState(() {
         _profileImage = File(image.path);
+      });
+    }
+  }
+
+  Future<void> _pickDocument(String type) async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        if (type == 'aadhar_front') _aadharFront = File(image.path);
+        if (type == 'aadhar_back') _aadharBack = File(image.path);
+        if (type == 'pan') _panPhoto = File(image.path);
+        if (type == 'pan_back') _panBackPhoto = File(image.path);
       });
     }
   }
@@ -268,6 +284,13 @@ class _AdvisorEditProfileScreenState extends State<AdvisorEditProfileScreen> {
               _buildTextField(_relationshipController, "Relationship", Icons.handshake_outlined),
               _buildTextField(_nomineePhoneController, "Nominee Age", Icons.phone, keyboardType: TextInputType.phone),
 
+              const SizedBox(height: 24),
+              _buildSectionTitle("Key Documents"),
+              _buildDocumentUploadBox("Aadhar Card (Front)", 'aadhar_front', _aadharFront, widget.profile.addressCardFrontPhoto, primaryBlue),
+              _buildDocumentUploadBox("Aadhar Card (Back)", 'aadhar_back', _aadharBack, widget.profile.addressCardBackPhoto, primaryBlue),
+              _buildDocumentUploadBox("PAN Card (Front)", 'pan', _panPhoto, widget.profile.panCardPhoto, primaryBlue),
+              _buildDocumentUploadBox("PAN Card (Back)", 'pan_back', _panBackPhoto, widget.profile.panCardBackPhoto, primaryBlue),
+
               const SizedBox(height: 40),
             ],
           ),
@@ -319,6 +342,49 @@ class _AdvisorEditProfileScreenState extends State<AdvisorEditProfileScreen> {
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
         validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+      ),
+    );
+  }
+
+  Widget _buildDocumentUploadBox(String title, String type, File? file, String url, Color primaryBlue) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: GoogleFonts.montserrat(fontSize: 12, color: Colors.black87, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => _pickDocument(type),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              decoration: BoxDecoration(
+                color: (file != null || url.isNotEmpty) ? primaryBlue.withOpacity(0.1) : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: (file != null || url.isNotEmpty) ? primaryBlue.withOpacity(0.5) : Colors.grey.withOpacity(0.3)),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    (file != null || url.isNotEmpty) ? Icons.check_circle : Icons.upload_file,
+                    color: (file != null || url.isNotEmpty) ? primaryBlue : Colors.grey,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    file != null 
+                        ? 'New File Attached' 
+                        : (url.isNotEmpty ? 'Document Uploaded (Tap to update)' : 'Tap to Upload'),
+                    style: GoogleFonts.montserrat(
+                      color: (file != null || url.isNotEmpty) ? primaryBlue : Colors.grey,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -415,6 +481,10 @@ class _AdvisorEditProfileScreenState extends State<AdvisorEditProfileScreen> {
       nomineeName: _nomineeNameController.text,
       nomineePhone: _nomineePhoneController.text,
       relationship: _relationshipController.text,
+      aadharFront: _aadharFront,
+      aadharBack: _aadharBack,
+      panPhoto: _panPhoto,
+      panBackPhoto: _panBackPhoto,
       profilePhoto: _profileImage,
     );
 

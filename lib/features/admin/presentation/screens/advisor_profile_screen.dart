@@ -11,6 +11,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../providers/admin_team_provider.dart';
 import '../widgets/share_profile_sheet.dart';
 import '../../data/models/team_models.dart';
+import '../providers/admin_advisor_provider.dart';
 
 const String _baseUrl = 'https://workiees.com/';
 
@@ -25,18 +26,37 @@ class AdvisorProfileScreen extends StatefulWidget {
 class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
   final TextEditingController _suspendReasonCtrl = TextEditingController();
   bool _personalExpanded = true;
+  bool _isLoadingAll = true;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final id = widget.advisorId;
-      if (id.startsWith('PIA') || id.startsWith('admin')) {
-        context.read<AdminTeamProvider>().fetchProfileByCode(id);
-      } else {
-        context.read<AdminTeamProvider>().fetchProfile(id);
-      }
-    });
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final teamProvider = context.read<AdminTeamProvider>();
+    final advisorProvider = context.read<AdminAdvisorProvider>();
+
+    advisorProvider.clearReviewMessages();
+
+    final id = widget.advisorId;
+    if (id.startsWith('PIA') || id.startsWith('admin')) {
+      await teamProvider.fetchProfileByCode(id);
+    } else {
+      await teamProvider.fetchProfile(id);
+    }
+
+    final p = teamProvider.selectedProfile;
+    if (p != null && p.status.toLowerCase() == 'reviewing') {
+      await advisorProvider.getReviewMessages(p.id);
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoadingAll = false;
+      });
+    }
   }
 
   @override
@@ -74,7 +94,7 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
       );
     }
 
-    if (provider.isLoading || provider.selectedProfile == null) {
+    if (_isLoadingAll || provider.isLoading || provider.selectedProfile == null) {
       return Scaffold(
         backgroundColor: primaryBlue,
         body: const Center(
@@ -215,6 +235,18 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Review Messages (if any)
+                  Consumer<AdminAdvisorProvider>(
+                    builder: (context, advisorProvider, child) {
+                      if (advisorProvider.reviewMessages.isEmpty ||
+                          p.status.toLowerCase() != 'reviewing') {
+                        return const SizedBox.shrink();
+                      }
+                      return _buildReviewMessagesSection(
+                          advisorProvider.reviewMessages, isDark, primaryBlue);
+                    },
+                  ),
+
                   // ── Contact Info ──────────────────────────────────────
                   _card(cardColor, [
                     _infoRow(
@@ -1813,6 +1845,74 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+  Widget _buildReviewMessagesSection(
+      List<dynamic> messages, bool isDark, Color primaryBlue) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.orange.withOpacity(0.1) : Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.orange.shade700, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Past Review Notes',
+                style: GoogleFonts.montserrat(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange.shade800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ListView.separated(
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: messages.length,
+            separatorBuilder: (context, index) =>
+                const Divider(color: Colors.orange),
+            itemBuilder: (context, index) {
+              final msg = messages[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      msg.message,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 13,
+                        color: isDark ? Colors.white70 : Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Admin • ${msg.createdAt}',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.orange.shade800,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),

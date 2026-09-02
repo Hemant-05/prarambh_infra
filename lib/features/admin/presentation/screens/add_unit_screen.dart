@@ -27,6 +27,7 @@ class _AddUnitScreenState extends State<AddUnitScreen>
   final _floorCtrl = TextEditingController();
   final _unitCtrl = TextEditingController();
   final _areaCtrl = TextEditingController();
+  final _buildupAreaCtrl = TextEditingController();
   final _rateCtrl = TextEditingController();
   final _plotDimCtrl = TextEditingController();
 
@@ -76,6 +77,7 @@ class _AddUnitScreenState extends State<AddUnitScreen>
     _floorCtrl.dispose();
     _unitCtrl.dispose();
     _areaCtrl.dispose();
+    _buildupAreaCtrl.dispose();
     _rateCtrl.dispose();
     _plotDimCtrl.dispose();
     super.dispose();
@@ -175,6 +177,31 @@ class _AddUnitScreenState extends State<AddUnitScreen>
               Row(
                 children: [
                   Expanded(
+                    child: _buildTextField(
+                      'UNIT NUMBER',
+                      _unitCtrl,
+                      validator: (v) =>
+                          Validators.validateRequired(v, 'UNIT NUMBER'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildTextField(
+                      'FLOOR NUMBER',
+                      _floorCtrl,
+                      isNumber: true,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: _buildTextField('BLOCK NAME', _towerCtrl)),
+                  const SizedBox(width: 16),
+                  Expanded(
                     child: _buildDropdown('PROPERTY TYPE', _type, [
                       'FLAT',
                       'LAND FARMING',
@@ -187,42 +214,13 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                       'P+C',
                     ], (v) => setState(() => _type = v!)),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildDropdown(
-                      'SALE CATEGORY',
-                      _saleCategory,
-                      ['New Sale', 'Resale', 'Rent'],
-                      (v) => setState(() => _saleCategory = v!),
-                    ),
-                  ),
+
                 ],
               ),
               const SizedBox(height: 16),
 
               // Unconditional Fields
-              Row(
-                children: [
-                  Expanded(child: _buildTextField('BLOCK NAME', _towerCtrl)),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildTextField(
-                      'FLOOR NUMBER',
-                      _floorCtrl,
-                      isNumber: true,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                'UNIT/PLOT NUMBER',
-                _unitCtrl,
-                validator: (v) =>
-                    Validators.validateRequired(v, 'UNIT/PLOT NUMBER'),
-              ),
-              const SizedBox(height: 16),
+              
               Row(
                 children: [
                   Expanded(
@@ -250,8 +248,6 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                 ],
               ),
               const SizedBox(height: 16),
-              _buildTextField('DIMENSION', _plotDimCtrl),
-              const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
@@ -269,12 +265,31 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                 children: [
                   Expanded(
                     child: _buildTextField(
-                      'BUILD UP AREA/ sq.feet',
+                      'PLOT AREA(SQFT)',
                       _areaCtrl,
                       isNumber: true,
                       validator: (v) => Validators.validateInteger(
                         v,
-                        'BUILD UP AREA/ sq.feet',
+                        'PLOT AREA(SQFT)',
+                      ),
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildTextField('DIMENSION', _plotDimCtrl)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      'BUILD UP AREA(SQFT)',
+                      _buildupAreaCtrl,
+                      isNumber: true,
+                      validator: (v) => Validators.validateInteger(
+                        v,
+                        'BUILD UP AREA(SQFT)',
                       ),
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     ),
@@ -301,6 +316,15 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                       'Booked',
                       'Sold',
                     ], (v) => setState(() => _status = v!)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildDropdown(
+                      'SALE CATEGORY',
+                      _saleCategory,
+                      ['New Sale', 'Resale', 'Rent'],
+                      (v) => setState(() => _saleCategory = v!),
+                    ),
                   ),
                 ],
               ),
@@ -401,6 +425,8 @@ class _AddUnitScreenState extends State<AddUnitScreen>
                                 "plot_dimensions": _plotDimCtrl.text,
                                 "area_sqft":
                                     double.tryParse(_areaCtrl.text) ?? 0,
+                                "buildup_area":
+                                    double.tryParse(_buildupAreaCtrl.text) ?? 0,
                                 "rate_per_sqft":
                                     double.tryParse(_rateCtrl.text) ?? 0,
                                 "availability_status": _status,

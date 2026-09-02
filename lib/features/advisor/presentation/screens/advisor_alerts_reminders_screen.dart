@@ -65,6 +65,7 @@ class _AdvisorAlertsRemindersScreenState extends State<AdvisorAlertsRemindersScr
       plotNumber: resale.plotNumber,
       plotDimensions: resale.plotDimensions,
       areaSqft: double.tryParse(resale.areaSqft) ?? 0,
+      buildupArea: 0,
       ratePerSqft: double.tryParse(resale.ratePerSqft) ?? 0,
       size: resale.areaSqft,
       availabilityStatus: resale.availabilityStatus,

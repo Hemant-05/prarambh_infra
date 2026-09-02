@@ -65,6 +65,10 @@ class AdvisorProfileRepository {
     String? city,
     String? state,
     String? pincode,
+    File? aadharFront,
+    File? aadharBack,
+    File? panPhoto,
+    File? panBackPhoto,
     File? profilePhoto,
   }) async {
     try {
@@ -72,7 +76,9 @@ class AdvisorProfileRepository {
         id, fullName, email, phone, fatherName, dob, gender,
         nomineeName, nomineePhone, relationship, occupation,
         aadhaar, pan, bankName, accNumber, ifsc,
-        address, city, state, pincode, profilePhoto,
+        address, city, state, pincode, 
+        null, null, null, null, null, null, null, null, null, null, null, // leaderCode, advisorType, applicationNumber, maritalStatus, branchCode, branchLocation, headOffice, primaryProfession, qualification, nationality, referencePerson
+        aadharFront, aadharBack, panPhoto, panBackPhoto, profilePhoto,
       );
       return response['status'] == true || response['status'] == 'success';
     } catch (e) {

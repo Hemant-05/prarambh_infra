@@ -479,6 +479,21 @@ class _ApiClient implements ApiClient {
     String? city,
     String? state,
     String? pincode,
+    String? leaderCode,
+    String? advisorType,
+    String? applicationNumber,
+    String? maritalStatus,
+    String? branchCode,
+    String? branchLocation,
+    String? headOffice,
+    String? primaryProfession,
+    String? qualification,
+    String? nationality,
+    String? referencePerson,
+    File? aadharFront,
+    File? aadharBack,
+    File? panPhoto,
+    File? panBackPhoto,
     File? profilePhoto,
   ) async {
     final _extra = <String, dynamic>{};
@@ -543,6 +558,83 @@ class _ApiClient implements ApiClient {
     if (pincode != null) {
       _data.fields.add(MapEntry('pincode', pincode));
     }
+    if (leaderCode != null) {
+      _data.fields.add(MapEntry('leader_code', leaderCode));
+    }
+    if (advisorType != null) {
+      _data.fields.add(MapEntry('advisor_type', advisorType));
+    }
+    if (applicationNumber != null) {
+      _data.fields.add(MapEntry('application_number', applicationNumber));
+    }
+    if (maritalStatus != null) {
+      _data.fields.add(MapEntry('marital_status', maritalStatus));
+    }
+    if (branchCode != null) {
+      _data.fields.add(MapEntry('branch_code', branchCode));
+    }
+    if (branchLocation != null) {
+      _data.fields.add(MapEntry('branch_location', branchLocation));
+    }
+    if (headOffice != null) {
+      _data.fields.add(MapEntry('head_office', headOffice));
+    }
+    if (primaryProfession != null) {
+      _data.fields.add(MapEntry('primary_profession', primaryProfession));
+    }
+    if (qualification != null) {
+      _data.fields.add(MapEntry('qualification', qualification));
+    }
+    if (nationality != null) {
+      _data.fields.add(MapEntry('nationality', nationality));
+    }
+    if (referencePerson != null) {
+      _data.fields.add(MapEntry('reference_person', referencePerson));
+    }
+    if (aadharFront != null) {
+      _data.files.add(
+        MapEntry(
+          'addresscard_front_photo',
+          MultipartFile.fromFileSync(
+            aadharFront.path,
+            filename: aadharFront.path.split(Platform.pathSeparator).last,
+          ),
+        ),
+      );
+    }
+    if (aadharBack != null) {
+      _data.files.add(
+        MapEntry(
+          'addresscard_back_photo',
+          MultipartFile.fromFileSync(
+            aadharBack.path,
+            filename: aadharBack.path.split(Platform.pathSeparator).last,
+          ),
+        ),
+      );
+    }
+    if (panPhoto != null) {
+      _data.files.add(
+        MapEntry(
+          'pancard_photo',
+          MultipartFile.fromFileSync(
+            panPhoto.path,
+            filename: panPhoto.path.split(Platform.pathSeparator).last,
+          ),
+        ),
+      );
+    }
+    if (panBackPhoto != null) {
+      _data.files.add(
+        MapEntry(
+          'pancard_back_photo',
+          MultipartFile.fromFileSync(
+            panBackPhoto.path,
+            filename: panBackPhoto.path.split(Platform.pathSeparator).last,
+          ),
+        ),
+      );
+    }
     if (profilePhoto != null) {
       _data.files.add(
         MapEntry(
@@ -585,6 +677,48 @@ class _ApiClient implements ApiClient {
           .compose(
             _dio.options,
             '/advisor/status/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> postReviewMessage(String id, dynamic body) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = body;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/advisor/review-message/${id}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> getReviewMessages(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/advisor/review-messages/${id}',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -999,6 +1133,7 @@ class _ApiClient implements ApiClient {
     String plotNumber,
     String plotDimensions,
     String areaSqft,
+    String buildupArea,
     String ratePerSqft,
     String size,
     String availabilityStatus,
@@ -1021,6 +1156,7 @@ class _ApiClient implements ApiClient {
     _data.fields.add(MapEntry('plot_number', plotNumber));
     _data.fields.add(MapEntry('plot_dimensions', plotDimensions));
     _data.fields.add(MapEntry('area_sqft', areaSqft));
+    _data.fields.add(MapEntry('buildup_area', buildupArea));
     _data.fields.add(MapEntry('rate_per_sqft', ratePerSqft));
     _data.fields.add(MapEntry('size', size));
     _data.fields.add(MapEntry('availability_status', availabilityStatus));
@@ -1210,6 +1346,7 @@ class _ApiClient implements ApiClient {
     String? plotNumber,
     String? plotDimensions,
     String? areaSqft,
+    String? buildupArea,
     String? ratePerSqft,
     String? size,
     String? availabilityStatus,
@@ -1255,6 +1392,9 @@ class _ApiClient implements ApiClient {
     }
     if (areaSqft != null) {
       _data.fields.add(MapEntry('area_sqft', areaSqft));
+    }
+    if (buildupArea != null) {
+      _data.fields.add(MapEntry('buildup_area', buildupArea));
     }
     if (ratePerSqft != null) {
       _data.fields.add(MapEntry('rate_per_sqft', ratePerSqft));

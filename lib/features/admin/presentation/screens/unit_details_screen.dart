@@ -634,6 +634,13 @@ class _UnitDetailsScreenState extends State<UnitDetailsScreen> {
                           '${widget.unit.areaSqft} sqft',
                           cardColor,
                         ),
+                      if (widget.unit.buildupArea > 0)
+                        _buildSpecBox(
+                          Icons.architecture,
+                          'Build Up Area',
+                          '${widget.unit.buildupArea} sqft',
+                          cardColor,
+                        ),
                       if (isValid(widget.unit.configuration))
                         _buildSpecBox(
                           Icons.bed,
@@ -756,6 +763,7 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
   final _locationCtrl = TextEditingController();
   final _plotNumCtrl = TextEditingController();
   final _plotDimCtrl = TextEditingController();
+  final _buildupAreaCtrl = TextEditingController();
 
   late String _config;
   late String _type;
@@ -804,6 +812,7 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
     _plotNumCtrl.text = widget.unit.plotNumber;
     _plotDimCtrl.text = widget.unit.plotDimensions;
     _areaCtrl.text = widget.unit.areaSqft.toString();
+    _buildupAreaCtrl.text = widget.unit.buildupArea.toString();
     _rateCtrl.text = widget.unit.ratePerSqft.toString();
 
     configOptions = [
@@ -879,6 +888,7 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
     _locationCtrl.dispose();
     _plotNumCtrl.dispose();
     _plotDimCtrl.dispose();
+    _buildupAreaCtrl.dispose();
     super.dispose();
   }
 
@@ -927,31 +937,7 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
                   Row(
                     children: [
                       Expanded(
-                        child: _buildDropdown(
-                          'PROPERTY TYPE',
-                          _type,
-                          typeOptions,
-                          (v) => setState(() => _type = v!),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildDropdown(
-                          'SALE CATEGORY',
-                          _saleCategory,
-                          saleOptions,
-                          (v) => setState(() => _saleCategory = v!),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Unconditional Fields
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildTextField('BLOCK NAME', _towerCtrl),
+                        child: _buildTextField('UNIT/PLOT NUMBER', _unitCtrl),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -964,7 +950,22 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  _buildTextField('UNIT/PLOT NUMBER', _unitCtrl),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTextField('BLOCK NAME', _towerCtrl),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildDropdown(
+                          'PROPERTY TYPE',
+                          _type,
+                          typeOptions,
+                          (v) => setState(() => _type = v!),
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
@@ -987,9 +988,6 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  _buildTextField('DIMENSION', _plotDimCtrl),
-
                   const SizedBox(height: 16),
                   Row(
                     children: [
@@ -1016,8 +1014,22 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
                     children: [
                       Expanded(
                         child: _buildTextField(
-                          'BUILD UP AREA/ sq.feet',
+                          'Plot area (Sq.ft)',
                           _areaCtrl,
+                          isNumber: true,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildTextField('DIMENSION', _plotDimCtrl)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTextField(
+                          'BUILD UP AREA (Sq.ft)',
+                          _buildupAreaCtrl,
                           isNumber: true,
                         ),
                       ),
@@ -1040,6 +1052,15 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
                           _status,
                           statusOptions,
                           (v) => setState(() => _status = v!),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildDropdown(
+                          'SALE CATEGORY',
+                          _saleCategory,
+                          saleOptions,
+                          (v) => setState(() => _saleCategory = v!),
                         ),
                       ),
                     ],
@@ -1144,6 +1165,8 @@ class _UpdateUnitFormState extends State<_UpdateUnitForm> {
                                     "plot_dimensions": _plotDimCtrl.text,
                                     "area_sqft":
                                         double.tryParse(_areaCtrl.text) ?? 0,
+                                    "buildup_area":
+                                        double.tryParse(_buildupAreaCtrl.text) ?? 0,
                                     "rate_per_sqft":
                                         double.tryParse(_rateCtrl.text) ?? 0,
                                     "availability_status": _status,

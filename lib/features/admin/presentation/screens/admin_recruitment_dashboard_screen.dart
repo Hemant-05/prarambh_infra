@@ -102,6 +102,15 @@ class _AdminRecruitmentDashboardScreenState
                     isDark,
                   ),
                   _buildStatCard(
+                    'REVIEWING',
+                    data.reviewing.toString(),
+                    'In Process',
+                    Icons.rate_review_outlined,
+                    Colors.blue,
+                    cardColor,
+                    isDark,
+                  ),
+                  _buildStatCard(
                     'TERMINATED',
                     data.inactiveOrSuspended.toString(),
                     'Inactive',
@@ -190,9 +199,13 @@ class _AdminRecruitmentDashboardScreenState
                     .map((applicant) {
                       bool isActive =
                           applicant.status.toLowerCase() == 'active';
+                      bool isReviewing =
+                          applicant.status.toLowerCase() == 'reviewing';
                       Color statusColor = isActive
                           ? Colors.green
-                          : Colors.orange;
+                          : isReviewing
+                              ? Colors.blue
+                              : Colors.orange;
 
                       return GestureDetector(
                         onTap: () {
@@ -501,7 +514,7 @@ class _AdminRecruitmentDashboardScreenState
                     spacing: 12,
                     runSpacing: 12,
                     children:
-                        ['All', 'Active', 'Pending', 'Terminated'].map((status) {
+                        ['All', 'Active', 'Pending', 'Reviewing', 'Terminated'].map((status) {
                           final isSelected = selectedStatus == status;
                           return GestureDetector(
                             onTap: () {

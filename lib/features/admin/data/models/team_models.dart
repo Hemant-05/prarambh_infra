@@ -157,6 +157,7 @@ class BrokerProfileModel {
   final String primaryProfession;
   final String qualification;
   final String nationality;
+  final List<Map<String, String>> referencePersons;
   final String refName;
   final String refAddress;
   final String refRelationship;
@@ -208,7 +209,7 @@ class BrokerProfileModel {
     this.leaderId, this.leaderCode, this.leaderName, this.leaderDesignation,
     required this.applicationNumber, required this.maritalStatus, required this.branchCode,
     required this.branchLocation, required this.headOffice, required this.primaryProfession,
-    required this.qualification, required this.nationality, required this.refName,
+    required this.qualification, required this.nationality, required this.referencePersons, required this.refName,
     required this.refAddress, required this.refRelationship, required this.refContact,
     required this.createdAt, required this.updatedAt,
     required this.myTeam, required this.salesPipeline,
@@ -232,12 +233,40 @@ class BrokerProfileModel {
     final contestsRaw = json['contests'] as List<dynamic>? ?? [];
 
     Map<String, dynamic> refMap = {};
-    if (ad['reference_person'] is String) {
-      try {
-        refMap = jsonDecode(ad['reference_person']) as Map<String, dynamic>;
-      } catch (_) {}
-    } else if (ad['reference_person'] is Map) {
-      refMap = Map<String, dynamic>.from(ad['reference_person']);
+    List<Map<String, String>> refPersons = [];
+    if (ad['reference_person'] != null) {
+      if (ad['reference_person'] is List) {
+        for (var item in (ad['reference_person'] as List)) {
+          if (item is Map) {
+            refPersons.add({
+              'name': item['name']?.toString() ?? 'N/A',
+              'address': item['address']?.toString() ?? 'N/A',
+              'relationship': item['relationship']?.toString() ?? 'N/A',
+              'contact_number': item['contact_number']?.toString() ?? 'N/A',
+            });
+          }
+        }
+      } else if (ad['reference_person'] is String) {
+        try {
+          var decoded = jsonDecode(ad['reference_person']);
+          if (decoded is List) {
+            for (var item in decoded) {
+              if (item is Map) {
+                refPersons.add({
+                  'name': item['name']?.toString() ?? 'N/A',
+                  'address': item['address']?.toString() ?? 'N/A',
+                  'relationship': item['relationship']?.toString() ?? 'N/A',
+                  'contact_number': item['contact_number']?.toString() ?? 'N/A',
+                });
+              }
+            }
+          } else if (decoded is Map) {
+            refMap = decoded as Map<String, dynamic>;
+          }
+        } catch (_) {}
+      } else if (ad['reference_person'] is Map) {
+        refMap = Map<String, dynamic>.from(ad['reference_person']);
+      }
     }
 
     return BrokerProfileModel(
@@ -283,10 +312,11 @@ class BrokerProfileModel {
       primaryProfession: ad['primary_profession']?.toString() ?? ad['Primary_profession']?.toString() ?? 'N/A',
       qualification: ad['qualification']?.toString() ?? ad['Qualification']?.toString() ?? 'N/A',
       nationality: ad['nationality']?.toString() ?? 'Indian',
-      refName: refMap['name']?.toString() ?? 'N/A',
-      refAddress: refMap['address']?.toString() ?? 'N/A',
-      refRelationship: refMap['relationship']?.toString() ?? 'N/A',
-      refContact: (refMap['phone'] ?? refMap['contact_number'])?.toString() ?? 'N/A',
+      referencePersons: refPersons,
+      refName: refMap['name']?.toString() ?? (refPersons.isNotEmpty ? refPersons[0]['name'] ?? 'N/A' : 'N/A'),
+      refAddress: refMap['address']?.toString() ?? (refPersons.isNotEmpty ? refPersons[0]['address'] ?? 'N/A' : 'N/A'),
+      refRelationship: refMap['relationship']?.toString() ?? (refPersons.isNotEmpty ? refPersons[0]['relationship'] ?? 'N/A' : 'N/A'),
+      refContact: (refMap['phone'] ?? refMap['contact_number'])?.toString() ?? (refPersons.isNotEmpty ? refPersons[0]['contact_number'] ?? 'N/A' : 'N/A'),
       createdAt: ad['created_at'] ?? '',
       updatedAt: ad['updated_at'] ?? '',
       myTeam: myTeamRaw.map((e) => TeamMemberModel.fromJson(e)).toList(),

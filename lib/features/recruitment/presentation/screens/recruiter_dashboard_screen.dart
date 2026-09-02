@@ -96,7 +96,7 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
   }
 
   Widget _buildFilterChips(Color primaryBlue, bool isDark) {
-    final filters = ['All', 'Active', 'Pending', 'Terminated'];
+    final filters = ['All', 'Active', 'Pending', 'Reviewing', 'Terminated'];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -219,50 +219,63 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final recruit = recruitments[index];
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.getBorderColor(context)),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2))],
-          ),
-          child: Row(
-            children: [
-              ProfileImage(
-                imageUrl: recruit.imageUrl.isNotEmpty ? recruit.imageUrl : null,
-                initials: recruit.name.isNotEmpty 
-                    ? recruit.name.trim().split(' ').map((l) => l.isNotEmpty ? l[0] : '').take(2).join().toUpperCase() 
-                    : '?',
-                heroTag: 'recruiter_team_${recruit.advisorCode}',
-                radius: 22,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      recruit.name,
-                      style: GoogleFonts.montserrat(color: textColor, fontSize: 14, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(Icons.badge_outlined, size: 12, color: secondaryTextColor),
-                        const SizedBox(width: 4),
-                        Text(recruit.advisorCode, style: GoogleFonts.montserrat(color: secondaryTextColor, fontSize: 11, fontWeight: FontWeight.w600)),
-                        const SizedBox(width: 8),
-                        Icon(Icons.calendar_today_outlined, size: 12, color: secondaryTextColor),
-                        const SizedBox(width: 4),
-                        Text(recruit.dateJoined, style: GoogleFonts.montserrat(color: secondaryTextColor, fontSize: 11)),
-                      ],
-                    ),
-                  ],
+        return InkWell(
+          onTap: () {
+            if (recruit.status.toLowerCase() == 'reviewing') {
+              Navigator.pushNamed(
+                context, 
+                '/advisor_registration', 
+                arguments: {'advisorId': recruit.id.toString(), 'isEdit': true},
+              );
+            }
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.getBorderColor(context)),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2))],
+            ),
+            child: Row(
+              children: [
+                ProfileImage(
+                  imageUrl: recruit.imageUrl.isNotEmpty ? recruit.imageUrl : null,
+                  initials: recruit.name.isNotEmpty 
+                      ? recruit.name.trim().split(' ').map((l) => l.isNotEmpty ? l[0] : '').take(2).join().toUpperCase() 
+                      : '?',
+                  heroTag: 'recruiter_team_${recruit.advisorCode}',
+                  radius: 22,
                 ),
-              ),
-              _buildStatusPill(context, recruit.status),
-            ],
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        recruit.name,
+                        style: GoogleFonts.montserrat(color: textColor, fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Icon(Icons.badge_outlined, size: 12, color: secondaryTextColor),
+                          const SizedBox(width: 4),
+                          Text(recruit.advisorCode, style: GoogleFonts.montserrat(color: secondaryTextColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                          const SizedBox(width: 8),
+                          Icon(Icons.calendar_today_outlined, size: 12, color: secondaryTextColor),
+                          const SizedBox(width: 4),
+                          Text(recruit.dateJoined, style: GoogleFonts.montserrat(color: secondaryTextColor, fontSize: 11)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                _buildStatusPill(context, recruit.status),
+              ],
+            ),
           ),
         );
       },
@@ -284,6 +297,10 @@ class _RecruiterDashboardScreenState extends State<RecruiterDashboardScreen> {
       case 'pending':
         bgColor = Colors.orange;
         textColor = Colors.orange;
+        break;
+      case 'reviewing':
+        bgColor = Colors.blue;
+        textColor = Colors.blue;
         break;
       case 'inactive':
       case 'suspended':

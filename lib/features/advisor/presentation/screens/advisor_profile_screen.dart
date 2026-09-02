@@ -439,6 +439,20 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                             ]
                           ],
                         ),
+                        const SizedBox(height: 16),
+                        _buildExpandableSection(
+                          context: context,
+                          title: "Key Documents",
+                          icon: Icons.folder_shared_outlined,
+                          primaryBlue: primaryBlue,
+                          isDark: isDark,
+                          children: [
+                            _buildDocumentRow(context, "Aadhar Card (Front)", provider.profile!.addressCardFrontPhoto, primaryBlue),
+                            _buildDocumentRow(context, "Aadhar Card (Back)", provider.profile!.addressCardBackPhoto, primaryBlue),
+                            _buildDocumentRow(context, "PAN Card (Front)", provider.profile!.panCardPhoto, primaryBlue),
+                            _buildDocumentRow(context, "PAN Card (Back)", provider.profile!.panCardBackPhoto, primaryBlue, isLast: true),
+                          ],
+                        ),
                         const SizedBox(height: 40), // Bottom Padding
                       ]),
                     ),
@@ -767,6 +781,88 @@ class _AdvisorProfileScreenState extends State<AdvisorProfileScreen> {
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- DOCUMENT ROW WIDGET ---
+  Widget _buildDocumentRow(
+    BuildContext context,
+    String label,
+    String url,
+    Color primaryBlue, {
+    bool isLast = false,
+  }) {
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color;
+
+    return InkWell(
+      onTap: () {
+        if (url.isNotEmpty) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => FullScreenImageViewer(
+                imageUrl: url,
+                heroTag: 'doc_$label',
+              ),
+            ),
+          );
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          border: isLast
+              ? null
+              : Border(
+                  bottom: BorderSide(color: AppColors.getBorderColor(context)),
+                ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: textColor,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  url.isNotEmpty ? "Tap to view" : "Not Provided",
+                  style: GoogleFonts.montserrat(
+                    fontSize: 11,
+                    color: url.isNotEmpty ? primaryBlue : secondaryTextColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            if (url.isNotEmpty)
+              Hero(
+                tag: 'doc_$label',
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    image: DecorationImage(
+                      image: NetworkImage(url),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              )
+            else
+              Icon(Icons.image_not_supported_outlined, color: secondaryTextColor),
           ],
         ),
       ),

@@ -9,12 +9,26 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/models/advisor_application_model.dart';
 
-class ReviewApplicationScreen extends StatelessWidget {
+class ReviewApplicationScreen extends StatefulWidget {
   final AdvisorApplicationModel advisor;
 
   const ReviewApplicationScreen({super.key, required this.advisor});
 
+  @override
+  State<ReviewApplicationScreen> createState() => _ReviewApplicationScreenState();
+}
+
+class _ReviewApplicationScreenState extends State<ReviewApplicationScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AdminAdvisorProvider>().getReviewMessages(widget.advisor.id);
+    });
+  }
+
   void _showRejectionDialog(BuildContext context, Color primaryBlue) {
+    final advisor = widget.advisor;
     final controller = TextEditingController();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -176,8 +190,167 @@ class ReviewApplicationScreen extends StatelessWidget {
     );
   }
 
+  void _showReviewDialog(BuildContext context, Color primaryBlue) {
+    final advisor = widget.advisor;
+    final controller = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: isDark ? Colors.grey[900] : Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header Icon
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: primaryBlue.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.rate_review_outlined,
+                  color: primaryBlue,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Title & Subtitle
+              Text(
+                'Review Application',
+                style: GoogleFonts.montserrat(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Specify the issues or missing details for the leader to correct.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.montserrat(
+                  fontSize: 12,
+                  color: Colors.grey[500],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Reason Input
+              TextField(
+                controller: controller,
+                maxLines: 3,
+                style: GoogleFonts.montserrat(fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'e.g., PAN card image is blurry...',
+                  hintStyle: GoogleFonts.montserrat(color: Colors.grey),
+                  filled: true,
+                  fillColor: isDark ? Colors.grey[800] : Colors.grey[100],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Action Buttons
+              Consumer<AdminAdvisorProvider>(
+                builder: (context, provider, child) {
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            'Cancel',
+                            style: GoogleFonts.montserrat(
+                              color: Colors.grey,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: provider.isSaving
+                              ? null
+                              : () async {
+                                  if (controller.text.trim().isEmpty) {
+                                    UIHelper.showError(
+                                        context, 'Please enter a message');
+                                    return;
+                                  }
+
+                                  final success = await provider.postReviewMessage(
+                                    advisor.id,
+                                    controller.text.trim(),
+                                  );
+
+                                  if (success) {
+                                    if (context.mounted) {
+                                      Navigator.pop(context);
+                                      UIHelper.showSuccess(
+                                          context, 'Message sent successfully');
+                                      Navigator.pop(context);
+                                    }
+                                  } else {
+                                    if (context.mounted) {
+                                      UIHelper.showError(context,
+                                          'Failed to send review message');
+                                    }
+                                  }
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryBlue,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: provider.isSaving
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2),
+                                )
+                              : Text(
+                                  'Send',
+                                  style: GoogleFonts.montserrat(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final advisor = widget.advisor;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryBlue = AppColors.getPrimaryBlue(context);
     final cardColor = AppColors.getCardColor(context);
@@ -213,6 +386,17 @@ class ReviewApplicationScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
+            // Review Messages (if any)
+            Consumer<AdminAdvisorProvider>(
+              builder: (context, provider, child) {
+                if (provider.reviewMessages.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                return _buildReviewMessagesSection(
+                    provider.reviewMessages, isDark, primaryBlue);
+              },
+            ),
+
             // Profile Header
             Center(
               child: Column(
@@ -603,6 +787,75 @@ class ReviewApplicationScreen extends StatelessWidget {
   }
 
   // --- Helpers ---
+
+  Widget _buildReviewMessagesSection(
+      List<dynamic> messages, bool isDark, Color primaryBlue) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.orange.withOpacity(0.1) : Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.orange.shade700, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Past Review Notes',
+                style: GoogleFonts.montserrat(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange.shade800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: messages.length,
+            separatorBuilder: (context, index) =>
+                const Divider(color: Colors.orange),
+            itemBuilder: (context, index) {
+              final msg = messages[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      msg.message,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 13,
+                        color: isDark ? Colors.white70 : Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Admin • ${msg.createdAt}',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.orange.shade800,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildInfoCard(Color cardColor, String title, List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
@@ -719,6 +972,7 @@ class ReviewApplicationScreen extends StatelessWidget {
     Color primaryBlue,
     bool isDark,
   ) {
+    final advisor = widget.advisor;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -793,27 +1047,52 @@ class ReviewApplicationScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton.icon(
-                onPressed: () => _showRejectionDialog(context, primaryBlue),
-                icon: const Icon(Icons.block, color: Colors.red),
-                label: Text(
-                  'Reject Application',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red,
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton.icon(
+                    onPressed: () => _showReviewDialog(context, primaryBlue),
+                    icon: const Icon(Icons.rate_review, color: Colors.orange),
+                    label: Text(
+                      'Review',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.orange.withOpacity(0.1),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   ),
                 ),
-                style: TextButton.styleFrom(
-                  backgroundColor: Colors.red.withOpacity(0.1),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextButton.icon(
+                    onPressed: () => _showRejectionDialog(context, primaryBlue),
+                    icon: const Icon(Icons.block, color: Colors.red),
+                    label: Text(
+                      'Reject',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.red.withOpacity(0.1),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ],
         ),

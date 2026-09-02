@@ -9,6 +9,10 @@ class AdvisorProfileModel {
   final String designation;
   final String status;
   final String profilePhoto;
+  final String addressCardFrontPhoto;
+  final String addressCardBackPhoto;
+  final String panCardPhoto;
+  final String panCardBackPhoto;
   final String dob;
   final String gender;
   final String fatherName;
@@ -48,6 +52,10 @@ class AdvisorProfileModel {
     required this.designation,
     required this.status,
     required this.profilePhoto,
+    required this.addressCardFrontPhoto,
+    required this.addressCardBackPhoto,
+    required this.panCardPhoto,
+    required this.panCardBackPhoto,
     required this.dob,
     required this.gender,
     required this.fatherName,
@@ -148,6 +156,10 @@ class AdvisorProfileModel {
       designation: data['designation'] ?? 'Advisor',
       status: data['status'] ?? 'Active',
       profilePhoto: finalPhotoUrl,
+      addressCardFrontPhoto: data['addresscard_front_photo'] != null ? (data['addresscard_front_photo'].toString().startsWith('http') ? data['addresscard_front_photo'] : baseUrl + data['addresscard_front_photo']) : '',
+      addressCardBackPhoto: data['addresscard_back_photo'] != null ? (data['addresscard_back_photo'].toString().startsWith('http') ? data['addresscard_back_photo'] : baseUrl + data['addresscard_back_photo']) : '',
+      panCardPhoto: data['pancard_photo'] != null ? (data['pancard_photo'].toString().startsWith('http') ? data['pancard_photo'] : baseUrl + data['pancard_photo']) : '',
+      panCardBackPhoto: data['pancard_back_photo'] != null ? (data['pancard_back_photo'].toString().startsWith('http') ? data['pancard_back_photo'] : baseUrl + data['pancard_back_photo']) : '',
       dob: data['date_of_birth'] ?? data['dob'] ?? 'N/A',
       gender: data['gender'] ?? 'N/A',
       fatherName: data['father_name'] ?? 'N/A',

@@ -90,6 +90,10 @@ class AdvisorProfileProvider extends ChangeNotifier {
     String? city,
     String? state,
     String? pincode,
+    File? aadharFront,
+    File? aadharBack,
+    File? panPhoto,
+    File? panBackPhoto,
     File? profilePhoto,
   }) async {
     _isSaving = true;
@@ -116,6 +120,10 @@ class AdvisorProfileProvider extends ChangeNotifier {
         city: city,
         state: state,
         pincode: pincode,
+        aadharFront: aadharFront,
+        aadharBack: aadharBack,
+        panPhoto: panPhoto,
+        panBackPhoto: panBackPhoto,
         profilePhoto: profilePhoto,
       );
       if (success) {
